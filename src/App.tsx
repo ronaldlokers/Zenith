@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { api } from "./api";
 import {
   INTERACTION_TYPES,
@@ -121,6 +127,40 @@ function StageRail({ status }: { status: Status }) {
       {PIPELINE.map((s, i) => (
         <i key={s} className={i <= idx ? `on stage-${status}` : ""} />
       ))}
+    </div>
+  );
+}
+
+const SHORTCUTS: [string, string][] = [
+  ["/", "Focus search"],
+  ["n", "Add a new job"],
+  ["j / k", "Move focus down / up the list"],
+  ["1–8", "Set the focused card's status (interested…ghosted)"],
+  ["Esc", "Close a form, collapse a timeline, or this help"],
+  ["?", "Toggle this help"],
+];
+
+function ShortcutHelp({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="modal shortcut-help"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label="Keyboard shortcuts"
+      >
+        <h2>Keyboard shortcuts</h2>
+        <p className="muted small">Desktop, Jobs tab only.</p>
+        <ul>
+          {SHORTCUTS.map(([key, label]) => (
+            <li key={key}>
+              <kbd>{key}</kbd>
+              <span>{label}</span>
+            </li>
+          ))}
+        </ul>
+        <button onClick={onClose}>Close</button>
+      </div>
     </div>
   );
 }
@@ -1111,6 +1151,9 @@ function ApplicationsTab({
     "updated",
   );
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [showHelp, setShowHelp] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
@@ -1151,19 +1194,82 @@ function ApplicationsTab({
       })
       .catch((e) => onError((e as Error).message));
 
+  // Desktop keyboard shortcuts: / search, n new job, Esc close,
+  // j/k move focus, 1-8 set status on the focused card, ? for help.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
+      if (e.key === "?" && !isTyping) {
+        e.preventDefault();
+        setShowHelp((v) => !v);
+        return;
+      }
+      if (e.key === "Escape") {
+        if (showHelp) return setShowHelp(false);
+        if (editing) return setEditing(null);
+        if (expandedId !== null) return setExpandedId(null);
+        (e.target as HTMLElement).blur?.();
+        return;
+      }
+      if (isTyping) return;
+
+      if (e.key === "/") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      } else if (e.key === "n") {
+        e.preventDefault();
+        setEditing("new");
+      } else if (e.key === "j") {
+        e.preventDefault();
+        setFocusedIndex((i) => Math.min(i + 1, visible.length - 1));
+      } else if (e.key === "k") {
+        e.preventDefault();
+        setFocusedIndex((i) => Math.max(i - 1, 0));
+      } else if (/^[1-8]$/.test(e.key)) {
+        const target = visible[focusedIndex];
+        const status = STATUSES[Number(e.key) - 1];
+        if (target && status) {
+          e.preventDefault();
+          onStatus(target.id, status);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [visible, editing, expandedId, showHelp, focusedIndex, onStatus]);
+
+  useEffect(() => {
+    if (focusedIndex < 0) return;
+    document
+      .querySelector(".card.kb-focused")
+      ?.scrollIntoView({ block: "nearest" });
+  }, [focusedIndex]);
+
   return (
     <section>
+      {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
       <StageHistogram applications={applications} />
       <div className="toolbar">
         <input
+          ref={searchRef}
           type="search"
           className="search"
-          placeholder="Search title, company, notes…"
+          placeholder="Search title, company, notes… (/)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <button className="primary" onClick={() => setEditing("new")}>
           + Add job
+        </button>
+        <button
+          className="help-btn"
+          onClick={() => setShowHelp(true)}
+          title="Keyboard shortcuts"
+          aria-label="Keyboard shortcuts"
+        >
+          ?
         </button>
       </div>
       <div className="filters">
@@ -1228,10 +1334,10 @@ function ApplicationsTab({
       )}
 
       <ul className="cards">
-        {visible.map((a) => (
+        {visible.map((a, i) => (
           <li
             key={a.id}
-            className={`card stage-${a.status}${isOverdue(a) ? " overdue" : ""}`}
+            className={`card stage-${a.status}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}`}
           >
             <div className="card-body">
               <div className="card-main">
