@@ -263,6 +263,28 @@ button.danger {
   color: var(--muted);
 }
 
+@media (max-width: 600px) {
+  /* Meet the ~44px touch-target minimum; Delete gets its own breathing
+     room so a mis-tap on Edit doesn't land on it instead. */
+  .card-actions {
+    gap: 0.5rem 0.6rem;
+  }
+
+  .card-actions button {
+    min-height: 44px;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .card-actions .danger {
+    margin-left: auto;
+  }
+
+  .card-actions select.status {
+    min-height: 44px;
+    padding: 0.5rem 0.6rem;
+  }
+}
+
 /* Pipeline rail (variant 2A/2B) */
 .rail {
   display: flex;
@@ -694,6 +716,12 @@ select.status {
   letter-spacing: 0.08em;
   color: var(--sc);
   padding: 0.3rem 0.1rem 0.45rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bcol-head::-webkit-details-marker {
+  display: none;
 }
 
 .bcol-head::before {
@@ -702,6 +730,18 @@ select.status {
   height: 8px;
   border-radius: 50%;
   background: var(--sc);
+  flex-shrink: 0;
+}
+
+.bcol-head::after {
+  content: "▸";
+  color: var(--faint);
+  font-size: 0.6rem;
+  transition: transform 0.15s ease;
+}
+
+.bcol[open] > .bcol-head::after {
+  transform: rotate(90deg);
 }
 
 .bcol-head .n {

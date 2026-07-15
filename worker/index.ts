@@ -484,7 +484,7 @@ app.get("/api/import", async (c) => {
 app.get("/api/stats", async (c) => {
   const [apps, history] = await Promise.all([
     c.env.DB.prepare(
-      "SELECT id, status, source, created_at FROM applications",
+      "SELECT id, status, source, applied_at, created_at FROM applications",
     ).all(),
     c.env.DB.prepare(
       `SELECT application_id, from_status, to_status, changed_at

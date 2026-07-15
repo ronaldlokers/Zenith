@@ -371,16 +371,35 @@ function BoardTab({
 
   const open = applications.filter((a) => !isDead(a.status));
 
+  // Collapsed by default, except stages with something due — keeps a
+  // long mobile scroll from burying the stage that actually needs
+  // attention under every earlier one. A manual toggle wins once used.
+  const [manualOpen, setManualOpen] = useState<Partial<Record<Status, boolean>>>(
+    {},
+  );
+
   return (
     <div className="board">
       {PIPELINE.map((stage) => {
         const cards = open.filter((a) => a.status === stage);
+        const hasDue = cards.some(isDue);
+        const isOpen = manualOpen[stage] ?? hasDue;
         return (
-          <section key={stage} className={`bcol stage-${stage}`}>
-            <header className="bcol-head">
+          <details
+            key={stage}
+            className={`bcol stage-${stage}`}
+            open={isOpen}
+            onToggle={(e) =>
+              setManualOpen((m) => ({
+                ...m,
+                [stage]: (e.target as HTMLDetailsElement).open,
+              }))
+            }
+          >
+            <summary className="bcol-head">
               {stage}
               <span className="n">{cards.length}</span>
-            </header>
+            </summary>
             {cards.map((a) => (
               <article key={a.id} className={`bcard stage-${a.status}`}>
                 <strong>{a.title}</strong>
@@ -416,7 +435,7 @@ function BoardTab({
                 {stage === "offer" ? "keep pushing" : "empty"}
               </div>
             )}
-          </section>
+          </details>
         );
       })}
     </div>
@@ -632,13 +651,15 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   if (!stats) return <p className="muted small">Loading stats…</p>;
   const { applications: apps, history } = stats;
 
-  // Applications per week, last 8 weeks
+  // Applications per week, last 8 weeks. Uses applied_at (when the lead
+  // actually moved) rather than created_at (when it was logged in the
+  // app, which can be days or weeks after the fact).
   const WEEK = 7 * 86400000;
   const now = Date.now();
   const weeks = Array.from({ length: 8 }, (_, i) => {
     const start = now - (7 - i) * WEEK;
     const count = apps.filter((a) => {
-      const t = parseSqlDate(a.created_at);
+      const t = parseSqlDate(a.applied_at ?? a.created_at);
       return t >= start && t < start + WEEK;
     }).length;
     const d = new Date(start);

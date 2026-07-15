@@ -47,6 +47,7 @@ export interface StatsApplication {
   id: number;
   status: Status;
   source: string | null;
+  applied_at: string | null;
   created_at: string;
 }
 
