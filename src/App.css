@@ -500,6 +500,51 @@ select.status {
   color: var(--ink);
 }
 
+.compare-wrap {
+  overflow-x: auto;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.compare-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  padding: 0.3rem 0.6rem 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.compare-table td {
+  padding: 0.5rem 0.6rem 0.5rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  vertical-align: top;
+}
+
+.compare-table tr.stage-interview td:first-child,
+.compare-table tr.stage-offer td:first-child {
+  border-left: 3px solid var(--sc);
+  padding-left: 0.5rem;
+}
+
+.compare-comp {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.compare-notes {
+  color: var(--muted);
+  max-width: 22rem;
+}
+
 .export-links {
   display: flex;
   gap: 0.5rem;

@@ -663,18 +663,47 @@ function parseSqlDate(d: string): number {
   return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
 }
 
+// Annualized midpoint, for sorting/comparing offers on a common basis
+function annualizedComp(a: Application): number | null {
+  if (a.salary_min == null && a.salary_max == null) return null;
+  const mid =
+    a.salary_max != null && a.salary_min != null
+      ? (a.salary_min + a.salary_max) / 2
+      : (a.salary_max ?? a.salary_min)!;
+  return a.salary_period === "month" ? mid * 12 : mid;
+}
+
+function formatComp(a: Application): string {
+  const cur = a.salary_currency ?? "";
+  const per = a.salary_period === "month" ? "/mo" : "/yr";
+  if (a.salary_min != null && a.salary_max != null) {
+    return `${cur} ${a.salary_min.toLocaleString()}–${a.salary_max.toLocaleString()}${per}`;
+  }
+  const one = a.salary_max ?? a.salary_min;
+  return one != null ? `${cur} ${one.toLocaleString()}${per}` : "—";
+}
+
 function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [fullApps, setFullApps] = useState<Application[] | null>(null);
 
   useEffect(() => {
     api
       .stats()
       .then(setStats)
       .catch((e) => onError((e as Error).message));
+    api
+      .list<Application>("applications")
+      .then(setFullApps)
+      .catch((e) => onError((e as Error).message));
   }, [onError]);
 
   if (!stats) return <p className="muted small">Loading stats…</p>;
   const { applications: apps, history } = stats;
+
+  const comparing = (fullApps ?? [])
+    .filter((a) => a.status === "interview" || a.status === "offer")
+    .sort((a, b) => (annualizedComp(b) ?? -1) - (annualizedComp(a) ?? -1));
 
   // Applications per week, last 8 weeks. Uses applied_at (when the lead
   // actually moved) rather than created_at (when it was logged in the
@@ -807,6 +836,40 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           ))}
         {bySource.size === 0 && <li className="tl-empty">No applications yet.</li>}
       </ul>
+
+      <h2 className="stat-h">Compare interviews &amp; offers</h2>
+      <div className="compare-wrap">
+        <table className="compare-table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Company</th>
+              <th>Stage</th>
+              <th>Comp</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparing.map((a) => (
+              <tr key={a.id} className={`stage-${a.status}`}>
+                <td>{a.title}</td>
+                <td>{a.company_name ?? "—"}</td>
+                <td>
+                  <span className="badge">{a.status}</span>
+                </td>
+                <td className="compare-comp">{formatComp(a)}</td>
+                <td className="compare-notes">{a.notes ?? ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {comparing.length === 0 && (
+          <p className="tl-empty">
+            Nothing at interview or offer stage yet. Add min/max/currency on a
+            job's edit form once it gets there.
+          </p>
+        )}
+      </div>
 
       <h2 className="stat-h">Export your data</h2>
       <p className="export-links">
@@ -1308,9 +1371,64 @@ function ApplicationForm({
       <label>
         Salary range
         <input
+          placeholder="freeform, e.g. from a job posting"
           value={form.salary_range ?? ""}
           onChange={(e) => set({ salary_range: e.target.value || null })}
         />
+      </label>
+      <label>
+        Currency
+        <select
+          value={form.salary_currency ?? ""}
+          onChange={(e) => set({ salary_currency: e.target.value || null })}
+        >
+          <option value="">—</option>
+          {["EUR", "USD", "GBP"].map((cur) => (
+            <option key={cur} value={cur}>
+              {cur}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Min
+        <input
+          type="number"
+          min={0}
+          value={form.salary_min ?? ""}
+          onChange={(e) =>
+            set({ salary_min: e.target.value ? Number(e.target.value) : null })
+          }
+        />
+      </label>
+      <label>
+        Max
+        <input
+          type="number"
+          min={0}
+          value={form.salary_max ?? ""}
+          onChange={(e) =>
+            set({ salary_max: e.target.value ? Number(e.target.value) : null })
+          }
+        />
+      </label>
+      <label>
+        Per
+        <select
+          value={form.salary_period ?? ""}
+          onChange={(e) =>
+            set({
+              salary_period: (e.target.value || null) as
+                | "year"
+                | "month"
+                | null,
+            })
+          }
+        >
+          <option value="">—</option>
+          <option value="year">year</option>
+          <option value="month">month</option>
+        </select>
       </label>
       <label>
         Applied on
