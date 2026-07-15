@@ -379,8 +379,12 @@ export default function App() {
             {tab === "board" && (
               <BoardTab
                 applications={visibleApps}
+                companies={visibleCompanies}
+                contacts={visibleContacts}
                 onChanged={reload}
                 onError={setError}
+                notify={notify}
+                onDelete={deleteWithUndo}
                 onStatus={setStatus}
               />
             )}
@@ -451,9 +455,17 @@ interface CrudTabProps extends TabProps {
 
 function BoardTab({
   applications,
+  companies,
+  contacts,
+  onChanged,
+  onError,
+  notify,
+  onDelete,
   onStatus,
-}: TabProps & {
+}: CrudTabProps & {
   applications: Application[];
+  companies: Company[];
+  contacts: Contact[];
   onStatus: (id: number, status: Status) => void;
 }) {
   const move = (a: Application, status: string) =>
@@ -467,6 +479,10 @@ function BoardTab({
   const [manualOpen, setManualOpen] = useState<Partial<Record<Status, boolean>>>(
     {},
   );
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<Status | null>(null);
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
   return (
     <div className="board">
@@ -477,7 +493,7 @@ function BoardTab({
         return (
           <details
             key={stage}
-            className={`bcol stage-${stage}`}
+            className={`bcol stage-${stage}${dragOverStage === stage ? " drag-over" : ""}`}
             open={isOpen}
             onToggle={(e) =>
               setManualOpen((m) => ({
@@ -485,27 +501,61 @@ function BoardTab({
                 [stage]: (e.target as HTMLDetailsElement).open,
               }))
             }
+            onDragOver={(e) => {
+              if (draggingId === null) return;
+              e.preventDefault();
+              setDragOverStage(stage);
+              if (!isOpen) setManualOpen((m) => ({ ...m, [stage]: true }));
+            }}
+            onDragLeave={() =>
+              setDragOverStage((s) => (s === stage ? null : s))
+            }
+            onDrop={(e) => {
+              e.preventDefault();
+              const id = Number(e.dataTransfer.getData("text/plain"));
+              if (id) onStatus(id, stage);
+              setDraggingId(null);
+              setDragOverStage(null);
+            }}
           >
             <summary className="bcol-head">
               {stage}
               <span className="n">{cards.length}</span>
             </summary>
             {cards.map((a) => (
-              <article key={a.id} className={`bcard stage-${a.status}`}>
-                <strong>{a.title}</strong>
-                <span className="co">
-                  {a.company_name ?? "—"}
-                  {a.contact_name ? ` · ${a.contact_name}` : ""}
-                </span>
-                <span className="bmeta">
-                  {isDue(a) && a.next_action ? (
-                    <span className={isOverdue(a) ? "late" : "today"}>
-                      → {a.next_action}
-                    </span>
-                  ) : (
-                    `upd ${ageDays(a.updated_at)}`
-                  )}
-                </span>
+              <article
+                key={a.id}
+                className={`bcard stage-${a.status}${draggingId === a.id ? " dragging" : ""}`}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", String(a.id));
+                  e.dataTransfer.effectAllowed = "move";
+                  setDraggingId(a.id);
+                }}
+                onDragEnd={() => {
+                  setDraggingId(null);
+                  setDragOverStage(null);
+                }}
+              >
+                <div
+                  className="bcard-body"
+                  onClick={() => setDetailId(a.id)}
+                >
+                  <strong>{a.title}</strong>
+                  <span className="co">
+                    {a.company_name ?? "—"}
+                    {a.contact_name ? ` · ${a.contact_name}` : ""}
+                  </span>
+                  <span className="bmeta">
+                    {isDue(a) && a.next_action ? (
+                      <span className={isOverdue(a) ? "late" : "today"}>
+                        → {a.next_action}
+                      </span>
+                    ) : (
+                      `upd ${ageDays(a.updated_at)}`
+                    )}
+                  </span>
+                </div>
                 <select
                   className={`status stage-${a.status}`}
                   value={a.status}
@@ -528,6 +578,19 @@ function BoardTab({
           </details>
         );
       })}
+      {detailApp && (
+        <ApplicationDetailModal
+          application={detailApp}
+          companies={companies}
+          contacts={contacts}
+          onClose={() => setDetailId(null)}
+          onChanged={onChanged}
+          onError={onError}
+          notify={notify}
+          onDelete={onDelete}
+          onStatus={onStatus}
+        />
+      )}
     </div>
   );
 }
@@ -1125,6 +1188,142 @@ function CalendarTab({
   );
 }
 
+function ApplicationDetailModal({
+  application,
+  companies,
+  contacts,
+  onClose,
+  onChanged,
+  onError,
+  notify,
+  onDelete,
+  onStatus,
+}: {
+  application: Application;
+  companies: Company[];
+  contacts: Contact[];
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+  onError: (message: string | null) => void;
+  notify: (message: string, undo?: () => void) => void;
+  onDelete: (resource: string, id: number, name: string) => void;
+  onStatus: (id: number, status: Status) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const a = application;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="modal detail-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label={a.title}
+      >
+        <div className="detail-head">
+          <div>
+            <h2>{a.title}</h2>
+            <span className="muted small">
+              {a.company_name ?? "—"}
+              {a.contact_name ? ` · ${a.contact_name}` : ""}
+            </span>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        {editing ? (
+          <ApplicationForm
+            initial={a}
+            companies={companies}
+            contacts={contacts}
+            onError={onError}
+            onCancel={() => setEditing(false)}
+            onSubmit={(data) =>
+              api
+                .update("applications", a.id, data)
+                .then(() => {
+                  setEditing(false);
+                  notify("Saved");
+                  return onChanged();
+                })
+                .catch((e) => onError((e as Error).message))
+            }
+          />
+        ) : (
+          <>
+            <div className="detail-fields">
+              <select
+                className={`status stage-${a.status}`}
+                value={a.status}
+                onChange={(e) => onStatus(a.id, e.target.value as Status)}
+              >
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <span className="muted small">{a.role_type}</span>
+              {safeHref(a.url) && (
+                <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
+                  Job posting ↗
+                </a>
+              )}
+              {a.source && <span className="muted small">via {a.source}</span>}
+              {a.salary_range && (
+                <span className="muted small">{a.salary_range}</span>
+              )}
+              {a.applied_at && (
+                <span className="muted small">
+                  Applied {formatDate(a.applied_at)}
+                </span>
+              )}
+              {(a.next_action || a.next_action_at) && (
+                <span
+                  className={`due-line${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
+                >
+                  → {a.next_action ?? "follow up"}
+                  {a.next_action_at ? ` · ${formatDate(a.next_action_at)}` : ""}
+                </span>
+              )}
+              {a.notes && <p className="notes">{a.notes}</p>}
+            </div>
+
+            <div className="detail-actions">
+              <button onClick={() => setEditing(true)}>Edit</button>
+              <button
+                className="danger"
+                onClick={() => {
+                  onDelete("applications", a.id, a.title);
+                  onClose();
+                }}
+              >
+                Delete
+              </button>
+            </div>
+
+            <h3 className="detail-sub">Timeline</h3>
+            <Timeline resource="applications" targetId={a.id} onError={onError} />
+
+            <h3 className="detail-sub">Documents</h3>
+            <Documents applicationId={a.id} onError={onError} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ApplicationsTab({
   applications,
   companies,
@@ -1154,6 +1353,8 @@ function ApplicationsTab({
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showHelp, setShowHelp] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
@@ -1340,7 +1541,10 @@ function ApplicationsTab({
             className={`card stage-${a.status}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}`}
           >
             <div className="card-body">
-              <div className="card-main">
+              <div
+                className="card-main clickable"
+                onClick={() => setDetailId(a.id)}
+              >
                 <strong>{a.title}</strong>
                 {(a.next_action || a.next_action_at) && (
                   <span
@@ -1365,6 +1569,7 @@ function ApplicationsTab({
                     target="_blank"
                     rel="noreferrer"
                     className="small"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     Job posting ↗
                   </a>
@@ -1422,6 +1627,19 @@ function ApplicationsTab({
           </li>
         )}
       </ul>
+      {detailApp && (
+        <ApplicationDetailModal
+          application={detailApp}
+          companies={companies}
+          contacts={contacts}
+          onClose={() => setDetailId(null)}
+          onChanged={onChanged}
+          onError={onError}
+          notify={notify}
+          onDelete={onDelete}
+          onStatus={onStatus}
+        />
+      )}
     </section>
   );
 }
