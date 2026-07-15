@@ -62,6 +62,14 @@ export interface Stats {
   history: StatusHistoryRow[];
 }
 
+export interface ImportResult {
+  title: string | null;
+  company: string | null;
+  location: string | null;
+  salary: string | null;
+  source: string;
+}
+
 export interface Document {
   id: number;
   application_id: number;
