@@ -127,12 +127,21 @@ function StageHistogram({ applications }: { applications: Application[] }) {
   );
 }
 
+interface Toast {
+  id: number;
+  message: string;
+  undo?: () => void;
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>("applications");
   const [applications, setApplications] = useState<Application[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
 
   const reload = useCallback(async () => {
     try {
@@ -147,12 +156,82 @@ export default function App() {
       setError(null);
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     reload();
   }, [reload]);
+
+  const notify = useCallback((message: string, undo?: () => void) => {
+    const id = Date.now();
+    setToast({ id, message, undo });
+    window.setTimeout(
+      () => setToast((t) => (t?.id === id ? null : t)),
+      undo ? 6000 : 3000,
+    );
+  }, []);
+
+  // Delete with an undo window: hide immediately, commit after the
+  // toast expires unless undone (cascaded data survives an undo).
+  const deleteWithUndo = useCallback(
+    (resource: string, id: number, name: string) => {
+      const key = `${resource}:${id}`;
+      setHidden((h) => new Set(h).add(key));
+      const timer = window.setTimeout(() => {
+        api
+          .remove(resource, id)
+          .then(reload)
+          .catch((e) => setError((e as Error).message))
+          .finally(() =>
+            setHidden((h) => {
+              const next = new Set(h);
+              next.delete(key);
+              return next;
+            }),
+          );
+      }, 6000);
+      notify(`Deleted "${name}"`, () => {
+        window.clearTimeout(timer);
+        setHidden((h) => {
+          const next = new Set(h);
+          next.delete(key);
+          return next;
+        });
+      });
+    },
+    [notify, reload],
+  );
+
+  // Optimistic status change: update locally, revert on API failure
+  const setStatus = useCallback(
+    (id: number, status: Status) => {
+      const prev = applications;
+      setApplications((apps) =>
+        apps.map((a) => (a.id === id ? { ...a, status } : a)),
+      );
+      api
+        .setStatus(id, status)
+        .then(reload)
+        .catch((e) => {
+          setApplications(prev);
+          setError((e as Error).message);
+        });
+    },
+    [applications, reload],
+  );
+
+  const visibleApps = applications.filter(
+    (a) => !hidden.has(`applications:${a.id}`),
+  );
+  const visibleCompanies = companies.filter(
+    (c) => !hidden.has(`companies:${c.id}`),
+  );
+  const visibleContacts = contacts.filter(
+    (c) => !hidden.has(`contacts:${c.id}`),
+  );
 
   return (
     <div className="app">
@@ -203,39 +282,69 @@ export default function App() {
       {error && <p className="error">{error}</p>}
 
       <main className="content">
-        {tab === "applications" && (
-          <ApplicationsTab
-            applications={applications}
-            companies={companies}
-            contacts={contacts}
-            onChanged={reload}
-            onError={setError}
-          />
-        )}
-        {tab === "board" && (
-          <BoardTab
-            applications={applications}
-            onChanged={reload}
-            onError={setError}
-          />
-        )}
-        {tab === "stats" && <StatsTab onError={setError} />}
-        {tab === "companies" && (
-          <CompaniesTab
-            companies={companies}
-            onChanged={reload}
-            onError={setError}
-          />
-        )}
-        {tab === "contacts" && (
-          <ContactsTab
-            contacts={contacts}
-            companies={companies}
-            onChanged={reload}
-            onError={setError}
-          />
+        {loading ? (
+          <p className="muted small loading">Loading…</p>
+        ) : (
+          <>
+            {tab === "applications" && (
+              <ApplicationsTab
+                applications={visibleApps}
+                companies={visibleCompanies}
+                contacts={visibleContacts}
+                onChanged={reload}
+                onError={setError}
+                notify={notify}
+                onDelete={deleteWithUndo}
+                onStatus={setStatus}
+              />
+            )}
+            {tab === "board" && (
+              <BoardTab
+                applications={visibleApps}
+                onChanged={reload}
+                onError={setError}
+                onStatus={setStatus}
+              />
+            )}
+            {tab === "stats" && <StatsTab onError={setError} />}
+            {tab === "companies" && (
+              <CompaniesTab
+                companies={visibleCompanies}
+                onChanged={reload}
+                onError={setError}
+                notify={notify}
+                onDelete={deleteWithUndo}
+              />
+            )}
+            {tab === "contacts" && (
+              <ContactsTab
+                contacts={visibleContacts}
+                companies={visibleCompanies}
+                onChanged={reload}
+                onError={setError}
+                notify={notify}
+                onDelete={deleteWithUndo}
+              />
+            )}
+          </>
         )}
       </main>
+
+      {toast && (
+        <div className="toast" role="status">
+          <span>{toast.message}</span>
+          {toast.undo && (
+            <button
+              onClick={() => {
+                toast.undo?.();
+                setToast(null);
+              }}
+            >
+              Undo
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -245,16 +354,20 @@ interface TabProps {
   onError: (message: string | null) => void;
 }
 
+interface CrudTabProps extends TabProps {
+  notify: (message: string, undo?: () => void) => void;
+  onDelete: (resource: string, id: number, name: string) => void;
+}
+
 function BoardTab({
   applications,
-  onChanged,
-  onError,
-}: TabProps & { applications: Application[] }) {
+  onStatus,
+}: TabProps & {
+  applications: Application[];
+  onStatus: (id: number, status: Status) => void;
+}) {
   const move = (a: Application, status: string) =>
-    api
-      .setStatus(a.id, status)
-      .then(onChanged)
-      .catch((e) => onError((e as Error).message));
+    onStatus(a.id, status as Status);
 
   const open = applications.filter((a) => !isDead(a.status));
 
@@ -653,10 +766,14 @@ function ApplicationsTab({
   contacts,
   onChanged,
   onError,
-}: TabProps & {
+  notify,
+  onDelete,
+  onStatus,
+}: CrudTabProps & {
   applications: Application[];
   companies: Company[];
   contacts: Contact[];
+  onStatus: (id: number, status: Status) => void;
 }) {
   const [editing, setEditing] = useState<Application | "new" | null>(null);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
@@ -702,6 +819,7 @@ function ApplicationsTab({
     fn()
       .then(() => {
         setEditing(null);
+        notify("Saved");
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
@@ -823,9 +941,7 @@ function ApplicationsTab({
                 <select
                   className={`status stage-${a.status}`}
                   value={a.status}
-                  onChange={(e) =>
-                    run(() => api.setStatus(a.id, e.target.value))
-                  }
+                  onChange={(e) => onStatus(a.id, e.target.value as Status)}
                 >
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -844,10 +960,7 @@ function ApplicationsTab({
                 <button onClick={() => setEditing(a)}>Edit</button>
                 <button
                   className="danger"
-                  onClick={() => {
-                    if (confirm(`Delete "${a.title}"?`))
-                      run(() => api.remove("applications", a.id));
-                  }}
+                  onClick={() => onDelete("applications", a.id, a.title)}
                 >
                   Delete
                 </button>
@@ -1032,7 +1145,9 @@ function CompaniesTab({
   companies,
   onChanged,
   onError,
-}: TabProps & { companies: Company[] }) {
+  notify,
+  onDelete,
+}: CrudTabProps & { companies: Company[] }) {
   const [editing, setEditing] = useState<Company | "new" | null>(null);
   const [query, setQuery] = useState("");
 
@@ -1049,6 +1164,7 @@ function CompaniesTab({
     fn()
       .then(() => {
         setEditing(null);
+        notify("Saved");
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
@@ -1108,10 +1224,7 @@ function CompaniesTab({
                 <button onClick={() => setEditing(c)}>Edit</button>
                 <button
                   className="danger"
-                  onClick={() => {
-                    if (confirm(`Delete "${c.name}"?`))
-                      run(() => api.remove("companies", c.id));
-                  }}
+                  onClick={() => onDelete("companies", c.id, c.name)}
                 >
                   Delete
                 </button>
@@ -1119,7 +1232,13 @@ function CompaniesTab({
             </div>
           </li>
         ))}
-        {companies.length === 0 && <li className="empty">No companies yet.</li>}
+        {visible.length === 0 && (
+          <li className="empty">
+            {companies.length === 0
+              ? "No companies yet. Add the ones you're targeting — applications and contacts link to them."
+              : "No companies match your search."}
+          </li>
+        )}
       </ul>
     </section>
   );
@@ -1202,7 +1321,9 @@ function ContactsTab({
   companies,
   onChanged,
   onError,
-}: TabProps & { contacts: Contact[]; companies: Company[] }) {
+  notify,
+  onDelete,
+}: CrudTabProps & { contacts: Contact[]; companies: Company[] }) {
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [query, setQuery] = useState("");
 
@@ -1219,6 +1340,7 @@ function ContactsTab({
     fn()
       .then(() => {
         setEditing(null);
+        notify("Saved");
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
@@ -1288,10 +1410,7 @@ function ContactsTab({
                 <button onClick={() => setEditing(c)}>Edit</button>
                 <button
                   className="danger"
-                  onClick={() => {
-                    if (confirm(`Delete "${c.name}"?`))
-                      run(() => api.remove("contacts", c.id));
-                  }}
+                  onClick={() => onDelete("contacts", c.id, c.name)}
                 >
                   Delete
                 </button>
@@ -1299,7 +1418,13 @@ function ContactsTab({
             </div>
           </li>
         ))}
-        {contacts.length === 0 && <li className="empty">No contacts yet.</li>}
+        {visible.length === 0 && (
+          <li className="empty">
+            {contacts.length === 0
+              ? "No people yet. Add recruiters and hiring managers so you can log every touchpoint."
+              : "No people match your search."}
+          </li>
+        )}
       </ul>
     </section>
   );
