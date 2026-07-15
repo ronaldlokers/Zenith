@@ -10,7 +10,7 @@ import {
 } from "./types";
 import "./App.css";
 
-type Tab = "applications" | "companies" | "contacts";
+type Tab = "applications" | "board" | "companies" | "contacts";
 
 const PIPELINE: Status[] = [
   "interested",
@@ -171,6 +171,12 @@ export default function App() {
           Jobs
         </button>
         <button
+          className={tab === "board" ? "active" : ""}
+          onClick={() => setTab("board")}
+        >
+          Board
+        </button>
+        <button
           className={tab === "companies" ? "active" : ""}
           onClick={() => setTab("companies")}
         >
@@ -192,6 +198,13 @@ export default function App() {
             applications={applications}
             companies={companies}
             contacts={contacts}
+            onChanged={reload}
+            onError={setError}
+          />
+        )}
+        {tab === "board" && (
+          <BoardTab
+            applications={applications}
             onChanged={reload}
             onError={setError}
           />
@@ -219,6 +232,71 @@ export default function App() {
 interface TabProps {
   onChanged: () => Promise<void>;
   onError: (message: string | null) => void;
+}
+
+function BoardTab({
+  applications,
+  onChanged,
+  onError,
+}: TabProps & { applications: Application[] }) {
+  const move = (a: Application, status: string) =>
+    api
+      .setStatus(a.id, status)
+      .then(onChanged)
+      .catch((e) => onError((e as Error).message));
+
+  const open = applications.filter((a) => !isDead(a.status));
+
+  return (
+    <div className="board">
+      {PIPELINE.map((stage) => {
+        const cards = open.filter((a) => a.status === stage);
+        return (
+          <section key={stage} className={`bcol stage-${stage}`}>
+            <header className="bcol-head">
+              {stage}
+              <span className="n">{cards.length}</span>
+            </header>
+            {cards.map((a) => (
+              <article key={a.id} className={`bcard stage-${a.status}`}>
+                <strong>{a.title}</strong>
+                <span className="co">
+                  {a.company_name ?? "—"}
+                  {a.contact_name ? ` · ${a.contact_name}` : ""}
+                </span>
+                <span className="bmeta">
+                  {isDue(a) && a.next_action ? (
+                    <span className={isOverdue(a) ? "late" : "today"}>
+                      → {a.next_action}
+                    </span>
+                  ) : (
+                    `upd ${ageDays(a.updated_at)}`
+                  )}
+                </span>
+                <select
+                  className={`status stage-${a.status}`}
+                  value={a.status}
+                  onChange={(e) => move(a, e.target.value)}
+                  aria-label={`Move ${a.title} to stage`}
+                >
+                  {STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </article>
+            ))}
+            {cards.length === 0 && (
+              <div className="bempty">
+                {stage === "offer" ? "keep pushing" : "empty"}
+              </div>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  );
 }
 
 function ApplicationsTab({
