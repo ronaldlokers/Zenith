@@ -60,6 +60,21 @@ function formatDate(d: string): string {
   });
 }
 
+// Only http(s) links are ever rendered as href — a stored javascript:
+// or data: URI (from a feed source, a scraped import, or hand-typed)
+// must not be clickable.
+function safeHref(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+      ? url
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function ageDays(updatedAt: string): string {
   const then = new Date(updatedAt.replace(" ", "T") + "Z").getTime();
   const days = Math.max(0, Math.floor((Date.now() - then) / 86400000));
@@ -884,8 +899,8 @@ function FeedTab({
                   {" · via "}
                   {item.source}
                 </span>
-                {item.url && (
-                  <a href={item.url} target="_blank" rel="noreferrer" className="small">
+                {safeHref(item.url) && (
+                  <a href={safeHref(item.url)} target="_blank" rel="noreferrer" className="small">
                     View posting ↗
                   </a>
                 )}
@@ -1076,9 +1091,9 @@ function ApplicationsTab({
                   {a.source ? ` · via ${a.source}` : ""}
                   {a.salary_range ? ` · ${a.salary_range}` : ""}
                 </span>
-                {a.url && (
+                {safeHref(a.url) && (
                   <a
-                    href={a.url}
+                    href={safeHref(a.url)}
                     target="_blank"
                     rel="noreferrer"
                     className="small"
@@ -1408,9 +1423,9 @@ function CompaniesTab({
                   {c.is_agency ? <span className="badge"> agency</span> : null}
                 </strong>
                 <span className="muted small">{c.location ?? ""}</span>
-                {c.website && (
+                {safeHref(c.website) && (
                   <a
-                    href={c.website}
+                    href={safeHref(c.website)}
                     target="_blank"
                     rel="noreferrer"
                     className="small"
@@ -1595,9 +1610,9 @@ function ContactsTab({
                     {c.phone}
                   </a>
                 )}
-                {c.linkedin && (
+                {safeHref(c.linkedin) && (
                   <a
-                    href={c.linkedin}
+                    href={safeHref(c.linkedin)}
                     target="_blank"
                     rel="noreferrer"
                     className="small"
