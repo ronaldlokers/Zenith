@@ -1365,6 +1365,7 @@ function CompaniesTab({
 }: CrudTabProps & { companies: Company[] }) {
   const [editing, setEditing] = useState<Company | "new" | null>(null);
   const [query, setQuery] = useState("");
+  const [researching, setResearching] = useState<Set<number>>(new Set());
 
   const q = query.trim().toLowerCase();
   const visible = companies.filter(
@@ -1383,6 +1384,24 @@ function CompaniesTab({
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
+
+  const research = (c: Company) => {
+    setResearching((s) => new Set(s).add(c.id));
+    api
+      .researchCompany(c.id)
+      .then(() => {
+        notify(`Researched ${c.name}`);
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message))
+      .finally(() =>
+        setResearching((s) => {
+          const next = new Set(s);
+          next.delete(c.id);
+          return next;
+        }),
+      );
+  };
 
   return (
     <section>
@@ -1417,6 +1436,14 @@ function CompaniesTab({
         {visible.map((c) => (
           <li key={c.id} className="card">
             <div className="card-body">
+              {c.logo_url && (
+                <img
+                  src={c.logo_url}
+                  alt=""
+                  className="company-logo"
+                  loading="lazy"
+                />
+              )}
               <div className="card-main">
                 <strong>
                   {c.name}
@@ -1433,9 +1460,21 @@ function CompaniesTab({
                     {c.website}
                   </a>
                 )}
+                {c.description && <p className="notes">{c.description}</p>}
                 {c.notes && <p className="notes">{c.notes}</p>}
+                {c.researched_at && (
+                  <span className="age">
+                    researched {ageDays(c.researched_at)} ago
+                  </span>
+                )}
               </div>
               <div className="card-actions">
+                <button
+                  disabled={!c.website || researching.has(c.id)}
+                  onClick={() => research(c)}
+                >
+                  {researching.has(c.id) ? "Researching…" : "Research"}
+                </button>
                 <button onClick={() => setEditing(c)}>Edit</button>
                 <button
                   className="danger"
