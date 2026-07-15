@@ -32,15 +32,19 @@ export const api = {
     }),
   remove: (resource: string, id: number) =>
     request<void>(`/api/${resource}/${id}`, { method: "DELETE" }),
-  interactions: (applicationId: number) =>
+  interactions: (resource: "applications" | "contacts", id: number) =>
     request<import("./types").Interaction[]>(
-      `/api/applications/${applicationId}/interactions`,
+      `/api/${resource}/${id}/interactions`,
     ),
-  addInteraction: (applicationId: number, data: unknown) =>
-    request<import("./types").Interaction>(
-      `/api/applications/${applicationId}/interactions`,
-      { method: "POST", body: JSON.stringify(data) },
-    ),
+  addInteraction: (
+    resource: "applications" | "contacts",
+    id: number,
+    data: unknown,
+  ) =>
+    request<import("./types").Interaction>(`/api/${resource}/${id}/interactions`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   stats: () => request<import("./types").Stats>("/api/stats"),
   documents: (applicationId: number) =>
     request<import("./types").Document[]>(

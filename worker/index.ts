@@ -207,9 +207,15 @@ app.delete("/api/applications/:id", async (c) => {
 // --- Interactions ---
 
 app.get("/api/applications/:id/interactions", async (c) => {
+  // Includes interactions logged directly on the application's linked
+  // contact, flagged via_contact so the UI can mark them.
   const { results } = await c.env.DB.prepare(
-    `SELECT * FROM interactions WHERE application_id = ?
-     ORDER BY happened_at DESC, id DESC`,
+    `SELECT i.*, CASE WHEN i.application_id IS NULL THEN 1 ELSE 0 END AS via_contact
+     FROM interactions i
+     WHERE i.application_id = ?1
+        OR (i.application_id IS NULL
+            AND i.contact_id = (SELECT contact_id FROM applications WHERE id = ?1))
+     ORDER BY i.happened_at DESC, i.id DESC`,
   )
     .bind(c.req.param("id"))
     .all();
@@ -220,6 +226,32 @@ app.post("/api/applications/:id/interactions", async (c) => {
   const body = await c.req.json();
   const result = await c.env.DB.prepare(
     `INSERT INTO interactions (application_id, type, happened_at, notes)
+     VALUES (?, ?, coalesce(?, date('now')), ?) RETURNING *`,
+  )
+    .bind(
+      c.req.param("id"),
+      body.type ?? "other",
+      body.happened_at ?? null,
+      body.notes ?? null,
+    )
+    .first();
+  return c.json(result, 201);
+});
+
+app.get("/api/contacts/:id/interactions", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT i.*, 0 AS via_contact FROM interactions i WHERE i.contact_id = ?
+     ORDER BY i.happened_at DESC, i.id DESC`,
+  )
+    .bind(c.req.param("id"))
+    .all();
+  return c.json(results);
+});
+
+app.post("/api/contacts/:id/interactions", async (c) => {
+  const body = await c.req.json();
+  const result = await c.env.DB.prepare(
+    `INSERT INTO interactions (contact_id, type, happened_at, notes)
      VALUES (?, ?, coalesce(?, date('now')), ?) RETURNING *`,
   )
     .bind(

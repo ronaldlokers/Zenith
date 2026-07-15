@@ -34,11 +34,13 @@ export type InteractionType = (typeof INTERACTION_TYPES)[number];
 
 export interface Interaction {
   id: number;
-  application_id: number;
+  application_id: number | null;
+  contact_id: number | null;
   type: InteractionType;
   happened_at: string;
   notes: string | null;
   created_at: string;
+  via_contact?: number;
 }
 
 export interface StatsApplication {
