@@ -192,8 +192,8 @@ app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, salary_currency, salary_min, salary_max, salary_period)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -208,6 +208,10 @@ app.post("/api/applications", async (c) => {
       body.applied_at ?? null,
       body.next_action ?? null,
       body.next_action_at ?? null,
+      body.salary_currency ?? null,
+      body.salary_min ?? null,
+      body.salary_max ?? null,
+      body.salary_period ?? null,
     )
     .first();
   return c.json(result, 201);
@@ -220,6 +224,7 @@ app.put("/api/applications/:id", async (c) => {
     `UPDATE applications
      SET company_id = ?, contact_id = ?, title = ?, role_type = ?, url = ?, source = ?,
          salary_range = ?, status = ?, notes = ?, applied_at = ?, next_action = ?, next_action_at = ?,
+         salary_currency = ?, salary_min = ?, salary_max = ?, salary_period = ?,
          updated_at = datetime('now')
      WHERE id = ? RETURNING *`,
   )
@@ -236,6 +241,10 @@ app.put("/api/applications/:id", async (c) => {
       body.applied_at ?? null,
       body.next_action ?? null,
       body.next_action_at ?? null,
+      body.salary_currency ?? null,
+      body.salary_min ?? null,
+      body.salary_max ?? null,
+      body.salary_period ?? null,
       c.req.param("id"),
     )
     .first();

@@ -133,6 +133,10 @@ export interface Application {
   url: string | null;
   source: string | null;
   salary_range: string | null;
+  salary_currency: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_period: "year" | "month" | null;
   status: Status;
   notes: string | null;
   applied_at: string | null;
