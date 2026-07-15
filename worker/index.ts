@@ -271,6 +271,60 @@ app.delete("/api/interactions/:id", async (c) => {
   return c.body(null, 204);
 });
 
+// --- Export ---
+
+const EXPORT_TABLES = [
+  "companies",
+  "contacts",
+  "applications",
+  "interactions",
+  "status_history",
+  "documents",
+] as const;
+
+app.get("/api/export", async (c) => {
+  const dump: Record<string, unknown[]> = {};
+  for (const table of EXPORT_TABLES) {
+    const { results } = await c.env.DB.prepare(
+      `SELECT * FROM ${table}`,
+    ).all();
+    dump[table] = results;
+  }
+  return c.json(
+    { exported_at: new Date().toISOString(), ...dump },
+    200,
+    {
+      "Content-Disposition": `attachment; filename="jobseekr-export-${new Date().toISOString().slice(0, 10)}.json"`,
+    },
+  );
+});
+
+function toCsv(rows: Record<string, unknown>[]): string {
+  if (rows.length === 0) return "";
+  const cols = Object.keys(rows[0]);
+  const escape = (v: unknown) => {
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [
+    cols.join(","),
+    ...rows.map((r) => cols.map((col) => escape(r[col])).join(",")),
+  ].join("\n");
+}
+
+app.get("/api/export/:table", async (c) => {
+  const table = c.req.param("table").replace(/\.csv$/, "");
+  if (!(EXPORT_TABLES as readonly string[]).includes(table)) {
+    return c.json({ error: "unknown table" }, 404);
+  }
+  const { results } = await c.env.DB.prepare(`SELECT * FROM ${table}`).all();
+  return c.body(toCsv(results as Record<string, unknown>[]), 200, {
+    "Content-Type": "text/csv; charset=utf-8",
+    "Content-Disposition": `attachment; filename="jobseekr-${table}.csv"`,
+  });
+});
+
 // --- Import job posting from URL (best effort) ---
 
 interface ImportResult {
