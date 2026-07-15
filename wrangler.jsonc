@@ -15,7 +15,10 @@
 	},
 	"upload_source_maps": true,
 	"compatibility_flags": [
-		"nodejs_compat"
+		"nodejs_compat",
+		// SSRF guard: outbound fetch refuses private/internal addresses,
+		// needed because /api/import fetches user-supplied URLs
+		"global_fetch_strictly_public"
 	],
 	"r2_buckets": [
 		{
