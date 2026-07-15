@@ -27,3 +27,6 @@ jobs:
 
       - name: Typecheck and build
         run: npm run build
+
+      - name: API integration tests
+        run: npm test
