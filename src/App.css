@@ -158,6 +158,83 @@
   margin: 0.5rem 0 0.75rem;
 }
 
+.help-btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--mono);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  padding: 1rem;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  max-width: 26rem;
+  width: 100%;
+}
+
+.shortcut-help h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+}
+
+.shortcut-help ul {
+  list-style: none;
+  margin: 0.8rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shortcut-help li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.86rem;
+}
+
+.shortcut-help kbd {
+  font-family: var(--mono);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.15rem 0.45rem;
+  min-width: 2.4rem;
+  text-align: center;
+}
+
+.shortcut-help button {
+  margin-top: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.card.kb-focused {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .toolbar .search {
   flex: 1;
   min-width: 0;
