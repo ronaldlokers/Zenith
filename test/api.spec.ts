@@ -381,6 +381,53 @@ describe("feed", () => {
   });
 });
 
+describe("agenda", () => {
+  it("combines due dates, interactions, and applied dates", async () => {
+    // due/applied have no date window; interactions are limited to the
+    // last 14 days (to bound the payload), so use "today" for that one.
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const app = await seedApplication({
+      applied_at: "2026-01-01",
+      next_action_at: "2026-01-15",
+      next_action: "Nudge recruiter",
+    });
+    await post(`/api/applications/${app.id}/interactions`, {
+      type: "call",
+      happened_at: todayStr,
+    });
+
+    const res = await SELF.fetch(`${BASE}/api/agenda`);
+    expect(res.status).toBe(200);
+    const entries = (await res.json()) as {
+      kind: string;
+      id: number;
+      date: string;
+    }[];
+    expect(entries.some((e) => e.kind === "due" && e.date === "2026-01-15")).toBe(
+      true,
+    );
+    expect(
+      entries.some((e) => e.kind === "applied" && e.date === "2026-01-01"),
+    ).toBe(true);
+    expect(
+      entries.some((e) => e.kind === "interaction" && e.date === todayStr),
+    ).toBe(true);
+  });
+
+  it("excludes due dates for dead-status applications", async () => {
+    const app = await seedApplication({
+      next_action_at: "2026-02-01",
+      next_action: "Should not appear",
+      status: "rejected",
+    });
+    const res = await SELF.fetch(`${BASE}/api/agenda`);
+    const entries = (await res.json()) as { kind: string; id: number }[];
+    expect(
+      entries.some((e) => e.kind === "due" && e.id === app.id),
+    ).toBe(false);
+  });
+});
+
 describe("misc", () => {
   it("404s unknown api routes", async () => {
     const res = await SELF.fetch(`${BASE}/api/nope`);

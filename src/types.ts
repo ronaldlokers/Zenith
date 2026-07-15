@@ -63,6 +63,19 @@ export interface Stats {
   history: StatusHistoryRow[];
 }
 
+export interface AgendaEntry {
+  kind: "due" | "interaction" | "applied";
+  id: number;
+  date: string;
+  title: string | null;
+  company_name: string | null;
+  label?: string | null;
+  type?: string;
+  notes?: string | null;
+  application_id?: number | null;
+  contact_name?: string | null;
+}
+
 export interface FeedItem {
   id: number;
   source: "adzuna" | "hn" | "arbeitnow";
