@@ -216,6 +216,46 @@ describe("documents", () => {
   });
 });
 
+describe("export", () => {
+  it("dumps everything as json", async () => {
+    const before = (await (
+      await SELF.fetch(`${BASE}/api/export`)
+    ).json()) as { applications: unknown[] };
+    await seedCompany();
+    await seedApplication();
+    const res = await SELF.fetch(`${BASE}/api/export`);
+    expect(res.status).toBe(200);
+    const dump = (await res.json()) as Record<string, unknown>;
+    expect(Object.keys(dump)).toEqual(
+      expect.arrayContaining([
+        "exported_at",
+        "companies",
+        "contacts",
+        "applications",
+        "interactions",
+        "status_history",
+        "documents",
+      ]),
+    );
+    expect((dump.applications as unknown[]).length).toBe(
+      before.applications.length + 1,
+    );
+  });
+
+  it("exports csv per table and 404s unknown tables", async () => {
+    await seedApplication({ title: 'Engineer, "Platform"' });
+    const res = await SELF.fetch(`${BASE}/api/export/applications.csv`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toContain("text/csv");
+    const csv = await res.text();
+    expect(csv.split("\n")[0]).toContain("title");
+    expect(csv).toContain('"Engineer, ""Platform"""');
+
+    const bad = await SELF.fetch(`${BASE}/api/export/sqlite_master.csv`);
+    expect(bad.status).toBe(404);
+  });
+});
+
 describe("misc", () => {
   it("404s unknown api routes", async () => {
     const res = await SELF.fetch(`${BASE}/api/nope`);

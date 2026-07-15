@@ -761,6 +761,20 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           ))}
         {bySource.size === 0 && <li className="tl-empty">No applications yet.</li>}
       </ul>
+
+      <h2 className="stat-h">Export your data</h2>
+      <p className="export-links">
+        <a href="/api/export" download>
+          Everything (JSON)
+        </a>
+        {["applications", "companies", "contacts", "interactions"].map(
+          (t) => (
+            <a key={t} href={`/api/export/${t}.csv`} download>
+              {t} (CSV)
+            </a>
+          ),
+        )}
+      </p>
     </section>
   );
 }
