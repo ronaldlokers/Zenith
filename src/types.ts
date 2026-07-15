@@ -41,6 +41,25 @@ export interface Interaction {
   created_at: string;
 }
 
+export interface StatsApplication {
+  id: number;
+  status: Status;
+  source: string | null;
+  created_at: string;
+}
+
+export interface StatusHistoryRow {
+  application_id: number;
+  from_status: Status | null;
+  to_status: Status;
+  changed_at: string;
+}
+
+export interface Stats {
+  applications: StatsApplication[];
+  history: StatusHistoryRow[];
+}
+
 export interface Document {
   id: number;
   application_id: number;

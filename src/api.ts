@@ -41,6 +41,7 @@ export const api = {
       `/api/applications/${applicationId}/interactions`,
       { method: "POST", body: JSON.stringify(data) },
     ),
+  stats: () => request<import("./types").Stats>("/api/stats"),
   documents: (applicationId: number) =>
     request<import("./types").Document[]>(
       `/api/applications/${applicationId}/documents`,

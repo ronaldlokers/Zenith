@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api } from "./api";
 import {
   INTERACTION_TYPES,
+  type Stats,
   ROLE_TYPES,
   STATUSES,
   type Application,
@@ -13,7 +14,7 @@ import {
 } from "./types";
 import "./App.css";
 
-type Tab = "applications" | "board" | "companies" | "contacts";
+type Tab = "applications" | "board" | "stats" | "companies" | "contacts";
 
 const PIPELINE: Status[] = [
   "interested",
@@ -180,6 +181,12 @@ export default function App() {
           Board
         </button>
         <button
+          className={tab === "stats" ? "active" : ""}
+          onClick={() => setTab("stats")}
+        >
+          Stats
+        </button>
+        <button
           className={tab === "companies" ? "active" : ""}
           onClick={() => setTab("companies")}
         >
@@ -212,6 +219,7 @@ export default function App() {
             onError={setError}
           />
         )}
+        {tab === "stats" && <StatsTab onError={setError} />}
         {tab === "companies" && (
           <CompaniesTab
             companies={companies}
@@ -486,6 +494,156 @@ function Documents({
         {items?.length === 0 && <li className="tl-empty">No files attached.</li>}
       </ul>
     </div>
+  );
+}
+
+function parseSqlDate(d: string): number {
+  return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
+}
+
+function StatsTab({ onError }: { onError: (m: string | null) => void }) {
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    api
+      .stats()
+      .then(setStats)
+      .catch((e) => onError((e as Error).message));
+  }, [onError]);
+
+  if (!stats) return <p className="muted small">Loading stats…</p>;
+  const { applications: apps, history } = stats;
+
+  // Applications per week, last 8 weeks
+  const WEEK = 7 * 86400000;
+  const now = Date.now();
+  const weeks = Array.from({ length: 8 }, (_, i) => {
+    const start = now - (7 - i) * WEEK;
+    const count = apps.filter((a) => {
+      const t = parseSqlDate(a.created_at);
+      return t >= start && t < start + WEEK;
+    }).length;
+    const d = new Date(start);
+    const label = `${d.getDate()}/${d.getMonth() + 1}`;
+    return { label, count };
+  });
+  const weekMax = Math.max(1, ...weeks.map((w) => w.count));
+
+  // Furthest pipeline stage each application ever reached
+  const reachedByApp = new Map<number, number>();
+  for (const row of history) {
+    const idx = PIPELINE.indexOf(row.to_status);
+    if (idx < 0) continue;
+    const prev = reachedByApp.get(row.application_id) ?? -1;
+    if (idx > prev) reachedByApp.set(row.application_id, idx);
+  }
+  const funnel = PIPELINE.map((stage, i) => ({
+    stage,
+    count: [...reachedByApp.values()].filter((r) => r >= i).length,
+  }));
+  const funnelMax = Math.max(1, funnel[0].count);
+
+  // Average days spent per pipeline stage
+  const stageDays = new Map<string, { total: number; n: number }>();
+  const byApp = new Map<number, typeof history>();
+  for (const row of history) {
+    const list = byApp.get(row.application_id) ?? [];
+    list.push(row);
+    byApp.set(row.application_id, list);
+  }
+  for (const rows of byApp.values()) {
+    for (let i = 0; i < rows.length; i++) {
+      const stage = rows[i].to_status;
+      if (!PIPELINE.includes(stage)) continue;
+      const start = parseSqlDate(rows[i].changed_at);
+      const end =
+        i + 1 < rows.length ? parseSqlDate(rows[i + 1].changed_at) : now;
+      const cur = stageDays.get(stage) ?? { total: 0, n: 0 };
+      cur.total += (end - start) / 86400000;
+      cur.n += 1;
+      stageDays.set(stage, cur);
+    }
+  }
+
+  // Ghost rate per source
+  const bySource = new Map<string, { total: number; ghosted: number }>();
+  for (const a of apps) {
+    const src = a.source?.trim() || "unknown";
+    const cur = bySource.get(src) ?? { total: 0, ghosted: 0 };
+    cur.total += 1;
+    if (a.status === "ghosted") cur.ghosted += 1;
+    bySource.set(src, cur);
+  }
+
+  return (
+    <section className="stats">
+      <h2 className="stat-h">Applications per week</h2>
+      <div className="histo">
+        {weeks.map((w) => (
+          <div key={w.label} className="hrow" title={`Week of ${w.label}: ${w.count}`}>
+            <span className="lbl">{w.label}</span>
+            <span className="htrack">
+              <span
+                className="hfill accent-fill"
+                style={{ width: `${(w.count / weekMax) * 100}%`, display: "block" }}
+              />
+            </span>
+            <span className="n">{w.count}</span>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="stat-h">Pipeline funnel — applications that reached each stage</h2>
+      <div className="histo">
+        {funnel.map((f) => (
+          <div
+            key={f.stage}
+            className={`hrow stage-${f.stage}`}
+            title={`${f.count} reached ${f.stage}`}
+          >
+            <span className="lbl">{STAGE_ABBR[f.stage]}</span>
+            <span className="htrack">
+              <span
+                className="hfill"
+                style={{ width: `${(f.count / funnelMax) * 100}%`, display: "block" }}
+              />
+            </span>
+            <span className="n">{f.count}</span>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="stat-h">Average time in stage</h2>
+      <ul className="stat-list">
+        {PIPELINE.filter((s) => stageDays.has(s)).map((s) => {
+          const d = stageDays.get(s)!;
+          return (
+            <li key={s} className={`stage-${s}`}>
+              <span className="stat-dot" />
+              <span>{s}</span>
+              <span className="stat-val">{(d.total / d.n).toFixed(1)}d</span>
+            </li>
+          );
+        })}
+        {stageDays.size === 0 && <li className="tl-empty">No history yet.</li>}
+      </ul>
+
+      <h2 className="stat-h">Ghost rate by source</h2>
+      <ul className="stat-list">
+        {[...bySource.entries()]
+          .sort((a, b) => b[1].total - a[1].total)
+          .map(([src, v]) => (
+            <li key={src}>
+              <span>{src}</span>
+              <span className="muted small">{v.total} apps</span>
+              <span className="stat-val">
+                {Math.round((v.ghosted / v.total) * 100)}% ghosted
+              </span>
+            </li>
+          ))}
+        {bySource.size === 0 && <li className="tl-empty">No applications yet.</li>}
+      </ul>
+    </section>
   );
 }
 
