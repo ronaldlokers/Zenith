@@ -239,6 +239,73 @@ app.delete("/api/interactions/:id", async (c) => {
   return c.body(null, 204);
 });
 
+// --- Documents (R2) ---
+
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+
+app.get("/api/applications/:id/documents", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT id, application_id, filename, label, size, content_type, created_at
+     FROM documents WHERE application_id = ? ORDER BY created_at DESC`,
+  )
+    .bind(c.req.param("id"))
+    .all();
+  return c.json(results);
+});
+
+app.post("/api/applications/:id/documents", async (c) => {
+  const filename = c.req.query("filename");
+  if (!filename) return c.json({ error: "filename query param is required" }, 400);
+  const size = Number(c.req.header("Content-Length") ?? 0);
+  if (!size) return c.json({ error: "empty body" }, 400);
+  if (size > MAX_DOCUMENT_BYTES) {
+    return c.json({ error: "file too large (max 10 MB)" }, 413);
+  }
+  const appId = c.req.param("id");
+  const contentType =
+    c.req.header("Content-Type") ?? "application/octet-stream";
+  const key = `app-${appId}/${Date.now()}-${filename}`;
+  await c.env.DOCS.put(key, c.req.raw.body, {
+    httpMetadata: { contentType },
+  });
+  const result = await c.env.DB.prepare(
+    `INSERT INTO documents (application_id, key, filename, label, size, content_type)
+     VALUES (?, ?, ?, ?, ?, ?)
+     RETURNING id, application_id, filename, label, size, content_type, created_at`,
+  )
+    .bind(appId, key, filename, c.req.query("label") ?? null, size, contentType)
+    .first();
+  return c.json(result, 201);
+});
+
+app.get("/api/documents/:id/download", async (c) => {
+  const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?")
+    .bind(c.req.param("id"))
+    .first<{ key: string; filename: string; content_type: string | null }>();
+  if (!doc) return c.json({ error: "not found" }, 404);
+  const object = await c.env.DOCS.get(doc.key);
+  if (!object) return c.json({ error: "file missing from storage" }, 404);
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": doc.content_type ?? "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${doc.filename.replace(/"/g, "")}"`,
+    },
+  });
+});
+
+app.delete("/api/documents/:id", async (c) => {
+  const doc = await c.env.DB.prepare("SELECT key FROM documents WHERE id = ?")
+    .bind(c.req.param("id"))
+    .first<{ key: string }>();
+  if (doc) {
+    await c.env.DOCS.delete(doc.key);
+    await c.env.DB.prepare("DELETE FROM documents WHERE id = ?")
+      .bind(c.req.param("id"))
+      .run();
+  }
+  return c.body(null, 204);
+});
+
 app.notFound((c) => c.json({ error: "not found" }, 404));
 
 app.onError((err, c) => {

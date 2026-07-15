@@ -41,6 +41,16 @@ export interface Interaction {
   created_at: string;
 }
 
+export interface Document {
+  id: number;
+  application_id: number;
+  filename: string;
+  label: string | null;
+  size: number;
+  content_type: string | null;
+  created_at: string;
+}
+
 export interface Company {
   id: number;
   name: string;
