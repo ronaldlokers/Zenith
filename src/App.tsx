@@ -9,12 +9,13 @@ import {
   type Company,
   type Contact,
   type Document,
+  type FeedItem,
   type Interaction,
   type Status,
 } from "./types";
 import "./App.css";
 
-type Tab = "applications" | "board" | "stats" | "companies" | "contacts";
+type Tab = "applications" | "board" | "feed" | "stats" | "companies" | "contacts";
 
 const PIPELINE: Status[] = [
   "interested",
@@ -260,6 +261,12 @@ export default function App() {
           Board
         </button>
         <button
+          className={tab === "feed" ? "active" : ""}
+          onClick={() => setTab("feed")}
+        >
+          Feed
+        </button>
+        <button
           className={tab === "stats" ? "active" : ""}
           onClick={() => setTab("stats")}
         >
@@ -305,6 +312,9 @@ export default function App() {
                 onError={setError}
                 onStatus={setStatus}
               />
+            )}
+            {tab === "feed" && (
+              <FeedTab onError={setError} notify={notify} />
             )}
             {tab === "stats" && <StatsTab onError={setError} />}
             {tab === "companies" && (
@@ -796,6 +806,106 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           ),
         )}
       </p>
+    </section>
+  );
+}
+
+function FeedTab({
+  onError,
+  notify,
+}: {
+  onError: (message: string | null) => void;
+  notify: (message: string, undo?: () => void) => void;
+}) {
+  const [items, setItems] = useState<FeedItem[] | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(
+    () => api.feed().then(setItems).catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const refresh = () => {
+    setRefreshing(true);
+    api
+      .refreshFeed()
+      .then((r) => {
+        notify(`Found ${r.inserted} new of ${r.seen} checked`);
+        return load();
+      })
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setRefreshing(false));
+  };
+
+  const dismiss = (item: FeedItem) => {
+    setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
+    api
+      .dismissFeedItem(item.id)
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const add = (item: FeedItem) => {
+    api
+      .addFeedItem(item.id)
+      .then(() => {
+        setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
+        notify(`Added "${item.title}" to Jobs`);
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  return (
+    <section>
+      <div className="toolbar">
+        <p className="muted small" style={{ margin: 0 }}>
+          Pulled from Adzuna, HN Who's Hiring, and Arbeitnow every 6 hours.
+        </p>
+        <button className="primary" disabled={refreshing} onClick={refresh}>
+          {refreshing ? "Checking…" : "Check now"}
+        </button>
+      </div>
+
+      <ul className="cards">
+        {(items ?? []).map((item) => (
+          <li key={item.id} className="card">
+            <div className="card-body">
+              <div className="card-main">
+                <strong>{item.title}</strong>
+                <span className="muted small">
+                  {[item.company, item.location].filter(Boolean).join(" · ")}
+                </span>
+                <span className="muted small">
+                  {item.role_type}
+                  {item.salary_text ? ` · ${item.salary_text}` : ""}
+                  {" · via "}
+                  {item.source}
+                </span>
+                {item.url && (
+                  <a href={item.url} target="_blank" rel="noreferrer" className="small">
+                    View posting ↗
+                  </a>
+                )}
+              </div>
+              <div className="card-actions">
+                <button className="primary" onClick={() => add(item)}>
+                  Add to Jobs
+                </button>
+                <button onClick={() => dismiss(item)}>Dismiss</button>
+              </div>
+            </div>
+          </li>
+        ))}
+        {items?.length === 0 && (
+          <li className="empty">
+            Nothing new. Feed checks automatically every 6 hours, or hit
+            "Check now".
+          </li>
+        )}
+      </ul>
     </section>
   );
 }

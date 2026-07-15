@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { refreshFeed, registerFeedRoutes } from "./feed.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -561,6 +562,8 @@ app.delete("/api/documents/:id", async (c) => {
   return c.body(null, 204);
 });
 
+registerFeedRoutes(app);
+
 app.notFound((c) => c.json({ error: "not found" }, 404));
 
 app.onError((err, c) => {
@@ -571,4 +574,9 @@ app.onError((err, c) => {
   return c.json({ error: "internal error" }, 500);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(refreshFeed(env));
+  },
+} satisfies ExportedHandler<Env>;
