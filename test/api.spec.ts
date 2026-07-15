@@ -172,6 +172,36 @@ describe("interactions", () => {
   });
 });
 
+describe("company research", () => {
+  it("requires a website before researching", async () => {
+    const company = await seedCompany();
+    const res = await SELF.fetch(`${BASE}/api/companies/${company.id}/research`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("404s for an unknown company", async () => {
+    const res = await SELF.fetch(`${BASE}/api/companies/999999/research`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it("rejects a non-http website", async () => {
+    const created = await post("/api/companies", {
+      name: "Bad Scheme Co",
+      website: "javascript:alert(1)",
+    });
+    const company = (await created.json()) as { id: number };
+    const res = await SELF.fetch(
+      `${BASE}/api/companies/${company.id}/research`,
+      { method: "POST" },
+    );
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("documents", () => {
   it("uploads, downloads, deletes", async () => {
     const app = await seedApplication();

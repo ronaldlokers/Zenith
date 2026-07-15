@@ -57,6 +57,64 @@ app.delete("/api/companies/:id", async (c) => {
   return c.body(null, 204);
 });
 
+app.post("/api/companies/:id/research", async (c) => {
+  const company = await c.env.DB.prepare(
+    "SELECT id, website FROM companies WHERE id = ?",
+  )
+    .bind(c.req.param("id"))
+    .first<{ id: number; website: string | null }>();
+  if (!company) return c.json({ error: "not found" }, 404);
+  if (!company.website) {
+    return c.json({ error: "add a website first" }, 400);
+  }
+
+  let url: URL;
+  try {
+    url = new URL(company.website);
+  } catch {
+    return c.json({ error: "invalid website url" }, 400);
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return c.json({ error: "only http(s) urls are supported" }, 400);
+  }
+
+  let html: string;
+  try {
+    const res = await fetch(url.toString(), {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml",
+      },
+      redirect: "follow",
+    });
+    if (!res.ok) {
+      return c.json({ error: `site returned ${res.status}` }, 502);
+    }
+    html = (await res.text()).slice(0, 2_000_000);
+  } catch {
+    return c.json({ error: "could not fetch site" }, 502);
+  }
+
+  const description = metaContent(html, "og:description");
+  let logo = metaContent(html, "og:image");
+  if (logo) {
+    try {
+      logo = new URL(logo, url).toString();
+    } catch {
+      logo = null;
+    }
+  }
+
+  const result = await c.env.DB.prepare(
+    `UPDATE companies SET description = ?, logo_url = ?, researched_at = datetime('now')
+     WHERE id = ? RETURNING *`,
+  )
+    .bind(description, logo, company.id)
+    .first();
+  return c.json(result);
+});
+
 // --- Contacts ---
 
 app.get("/api/contacts", async (c) => {

@@ -229,6 +229,16 @@ button.danger {
   justify-content: space-between;
 }
 
+.company-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
 .card-main {
   display: flex;
   flex-direction: column;
