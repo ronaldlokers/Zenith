@@ -46,6 +46,10 @@ export const api = {
       body: JSON.stringify(data),
     }),
   stats: () => request<import("./types").Stats>("/api/stats"),
+  importUrl: (url: string) =>
+    request<import("./types").ImportResult>(
+      `/api/import?url=${encodeURIComponent(url)}`,
+    ),
   documents: (applicationId: number) =>
     request<import("./types").Document[]>(
       `/api/applications/${applicationId}/documents`,

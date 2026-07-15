@@ -790,6 +790,27 @@ select.status {
   text-transform: none;
 }
 
+.url-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.url-row button {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--surface);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.url-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .form-actions {
   display: flex;
   gap: 0.5rem;

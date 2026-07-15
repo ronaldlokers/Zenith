@@ -893,6 +893,7 @@ function ApplicationsTab({
           initial={editing === "new" ? null : editing}
           companies={companies}
           contacts={contacts}
+          onError={onError}
           onCancel={() => setEditing(null)}
           onSubmit={(data) =>
             run(() =>
@@ -1003,18 +1004,58 @@ function ApplicationForm({
   contacts,
   onSubmit,
   onCancel,
+  onError,
 }: {
   initial: Application | null;
   companies: Company[];
   contacts: Contact[];
   onSubmit: (data: Partial<Application>) => void;
   onCancel: () => void;
+  onError: (message: string | null) => void;
 }) {
   const [form, setForm] = useState<Partial<Application>>(
     initial ?? { role_type: "other", status: "interested" },
   );
+  const [extraCompanies, setExtraCompanies] = useState<Company[]>([]);
+  const [importing, setImporting] = useState(false);
   const set = (patch: Partial<Application>) =>
     setForm((f) => ({ ...f, ...patch }));
+
+  const allCompanies = [...companies, ...extraCompanies];
+
+  // Fetch the job page and pre-fill; creates the company if unknown
+  const importFromUrl = async () => {
+    if (!form.url) return;
+    setImporting(true);
+    try {
+      const r = await api.importUrl(form.url);
+      const patch: Partial<Application> = {};
+      if (r.title && !form.title) patch.title = r.title;
+      if (r.salary && !form.salary_range) patch.salary_range = r.salary;
+      if (r.source && !form.source) patch.source = r.source;
+      if (r.company) {
+        const existing = allCompanies.find(
+          (c) => c.name.toLowerCase() === r.company!.toLowerCase(),
+        );
+        if (existing) {
+          patch.company_id = existing.id;
+        } else {
+          const created = await api.create<Company>("companies", {
+            name: r.company,
+            location: r.location,
+          });
+          setExtraCompanies((x) => [...x, created]);
+          patch.company_id = created.id;
+        }
+      }
+      set(patch);
+      onError(null);
+    } catch (e) {
+      onError((e as Error).message);
+    } finally {
+      setImporting(false);
+    }
+  };
 
   return (
     <form
@@ -1056,7 +1097,7 @@ function ApplicationForm({
           }
         >
           <option value="">—</option>
-          {companies.map((c) => (
+          {allCompanies.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
@@ -1081,11 +1122,20 @@ function ApplicationForm({
       </label>
       <label>
         URL
-        <input
-          type="url"
-          value={form.url ?? ""}
-          onChange={(e) => set({ url: e.target.value || null })}
-        />
+        <span className="url-row">
+          <input
+            type="url"
+            value={form.url ?? ""}
+            onChange={(e) => set({ url: e.target.value || null })}
+          />
+          <button
+            type="button"
+            disabled={!form.url || importing}
+            onClick={importFromUrl}
+          >
+            {importing ? "Fetching…" : "Fetch"}
+          </button>
+        </span>
       </label>
       <label>
         Source
