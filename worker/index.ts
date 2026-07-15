@@ -133,8 +133,8 @@ app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -147,6 +147,8 @@ app.post("/api/applications", async (c) => {
       body.status ?? "interested",
       body.notes ?? null,
       body.applied_at ?? null,
+      body.next_action ?? null,
+      body.next_action_at ?? null,
     )
     .first();
   return c.json(result, 201);
@@ -158,7 +160,8 @@ app.put("/api/applications/:id", async (c) => {
   const result = await c.env.DB.prepare(
     `UPDATE applications
      SET company_id = ?, contact_id = ?, title = ?, role_type = ?, url = ?, source = ?,
-         salary_range = ?, status = ?, notes = ?, applied_at = ?, updated_at = datetime('now')
+         salary_range = ?, status = ?, notes = ?, applied_at = ?, next_action = ?, next_action_at = ?,
+         updated_at = datetime('now')
      WHERE id = ? RETURNING *`,
   )
     .bind(
@@ -172,6 +175,8 @@ app.put("/api/applications/:id", async (c) => {
       body.status ?? "interested",
       body.notes ?? null,
       body.applied_at ?? null,
+      body.next_action ?? null,
+      body.next_action_at ?? null,
       c.req.param("id"),
     )
     .first();

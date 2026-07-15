@@ -36,6 +36,25 @@ function isDead(status: Status): boolean {
   return status === "rejected" || status === "withdrawn" || status === "ghosted";
 }
 
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isDue(a: Application): boolean {
+  return !!a.next_action_at && !isDead(a.status) && a.next_action_at <= today();
+}
+
+function isOverdue(a: Application): boolean {
+  return !!a.next_action_at && !isDead(a.status) && a.next_action_at < today();
+}
+
+function formatDate(d: string): string {
+  return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 function ageDays(updatedAt: string): string {
   const then = new Date(updatedAt.replace(" ", "T") + "Z").getTime();
   const days = Math.max(0, Math.floor((Date.now() - then) / 86400000));
@@ -140,6 +159,8 @@ export default function App() {
         </div>
         <span className="open-count">
           {applications.filter((a) => !isDead(a.status)).length} open
+          {applications.filter(isDue).length > 0 &&
+            ` · ${applications.filter(isDue).length} due`}
         </span>
       </header>
       <nav className="tabs">
@@ -214,10 +235,19 @@ function ApplicationsTab({
   const [editing, setEditing] = useState<Application | "new" | null>(null);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
 
-  const visible =
+  const filtered =
     statusFilter === "all"
       ? applications
       : applications.filter((a) => a.status === statusFilter);
+  // Due items pinned on top, most overdue first
+  const visible = [
+    ...filtered
+      .filter(isDue)
+      .sort((a, b) =>
+        (a.next_action_at ?? "").localeCompare(b.next_action_at ?? ""),
+      ),
+    ...filtered.filter((a) => !isDue(a)),
+  ];
 
   const run = (fn: () => Promise<unknown>) =>
     fn()
@@ -265,10 +295,21 @@ function ApplicationsTab({
 
       <ul className="cards">
         {visible.map((a) => (
-          <li key={a.id} className={`card stage-${a.status}`}>
+          <li
+            key={a.id}
+            className={`card stage-${a.status}${isOverdue(a) ? " overdue" : ""}`}
+          >
             <div className="card-body">
               <div className="card-main">
                 <strong>{a.title}</strong>
+                {(a.next_action || a.next_action_at) && (
+                  <span
+                    className={`due-line${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
+                  >
+                    → {a.next_action ?? "follow up"}
+                    {a.next_action_at ? ` · ${formatDate(a.next_action_at)}` : ""}
+                  </span>
+                )}
                 <span className="muted small">
                   {a.company_name ?? "—"}
                   {a.contact_name ? ` · ${a.contact_name}` : ""}
@@ -448,6 +489,22 @@ function ApplicationForm({
           type="date"
           value={form.applied_at ?? ""}
           onChange={(e) => set({ applied_at: e.target.value || null })}
+        />
+      </label>
+      <label>
+        Next action
+        <input
+          placeholder="Nudge recruiter, prep case study, …"
+          value={form.next_action ?? ""}
+          onChange={(e) => set({ next_action: e.target.value || null })}
+        />
+      </label>
+      <label>
+        Next action due
+        <input
+          type="date"
+          value={form.next_action_at ?? ""}
+          onChange={(e) => set({ next_action_at: e.target.value || null })}
         />
       </label>
       <label className="full">
