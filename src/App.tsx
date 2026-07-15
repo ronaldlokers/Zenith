@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api } from "./api";
 import {
+  INTERACTION_TYPES,
   ROLE_TYPES,
   STATUSES,
   type Application,
   type Company,
   type Contact,
+  type Interaction,
   type Status,
 } from "./types";
 import "./App.css";
@@ -299,6 +301,101 @@ function BoardTab({
   );
 }
 
+function Timeline({
+  applicationId,
+  onError,
+}: {
+  applicationId: number;
+  onError: (message: string | null) => void;
+}) {
+  const [items, setItems] = useState<Interaction[] | null>(null);
+  const [form, setForm] = useState({ type: "email", happened_at: today(), notes: "" });
+
+  const load = useCallback(
+    () =>
+      api
+        .interactions(applicationId)
+        .then(setItems)
+        .catch((e) => onError((e as Error).message)),
+    [applicationId, onError],
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const add = (e: FormEvent) => {
+    e.preventDefault();
+    api
+      .addInteraction(applicationId, {
+        type: form.type,
+        happened_at: form.happened_at,
+        notes: form.notes || null,
+      })
+      .then(() => {
+        setForm({ type: "email", happened_at: today(), notes: "" });
+        return load();
+      })
+      .catch((err) => onError((err as Error).message));
+  };
+
+  return (
+    <div className="timeline">
+      <form className="tl-add" onSubmit={add}>
+        <select
+          value={form.type}
+          onChange={(e) => setForm({ ...form, type: e.target.value })}
+          aria-label="Interaction type"
+        >
+          {INTERACTION_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={form.happened_at}
+          onChange={(e) => setForm({ ...form, happened_at: e.target.value })}
+          aria-label="Interaction date"
+        />
+        <input
+          placeholder="What happened?"
+          value={form.notes}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+        />
+        <button type="submit" className="primary">
+          Log
+        </button>
+      </form>
+      <ul className="tl-items">
+        {(items ?? []).map((it) => (
+          <li key={it.id}>
+            <span className="tl-type">{it.type}</span>
+            <span className="tl-date">{formatDate(it.happened_at)}</span>
+            <span className="tl-notes">{it.notes ?? ""}</span>
+            <button
+              className="tl-del danger"
+              aria-label="Delete interaction"
+              onClick={() =>
+                api
+                  .remove("interactions", it.id)
+                  .then(load)
+                  .catch((e) => onError((e as Error).message))
+              }
+            >
+              ×
+            </button>
+          </li>
+        ))}
+        {items?.length === 0 && (
+          <li className="tl-empty">No touchpoints logged yet.</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
 function ApplicationsTab({
   applications,
   companies,
@@ -312,6 +409,7 @@ function ApplicationsTab({
 }) {
   const [editing, setEditing] = useState<Application | "new" | null>(null);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const filtered =
     statusFilter === "all"
@@ -424,6 +522,13 @@ function ApplicationsTab({
                   ))}
                 </select>
                 <span className="age">upd {ageDays(a.updated_at)}</span>
+                <button
+                  onClick={() =>
+                    setExpandedId(expandedId === a.id ? null : a.id)
+                  }
+                >
+                  Log
+                </button>
                 <button onClick={() => setEditing(a)}>Edit</button>
                 <button
                   className="danger"
@@ -436,6 +541,9 @@ function ApplicationsTab({
                 </button>
               </div>
             </div>
+            {expandedId === a.id && (
+              <Timeline applicationId={a.id} onError={onError} />
+            )}
             <StageRail status={a.status} />
           </li>
         ))}

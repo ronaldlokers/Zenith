@@ -32,4 +32,13 @@ export const api = {
     }),
   remove: (resource: string, id: number) =>
     request<void>(`/api/${resource}/${id}`, { method: "DELETE" }),
+  interactions: (applicationId: number) =>
+    request<import("./types").Interaction[]>(
+      `/api/applications/${applicationId}/interactions`,
+    ),
+  addInteraction: (applicationId: number, data: unknown) =>
+    request<import("./types").Interaction>(
+      `/api/applications/${applicationId}/interactions`,
+      { method: "POST", body: JSON.stringify(data) },
+    ),
 };

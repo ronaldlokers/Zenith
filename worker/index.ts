@@ -204,6 +204,41 @@ app.delete("/api/applications/:id", async (c) => {
   return c.body(null, 204);
 });
 
+// --- Interactions ---
+
+app.get("/api/applications/:id/interactions", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT * FROM interactions WHERE application_id = ?
+     ORDER BY happened_at DESC, id DESC`,
+  )
+    .bind(c.req.param("id"))
+    .all();
+  return c.json(results);
+});
+
+app.post("/api/applications/:id/interactions", async (c) => {
+  const body = await c.req.json();
+  const result = await c.env.DB.prepare(
+    `INSERT INTO interactions (application_id, type, happened_at, notes)
+     VALUES (?, ?, coalesce(?, date('now')), ?) RETURNING *`,
+  )
+    .bind(
+      c.req.param("id"),
+      body.type ?? "other",
+      body.happened_at ?? null,
+      body.notes ?? null,
+    )
+    .first();
+  return c.json(result, 201);
+});
+
+app.delete("/api/interactions/:id", async (c) => {
+  await c.env.DB.prepare("DELETE FROM interactions WHERE id = ?")
+    .bind(c.req.param("id"))
+    .run();
+  return c.body(null, 204);
+});
+
 app.notFound((c) => c.json({ error: "not found" }, 404));
 
 app.onError((err, c) => {

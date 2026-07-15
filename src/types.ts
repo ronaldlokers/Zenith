@@ -21,6 +21,26 @@ export const ROLE_TYPES = [
 
 export type RoleType = (typeof ROLE_TYPES)[number];
 
+export const INTERACTION_TYPES = [
+  "email",
+  "call",
+  "message",
+  "interview",
+  "meeting",
+  "other",
+] as const;
+
+export type InteractionType = (typeof INTERACTION_TYPES)[number];
+
+export interface Interaction {
+  id: number;
+  application_id: number;
+  type: InteractionType;
+  happened_at: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface Company {
   id: number;
   name: string;
