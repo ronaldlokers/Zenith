@@ -239,6 +239,21 @@ app.delete("/api/interactions/:id", async (c) => {
   return c.body(null, 204);
 });
 
+// --- Stats ---
+
+app.get("/api/stats", async (c) => {
+  const [apps, history] = await Promise.all([
+    c.env.DB.prepare(
+      "SELECT id, status, source, created_at FROM applications",
+    ).all(),
+    c.env.DB.prepare(
+      `SELECT application_id, from_status, to_status, changed_at
+       FROM status_history ORDER BY application_id, changed_at, id`,
+    ).all(),
+  ]);
+  return c.json({ applications: apps.results, history: history.results });
+});
+
 // --- Documents (R2) ---
 
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;

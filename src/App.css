@@ -341,6 +341,64 @@ select.status {
   cursor: pointer;
 }
 
+/* Stats */
+.stats {
+  margin-top: 0.75rem;
+}
+
+.stat-h {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  margin: 1.4rem 0 0.5rem;
+  font-weight: 600;
+}
+
+.stat-h:first-child {
+  margin-top: 0.4rem;
+}
+
+.accent-fill {
+  background: var(--accent);
+}
+
+.stat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stat-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.35rem 0.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  font-size: 0.85rem;
+}
+
+.stat-list li:last-child {
+  border-bottom: 0;
+}
+
+.stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sc);
+  align-self: center;
+}
+
+.stat-val {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
 /* Interaction timeline */
 .timeline {
   border-top: 1px solid var(--border);
