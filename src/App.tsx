@@ -424,10 +424,12 @@ function BoardTab({
 }
 
 function Timeline({
-  applicationId,
+  resource,
+  targetId,
   onError,
 }: {
-  applicationId: number;
+  resource: "applications" | "contacts";
+  targetId: number;
   onError: (message: string | null) => void;
 }) {
   const [items, setItems] = useState<Interaction[] | null>(null);
@@ -436,10 +438,10 @@ function Timeline({
   const load = useCallback(
     () =>
       api
-        .interactions(applicationId)
+        .interactions(resource, targetId)
         .then(setItems)
         .catch((e) => onError((e as Error).message)),
-    [applicationId, onError],
+    [resource, targetId, onError],
   );
 
   useEffect(() => {
@@ -449,7 +451,7 @@ function Timeline({
   const add = (e: FormEvent) => {
     e.preventDefault();
     api
-      .addInteraction(applicationId, {
+      .addInteraction(resource, targetId, {
         type: form.type,
         happened_at: form.happened_at,
         notes: form.notes || null,
@@ -495,7 +497,10 @@ function Timeline({
           <li key={it.id}>
             <span className="tl-type">{it.type}</span>
             <span className="tl-date">{formatDate(it.happened_at)}</span>
-            <span className="tl-notes">{it.notes ?? ""}</span>
+            <span className="tl-notes">
+              {it.notes ?? ""}
+              {it.via_contact ? <span className="badge">via contact</span> : null}
+            </span>
             <button
               className="tl-del danger"
               aria-label="Delete interaction"
@@ -968,7 +973,7 @@ function ApplicationsTab({
             </div>
             {expandedId === a.id && (
               <>
-                <Timeline applicationId={a.id} onError={onError} />
+                <Timeline resource="applications" targetId={a.id} onError={onError} />
                 <Documents applicationId={a.id} onError={onError} />
               </>
             )}
@@ -1326,6 +1331,7 @@ function ContactsTab({
 }: CrudTabProps & { contacts: Contact[]; companies: Company[] }) {
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [query, setQuery] = useState("");
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const q = query.trim().toLowerCase();
   const visible = contacts.filter(
@@ -1407,6 +1413,13 @@ function ContactsTab({
                 {c.notes && <p className="notes">{c.notes}</p>}
               </div>
               <div className="card-actions">
+                <button
+                  onClick={() =>
+                    setExpandedId(expandedId === c.id ? null : c.id)
+                  }
+                >
+                  Log
+                </button>
                 <button onClick={() => setEditing(c)}>Edit</button>
                 <button
                   className="danger"
@@ -1416,6 +1429,9 @@ function ContactsTab({
                 </button>
               </div>
             </div>
+            {expandedId === c.id && (
+              <Timeline resource="contacts" targetId={c.id} onError={onError} />
+            )}
           </li>
         ))}
         {visible.length === 0 && (
