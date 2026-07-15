@@ -12,6 +12,98 @@ import "./App.css";
 
 type Tab = "applications" | "companies" | "contacts";
 
+const PIPELINE: Status[] = [
+  "interested",
+  "applied",
+  "screening",
+  "interview",
+  "offer",
+];
+
+const STAGE_ABBR: Record<string, string> = {
+  interested: "int",
+  applied: "app",
+  screening: "scr",
+  interview: "ivw",
+  offer: "off",
+};
+
+function stageIndex(status: Status): number {
+  return PIPELINE.indexOf(status);
+}
+
+function isDead(status: Status): boolean {
+  return status === "rejected" || status === "withdrawn" || status === "ghosted";
+}
+
+function ageDays(updatedAt: string): string {
+  const then = new Date(updatedAt.replace(" ", "T") + "Z").getTime();
+  const days = Math.max(0, Math.floor((Date.now() - then) / 86400000));
+  return `${days}d`;
+}
+
+function Logo({ size = 26 }: { size?: number }) {
+  return (
+    <svg
+      width={(size * 140) / 56}
+      height={size}
+      viewBox="0 0 140 56"
+      fill="none"
+      aria-hidden="true"
+    >
+      <line x1="14" y1="28" x2="98" y2="28" stroke="currentColor" strokeWidth="4" opacity="0.3" />
+      <circle cx="14" cy="28" r="5.5" fill="currentColor" />
+      <circle cx="38" cy="28" r="5.5" fill="currentColor" />
+      <circle cx="62" cy="28" r="5.5" fill="currentColor" opacity="0.45" />
+      <g stroke="var(--accent)" strokeWidth="3.6">
+        <circle cx="106" cy="28" r="12" />
+        <line x1="106" y1="10" x2="106" y2="16" />
+        <line x1="106" y1="40" x2="106" y2="46" />
+        <line x1="88" y1="28" x2="94" y2="28" />
+        <line x1="118" y1="28" x2="124" y2="28" />
+      </g>
+      <circle cx="106" cy="28" r="4" fill="var(--accent)" />
+    </svg>
+  );
+}
+
+function StageRail({ status }: { status: Status }) {
+  const idx = isDead(status) ? stageIndex("applied") : stageIndex(status);
+  return (
+    <div className={`rail${isDead(status) ? " dead" : ""}`}>
+      {PIPELINE.map((s, i) => (
+        <i key={s} className={i <= idx ? `on stage-${status}` : ""} />
+      ))}
+    </div>
+  );
+}
+
+function StageHistogram({ applications }: { applications: Application[] }) {
+  const open = applications.filter((a) => !isDead(a.status));
+  const max = Math.max(1, ...PIPELINE.map(
+    (s) => open.filter((a) => a.status === s).length,
+  ));
+  return (
+    <div className="histo">
+      {PIPELINE.map((s) => {
+        const count = open.filter((a) => a.status === s).length;
+        return (
+          <div key={s} className={`hrow stage-${s}`}>
+            <span className="lbl">{STAGE_ABBR[s]}</span>
+            <span className="htrack">
+              <span
+                className="hfill"
+                style={{ width: `${(count / max) * 100}%`, display: "block" }}
+              />
+            </span>
+            <span className="n">{count}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>("applications");
   const [applications, setApplications] = useState<Application[]>([]);
@@ -42,28 +134,34 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>JobSeekr</h1>
-        <nav className="tabs">
-          <button
-            className={tab === "applications" ? "active" : ""}
-            onClick={() => setTab("applications")}
-          >
-            Jobs ({applications.length})
-          </button>
-          <button
-            className={tab === "companies" ? "active" : ""}
-            onClick={() => setTab("companies")}
-          >
-            Companies ({companies.length})
-          </button>
-          <button
-            className={tab === "contacts" ? "active" : ""}
-            onClick={() => setTab("contacts")}
-          >
-            Contacts ({contacts.length})
-          </button>
-        </nav>
+        <div className="brand">
+          <Logo />
+          <h1>JobSeekr</h1>
+        </div>
+        <span className="open-count">
+          {applications.filter((a) => !isDead(a.status)).length} open
+        </span>
       </header>
+      <nav className="tabs">
+        <button
+          className={tab === "applications" ? "active" : ""}
+          onClick={() => setTab("applications")}
+        >
+          Jobs
+        </button>
+        <button
+          className={tab === "companies" ? "active" : ""}
+          onClick={() => setTab("companies")}
+        >
+          Companies
+        </button>
+        <button
+          className={tab === "contacts" ? "active" : ""}
+          onClick={() => setTab("contacts")}
+        >
+          People
+        </button>
+      </nav>
 
       {error && <p className="error">{error}</p>}
 
@@ -131,6 +229,7 @@ function ApplicationsTab({
 
   return (
     <section>
+      <StageHistogram applications={applications} />
       <div className="toolbar">
         <select
           value={statusFilter}
@@ -166,57 +265,72 @@ function ApplicationsTab({
 
       <ul className="cards">
         {visible.map((a) => (
-          <li key={a.id} className="card">
-            <div className="card-main">
-              <strong>{a.title}</strong>
-              <span className="muted">
-                {a.company_name ?? "—"}
-                {a.contact_name ? ` · ${a.contact_name}` : ""}
-              </span>
-              <span className="muted small">
-                {a.role_type}
-                {a.source ? ` · via ${a.source}` : ""}
-                {a.salary_range ? ` · ${a.salary_range}` : ""}
-              </span>
-              {a.url && (
-                <a
-                  href={a.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="small"
+          <li key={a.id} className={`card stage-${a.status}`}>
+            <div className="card-body">
+              <div className="card-main">
+                <strong>{a.title}</strong>
+                <span className="muted small">
+                  {a.company_name ?? "—"}
+                  {a.contact_name ? ` · ${a.contact_name}` : ""}
+                </span>
+                <span className="muted small">
+                  {a.role_type}
+                  {a.source ? ` · via ${a.source}` : ""}
+                  {a.salary_range ? ` · ${a.salary_range}` : ""}
+                </span>
+                {a.url && (
+                  <a
+                    href={a.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="small"
+                  >
+                    Job posting ↗
+                  </a>
+                )}
+                {a.notes && <p className="notes">{a.notes}</p>}
+              </div>
+              <div className="card-actions">
+                <select
+                  className={`status stage-${a.status}`}
+                  value={a.status}
+                  onChange={(e) =>
+                    run(() => api.setStatus(a.id, e.target.value))
+                  }
                 >
-                  Job posting ↗
-                </a>
-              )}
-              {a.notes && <p className="notes">{a.notes}</p>}
+                  {STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                <span className="age">upd {ageDays(a.updated_at)}</span>
+                <button onClick={() => setEditing(a)}>Edit</button>
+                <button
+                  className="danger"
+                  onClick={() => {
+                    if (confirm(`Delete "${a.title}"?`))
+                      run(() => api.remove("applications", a.id));
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="card-actions">
-              <select
-                className={`status status-${a.status}`}
-                value={a.status}
-                onChange={(e) => run(() => api.setStatus(a.id, e.target.value))}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              <button onClick={() => setEditing(a)}>Edit</button>
-              <button
-                className="danger"
-                onClick={() => {
-                  if (confirm(`Delete "${a.title}"?`))
-                    run(() => api.remove("applications", a.id));
-                }}
-              >
-                Delete
-              </button>
-            </div>
+            <StageRail status={a.status} />
           </li>
         ))}
         {visible.length === 0 && (
-          <li className="empty">No jobs yet. Add your first lead.</li>
+          <li className="empty">
+            <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+              <line x1="20" y1="76" x2="70" y2="26" strokeWidth="5" opacity="0.28" strokeLinecap="round" />
+              <circle cx="20" cy="76" r="7" fill="currentColor" stroke="none" />
+              <circle cx="36.7" cy="59.3" r="7" fill="currentColor" stroke="none" />
+              <circle cx="53.3" cy="42.7" r="7" fill="currentColor" stroke="none" opacity="0.35" />
+              <circle cx="72" cy="24" r="11" strokeWidth="5.5" className="accent-stroke" />
+            </svg>
+            No jobs yet. Add your first lead and start the climb.
+          </li>
         )}
       </ul>
     </section>
@@ -397,35 +511,37 @@ function CompaniesTab({
       <ul className="cards">
         {companies.map((c) => (
           <li key={c.id} className="card">
-            <div className="card-main">
-              <strong>
-                {c.name}
-                {c.is_agency ? <span className="badge"> agency</span> : null}
-              </strong>
-              <span className="muted small">{c.location ?? ""}</span>
-              {c.website && (
-                <a
-                  href={c.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="small"
+            <div className="card-body">
+              <div className="card-main">
+                <strong>
+                  {c.name}
+                  {c.is_agency ? <span className="badge"> agency</span> : null}
+                </strong>
+                <span className="muted small">{c.location ?? ""}</span>
+                {c.website && (
+                  <a
+                    href={c.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="small"
+                  >
+                    {c.website}
+                  </a>
+                )}
+                {c.notes && <p className="notes">{c.notes}</p>}
+              </div>
+              <div className="card-actions">
+                <button onClick={() => setEditing(c)}>Edit</button>
+                <button
+                  className="danger"
+                  onClick={() => {
+                    if (confirm(`Delete "${c.name}"?`))
+                      run(() => api.remove("companies", c.id));
+                  }}
                 >
-                  {c.website}
-                </a>
-              )}
-              {c.notes && <p className="notes">{c.notes}</p>}
-            </div>
-            <div className="card-actions">
-              <button onClick={() => setEditing(c)}>Edit</button>
-              <button
-                className="danger"
-                onClick={() => {
-                  if (confirm(`Delete "${c.name}"?`))
-                    run(() => api.remove("companies", c.id));
-                }}
-              >
-                Delete
-              </button>
+                  Delete
+                </button>
+              </div>
             </div>
           </li>
         ))}
@@ -550,44 +666,46 @@ function ContactsTab({
       <ul className="cards">
         {contacts.map((c) => (
           <li key={c.id} className="card">
-            <div className="card-main">
-              <strong>{c.name}</strong>
-              <span className="muted small">
-                {[c.role, c.company_name].filter(Boolean).join(" · ")}
-              </span>
-              {c.email && (
-                <a href={`mailto:${c.email}`} className="small">
-                  {c.email}
-                </a>
-              )}
-              {c.phone && (
-                <a href={`tel:${c.phone}`} className="small">
-                  {c.phone}
-                </a>
-              )}
-              {c.linkedin && (
-                <a
-                  href={c.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="small"
+            <div className="card-body">
+              <div className="card-main">
+                <strong>{c.name}</strong>
+                <span className="muted small">
+                  {[c.role, c.company_name].filter(Boolean).join(" · ")}
+                </span>
+                {c.email && (
+                  <a href={`mailto:${c.email}`} className="small">
+                    {c.email}
+                  </a>
+                )}
+                {c.phone && (
+                  <a href={`tel:${c.phone}`} className="small">
+                    {c.phone}
+                  </a>
+                )}
+                {c.linkedin && (
+                  <a
+                    href={c.linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="small"
+                  >
+                    LinkedIn ↗
+                  </a>
+                )}
+                {c.notes && <p className="notes">{c.notes}</p>}
+              </div>
+              <div className="card-actions">
+                <button onClick={() => setEditing(c)}>Edit</button>
+                <button
+                  className="danger"
+                  onClick={() => {
+                    if (confirm(`Delete "${c.name}"?`))
+                      run(() => api.remove("contacts", c.id));
+                  }}
                 >
-                  LinkedIn ↗
-                </a>
-              )}
-              {c.notes && <p className="notes">{c.notes}</p>}
-            </div>
-            <div className="card-actions">
-              <button onClick={() => setEditing(c)}>Edit</button>
-              <button
-                className="danger"
-                onClick={() => {
-                  if (confirm(`Delete "${c.name}"?`))
-                    run(() => api.remove("contacts", c.id));
-                }}
-              >
-                Delete
-              </button>
+                  Delete
+                </button>
+              </div>
             </div>
           </li>
         ))}
