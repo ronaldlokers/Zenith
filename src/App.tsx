@@ -660,20 +660,42 @@ function ApplicationsTab({
 }) {
   const [editing, setEditing] = useState<Application | "new" | null>(null);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<"updated" | "applied" | "company">(
+    "updated",
+  );
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const filtered =
-    statusFilter === "all"
-      ? applications
-      : applications.filter((a) => a.status === statusFilter);
+  const q = query.trim().toLowerCase();
+  const filtered = applications.filter(
+    (a) =>
+      (statusFilter === "all" || a.status === statusFilter) &&
+      (roleFilter === "all" || a.role_type === roleFilter) &&
+      (companyFilter === "all" || String(a.company_id) === companyFilter) &&
+      (!q ||
+        [a.title, a.company_name, a.contact_name, a.notes, a.source]
+          .filter(Boolean)
+          .some((f) => (f as string).toLowerCase().includes(q))),
+  );
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === "applied")
+      return (b.applied_at ?? "").localeCompare(a.applied_at ?? "");
+    if (sort === "company")
+      return (a.company_name ?? "￿").localeCompare(
+        b.company_name ?? "￿",
+      );
+    return b.updated_at.localeCompare(a.updated_at);
+  });
   // Due items pinned on top, most overdue first
   const visible = [
-    ...filtered
+    ...sorted
       .filter(isDue)
       .sort((a, b) =>
         (a.next_action_at ?? "").localeCompare(b.next_action_at ?? ""),
       ),
-    ...filtered.filter((a) => !isDue(a)),
+    ...sorted.filter((a) => !isDue(a)),
   ];
 
   const run = (fn: () => Promise<unknown>) =>
@@ -688,6 +710,18 @@ function ApplicationsTab({
     <section>
       <StageHistogram applications={applications} />
       <div className="toolbar">
+        <input
+          type="search"
+          className="search"
+          placeholder="Search title, company, notes…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <button className="primary" onClick={() => setEditing("new")}>
+          + Add job
+        </button>
+      </div>
+      <div className="filters">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
@@ -699,9 +733,36 @@ function ApplicationsTab({
             </option>
           ))}
         </select>
-        <button className="primary" onClick={() => setEditing("new")}>
-          + Add job
-        </button>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+        >
+          <option value="all">All roles</option>
+          {ROLE_TYPES.map((r) => (
+            <option key={r} value={r}>
+              {r}
+            </option>
+          ))}
+        </select>
+        <select
+          value={companyFilter}
+          onChange={(e) => setCompanyFilter(e.target.value)}
+        >
+          <option value="all">All companies</option>
+          {companies.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as typeof sort)}
+        >
+          <option value="updated">Last updated</option>
+          <option value="applied">Applied date</option>
+          <option value="company">Company name</option>
+        </select>
       </div>
 
       {editing && (
@@ -973,6 +1034,16 @@ function CompaniesTab({
   onError,
 }: TabProps & { companies: Company[] }) {
   const [editing, setEditing] = useState<Company | "new" | null>(null);
+  const [query, setQuery] = useState("");
+
+  const q = query.trim().toLowerCase();
+  const visible = companies.filter(
+    (c) =>
+      !q ||
+      [c.name, c.location, c.notes, c.website]
+        .filter(Boolean)
+        .some((f) => (f as string).toLowerCase().includes(q)),
+  );
 
   const run = (fn: () => Promise<unknown>) =>
     fn()
@@ -985,7 +1056,13 @@ function CompaniesTab({
   return (
     <section>
       <div className="toolbar">
-        <span />
+        <input
+          type="search"
+          className="search"
+          placeholder="Search companies…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <button className="primary" onClick={() => setEditing("new")}>
           + Add company
         </button>
@@ -1006,7 +1083,7 @@ function CompaniesTab({
       )}
 
       <ul className="cards">
-        {companies.map((c) => (
+        {visible.map((c) => (
           <li key={c.id} className="card">
             <div className="card-body">
               <div className="card-main">
@@ -1127,6 +1204,16 @@ function ContactsTab({
   onError,
 }: TabProps & { contacts: Contact[]; companies: Company[] }) {
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
+  const [query, setQuery] = useState("");
+
+  const q = query.trim().toLowerCase();
+  const visible = contacts.filter(
+    (c) =>
+      !q ||
+      [c.name, c.role, c.company_name, c.email, c.notes]
+        .filter(Boolean)
+        .some((f) => (f as string).toLowerCase().includes(q)),
+  );
 
   const run = (fn: () => Promise<unknown>) =>
     fn()
@@ -1139,7 +1226,13 @@ function ContactsTab({
   return (
     <section>
       <div className="toolbar">
-        <span />
+        <input
+          type="search"
+          className="search"
+          placeholder="Search people…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <button className="primary" onClick={() => setEditing("new")}>
           + Add contact
         </button>
@@ -1161,7 +1254,7 @@ function ContactsTab({
       )}
 
       <ul className="cards">
-        {contacts.map((c) => (
+        {visible.map((c) => (
           <li key={c.id} className="card">
             <div className="card-body">
               <div className="card-main">
