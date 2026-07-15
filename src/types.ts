@@ -63,6 +63,21 @@ export interface Stats {
   history: StatusHistoryRow[];
 }
 
+export interface FeedItem {
+  id: number;
+  source: "adzuna" | "hn" | "arbeitnow";
+  external_id: string;
+  title: string;
+  company: string | null;
+  location: string | null;
+  url: string | null;
+  salary_text: string | null;
+  role_type: RoleType;
+  posted_at: string | null;
+  fetched_at: string;
+  status: "new" | "added" | "dismissed";
+}
+
 export interface ImportResult {
   title: string | null;
   company: string | null;

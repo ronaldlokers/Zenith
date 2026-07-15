@@ -46,6 +46,17 @@ export const api = {
       body: JSON.stringify(data),
     }),
   stats: () => request<import("./types").Stats>("/api/stats"),
+  feed: () => request<import("./types").FeedItem[]>("/api/feed"),
+  refreshFeed: () =>
+    request<{ inserted: number; seen: number }>("/api/feed/refresh", {
+      method: "POST",
+    }),
+  dismissFeedItem: (id: number) =>
+    request<void>(`/api/feed/${id}/dismiss`, { method: "POST" }),
+  addFeedItem: (id: number) =>
+    request<import("./types").Application>(`/api/feed/${id}/add`, {
+      method: "POST",
+    }),
   importUrl: (url: string) =>
     request<import("./types").ImportResult>(
       `/api/import?url=${encodeURIComponent(url)}`,

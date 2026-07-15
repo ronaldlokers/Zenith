@@ -1,4 +1,4 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 
 const BASE = "http://jobseekr.test";
@@ -253,6 +253,101 @@ describe("export", () => {
 
     const bad = await SELF.fetch(`${BASE}/api/export/sqlite_master.csv`);
     expect(bad.status).toBe(404);
+  });
+});
+
+describe("feed", () => {
+  // Network sources (Adzuna/HN/Arbeitnow) aren't hit in tests — insert
+  // directly at the DB layer, same as a real refresh would, and test
+  // the review-inbox endpoints on top of that.
+  async function seedFeedItem(overrides: Record<string, unknown> = {}) {
+    const row = {
+      source: "arbeitnow",
+      external_id: `test-${crypto.randomUUID()}`,
+      title: "Platform Engineer",
+      company: "Feed Co",
+      location: "Remote",
+      url: "https://example.com/job",
+      salary_text: null,
+      role_type: "platform-engineer",
+      posted_at: null,
+      ...overrides,
+    };
+    const result = await env.DB.prepare(
+      `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    )
+      .bind(
+        row.source,
+        row.external_id,
+        row.title,
+        row.company,
+        row.location,
+        row.url,
+        row.salary_text,
+        row.role_type,
+        row.posted_at,
+      )
+      .first();
+    return result as { id: number };
+  }
+
+  it("lists only new items", async () => {
+    const item = await seedFeedItem();
+    const list = (await (
+      await SELF.fetch(`${BASE}/api/feed`)
+    ).json()) as { id: number }[];
+    expect(list.some((i) => i.id === item.id)).toBe(true);
+  });
+
+  it("dismiss removes an item from the new list", async () => {
+    const item = await seedFeedItem();
+    const res = await SELF.fetch(`${BASE}/api/feed/${item.id}/dismiss`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(204);
+    const list = (await (
+      await SELF.fetch(`${BASE}/api/feed`)
+    ).json()) as { id: number }[];
+    expect(list.some((i) => i.id === item.id)).toBe(false);
+  });
+
+  it("add creates an application and a new company, then removes from feed", async () => {
+    const item = await seedFeedItem({ company: "Brand New Co" });
+    const res = await SELF.fetch(`${BASE}/api/feed/${item.id}/add`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(201);
+    const app = (await res.json()) as {
+      title: string;
+      source: string;
+      company_id: number;
+    };
+    expect(app.title).toBe("Platform Engineer");
+    expect(app.source).toBe("feed:arbeitnow");
+
+    const company = await env.DB.prepare(
+      "SELECT name FROM companies WHERE id = ?",
+    )
+      .bind(app.company_id)
+      .first<{ name: string }>();
+    expect(company?.name).toBe("Brand New Co");
+
+    const list = (await (
+      await SELF.fetch(`${BASE}/api/feed`)
+    ).json()) as { id: number }[];
+    expect(list.some((i) => i.id === item.id)).toBe(false);
+  });
+
+  it("reuses an existing company by name instead of duplicating it", async () => {
+    const existingRes = await post("/api/companies", { name: "Reuse Me" });
+    const existing = (await existingRes.json()) as { id: number };
+    const item = await seedFeedItem({ company: "reuse me" });
+    const res = await SELF.fetch(`${BASE}/api/feed/${item.id}/add`, {
+      method: "POST",
+    });
+    const app = (await res.json()) as { company_id: number };
+    expect(app.company_id).toBe(existing.id);
   });
 });
 

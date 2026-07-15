@@ -33,7 +33,11 @@
 			"database_id": "ca1cf5c8-4d60-4bb6-80dc-89265bd4e9aa",
 			"migrations_dir": "./migrations"
 		}
-	]
+	],
+	"triggers": {
+		// Every 6 hours: pull new listings from free job sources into the feed review inbox
+		"crons": ["17 */6 * * *"]
+	}
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
