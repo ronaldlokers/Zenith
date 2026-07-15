@@ -41,4 +41,31 @@ export const api = {
       `/api/applications/${applicationId}/interactions`,
       { method: "POST", body: JSON.stringify(data) },
     ),
+  documents: (applicationId: number) =>
+    request<import("./types").Document[]>(
+      `/api/applications/${applicationId}/documents`,
+    ),
+  uploadDocument: async (
+    applicationId: number,
+    file: File,
+    label: string | null,
+  ) => {
+    const params = new URLSearchParams({ filename: file.name });
+    if (label) params.set("label", label);
+    const res = await fetch(
+      `/api/applications/${applicationId}/documents?${params}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      },
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(
+        (body as { error?: string }).error ?? `Upload failed (${res.status})`,
+      );
+    }
+    return res.json() as Promise<import("./types").Document>;
+  },
 };

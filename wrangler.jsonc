@@ -17,6 +17,12 @@
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
+	"r2_buckets": [
+		{
+			"binding": "DOCS",
+			"bucket_name": "jobseekr-documents"
+		}
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",

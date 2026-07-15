@@ -7,6 +7,7 @@ import {
   type Application,
   type Company,
   type Contact,
+  type Document,
   type Interaction,
   type Status,
 } from "./types";
@@ -396,6 +397,98 @@ function Timeline({
   );
 }
 
+function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} kB`;
+}
+
+function Documents({
+  applicationId,
+  onError,
+}: {
+  applicationId: number;
+  onError: (message: string | null) => void;
+}) {
+  const [items, setItems] = useState<Document[] | null>(null);
+  const [label, setLabel] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(
+    () =>
+      api
+        .documents(applicationId)
+        .then(setItems)
+        .catch((e) => onError((e as Error).message)),
+    [applicationId, onError],
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const upload = (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    api
+      .uploadDocument(applicationId, file, label || null)
+      .then(() => {
+        setLabel("");
+        return load();
+      })
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <div className="docs">
+      <div className="docs-add">
+        <input
+          placeholder="Label (CV v3, cover letter, …)"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+        />
+        <label className={`upload-btn${busy ? " busy" : ""}`}>
+          {busy ? "Uploading…" : "Attach file"}
+          <input
+            type="file"
+            hidden
+            disabled={busy}
+            onChange={(e) => {
+              upload(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
+      <ul className="docs-items">
+        {(items ?? []).map((d) => (
+          <li key={d.id}>
+            <a href={`/api/documents/${d.id}/download`} download>
+              {d.filename}
+            </a>
+            {d.label && <span className="doc-label">{d.label}</span>}
+            <span className="doc-size">{formatSize(d.size)}</span>
+            <button
+              className="tl-del danger"
+              aria-label="Delete document"
+              onClick={() => {
+                if (confirm(`Delete "${d.filename}"?`))
+                  api
+                    .remove("documents", d.id)
+                    .then(load)
+                    .catch((e) => onError((e as Error).message));
+              }}
+            >
+              ×
+            </button>
+          </li>
+        ))}
+        {items?.length === 0 && <li className="tl-empty">No files attached.</li>}
+      </ul>
+    </div>
+  );
+}
+
 function ApplicationsTab({
   applications,
   companies,
@@ -542,7 +635,10 @@ function ApplicationsTab({
               </div>
             </div>
             {expandedId === a.id && (
-              <Timeline applicationId={a.id} onError={onError} />
+              <>
+                <Timeline applicationId={a.id} onError={onError} />
+                <Documents applicationId={a.id} onError={onError} />
+              </>
             )}
             <StageRail status={a.status} />
           </li>
