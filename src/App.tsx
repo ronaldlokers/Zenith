@@ -9,13 +9,21 @@ import {
   type Company,
   type Contact,
   type Document,
+  type AgendaEntry,
   type FeedItem,
   type Interaction,
   type Status,
 } from "./types";
 import "./App.css";
 
-type Tab = "applications" | "board" | "feed" | "stats" | "companies" | "contacts";
+type Tab =
+  | "applications"
+  | "board"
+  | "feed"
+  | "calendar"
+  | "stats"
+  | "companies"
+  | "contacts";
 
 const PIPELINE: Status[] = [
   "interested",
@@ -158,6 +166,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<Toast | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [jumpQuery, setJumpQuery] = useState("");
 
   const reload = useCallback(async () => {
     try {
@@ -282,6 +291,12 @@ export default function App() {
           Feed
         </button>
         <button
+          className={tab === "calendar" ? "active" : ""}
+          onClick={() => setTab("calendar")}
+        >
+          Calendar
+        </button>
+        <button
           className={tab === "stats" ? "active" : ""}
           onClick={() => setTab("stats")}
         >
@@ -318,6 +333,7 @@ export default function App() {
                 notify={notify}
                 onDelete={deleteWithUndo}
                 onStatus={setStatus}
+                initialQuery={jumpQuery}
               />
             )}
             {tab === "board" && (
@@ -330,6 +346,15 @@ export default function App() {
             )}
             {tab === "feed" && (
               <FeedTab onError={setError} notify={notify} />
+            )}
+            {tab === "calendar" && (
+              <CalendarTab
+                onError={setError}
+                onJump={(title) => {
+                  setJumpQuery(title);
+                  setTab("applications");
+                }}
+              />
             )}
             {tab === "stats" && <StatsTab onError={setError} />}
             {tab === "companies" && (
@@ -988,6 +1013,78 @@ function FeedTab({
   );
 }
 
+function agendaText(e: AgendaEntry): string {
+  const where = [e.company_name, e.contact_name].filter(Boolean).join(" · ");
+  if (e.kind === "due") {
+    return `${e.label ?? "Follow up"} — ${e.title ?? ""}${where ? ` (${where})` : ""}`;
+  }
+  if (e.kind === "interaction") {
+    return `${e.type ?? "touchpoint"}${e.title ? ` — ${e.title}` : ""}${where ? ` (${where})` : ""}`;
+  }
+  return `Applied to ${e.title ?? ""}${where ? ` at ${where}` : ""}`;
+}
+
+function CalendarTab({
+  onError,
+  onJump,
+}: {
+  onError: (message: string | null) => void;
+  onJump: (title: string) => void;
+}) {
+  const [entries, setEntries] = useState<AgendaEntry[] | null>(null);
+
+  useEffect(() => {
+    api
+      .agenda()
+      .then(setEntries)
+      .catch((e) => onError((e as Error).message));
+  }, [onError]);
+
+  if (!entries) return <p className="muted small">Loading agenda…</p>;
+
+  const todayStr = today();
+  const groups = new Map<string, AgendaEntry[]>();
+  for (const e of entries) {
+    const day = e.date.slice(0, 10);
+    const list = groups.get(day) ?? [];
+    list.push(e);
+    groups.set(day, list);
+  }
+  const days = [...groups.keys()].sort();
+
+  return (
+    <section className="agenda">
+      {days.length === 0 && (
+        <p className="empty">
+          Nothing on the agenda yet. Due dates, logged touchpoints, and
+          applied dates all show up here.
+        </p>
+      )}
+      {days.map((day) => (
+        <div key={day} className="agenda-day">
+          <h3
+            className={`agenda-date${day === todayStr ? " today" : day < todayStr ? " past" : ""}`}
+          >
+            {formatDate(day)}
+            {day === todayStr ? " · today" : ""}
+          </h3>
+          <ul className="agenda-items">
+            {(groups.get(day) ?? []).map((e) => (
+              <li
+                key={`${e.kind}-${e.id}`}
+                className={`agenda-item kind-${e.kind}`}
+                onClick={() => e.title && onJump(e.title)}
+              >
+                {agendaText(e)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function ApplicationsTab({
   applications,
   companies,
@@ -997,17 +1094,19 @@ function ApplicationsTab({
   notify,
   onDelete,
   onStatus,
+  initialQuery,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
   contacts: Contact[];
   onStatus: (id: number, status: Status) => void;
+  initialQuery?: string;
 }) {
   const [editing, setEditing] = useState<Application | "new" | null>(null);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"updated" | "applied" | "company">(
     "updated",
   );

@@ -132,6 +132,14 @@
     padding: 0.5rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
     background: var(--bg);
     border-top: 1px solid var(--border);
+    /* More tabs than fit at 390px (#48 tracks a real declutter pass);
+       scroll rather than let items overflow off-screen unreachable. */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs button {
+    flex: 0 0 auto;
   }
 }
 
@@ -445,6 +453,63 @@ select.status {
 /* Stats */
 .stats {
   margin-top: 0.75rem;
+}
+
+/* Agenda / calendar */
+.agenda {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.agenda-date {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+}
+
+.agenda-date.today {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.agenda-date.past {
+  color: var(--faint);
+}
+
+.agenda-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.agenda-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--faint);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.agenda-item.kind-due {
+  border-left-color: var(--danger);
+}
+
+.agenda-item.kind-applied {
+  border-left-color: var(--st-interested);
+}
+
+.agenda-item.kind-interaction {
+  border-left-color: var(--accent);
 }
 
 .stat-h {

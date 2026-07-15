@@ -46,6 +46,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
   stats: () => request<import("./types").Stats>("/api/stats"),
+  agenda: () => request<import("./types").AgendaEntry[]>("/api/agenda"),
   researchCompany: (id: number) =>
     request<import("./types").Company>(`/api/companies/${id}/research`, {
       method: "POST",

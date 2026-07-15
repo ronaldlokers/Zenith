@@ -547,6 +547,55 @@ app.get("/api/import", async (c) => {
   return c.json(result);
 });
 
+// --- Agenda ---
+// Combines three date-bearing signals already in the schema into one
+// read-only feed: no separate "scheduled interview" concept needed —
+// an interaction logged with a future happened_at (nothing stops you
+// entering one today) doubles as a scheduled event.
+
+app.get("/api/agenda", async (c) => {
+  const [dueRes, interactionsRes, appliedRes] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT applications.id, applications.title, applications.next_action AS label,
+              applications.next_action_at AS date, companies.name AS company_name
+       FROM applications
+       LEFT JOIN companies ON companies.id = applications.company_id
+       WHERE applications.next_action_at IS NOT NULL
+         AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
+    ).all(),
+    c.env.DB.prepare(
+      `SELECT interactions.id, interactions.type, interactions.happened_at AS date,
+              interactions.notes,
+              applications.id AS application_id, applications.title,
+              companies.name AS company_name, contacts.name AS contact_name
+       FROM interactions
+       LEFT JOIN applications ON applications.id = interactions.application_id
+       LEFT JOIN companies ON companies.id = applications.company_id
+       LEFT JOIN contacts ON contacts.id = COALESCE(interactions.contact_id, applications.contact_id)
+       WHERE interactions.happened_at >= date('now', '-14 days')`,
+    ).all(),
+    c.env.DB.prepare(
+      `SELECT applications.id, applications.title, applications.applied_at AS date,
+              companies.name AS company_name
+       FROM applications
+       LEFT JOIN companies ON companies.id = applications.company_id
+       WHERE applications.applied_at IS NOT NULL`,
+    ).all(),
+  ]);
+
+  const due = dueRes.results.map((r) => ({ kind: "due" as const, ...r }));
+  const interactions = interactionsRes.results.map((r) => ({
+    kind: "interaction" as const,
+    ...r,
+  }));
+  const applied = appliedRes.results.map((r) => ({
+    kind: "applied" as const,
+    ...r,
+  }));
+
+  return c.json([...due, ...interactions, ...applied]);
+});
+
 // --- Stats ---
 
 app.get("/api/stats", async (c) => {
