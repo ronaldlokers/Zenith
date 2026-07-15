@@ -341,6 +341,100 @@ select.status {
   cursor: pointer;
 }
 
+/* Interaction timeline */
+.timeline {
+  border-top: 1px solid var(--border);
+  padding: 0.65rem 0.85rem 0.5rem;
+  background: color-mix(in srgb, var(--bg) 55%, var(--surface));
+}
+
+.tl-add {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.55rem;
+}
+
+.tl-add select,
+.tl-add input {
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.8rem;
+}
+
+.tl-add select {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.tl-add input[placeholder] {
+  flex: 1;
+  min-width: 8rem;
+}
+
+.tl-add button {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.tl-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tl-items li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  font-size: 0.8rem;
+}
+
+.tl-items li:last-child {
+  border-bottom: 0;
+}
+
+.tl-type {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  min-width: 4.2rem;
+}
+
+.tl-date {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tl-notes {
+  flex: 1;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.tl-del {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0 0.2rem;
+}
+
+.tl-empty {
+  color: var(--faint);
+}
+
 /* Board (variant 2C) */
 .board {
   display: grid;
