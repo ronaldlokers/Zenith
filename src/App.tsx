@@ -591,11 +591,26 @@ function ResetDemoData() {
   );
 }
 
+const THEME_KEY = "jobseekr_theme";
+
+// Applies the persisted theme choice — called on initial load (see App())
+// and whenever the Settings selector changes it.
+function applyTheme(value: string) {
+  if (value === "control-room") {
+    document.documentElement.dataset.theme = "control-room";
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+}
+
 function SettingsModal({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const { data: session } = useSession();
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
+  );
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem(THEME_KEY) ?? "auto",
   );
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
@@ -652,6 +667,20 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
                 {t(`settings.${labelKey}`)}
               </option>
             ))}
+          </select>
+        </label>
+        <label className="settings-field">
+          <span>{t("settings.theme")}</span>
+          <select
+            value={theme}
+            onChange={(e) => {
+              setTheme(e.target.value);
+              localStorage.setItem(THEME_KEY, e.target.value);
+              applyTheme(e.target.value);
+            }}
+          >
+            <option value="auto">{t("settings.themeAuto")}</option>
+            <option value="control-room">{t("settings.themeControlRoom")}</option>
           </select>
         </label>
         <label className="settings-field">
