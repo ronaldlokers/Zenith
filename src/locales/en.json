@@ -107,7 +107,15 @@
     "ghostRate": "Ghost rate by source",
     "unknownSource": "Unknown",
     "compare": "Compare interviews & offers",
-    "exportData": "Export your data"
+    "exportData": "Export your data",
+    "streak": {
+      "activeTitle_one": "{{count}} week active streak",
+      "activeTitle_other": "{{count}} week active streak",
+      "milestoneTitle_one": "{{count}} week streak — nice work",
+      "milestoneTitle_other": "{{count}} week streak — nice work",
+      "brokenTitle": "No activity this week",
+      "brokenBody": "That's fine — job searches aren't linear. Your best is still on record whenever you're ready to pick it back up."
+    }
   },
   "palette": {
     "title": "Jump to…",
