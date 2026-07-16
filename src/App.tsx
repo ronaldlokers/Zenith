@@ -3928,9 +3928,19 @@ function ApplicationsTab({
               </span>
             </div>
             <div className="l2">
-              <span className={`pill stage-${a.status}`}>
-                {t(`stages.${a.status}`)}
-              </span>
+              <select
+                className={`status stage-${a.status}`}
+                value={a.status}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => onStatus(a.id, e.target.value as Status)}
+                aria-label={`Move ${a.title} to stage`}
+              >
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`stages.${s}`)}
+                  </option>
+                ))}
+              </select>
               <span
                 className={`due${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
               >
