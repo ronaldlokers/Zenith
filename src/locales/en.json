@@ -1,0 +1,43 @@
+{
+  "tabs": {
+    "jobs": "Jobs",
+    "board": "Board",
+    "feed": "Feed",
+    "calendar": "Calendar",
+    "stats": "Stats",
+    "companies": "Companies",
+    "people": "People"
+  },
+  "header": {
+    "openCount_one": "{{count}} open",
+    "openCount_other": "{{count}} open",
+    "dueCount_one": "{{count}} due",
+    "dueCount_other": "{{count}} due",
+    "settings": "Settings"
+  },
+  "common": {
+    "loading": "Loading…",
+    "close": "Close"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search title, company, notes… (/)",
+    "addJob": "+ Add job",
+    "shortcuts": "Keyboard shortcuts"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "subtitle": "Desktop, Jobs tab only.",
+    "focusSearch": "Focus search",
+    "addJob": "Add a new job",
+    "moveFocus": "Move focus down / up the list",
+    "setStatus": "Set the focused card's status (interested…ghosted)",
+    "closeHelp": "Close a form, collapse a timeline, or this help",
+    "toggleHelp": "Toggle this help"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageEn": "English",
+    "languageNl": "Nederlands"
+  }
+}

@@ -5,6 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import {
   INTERACTION_TYPES,
@@ -131,35 +132,71 @@ function StageRail({ status }: { status: Status }) {
   );
 }
 
-const SHORTCUTS: [string, string][] = [
-  ["/", "Focus search"],
-  ["n", "Add a new job"],
-  ["j / k", "Move focus down / up the list"],
-  ["1–8", "Set the focused card's status (interested…ghosted)"],
-  ["Esc", "Close a form, collapse a timeline, or this help"],
-  ["?", "Toggle this help"],
+const SHORTCUT_KEYS: [string, string][] = [
+  ["/", "focusSearch"],
+  ["n", "addJob"],
+  ["j / k", "moveFocus"],
+  ["1–8", "setStatus"],
+  ["Esc", "closeHelp"],
+  ["?", "toggleHelp"],
 ];
 
 function ShortcutHelp({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="modal shortcut-help"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
-        aria-label="Keyboard shortcuts"
+        aria-label={t("shortcuts.title")}
       >
-        <h2>Keyboard shortcuts</h2>
-        <p className="muted small">Desktop, Jobs tab only.</p>
+        <h2>{t("shortcuts.title")}</h2>
+        <p className="muted small">{t("shortcuts.subtitle")}</p>
         <ul>
-          {SHORTCUTS.map(([key, label]) => (
+          {SHORTCUT_KEYS.map(([key, labelKey]) => (
             <li key={key}>
               <kbd>{key}</kbd>
-              <span>{label}</span>
+              <span>{t(`shortcuts.${labelKey}`)}</span>
             </li>
           ))}
         </ul>
-        <button onClick={onClose}>Close</button>
+        <button onClick={onClose}>{t("common.close")}</button>
+      </div>
+    </div>
+  );
+}
+
+const LANGUAGES: [string, string][] = [
+  ["en", "languageEn"],
+  ["nl", "languageNl"],
+];
+
+function SettingsModal({ onClose }: { onClose: () => void }) {
+  const { t, i18n } = useTranslation();
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="modal settings-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label={t("settings.title")}
+      >
+        <h2>{t("settings.title")}</h2>
+        <label className="settings-field">
+          <span>{t("settings.language")}</span>
+          <select
+            value={i18n.resolvedLanguage}
+            onChange={(e) => i18n.changeLanguage(e.target.value)}
+          >
+            {LANGUAGES.map(([code, labelKey]) => (
+              <option key={code} value={code}>
+                {t(`settings.${labelKey}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>
   );
@@ -198,7 +235,9 @@ interface Toast {
 }
 
 export default function App() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("applications");
+  const [showSettings, setShowSettings] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -303,15 +342,30 @@ export default function App() {
 
   return (
     <div className="app">
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
       <header className="header">
         <div className="brand">
           <Logo />
           <h1>JobSeekr</h1>
         </div>
-        <span className="open-count">
-          {applications.filter((a) => !isDead(a.status)).length} open
-          {applications.filter(isDue).length > 0 &&
-            ` · ${applications.filter(isDue).length} due`}
+        <span className="header-actions">
+          <span className="open-count">
+            {t("header.openCount", {
+              count: applications.filter((a) => !isDead(a.status)).length,
+            })}
+            {applications.filter(isDue).length > 0 &&
+              ` · ${t("header.dueCount", { count: applications.filter(isDue).length })}`}
+          </span>
+          <button
+            className="settings-btn"
+            onClick={() => setShowSettings(true)}
+            title={t("header.settings")}
+            aria-label={t("header.settings")}
+          >
+            ⚙
+          </button>
         </span>
       </header>
       <nav className="tabs">
@@ -319,43 +373,43 @@ export default function App() {
           className={tab === "applications" ? "active" : ""}
           onClick={() => setTab("applications")}
         >
-          Jobs
+          {t("tabs.jobs")}
         </button>
         <button
           className={tab === "board" ? "active" : ""}
           onClick={() => setTab("board")}
         >
-          Board
+          {t("tabs.board")}
         </button>
         <button
           className={tab === "feed" ? "active" : ""}
           onClick={() => setTab("feed")}
         >
-          Feed
+          {t("tabs.feed")}
         </button>
         <button
           className={tab === "calendar" ? "active" : ""}
           onClick={() => setTab("calendar")}
         >
-          Calendar
+          {t("tabs.calendar")}
         </button>
         <button
           className={tab === "stats" ? "active" : ""}
           onClick={() => setTab("stats")}
         >
-          Stats
+          {t("tabs.stats")}
         </button>
         <button
           className={tab === "companies" ? "active" : ""}
           onClick={() => setTab("companies")}
         >
-          Companies
+          {t("tabs.companies")}
         </button>
         <button
           className={tab === "contacts" ? "active" : ""}
           onClick={() => setTab("contacts")}
         >
-          People
+          {t("tabs.people")}
         </button>
       </nav>
 
@@ -363,7 +417,7 @@ export default function App() {
 
       <main className="content">
         {loading ? (
-          <p className="muted small loading">Loading…</p>
+          <p className="muted small loading">{t("common.loading")}</p>
         ) : (
           <>
             {tab === "applications" && (
@@ -1609,6 +1663,7 @@ function ApplicationsTab({
   onStatus: (id: number, status: Status) => void;
   initialQuery?: string;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState<Application | "new" | null>(null);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -1725,18 +1780,18 @@ function ApplicationsTab({
           ref={searchRef}
           type="search"
           className="search"
-          placeholder="Search title, company, notes… (/)"
+          placeholder={t("toolbar.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <button className="primary" onClick={() => setEditing("new")}>
-          + Add job
+          {t("toolbar.addJob")}
         </button>
         <button
           className="help-btn"
           onClick={() => setShowHelp(true)}
-          title="Keyboard shortcuts"
-          aria-label="Keyboard shortcuts"
+          title={t("toolbar.shortcuts")}
+          aria-label={t("toolbar.shortcuts")}
         >
           ?
         </button>
