@@ -20,6 +20,10 @@ import {
   type RoleTypeDef,
   type Interaction,
   type Status,
+  type Profile,
+  type WorkExperience,
+  type Education,
+  type Language,
 } from "./types";
 import "./App.css";
 
@@ -30,7 +34,8 @@ type Tab =
   | "calendar"
   | "stats"
   | "companies"
-  | "contacts";
+  | "contacts"
+  | "cv";
 
 const PIPELINE: Status[] = [
   "interested",
@@ -389,6 +394,12 @@ export default function App() {
         >
           {t("tabs.people")}
         </button>
+        <button
+          className={tab === "cv" ? "active" : ""}
+          onClick={() => setTab("cv")}
+        >
+          {t("tabs.cv")}
+        </button>
       </nav>
 
       {error && <p className="error">{error}</p>}
@@ -463,6 +474,7 @@ export default function App() {
                 onDelete={deleteWithUndo}
               />
             )}
+            {tab === "cv" && <CVTab onError={setError} notify={notify} />}
           </>
         )}
       </main>
@@ -3027,6 +3039,646 @@ function ContactDetailModal({
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function formatMonthYear(month: number | null, year: number | null): string {
+  if (!year) return "";
+  return month ? `${MONTH_NAMES[month - 1]} ${year}` : `${year}`;
+}
+
+function CVTab({
+  onError,
+  notify,
+}: {
+  onError: (message: string | null) => void;
+  notify: (message: string, undo?: () => void) => void;
+}) {
+  const { t } = useTranslation();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [workExp, setWorkExp] = useState<WorkExperience[] | null>(null);
+  const [education, setEducation] = useState<Education[] | null>(null);
+  const [languages, setLanguages] = useState<Language[] | null>(null);
+
+  const load = useCallback(
+    () =>
+      Promise.all([
+        api.profile().then(setProfile),
+        api.list<WorkExperience>("work-experience").then(setWorkExp),
+        api.list<Education>("education").then(setEducation),
+        api.list<Language>("languages").then(setLanguages),
+      ]).catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (!profile || !workExp || !education || !languages) {
+    return <p className="muted small">{t("common.loading")}</p>;
+  }
+
+  return (
+    <section className="cv-tab">
+      <ProfileSection
+        profile={profile}
+        onChanged={load}
+        onError={onError}
+        notify={notify}
+      />
+      <WorkExperienceSection
+        items={workExp}
+        onChanged={load}
+        onError={onError}
+        notify={notify}
+      />
+      <EducationSection
+        items={education}
+        onChanged={load}
+        onError={onError}
+        notify={notify}
+      />
+      <LanguagesSection
+        items={languages}
+        onChanged={load}
+        onError={onError}
+        notify={notify}
+      />
+    </section>
+  );
+}
+
+function ProfileSection({
+  profile,
+  onChanged,
+  onError,
+  notify,
+}: {
+  profile: Profile;
+  onChanged: () => Promise<unknown>;
+  onError: (message: string | null) => void;
+  notify: (message: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [form, setForm] = useState(profile);
+  const set = (patch: Partial<Profile>) => setForm((f) => ({ ...f, ...patch }));
+
+  const save = (e: FormEvent) => {
+    e.preventDefault();
+    api
+      .updateProfile(form)
+      .then(() => {
+        notify(t("common.saved"));
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  return (
+    <form className="form" onSubmit={save}>
+      <div className="form-group">
+        <h4>{t("cv.profile")}</h4>
+        <label>
+          {t("cv.name")}
+          <input value={form.name ?? ""} onChange={(e) => set({ name: e.target.value })} />
+        </label>
+        <label>
+          {t("cv.email")}
+          <input
+            type="email"
+            value={form.email ?? ""}
+            onChange={(e) => set({ email: e.target.value })}
+          />
+        </label>
+        <label>
+          {t("cv.phone")}
+          <input value={form.phone ?? ""} onChange={(e) => set({ phone: e.target.value })} />
+        </label>
+        <label>
+          {t("cv.location")}
+          <input
+            value={form.location ?? ""}
+            onChange={(e) => set({ location: e.target.value })}
+          />
+        </label>
+        <label>
+          {t("cv.linkedin")}
+          <input
+            type="url"
+            value={form.linkedin ?? ""}
+            onChange={(e) => set({ linkedin: e.target.value })}
+          />
+        </label>
+        <label>
+          {t("cv.github")}
+          <input
+            type="url"
+            value={form.github ?? ""}
+            onChange={(e) => set({ github: e.target.value })}
+          />
+        </label>
+        <label>
+          {t("cv.portfolio")}
+          <input
+            type="url"
+            value={form.portfolio ?? ""}
+            onChange={(e) => set({ portfolio: e.target.value })}
+          />
+        </label>
+        <label className="full">
+          {t("cv.summary")}
+          <textarea
+            rows={3}
+            value={form.summary ?? ""}
+            onChange={(e) => set({ summary: e.target.value })}
+          />
+        </label>
+      </div>
+      <div className="form-actions">
+        <button type="submit" className="primary">
+          {t("common.save")}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function WorkExperienceForm({
+  initial,
+  onSubmit,
+  onCancel,
+}: {
+  initial: WorkExperience | null;
+  onSubmit: (data: Partial<WorkExperience>) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [form, setForm] = useState<Partial<WorkExperience>>(initial ?? {});
+  const set = (patch: Partial<WorkExperience>) =>
+    setForm((f) => ({ ...f, ...patch }));
+
+  return (
+    <form
+      className="form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(form);
+      }}
+    >
+      <label>
+        {t("cv.company")} *
+        <input
+          required
+          value={form.company ?? ""}
+          onChange={(e) => set({ company: e.target.value })}
+        />
+      </label>
+      <label>
+        {t("cv.jobTitle")} *
+        <input
+          required
+          value={form.title ?? ""}
+          onChange={(e) => set({ title: e.target.value })}
+        />
+      </label>
+      <label>
+        {t("cv.startMonth")}
+        <input
+          type="number"
+          min={1}
+          max={12}
+          value={form.start_month ?? ""}
+          onChange={(e) =>
+            set({ start_month: e.target.value ? Number(e.target.value) : null })
+          }
+        />
+      </label>
+      <label>
+        {t("cv.startYear")}
+        <input
+          type="number"
+          value={form.start_year ?? ""}
+          onChange={(e) =>
+            set({ start_year: e.target.value ? Number(e.target.value) : null })
+          }
+        />
+      </label>
+      <label className="checkbox">
+        <input
+          type="checkbox"
+          checked={!!form.is_current}
+          onChange={(e) => set({ is_current: e.target.checked ? 1 : 0 })}
+        />
+        {t("cv.current")}
+      </label>
+      {!form.is_current && (
+        <>
+          <label>
+            {t("cv.endMonth")}
+            <input
+              type="number"
+              min={1}
+              max={12}
+              value={form.end_month ?? ""}
+              onChange={(e) =>
+                set({ end_month: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          </label>
+          <label>
+            {t("cv.endYear")}
+            <input
+              type="number"
+              value={form.end_year ?? ""}
+              onChange={(e) =>
+                set({ end_year: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          </label>
+        </>
+      )}
+      <label className="full">
+        {t("cv.description")}
+        <textarea
+          rows={3}
+          value={form.description ?? ""}
+          onChange={(e) => set({ description: e.target.value })}
+        />
+      </label>
+      <div className="form-actions">
+        <button type="submit" className="primary">
+          {t("common.save")}
+        </button>
+        <button type="button" onClick={onCancel}>
+          {t("common.cancel")}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function WorkExperienceSection({
+  items,
+  onChanged,
+  onError,
+  notify,
+}: {
+  items: WorkExperience[];
+  onChanged: () => Promise<unknown>;
+  onError: (message: string | null) => void;
+  notify: (message: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState<WorkExperience | "new" | null>(null);
+  const [newSkill, setNewSkill] = useState<Record<number, string>>({});
+
+  const run = (fn: () => Promise<unknown>) =>
+    fn()
+      .then(() => {
+        setEditing(null);
+        notify(t("common.saved"));
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+
+  const addSkill = (workExperienceId: number) => {
+    const name = (newSkill[workExperienceId] ?? "").trim();
+    if (!name) return;
+    api
+      .addWorkExperienceSkill(workExperienceId, name)
+      .then(() => {
+        setNewSkill((m) => ({ ...m, [workExperienceId]: "" }));
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  return (
+    <div className="cv-section">
+      <h3 className="detail-sub">{t("cv.workExperience")}</h3>
+      <ul className="cv-list">
+        {items.map((w) => (
+          <li key={w.id} className="cv-item">
+            <div className="cv-item-head">
+              <div>
+                <strong>{w.title}</strong> — {w.company}
+                <div className="muted small">
+                  {formatMonthYear(w.start_month, w.start_year)} –{" "}
+                  {w.is_current
+                    ? t("cv.present")
+                    : formatMonthYear(w.end_month, w.end_year)}
+                </div>
+              </div>
+              <div className="cv-item-actions">
+                <button onClick={() => setEditing(w)}>{t("common.edit")}</button>
+                <button
+                  className="danger"
+                  onClick={() =>
+                    api
+                      .remove("work-experience", w.id)
+                      .then(onChanged)
+                      .catch((e) => onError((e as Error).message))
+                  }
+                >
+                  {t("common.delete")}
+                </button>
+              </div>
+            </div>
+            {w.description && <p className="notes">{w.description}</p>}
+            <div className="keyword-chips">
+              {w.skills.map((s) => (
+                <span key={s.id} className="chip">
+                  {s.name}
+                  <button
+                    onClick={() =>
+                      api
+                        .removeWorkExperienceSkill(w.id, s.id)
+                        .then(onChanged)
+                        .catch((e) => onError((e as Error).message))
+                    }
+                    aria-label={t("feedSettings.removeKeyword")}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <input
+                placeholder={t("cv.addSkill")}
+                value={newSkill[w.id] ?? ""}
+                onChange={(e) =>
+                  setNewSkill((m) => ({ ...m, [w.id]: e.target.value }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSkill(w.id);
+                  }
+                }}
+              />
+            </div>
+            {editing !== "new" && editing?.id === w.id && (
+              <WorkExperienceForm
+                initial={editing}
+                onCancel={() => setEditing(null)}
+                onSubmit={(data) =>
+                  run(() => api.update("work-experience", w.id, data))
+                }
+              />
+            )}
+          </li>
+        ))}
+        {items.length === 0 && <li className="empty">{t("cv.noWorkExperience")}</li>}
+      </ul>
+      {editing === "new" ? (
+        <WorkExperienceForm
+          initial={null}
+          onCancel={() => setEditing(null)}
+          onSubmit={(data) => run(() => api.create("work-experience", data))}
+        />
+      ) : (
+        <button className="primary" onClick={() => setEditing("new")}>
+          {t("cv.addWorkExperience")}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function EducationForm({
+  initial,
+  onSubmit,
+  onCancel,
+}: {
+  initial: Education | null;
+  onSubmit: (data: Partial<Education>) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const [form, setForm] = useState<Partial<Education>>(initial ?? {});
+  const set = (patch: Partial<Education>) => setForm((f) => ({ ...f, ...patch }));
+
+  return (
+    <form
+      className="form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(form);
+      }}
+    >
+      <label>
+        {t("cv.institution")} *
+        <input
+          required
+          value={form.institution ?? ""}
+          onChange={(e) => set({ institution: e.target.value })}
+        />
+      </label>
+      <label>
+        {t("cv.degree")}
+        <input
+          value={form.degree ?? ""}
+          onChange={(e) => set({ degree: e.target.value })}
+        />
+      </label>
+      <label>
+        {t("cv.field")}
+        <input
+          value={form.field ?? ""}
+          onChange={(e) => set({ field: e.target.value })}
+        />
+      </label>
+      <label>
+        {t("cv.startYear")}
+        <input
+          type="number"
+          value={form.start_year ?? ""}
+          onChange={(e) =>
+            set({ start_year: e.target.value ? Number(e.target.value) : null })
+          }
+        />
+      </label>
+      <label>
+        {t("cv.endYear")}
+        <input
+          type="number"
+          value={form.end_year ?? ""}
+          onChange={(e) =>
+            set({ end_year: e.target.value ? Number(e.target.value) : null })
+          }
+        />
+      </label>
+      <div className="form-actions">
+        <button type="submit" className="primary">
+          {t("common.save")}
+        </button>
+        <button type="button" onClick={onCancel}>
+          {t("common.cancel")}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function EducationSection({
+  items,
+  onChanged,
+  onError,
+  notify,
+}: {
+  items: Education[];
+  onChanged: () => Promise<unknown>;
+  onError: (message: string | null) => void;
+  notify: (message: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState<Education | "new" | null>(null);
+
+  const run = (fn: () => Promise<unknown>) =>
+    fn()
+      .then(() => {
+        setEditing(null);
+        notify(t("common.saved"));
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+
+  return (
+    <div className="cv-section">
+      <h3 className="detail-sub">{t("cv.education")}</h3>
+      <ul className="cv-list">
+        {items.map((ed) => (
+          <li key={ed.id} className="cv-item">
+            <div className="cv-item-head">
+              <div>
+                <strong>{ed.institution}</strong>
+                {ed.degree ? ` — ${ed.degree}` : ""}
+                {ed.field ? ` (${ed.field})` : ""}
+                <div className="muted small">
+                  {formatMonthYear(ed.start_month, ed.start_year)} –{" "}
+                  {formatMonthYear(ed.end_month, ed.end_year)}
+                </div>
+              </div>
+              <div className="cv-item-actions">
+                <button onClick={() => setEditing(ed)}>{t("common.edit")}</button>
+                <button
+                  className="danger"
+                  onClick={() =>
+                    api
+                      .remove("education", ed.id)
+                      .then(onChanged)
+                      .catch((e) => onError((e as Error).message))
+                  }
+                >
+                  {t("common.delete")}
+                </button>
+              </div>
+            </div>
+            {editing !== "new" && editing?.id === ed.id && (
+              <EducationForm
+                initial={editing}
+                onCancel={() => setEditing(null)}
+                onSubmit={(data) => run(() => api.update("education", ed.id, data))}
+              />
+            )}
+          </li>
+        ))}
+        {items.length === 0 && <li className="empty">{t("cv.noEducation")}</li>}
+      </ul>
+      {editing === "new" ? (
+        <EducationForm
+          initial={null}
+          onCancel={() => setEditing(null)}
+          onSubmit={(data) => run(() => api.create("education", data))}
+        />
+      ) : (
+        <button className="primary" onClick={() => setEditing("new")}>
+          {t("cv.addEducation")}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function LanguagesSection({
+  items,
+  onChanged,
+  onError,
+  notify,
+}: {
+  items: Language[];
+  onChanged: () => Promise<unknown>;
+  onError: (message: string | null) => void;
+  notify: (message: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [name, setName] = useState("");
+  const [proficiency, setProficiency] =
+    useState<Language["proficiency"]>("conversational");
+
+  const add = (e: FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    api
+      .create("languages", { name: name.trim(), proficiency })
+      .then(() => {
+        setName("");
+        notify(t("common.saved"));
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  return (
+    <div className="cv-section">
+      <h3 className="detail-sub">{t("cv.languages")}</h3>
+      <ul className="settings-list">
+        {items.map((l) => (
+          <li key={l.id}>
+            <span>
+              {l.name} — {t(`cv.proficiency.${l.proficiency}`)}
+            </span>
+            <button
+              className="danger"
+              onClick={() =>
+                api
+                  .remove("languages", l.id)
+                  .then(onChanged)
+                  .catch((e) => onError((e as Error).message))
+              }
+            >
+              ×
+            </button>
+          </li>
+        ))}
+        {items.length === 0 && <li className="empty">{t("cv.noLanguages")}</li>}
+      </ul>
+      <form className="settings-add" onSubmit={add}>
+        <input
+          placeholder={t("cv.languageName")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <select
+          value={proficiency}
+          onChange={(e) =>
+            setProficiency(e.target.value as Language["proficiency"])
+          }
+        >
+          <option value="conversational">{t("cv.proficiency.conversational")}</option>
+          <option value="fluent">{t("cv.proficiency.fluent")}</option>
+          <option value="native">{t("cv.proficiency.native")}</option>
+        </select>
+        <button type="submit" className="primary">
+          {t("feedSettings.add")}
+        </button>
+      </form>
     </div>
   );
 }

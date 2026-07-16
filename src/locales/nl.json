@@ -6,7 +6,8 @@
     "calendar": "Agenda",
     "stats": "Statistieken",
     "companies": "Bedrijven",
-    "people": "Contacten"
+    "people": "Contacten",
+    "cv": "CV"
   },
   "header": {
     "openCount_one": "{{count}} open",
@@ -126,6 +127,44 @@
     "touchpoint": "Contactmoment",
     "appliedTo": "Gesolliciteerd bij",
     "at": "bij"
+  },
+  "cv": {
+    "profile": "Profiel",
+    "name": "Naam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "location": "Locatie",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "portfolio": "Portfolio",
+    "summary": "Samenvatting",
+    "workExperience": "Werkervaring",
+    "company": "Bedrijf",
+    "jobTitle": "Functietitel",
+    "startMonth": "Startmaand",
+    "startYear": "Startjaar",
+    "endMonth": "Eindmaand",
+    "endYear": "Eindjaar",
+    "current": "Huidige functie",
+    "present": "Heden",
+    "description": "Omschrijving",
+    "addSkill": "+ vaardigheid",
+    "addWorkExperience": "+ Werkervaring toevoegen",
+    "noWorkExperience": "Nog geen werkervaring toegevoegd.",
+    "education": "Opleiding",
+    "institution": "Instelling",
+    "degree": "Diploma",
+    "field": "Studierichting",
+    "addEducation": "+ Opleiding toevoegen",
+    "noEducation": "Nog geen opleiding toegevoegd.",
+    "languages": "Talen",
+    "languageName": "Taal",
+    "noLanguages": "Nog geen talen toegevoegd.",
+    "proficiency": {
+      "conversational": "Redelijk",
+      "fluent": "Vloeiend",
+      "native": "Moedertaal"
+    }
   },
   "posting": {
     "staleBadge": "verlopen?",
