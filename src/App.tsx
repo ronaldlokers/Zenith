@@ -2294,6 +2294,7 @@ function FeedTab({
   const [items, setItems] = useState<FeedItem[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(0);
 
   const load = useCallback(
     () => api.feed().then(setItems).catch((e) => onError((e as Error).message)),
@@ -2333,6 +2334,40 @@ function FeedTab({
       .catch((e) => onError((e as Error).message));
   };
 
+  // Desktop keyboard triage (#144) — mirrors the Jobs tab's j/k pattern
+  // (#39): j/k move focus, a adds the focused item, d dismisses it. The
+  // swipe gesture from the same issue is mobile-only (a mouse-drag
+  // simulation of a touch gesture reads as gimmicky, not efficient); both
+  // input methods keep the existing buttons as the accessible fallback.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const list = items ?? [];
+      if (e.key === "j") {
+        e.preventDefault();
+        setFocusedIndex((i) => Math.min(i + 1, list.length - 1));
+      } else if (e.key === "k") {
+        e.preventDefault();
+        setFocusedIndex((i) => Math.max(i - 1, 0));
+      } else if (e.key === "a") {
+        const target = list[focusedIndex];
+        if (target) {
+          e.preventDefault();
+          add(target);
+        }
+      } else if (e.key === "d") {
+        const target = list[focusedIndex];
+        if (target) {
+          e.preventDefault();
+          dismiss(target);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [items, focusedIndex]);
+
   return (
     <section>
       <div className="toolbar">
@@ -2360,41 +2395,96 @@ function FeedTab({
       )}
 
       <ul className="cards">
-        {(items ?? []).map((item) => (
-          <li key={item.id} className="card">
-            <div className="card-body">
-              <div className="card-main">
-                <strong>{item.title}</strong>
-                <span className="muted small">
-                  {[item.company, item.location].filter(Boolean).join(" · ")}
-                </span>
-                <span className="muted small">
-                  {roleTypes.find((r) => r.slug === item.role_type)?.label ??
-                    item.role_type}
-                  {item.salary_text ? ` · ${item.salary_text}` : ""}
-                  {" · via "}
-                  {item.source}
-                </span>
-                {safeHref(item.url) && (
-                  <a href={safeHref(item.url)} target="_blank" rel="noreferrer" className="small">
-                    View posting ↗
-                  </a>
-                )}
-              </div>
-              <div className="card-actions">
-                <button className="primary" onClick={() => add(item)}>
-                  Add to Jobs
-                </button>
-                <button onClick={() => dismiss(item)}>Dismiss</button>
-              </div>
-            </div>
-          </li>
+        {(items ?? []).map((item, i) => (
+          <FeedCard
+            key={item.id}
+            item={item}
+            roleLabel={roleTypes.find((r) => r.slug === item.role_type)?.label ?? item.role_type}
+            focused={i === focusedIndex}
+            onAdd={() => add(item)}
+            onDismiss={() => dismiss(item)}
+          />
         ))}
         {items?.length === 0 && (
           <li className="empty">{t("empty.feedNothingNew")}</li>
         )}
       </ul>
     </section>
+  );
+}
+
+// Mobile swipe-to-triage (#144) — swipe right to add, left to dismiss.
+// Desktop keeps the buttons plus j/k/a/d (see FeedTab); a mouse-drag
+// simulation of the same gesture was rejected as gimmicky for a pointer
+// device, so this only activates via touch.
+const SWIPE_COMMIT_THRESHOLD = 90;
+
+function FeedCard({
+  item,
+  roleLabel,
+  focused,
+  onAdd,
+  onDismiss,
+}: {
+  item: FeedItem;
+  roleLabel: string;
+  focused: boolean;
+  onAdd: () => void;
+  onDismiss: () => void;
+}) {
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startX = useRef(0);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    setDragging(true);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!dragging) return;
+    setDragX(e.touches[0].clientX - startX.current);
+  };
+  const onTouchEnd = () => {
+    setDragging(false);
+    if (dragX > SWIPE_COMMIT_THRESHOLD) onAdd();
+    else if (dragX < -SWIPE_COMMIT_THRESHOLD) onDismiss();
+    setDragX(0);
+  };
+
+  return (
+    <li
+      className={`card feed-card${focused ? " kb-focused" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={dragging ? { transform: `translateX(${dragX}px)` } : undefined}
+    >
+      <div className="card-body">
+        <div className="card-main">
+          <strong>{item.title}</strong>
+          <span className="muted small">
+            {[item.company, item.location].filter(Boolean).join(" · ")}
+          </span>
+          <span className="muted small">
+            {roleLabel}
+            {item.salary_text ? ` · ${item.salary_text}` : ""}
+            {" · via "}
+            {item.source}
+          </span>
+          {safeHref(item.url) && (
+            <a href={safeHref(item.url)} target="_blank" rel="noreferrer" className="small">
+              View posting ↗
+            </a>
+          )}
+        </div>
+        <div className="card-actions">
+          <button className="primary" onClick={onAdd}>
+            Add to Jobs
+          </button>
+          <button onClick={onDismiss}>Dismiss</button>
+        </div>
+      </div>
+    </li>
   );
 }
 

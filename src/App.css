@@ -825,6 +825,21 @@ button.danger {
   flex-wrap: wrap;
 }
 
+/* Mobile swipe-to-triage (#144) — background tint during the drag,
+   before the swipe crosses the commit threshold. */
+.feed-card {
+  touch-action: pan-y;
+  transition: background-color 0.1s ease;
+}
+
+.feed-card.swipe-add {
+  background: color-mix(in srgb, var(--st-offer) 18%, var(--surface));
+}
+
+.feed-card.swipe-dismiss {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+}
+
 .card-actions button {
   border: 1px solid var(--border);
   background: var(--surface);
