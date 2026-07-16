@@ -73,7 +73,8 @@
     "title": "Settings",
     "language": "Language",
     "languageEn": "English",
-    "languageNl": "Nederlands"
+    "languageNl": "Nederlands",
+    "cvLanguage": "CV output language"
   },
   "feed": {
     "pulledFrom": "Pulled from Adzuna, HN Who's Hiring, and Arbeitnow every 6 hours.",

@@ -189,8 +189,17 @@ const LANGUAGES: [string, string][] = [
   ["nl", "languageNl"],
 ];
 
+const CV_LANG_KEY = "jobseekr_cv_lang";
+
+function getCvLanguage(fallback: string): string {
+  return localStorage.getItem(CV_LANG_KEY) || fallback;
+}
+
 function SettingsModal({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
+  const [cvLang, setCvLang] = useState(() =>
+    getCvLanguage(i18n.resolvedLanguage ?? "en"),
+  );
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -212,6 +221,22 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
           <select
             value={i18n.resolvedLanguage}
             onChange={(e) => i18n.changeLanguage(e.target.value)}
+          >
+            {LANGUAGES.map(([code, labelKey]) => (
+              <option key={code} value={code}>
+                {t(`settings.${labelKey}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="settings-field">
+          <span>{t("settings.cvLanguage")}</span>
+          <select
+            value={cvLang}
+            onChange={(e) => {
+              setCvLang(e.target.value);
+              localStorage.setItem(CV_LANG_KEY, e.target.value);
+            }}
           >
             {LANGUAGES.map(([code, labelKey]) => (
               <option key={code} value={code}>
@@ -3160,7 +3185,7 @@ function CVTab({
   onError: (message: string | null) => void;
   notify: (message: string, undo?: () => void) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [workExp, setWorkExp] = useState<WorkExperience[] | null>(null);
   const [education, setEducation] = useState<Education[] | null>(null);
@@ -3192,12 +3217,13 @@ function CVTab({
     // Dynamic import — jsPDF (~400kB) is only needed once someone
     // actually downloads a CV, not on every page load.
     const { generateCvPdf, generateCvPdfTwoColumn } = await import("./pdf");
+    const tCv = i18n.getFixedT(getCvLanguage(i18n.resolvedLanguage ?? "en"));
     const labels = {
-      present: t("cv.present"),
-      workExperience: t("cv.workExperience"),
-      education: t("cv.education"),
-      languages: t("cv.languages"),
-      skills: t("cv.skills"),
+      present: tCv("cv.present"),
+      workExperience: tCv("cv.workExperience"),
+      education: tCv("cv.education"),
+      languages: tCv("cv.languages"),
+      skills: tCv("cv.skills"),
     };
     const cvData = { profile, workExperience: workExp, education, languages };
     const doc =
