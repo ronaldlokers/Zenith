@@ -705,29 +705,81 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// Radial pipeline ring (#143) — replaces the Jobs-tab histogram with a
+// donut: this one is a genuine part-of-a-whole snapshot (how currently-
+// open applications break down by stage right now), which is what a
+// donut communicates best, in the same compact footprint the histogram
+// used. Stats tab's weekly bars (a trend, not a distribution) and
+// pipeline funnel (cumulative-reached-per-stage, a different
+// denominator, needs the funnel's decreasing-max shape) are untouched —
+// this consolidates only the one genuinely overlapping chart.
 function StageHistogram({ applications }: { applications: Application[] }) {
   const { t } = useTranslation();
   const open = applications.filter((a) => !isDead(a.status));
-  const max = Math.max(1, ...PIPELINE.map(
+  const total = open.length;
+  const counts = PIPELINE.map(
     (s) => open.filter((a) => a.status === s).length,
-  ));
+  );
+
+  const size = 96;
+  const strokeWidth = 14;
+  const r = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * r;
+  let cumulative = 0;
+
   return (
-    <div className="histo">
-      {PIPELINE.map((s) => {
-        const count = open.filter((a) => a.status === s).length;
-        return (
-          <div key={s} className={`hrow stage-${s}`}>
-            <span className="lbl">{t(`stages.${s}`)}</span>
-            <span className="htrack">
-              <span
-                className="hfill"
-                style={{ width: `${(count / max) * 100}%`, display: "block" }}
+    <div className="ring-chart">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={t("stats.pipelineFunnel")}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="var(--track)"
+          strokeWidth={strokeWidth}
+        />
+        {total > 0 &&
+          PIPELINE.map((s, i) => {
+            const count = counts[i];
+            if (count === 0) return null;
+            const fraction = count / total;
+            const dash = fraction * circumference;
+            const offset = -cumulative * circumference;
+            cumulative += fraction;
+            return (
+              <circle
+                key={s}
+                cx={size / 2}
+                cy={size / 2}
+                r={r}
+                fill="none"
+                stroke={`var(--st-${s})`}
+                strokeWidth={strokeWidth}
+                strokeDasharray={`${dash} ${circumference - dash}`}
+                strokeDashoffset={offset}
+                transform={`rotate(-90 ${size / 2} ${size / 2})`}
               />
-            </span>
-            <span className="n">{count}</span>
-          </div>
-        );
-      })}
+            );
+          })}
+        <text
+          x={size / 2}
+          y={size / 2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="ring-total"
+        >
+          {total}
+        </text>
+      </svg>
+      <ul className="ring-legend">
+        {PIPELINE.map((s, i) => (
+          <li key={s} className={`stage-${s}`}>
+            <span className="ring-dot" />
+            <span className="lbl">{t(`stages.${s}`)}</span>
+            <span className="n">{counts[i]}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
