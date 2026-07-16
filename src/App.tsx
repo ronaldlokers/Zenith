@@ -33,6 +33,41 @@ import {
 } from "./types";
 import "./App.css";
 
+// Shared remove-icon glyph (#118) — a plain "×" character renders at
+// inconsistent visual weight across browsers/fonts; an inline SVG at a
+// fixed stroke width looks the same everywhere.
+// Loading skeleton (#122) — replaces the plain "Loading…" text with
+// shimmering placeholder bars shaped like the app's own .card rows.
+function LoadingSkeleton() {
+  return (
+    <div className="skeleton-list" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="skeleton-card" />
+      ))}
+    </div>
+  );
+}
+
+function RemoveIcon() {
+  return (
+    <svg
+      className="remove-icon"
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M1 1L9 9M9 1L1 9"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 type Tab =
   | "applications"
   | "board"
@@ -670,6 +705,17 @@ export default function App() {
   const [onboardingDismissed, setOnboardingDismissed] = useState(
     () => localStorage.getItem("jobseekr_onboarding_dismissed") === "1",
   );
+  const [scrolled, setScrolled] = useState(false);
+
+  // Sticky header divider once the page scrolls under it (#126) — with
+  // nothing scrolled it looks identical to the page background, so
+  // there's no visual seam between header and content until this fires.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 0);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     if (onboardingDismissed) return;
@@ -837,7 +883,7 @@ export default function App() {
           }}
         />
       )}
-      <header className="header">
+      <header className={`header${scrolled ? " scrolled" : ""}`}>
         <div className="brand">
           <Logo />
           <h1>JobSeekr</h1>
@@ -915,7 +961,7 @@ export default function App() {
 
       <main className="content">
         {loading ? (
-          <p className="muted small loading">{t("common.loading")}</p>
+          <LoadingSkeleton />
         ) : (
           <>
             {tab === "applications" &&
@@ -1375,7 +1421,7 @@ function Timeline({
                   .catch((e) => onError((e as Error).message))
               }
             >
-              ×
+              <RemoveIcon />
             </button>
           </li>
         ))}
@@ -1470,7 +1516,7 @@ function Documents({
                     .catch((e) => onError((e as Error).message));
               }}
             >
-              ×
+              <RemoveIcon />
             </button>
           </li>
         ))}
@@ -1571,8 +1617,12 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
       const t = parseSqlDate(a.applied_at ?? a.created_at);
       return t >= start && t < start + WEEK;
     }).length;
-    const d = new Date(start);
-    const label = `${d.getDate()}/${d.getMonth() + 1}`;
+    // Same "16 Jul"-style format as formatDate() elsewhere (#125) — this
+    // used to be its own "28/5" convention, the only one in the app.
+    const label = new Date(start).toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+    });
     return { label, count };
   });
   const weekMax = Math.max(1, ...weeks.map((w) => w.count));
@@ -1898,7 +1948,7 @@ function FeedSettings({
               onBlur={(e) => renameRole(r, e.target.value)}
             />
             <button className="danger" onClick={() => removeRole(r)}>
-              ×
+              <RemoveIcon />
             </button>
           </li>
         ))}
@@ -1957,7 +2007,7 @@ function FeedSettings({
                     onClick={() => removeKeyword(k.id)}
                     aria-label={t("feedSettings.removeKeyword")}
                   >
-                    ×
+                    <RemoveIcon />
                   </button>
                 </span>
               ))}
@@ -2270,7 +2320,7 @@ function InterviewPrepSection({
               onClick={() => removeItem(item.id)}
               aria-label={t("common.delete")}
             >
-              ×
+              <RemoveIcon />
             </button>
           </li>
         ))}
@@ -2644,7 +2694,7 @@ function ApplicationDetailModal({
                     }
                     aria-label={t("feedSettings.removeKeyword")}
                   >
-                    ×
+                    <RemoveIcon />
                   </button>
                 </span>
               ))}
@@ -4351,7 +4401,7 @@ function CVTab({
   }, [load]);
 
   if (!profile || !workExp || !education || !languages) {
-    return <p className="muted small">{t("common.loading")}</p>;
+    return <LoadingSkeleton />;
   }
 
   const downloadPdf = async () => {
@@ -4791,7 +4841,7 @@ function WorkExperienceSection({
                     }
                     aria-label={t("feedSettings.removeKeyword")}
                   >
-                    ×
+                    <RemoveIcon />
                   </button>
                 </span>
               ))}
@@ -5065,7 +5115,7 @@ function LanguagesSection({
                   .catch((e) => onError((e as Error).message))
               }
             >
-              ×
+              <RemoveIcon />
             </button>
           </li>
         ))}
