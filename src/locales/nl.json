@@ -331,7 +331,16 @@
     "totalComp": "Totale beloning (geschat)",
     "benchmark": "{{pct}}% {{direction}} je mediane bijgehouden aanbod ({{n}} andere(n))",
     "above": "hoger dan",
-    "below": "lager dan"
+    "below": "lager dan",
+    "draftNegotiation": "Stel onderhandelingspunten op",
+    "hideNegotiationDraft": "Verberg onderhandelingspunten",
+    "copyDraft": "Kopiëren",
+    "negotiationIntro": "Notities voor het {{title}}-gesprek met {{company}}:",
+    "negotiationComp": "- De geschatte totale beloning van dit aanbod is ~{{amount}}.",
+    "negotiationCompeting": "- Ik heb een tegenaanbod van {{company}} om tegen dit aanbod af te wegen.",
+    "negotiationAnotherCompany": "een ander bedrijf",
+    "negotiationBelowMarket": "- Dit aanbod ligt ~{{pct}}% onder de mediaan van mijn andere aanbiedingen voor deze rol — de moeite waard om aan te kaarten.",
+    "negotiationClose": "- Vraag: is er ruimte op basissalaris, tekenbonus of aandelen voordat ik een definitief antwoord geef?"
   },
   "feedSettings": {
     "roleTypes": "Rollen",
