@@ -180,10 +180,12 @@ app.delete("/api/contacts/:id", async (c) => {
 
 app.get("/api/applications", async (c) => {
   const { results } = await c.env.DB.prepare(
-    `SELECT applications.*, companies.name AS company_name, contacts.name AS contact_name
+    `SELECT applications.*, companies.name AS company_name, contacts.name AS contact_name,
+            referrer.name AS referred_by_name
      FROM applications
      LEFT JOIN companies ON companies.id = applications.company_id
      LEFT JOIN contacts ON contacts.id = applications.contact_id
+     LEFT JOIN contacts AS referrer ON referrer.id = applications.referred_by_contact_id
      ORDER BY applications.updated_at DESC`,
   ).all();
   return c.json(results);
@@ -193,8 +195,8 @@ app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -217,6 +219,7 @@ app.post("/api/applications", async (c) => {
       body.bonus_target_pct ?? null,
       body.equity_value ?? null,
       body.benefits_notes ?? null,
+      body.referred_by_contact_id ?? null,
     )
     .first();
   await c.env.DB.prepare(
@@ -242,6 +245,7 @@ app.put("/api/applications/:id", async (c) => {
          salary_range = ?, status = ?, notes = ?, applied_at = ?, next_action = ?, next_action_at = ?,
          salary_currency = ?, salary_min = ?, salary_max = ?, salary_period = ?,
          signing_bonus = ?, bonus_target_pct = ?, equity_value = ?, benefits_notes = ?,
+         referred_by_contact_id = ?,
          updated_at = datetime('now')
      WHERE id = ? RETURNING *`,
   )
@@ -266,6 +270,7 @@ app.put("/api/applications/:id", async (c) => {
       body.bonus_target_pct ?? null,
       body.equity_value ?? null,
       body.benefits_notes ?? null,
+      body.referred_by_contact_id ?? null,
       c.req.param("id"),
     )
     .first();

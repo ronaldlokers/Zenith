@@ -446,6 +446,7 @@ export default function App() {
             {tab === "companies" && (
               <CompaniesTab
                 companies={visibleCompanies}
+                applications={visibleApps}
                 onChanged={reload}
                 onError={setError}
                 notify={notify}
@@ -606,7 +607,15 @@ function BoardTab({
                   className="bcard-body"
                   onClick={() => setDetailId(a.id)}
                 >
-                  <strong>{a.title}</strong>
+                  <strong>
+                    {a.title}
+                    {a.referred_by_contact_id ? (
+                      <span className="badge" title={t("referral.referredBy")}>
+                        {" "}
+                        {t("referral.badge")}
+                      </span>
+                    ) : null}
+                  </strong>
                   <span className="co">
                     {a.company_name ?? "—"}
                     {a.contact_name ? ` · ${a.contact_name}` : ""}
@@ -1657,6 +1666,11 @@ function ApplicationDetailModal({
                 </a>
               )}
               {a.source && <span className="muted small">via {a.source}</span>}
+              {a.referred_by_name && (
+                <span className="muted small">
+                  {t("referral.referredBy")}: {a.referred_by_name}
+                </span>
+              )}
               {a.salary_range && (
                 <span className="muted small">{a.salary_range}</span>
               )}
@@ -1961,7 +1975,15 @@ function ApplicationsTab({
             onClick={() => setDetailId(a.id)}
           >
             <div className="l1">
-              <strong>{a.title}</strong>
+              <strong>
+                {a.title}
+                {a.referred_by_contact_id ? (
+                  <span className="badge" title={t("referral.referredBy")}>
+                    {" "}
+                    {t("referral.badge")}
+                  </span>
+                ) : null}
+              </strong>
               <span className="co">
                 {a.company_name ?? "—"}
                 {a.contact_name ? ` · ${a.contact_name}` : ""}
@@ -2135,6 +2157,26 @@ function ApplicationForm({
             onChange={(e) =>
               set({
                 contact_id: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          >
+            <option value="">—</option>
+            {contacts.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          {t("referral.referredBy")}
+          <select
+            value={form.referred_by_contact_id ?? ""}
+            onChange={(e) =>
+              set({
+                referred_by_contact_id: e.target.value
+                  ? Number(e.target.value)
+                  : null,
               })
             }
           >
@@ -2351,11 +2393,12 @@ function ApplicationForm({
 
 function CompaniesTab({
   companies,
+  applications,
   onChanged,
   onError,
   notify,
   onDelete,
-}: CrudTabProps & { companies: Company[] }) {
+}: CrudTabProps & { companies: Company[]; applications: Application[] }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Company | "new" | null>(null);
   const [query, setQuery] = useState("");
@@ -2410,7 +2453,14 @@ function CompaniesTab({
       )}
 
       <ul className="cards">
-        {visible.map((c) => (
+        {visible.map((c) => {
+          const referrals = applications.filter(
+            (a) =>
+              a.company_id === c.id &&
+              a.referred_by_contact_id &&
+              !isDead(a.status),
+          ).length;
+          return (
           <li
             key={c.id}
             className="card row2"
@@ -2420,6 +2470,12 @@ function CompaniesTab({
               <strong>
                 {c.name}
                 {c.is_agency ? <span className="badge"> agency</span> : null}
+                {referrals > 0 ? (
+                  <span className="badge">
+                    {" "}
+                    {t("referral.badgeCount", { count: referrals })}
+                  </span>
+                ) : null}
               </strong>
               <span className="co">{c.location ?? ""}</span>
             </div>
@@ -2432,7 +2488,8 @@ function CompaniesTab({
               </span>
             </div>
           </li>
-        ))}
+          );
+        })}
         {visible.length === 0 && (
           <li className="empty">
             {companies.length === 0

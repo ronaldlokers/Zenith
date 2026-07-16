@@ -98,6 +98,27 @@ describe("applications", () => {
     expect(noTitle.status).toBe(400);
   });
 
+  it("persists a referral link and surfaces the referrer's name", async () => {
+    const contact = await post("/api/contacts", { name: "Jordan Referrer" });
+    const { id: contactId } = (await contact.json()) as { id: number };
+
+    const created = await post("/api/applications", {
+      title: "Referred Role",
+      referred_by_contact_id: contactId,
+    });
+    expect(created.status).toBe(201);
+    const app = (await created.json()) as { referred_by_contact_id: number };
+    expect(app.referred_by_contact_id).toBe(contactId);
+
+    const list = await SELF.fetch(`${BASE}/api/applications`);
+    const apps = (await list.json()) as {
+      title: string;
+      referred_by_name: string | null;
+    }[];
+    const referred = apps.find((a) => a.title === "Referred Role");
+    expect(referred?.referred_by_name).toBe("Jordan Referrer");
+  });
+
   it("persists offer-stage compensation fields", async () => {
     const created = await post("/api/applications", {
       title: "Staff Engineer",
