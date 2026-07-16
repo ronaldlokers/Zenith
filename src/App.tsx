@@ -3237,6 +3237,7 @@ function ApplicationDetailModal({
             companies={companies}
             contacts={contacts}
             roleTypes={roleTypes}
+            applications={allApplications}
             onError={onError}
             onCancel={() => setEditing(false)}
             onSubmit={(data) =>
@@ -3995,6 +3996,7 @@ function ApplicationsTab({
           companies={companies}
           contacts={contacts}
           roleTypes={roleTypes}
+          applications={applications}
           onError={onError}
           onCancel={() => setEditing(null)}
           onSubmit={(data) =>
@@ -4165,6 +4167,7 @@ function ApplicationForm({
   companies,
   contacts,
   roleTypes,
+  applications,
   onSubmit,
   onCancel,
   onError,
@@ -4173,6 +4176,7 @@ function ApplicationForm({
   companies: Company[];
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
+  applications?: Application[];
   onSubmit: (data: Partial<Application>) => void;
   onCancel: () => void;
   onError: (message: string | null) => void;
@@ -4187,6 +4191,17 @@ function ApplicationForm({
     setForm((f) => ({ ...f, ...patch }));
 
   const allCompanies = [...companies, ...extraCompanies];
+
+  // Same company + not already dismissed/rejected/withdrawn — a soft,
+  // dismissable nudge rather than a hard block, since deliberately
+  // re-applying (different role, referral this time, reopened req) is
+  // a real workflow (#217).
+  const possibleDuplicate =
+    !initial && form.company_id
+      ? (applications ?? []).find(
+          (a) => a.company_id === form.company_id && !isDead(a.status),
+        )
+      : null;
 
   // Fetch the job page and pre-fill; creates the company if unknown
   const importFromUrl = async () => {
@@ -4230,6 +4245,14 @@ function ApplicationForm({
         onSubmit(form);
       }}
     >
+      {possibleDuplicate && (
+        <p className="error">
+          <ErrorIcon />
+          <span className="error-text">
+            {t("detail.possibleDuplicate", { title: possibleDuplicate.title })}
+          </span>
+        </p>
+      )}
       <div className="form-group">
         <h4>Basics</h4>
         <label>

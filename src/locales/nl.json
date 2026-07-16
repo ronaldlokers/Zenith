@@ -188,6 +188,7 @@
     "jobDescription": "Vacaturetekst",
     "jobDescriptionCaptured": "vastgelegd op {{date}}",
     "jobDescriptionPlaceholder": "Plak hier de vacaturetekst — blijft bewaard, ook als de vacature wordt aangepast of verwijderd.",
+    "possibleDuplicate": "Je hebt al een open sollicitatie bij dit bedrijf: \"{{title}}\". Opslaan voegt een aparte toe.",
     "archived": "Gearchiveerd",
     "archive": "Archiveren",
     "unarchive": "Herstellen",
