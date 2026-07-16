@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { generateCvPdf, generateCvPdfTwoColumn } from "../src/pdf";
+import {
+  generateCvPdf,
+  generateCvPdfTwoColumn,
+  generateInterviewCheatSheet,
+} from "../src/pdf";
 import type { Education, Language, Profile, WorkExperience } from "../src/types";
 
 const labels = {
@@ -123,5 +127,66 @@ describe("generateCvPdfTwoColumn", () => {
       labels,
     );
     expect(doc.getNumberOfPages()).toBeGreaterThan(1);
+  });
+});
+
+describe("generateInterviewCheatSheet", () => {
+  const cheatSheetLabels = {
+    contact: "Contact",
+    companyResearch: "Company research",
+    prepChecklist: "Interview prep",
+    pastInteractions: "Timeline",
+    noNotes: "Nothing logged yet.",
+  };
+
+  it("produces a valid PDF containing company, contact, prep, and interaction data", () => {
+    const doc = generateInterviewCheatSheet(
+      {
+        title: "Senior Platform Engineer",
+        companyName: "Acme Cloud",
+        companyWebsite: "https://acme.example",
+        companyDescription: "Cloud infrastructure platform.",
+        contactName: "Jamie Park",
+        contactRole: "Talent Partner",
+        contactEmail: "jamie@acme.example",
+        contactPhone: null,
+        notes: "Warm intro via referral.",
+        prepItems: [
+          { text: "Research the team", done: true },
+          { text: "Prepare 3 questions", done: false },
+        ],
+        interactions: [
+          { type: "call", happened_at: "2026-01-05", notes: "Recruiter screen" },
+        ],
+      },
+      cheatSheetLabels,
+    );
+    const raw = doc.output();
+    expect(raw.startsWith("%PDF")).toBe(true);
+    expect(raw).toContain("Senior Platform Engineer");
+    expect(raw).toContain("Acme Cloud");
+    expect(raw).toContain("Jamie Park");
+    expect(raw).toContain("Research the team");
+    expect(raw).toContain("Recruiter screen");
+  });
+
+  it("falls back to the no-notes label for empty sections", () => {
+    const doc = generateInterviewCheatSheet(
+      {
+        title: "DevOps Engineer",
+        companyName: null,
+        companyWebsite: null,
+        companyDescription: null,
+        contactName: null,
+        contactRole: null,
+        contactEmail: null,
+        contactPhone: null,
+        notes: null,
+        prepItems: [],
+        interactions: [],
+      },
+      cheatSheetLabels,
+    );
+    expect(doc.output().startsWith("%PDF")).toBe(true);
   });
 });

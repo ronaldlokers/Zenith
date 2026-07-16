@@ -179,7 +179,14 @@
     "unarchive": "Herstellen",
     "keywordMatch": "Trefwoorden-check",
     "pasteJdPlaceholder": "Plak de vacaturetekst om te vergelijken met je CV-vaardigheden…",
-    "keywordMatchCount": "Je CV noemt {{matched}} van de {{total}} trefwoorden uit deze vacature"
+    "keywordMatchCount": "Je CV noemt {{matched}} van de {{total}} trefwoorden uit deze vacature",
+    "cheatSheet": {
+      "print": "Spiekbriefje printen",
+      "printing": "Voorbereiden…",
+      "contact": "Contact",
+      "companyResearch": "Bedrijfsonderzoek",
+      "noNotes": "Nog niets gelogd."
+    }
   },
   "nextUp": {
     "title": "Binnenkort"
