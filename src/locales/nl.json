@@ -245,7 +245,10 @@
     "bonusTarget": "Jaarlijkse bonus target %",
     "equityValue": "Aandelenwaarde (geschat, jaarlijks)",
     "benefitsNotes": "Notities secundaire arbeidsvoorwaarden",
-    "totalComp": "Totale beloning (geschat)"
+    "totalComp": "Totale beloning (geschat)",
+    "benchmark": "{{pct}}% {{direction}} je mediane bijgehouden aanbod ({{n}} andere(n))",
+    "above": "hoger dan",
+    "below": "lager dan"
   },
   "feedSettings": {
     "roleTypes": "Rollen",

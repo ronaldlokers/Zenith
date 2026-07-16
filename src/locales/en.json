@@ -245,7 +245,10 @@
     "bonusTarget": "Annual bonus target %",
     "equityValue": "Equity value (annualized est.)",
     "benefitsNotes": "Benefits notes",
-    "totalComp": "Total comp (est.)"
+    "totalComp": "Total comp (est.)",
+    "benchmark": "{{pct}}% {{direction}} your median tracked offer ({{n}} others)",
+    "above": "above",
+    "below": "below"
   },
   "feedSettings": {
     "roleTypes": "Role types",
