@@ -250,6 +250,66 @@
   width: 100%;
 }
 
+.command-palette {
+  max-width: 32rem;
+  padding: 0;
+  overflow: hidden;
+  align-self: flex-start;
+  margin-top: 4rem;
+}
+
+.palette-input {
+  width: 100%;
+  padding: 0.9rem 1.1rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.palette-input:focus {
+  outline: none;
+}
+
+.palette-results {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.palette-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.palette-group-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+  padding: 0.3rem 0.6rem 0.15rem;
+}
+
+.palette-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.palette-item:hover {
+  background: var(--bg);
+}
+
 .shortcut-help h2 {
   margin: 0 0 0.2rem;
   font-size: 1.05rem;

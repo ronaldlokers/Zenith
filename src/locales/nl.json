@@ -95,6 +95,11 @@
     "compare": "Vergelijk interviews & aanbiedingen",
     "exportData": "Exporteer je gegevens"
   },
+  "palette": {
+    "title": "Ga naar…",
+    "placeholder": "Zoek vacatures, bedrijven, contacten… (⌘K)",
+    "noResults": "Geen resultaten."
+  },
   "bulk": {
     "selectedCount_one": "{{count}} geselecteerd",
     "selectedCount_other": "{{count}} geselecteerd",
