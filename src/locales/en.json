@@ -5,6 +5,7 @@
     "board": "Board",
     "feed": "Feed",
     "calendar": "Calendar",
+    "activity": "Activity",
     "stats": "Stats",
     "companies": "Companies",
     "people": "People",
@@ -314,6 +315,9 @@
     "resetDemoSubmit": "Reset demo data",
     "resetDemoSuccess": "Demo data reset.",
     "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?"
+  },
+  "activityFeed": {
+    "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
   },
   "overview": {
     "openCount_one": "open application",

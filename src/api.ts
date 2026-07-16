@@ -80,6 +80,8 @@ export const api = {
   deleteFeedKeyword: (id: number) =>
     request<void>(`/api/feed/config/keywords/${id}`, { method: "DELETE" }),
   agenda: () => request<import("./types").AgendaEntry[]>("/api/agenda"),
+  activity: () =>
+    request<import("./types").ActivityEvent[]>("/api/activity"),
   researchCompany: (id: number) =>
     request<import("./types").Company>(`/api/companies/${id}/research`, {
       method: "POST",

@@ -1207,6 +1207,48 @@ select.status {
   border-left-color: var(--accent);
 }
 
+/* Activity feed (#129) */
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.activity-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--faint);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.activity-item.kind-status {
+  border-left-color: var(--accent);
+}
+
+.activity-item.kind-interaction {
+  border-left-color: var(--st-interview);
+}
+
+.activity-item.kind-document {
+  border-left-color: var(--st-offer);
+}
+
+.activity-date {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
 .stat-h {
   font-family: var(--mono);
   font-size: 0.66rem;

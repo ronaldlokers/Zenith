@@ -490,6 +490,41 @@ describe("agenda", () => {
   });
 });
 
+describe("activity", () => {
+  it("combines status changes, interactions, and documents across applications", async () => {
+    const app = await seedApplication({ title: "Activity Feed Target" });
+    await post(`/api/applications/${app.id}/interactions`, {
+      type: "call",
+      notes: "intro call",
+    });
+    await authedFetch(`${BASE}/api/applications/${app.id}/documents?filename=cv.pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/pdf", "Content-Length": "4" },
+      body: "%PDF",
+    });
+
+    const res = await authedFetch(`${BASE}/api/activity`);
+    expect(res.status).toBe(200);
+    const events = (await res.json()) as {
+      kind: string;
+      application_id: number;
+      title: string;
+      to_status: string | null;
+      type: string | null;
+      filename: string | null;
+    }[];
+    const forApp = events.filter((e) => e.application_id === app.id);
+    expect(forApp.some((e) => e.kind === "status" && e.to_status === "interested")).toBe(
+      true,
+    );
+    expect(forApp.some((e) => e.kind === "interaction" && e.type === "call")).toBe(true);
+    expect(forApp.some((e) => e.kind === "document" && e.filename === "cv.pdf")).toBe(
+      true,
+    );
+    expect(forApp.every((e) => e.title === "Activity Feed Target")).toBe(true);
+  });
+});
+
 describe("misc", () => {
   it("404s unknown api routes", async () => {
     const res = await authedFetch(`${BASE}/api/nope`);

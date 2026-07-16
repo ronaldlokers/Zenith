@@ -5,6 +5,7 @@
     "board": "Bord",
     "feed": "Feed",
     "calendar": "Agenda",
+    "activity": "Activiteit",
     "stats": "Statistieken",
     "companies": "Bedrijven",
     "people": "Contacten",
@@ -314,6 +315,9 @@
     "resetDemoSubmit": "Demo-data resetten",
     "resetDemoSuccess": "Demo-data gereset.",
     "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?"
+  },
+  "activityFeed": {
+    "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
   },
   "overview": {
     "openCount_one": "open sollicitatie",

@@ -930,6 +930,52 @@ app.get("/api/agenda", async (c) => {
   return c.json([...due, ...interactions, ...applied]);
 });
 
+// --- Activity feed (#129) ---
+// A single reverse-chronological feed across every application — status
+// changes, interactions, documents attached — distinct from the
+// per-application timeline in the detail modal.
+
+const ACTIVITY_LIMIT = 100;
+
+app.get("/api/activity", async (c) => {
+  const userId = c.get("userId");
+  const { results } = await c.env.DB.prepare(
+    `SELECT 'status' AS kind, sh.application_id, a.title, comp.name AS company_name,
+            sh.from_status, sh.to_status, NULL AS type, NULL AS notes, NULL AS filename,
+            sh.changed_at AS ts
+     FROM status_history sh
+     JOIN applications a ON a.id = sh.application_id
+     LEFT JOIN companies comp ON comp.id = a.company_id
+     WHERE sh.user_id = ?1
+
+     UNION ALL
+
+     SELECT 'interaction', i.application_id, a.title, comp.name,
+            NULL, NULL, i.type, i.notes, NULL,
+            i.happened_at
+     FROM interactions i
+     JOIN applications a ON a.id = i.application_id
+     LEFT JOIN companies comp ON comp.id = a.company_id
+     WHERE i.user_id = ?1 AND i.application_id IS NOT NULL
+
+     UNION ALL
+
+     SELECT 'document', d.application_id, a.title, comp.name,
+            NULL, NULL, NULL, NULL, d.filename,
+            d.created_at
+     FROM documents d
+     JOIN applications a ON a.id = d.application_id
+     LEFT JOIN companies comp ON comp.id = a.company_id
+     WHERE d.user_id = ?1
+
+     ORDER BY ts DESC
+     LIMIT ?2`,
+  )
+    .bind(userId, ACTIVITY_LIMIT)
+    .all();
+  return c.json(results);
+});
+
 // --- Stats ---
 
 app.get("/api/stats", async (c) => {

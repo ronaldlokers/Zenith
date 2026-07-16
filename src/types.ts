@@ -77,6 +77,19 @@ export interface AgendaEntry {
   contact_name?: string | null;
 }
 
+export interface ActivityEvent {
+  kind: "status" | "interaction" | "document";
+  application_id: number;
+  title: string;
+  company_name: string | null;
+  from_status: Status | null;
+  to_status: Status | null;
+  type: InteractionType | null;
+  notes: string | null;
+  filename: string | null;
+  ts: string;
+}
+
 export interface FeedItem {
   id: number;
   // "arbeitnow" no longer gets ingested (#165, German-market focused) but

@@ -18,6 +18,7 @@ import {
   type Contact,
   type Document,
   type AgendaEntry,
+  type ActivityEvent,
   type FeedItem,
   type RoleTypeDef,
   type Interaction,
@@ -74,6 +75,7 @@ type Tab =
   | "board"
   | "feed"
   | "calendar"
+  | "activity"
   | "stats"
   | "companies"
   | "contacts"
@@ -90,6 +92,7 @@ const TAB_PATHS: Record<Tab, string> = {
   board: "/board",
   feed: "/feed",
   calendar: "/calendar",
+  activity: "/activity",
   stats: "/stats",
   companies: "/companies",
   contacts: "/people",
@@ -101,6 +104,7 @@ const PATH_TABS: Record<string, Tab> = {
   board: "board",
   feed: "feed",
   calendar: "calendar",
+  activity: "activity",
   stats: "stats",
   companies: "companies",
   people: "contacts",
@@ -940,6 +944,12 @@ export default function App() {
           {t("tabs.calendar")}
         </button>
         <button
+          className={tab === "activity" ? "active" : ""}
+          onClick={() => setTab("activity")}
+        >
+          {t("tabs.activity")}
+        </button>
+        <button
           className={tab === "stats" ? "active" : ""}
           onClick={() => setTab("stats")}
         >
@@ -1042,6 +1052,12 @@ export default function App() {
                   setJumpQuery(title);
                   setTab("applications");
                 }}
+              />
+            )}
+            {tab === "activity" && (
+              <ActivityTab
+                onError={setError}
+                onOpenJob={(id) => navigate(`/jobs/${id}`)}
               />
             )}
             {tab === "stats" && <StatsTab onError={setError} />}
@@ -2239,6 +2255,66 @@ function CalendarTab({
           </ul>
         </div>
       ))}
+    </section>
+  );
+}
+
+// Activity feed (#129) — reverse-chronological across every application:
+// status changes, interactions, documents attached. Distinct from the
+// per-application timeline in the detail modal, which only covers one job.
+function activityText(
+  e: ActivityEvent,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  const co = e.company_name ? ` · ${e.company_name}` : "";
+  if (e.kind === "status") {
+    const from = e.from_status ? t(`stages.${e.from_status}`) : null;
+    const to = e.to_status ? t(`stages.${e.to_status}`) : "";
+    return `${e.title}${co} — ${from ? `${from} → ${to}` : to}`;
+  }
+  if (e.kind === "interaction") {
+    const type = e.type ? t(`interactionTypes.${e.type}`) : "";
+    return `${type} logged on ${e.title}${co}${e.notes ? ` — ${e.notes}` : ""}`;
+  }
+  return `${e.filename} attached to ${e.title}${co}`;
+}
+
+function ActivityTab({
+  onError,
+  onOpenJob,
+}: {
+  onError: (message: string | null) => void;
+  onOpenJob: (id: number) => void;
+}) {
+  const { t } = useTranslation();
+  const [events, setEvents] = useState<ActivityEvent[] | null>(null);
+
+  useEffect(() => {
+    api
+      .activity()
+      .then(setEvents)
+      .catch((e) => onError((e as Error).message));
+  }, [onError]);
+
+  if (!events) return <LoadingSkeleton />;
+
+  return (
+    <section className="activity">
+      {events.length === 0 && (
+        <p className="empty">{t("activityFeed.empty")}</p>
+      )}
+      <ul className="activity-list">
+        {events.map((e, i) => (
+          <li
+            key={i}
+            className={`activity-item kind-${e.kind}`}
+            onClick={() => onOpenJob(e.application_id)}
+          >
+            <span className="activity-date">{formatDate(e.ts.slice(0, 10))}</span>
+            <span className="activity-text">{activityText(e, t)}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
