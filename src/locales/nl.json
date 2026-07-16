@@ -44,6 +44,7 @@
     "allRoles": "Alle rollen",
     "allCompanies": "Alle bedrijven",
     "allTags": "Alle labels",
+    "showArchived": "Toon gearchiveerd",
     "sortUpdated": "Laatst bijgewerkt",
     "sortApplied": "Sollicitatiedatum",
     "sortCompany": "Bedrijf"
@@ -106,6 +107,9 @@
     "notes": "Notities",
     "deadline": "Deadline",
     "addTag": "+ label",
+    "archived": "Gearchiveerd",
+    "archive": "Archiveren",
+    "unarchive": "Herstellen",
     "keywordMatch": "Trefwoorden-check",
     "pasteJdPlaceholder": "Plak de vacaturetekst om te vergelijken met je CV-vaardigheden…",
     "keywordMatchCount": "Je CV noemt {{matched}} van de {{total}} trefwoorden uit deze vacature"
