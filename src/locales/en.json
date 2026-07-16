@@ -89,6 +89,7 @@
     "avgTimeInStage": "Average time in stage",
     "noHistory": "No history yet.",
     "ghostRate": "Ghost rate by source",
+    "unknownSource": "Unknown",
     "compare": "Compare interviews & offers",
     "exportData": "Export your data"
   },

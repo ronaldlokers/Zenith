@@ -189,6 +189,8 @@ const LANGUAGES: [string, string][] = [
   ["nl", "languageNl"],
 ];
 
+const UNKNOWN_SOURCE = "__unknown_source__";
+
 const CV_LANG_KEY = "jobseekr_cv_lang";
 
 function getCvLanguage(fallback: string): string {
@@ -1154,7 +1156,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   // Ghost rate per source
   const bySource = new Map<string, { total: number; ghosted: number }>();
   for (const a of apps) {
-    const src = a.source?.trim() || "unknown";
+    const src = a.source?.trim() || UNKNOWN_SOURCE;
     const cur = bySource.get(src) ?? { total: 0, ghosted: 0 };
     cur.total += 1;
     if (a.status === "ghosted") cur.ghosted += 1;
@@ -1220,7 +1222,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           .sort((a, b) => b[1].total - a[1].total)
           .map(([src, v]) => (
             <li key={src}>
-              <span>{src}</span>
+              <span>{src === UNKNOWN_SOURCE ? t("stats.unknownSource") : src}</span>
               <span className="muted small">{v.total} apps</span>
               <span className="stat-val">
                 {Math.round((v.ghosted / v.total) * 100)}% ghosted
