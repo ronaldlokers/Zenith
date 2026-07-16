@@ -1882,6 +1882,11 @@ select.status {
   padding: 0 0.2rem;
 }
 
+.keyword-chips .chip button.chip-move:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 .keyword-chips input {
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--border);
@@ -1926,6 +1931,18 @@ select.status {
   cursor: pointer;
   font-size: 0.9rem;
   line-height: 1;
+}
+
+.prep-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.prep-item-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .prep-add {
