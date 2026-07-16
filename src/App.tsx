@@ -1054,7 +1054,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           return (
             <li key={s} className={`stage-${s}`}>
               <span className="stat-dot" />
-              <span>{s}</span>
+              <span>{stageLabel(s)}</span>
               <span className="stat-val">{(d.total / d.n).toFixed(1)}d</span>
             </li>
           );
@@ -1377,7 +1377,10 @@ function FeedTab({
         <p className="muted small" style={{ margin: 0 }}>
           Pulled from Adzuna, HN Who's Hiring, and Arbeitnow every 6 hours.
         </p>
-        <button onClick={() => setShowSettings((v) => !v)}>
+        <button
+          className="btn-secondary"
+          onClick={() => setShowSettings((v) => !v)}
+        >
           {showSettings ? "Hide settings" : "Settings"}
         </button>
         <button className="primary" disabled={refreshing} onClick={refresh}>
@@ -1442,7 +1445,7 @@ function agendaText(e: AgendaEntry): string {
     return `${e.label ?? "Follow up"} — ${e.title ?? ""}${where ? ` (${where})` : ""}`;
   }
   if (e.kind === "interaction") {
-    return `${e.type ?? "touchpoint"}${e.title ? ` — ${e.title}` : ""}${where ? ` (${where})` : ""}`;
+    return `${e.type ? stageLabel(e.type) : "Touchpoint"}${e.title ? ` — ${e.title}` : ""}${where ? ` (${where})` : ""}`;
   }
   return `Applied to ${e.title ?? ""}${where ? ` at ${where}` : ""}`;
 }
@@ -1596,7 +1599,10 @@ function ApplicationDetailModal({
                   </option>
                 ))}
               </select>
-              <span className="muted small">{a.role_type}</span>
+              <span className="muted small">
+                {roleTypes.find((r) => r.slug === a.role_type)?.label ??
+                  a.role_type}
+              </span>
               {safeHref(a.url) && (
                 <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
                   Job posting ↗
@@ -1644,6 +1650,36 @@ function ApplicationDetailModal({
         )}
       </div>
     </div>
+  );
+}
+
+function NextUpPanel({ applications }: { applications: Application[] }) {
+  const upcoming = applications
+    .filter((a) => a.next_action_at && !isDead(a.status))
+    .sort((a, b) => (a.next_action_at ?? "").localeCompare(b.next_action_at ?? ""))
+    .slice(0, 6);
+
+  return (
+    <aside className="jobs-side">
+      <h3 className="side-h">Next up</h3>
+      {upcoming.length === 0 ? (
+        <p className="muted small">No follow-ups scheduled.</p>
+      ) : (
+        <ul className="side-list">
+          {upcoming.map((a) => (
+            <li key={a.id} className={`stage-${a.status}`}>
+              <span
+                className={`side-date${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
+              >
+                {formatDate(a.next_action_at!)}
+              </span>
+              <span className="side-title">{a.title}</span>
+              <span className="side-co">{a.company_name ?? "—"}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
   );
 }
 
@@ -1775,6 +1811,8 @@ function ApplicationsTab({
   return (
     <section>
       {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
+      <div className="jobs-layout">
+      <div className="jobs-main">
       <StageHistogram applications={applications} />
       <div className="toolbar">
         <input
@@ -1900,6 +1938,9 @@ function ApplicationsTab({
           </li>
         )}
       </ul>
+      </div>
+      <NextUpPanel applications={applications} />
+      </div>
       {detailApp && (
         <ApplicationDetailModal
           application={detailApp}
@@ -2182,7 +2223,8 @@ function CompaniesTab({
 }: CrudTabProps & { companies: Company[] }) {
   const [editing, setEditing] = useState<Company | "new" | null>(null);
   const [query, setQuery] = useState("");
-  const [researching, setResearching] = useState<Set<number>>(new Set());
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const detailCompany = companies.find((c) => c.id === detailId) ?? null;
 
   const q = query.trim().toLowerCase();
   const visible = companies.filter(
@@ -2201,24 +2243,6 @@ function CompaniesTab({
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
-
-  const research = (c: Company) => {
-    setResearching((s) => new Set(s).add(c.id));
-    api
-      .researchCompany(c.id)
-      .then(() => {
-        notify(`Researched ${c.name}`);
-        return onChanged();
-      })
-      .catch((e) => onError((e as Error).message))
-      .finally(() =>
-        setResearching((s) => {
-          const next = new Set(s);
-          next.delete(c.id);
-          return next;
-        }),
-      );
-  };
 
   return (
     <section>
@@ -2251,55 +2275,25 @@ function CompaniesTab({
 
       <ul className="cards">
         {visible.map((c) => (
-          <li key={c.id} className="card">
-            <div className="card-body">
-              {c.logo_url && (
-                <img
-                  src={c.logo_url}
-                  alt=""
-                  className="company-logo"
-                  loading="lazy"
-                />
-              )}
-              <div className="card-main">
-                <strong>
-                  {c.name}
-                  {c.is_agency ? <span className="badge"> agency</span> : null}
-                </strong>
-                <span className="muted small">{c.location ?? ""}</span>
-                {safeHref(c.website) && (
-                  <a
-                    href={safeHref(c.website)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="small"
-                  >
-                    {c.website}
-                  </a>
-                )}
-                {c.description && <p className="notes">{c.description}</p>}
-                {c.notes && <p className="notes">{c.notes}</p>}
-                {c.researched_at && (
-                  <span className="age">
-                    researched {ageDays(c.researched_at)} ago
-                  </span>
-                )}
-              </div>
-              <div className="card-actions">
-                <button
-                  disabled={!c.website || researching.has(c.id)}
-                  onClick={() => research(c)}
-                >
-                  {researching.has(c.id) ? "Researching…" : "Research"}
-                </button>
-                <button onClick={() => setEditing(c)}>Edit</button>
-                <button
-                  className="danger"
-                  onClick={() => onDelete("companies", c.id, c.name)}
-                >
-                  Delete
-                </button>
-              </div>
+          <li
+            key={c.id}
+            className="card row2"
+            onClick={() => setDetailId(c.id)}
+          >
+            <div className="l1">
+              <strong>
+                {c.name}
+                {c.is_agency ? <span className="badge"> agency</span> : null}
+              </strong>
+              <span className="co">{c.location ?? ""}</span>
+            </div>
+            <div className="l2">
+              <span className="co">{c.website ?? ""}</span>
+              <span className="due">
+                {c.researched_at
+                  ? `researched ${ageDays(c.researched_at)} ago`
+                  : "not researched"}
+              </span>
             </div>
           </li>
         ))}
@@ -2311,6 +2305,16 @@ function CompaniesTab({
           </li>
         )}
       </ul>
+      {detailCompany && (
+        <CompanyDetailModal
+          company={detailCompany}
+          onClose={() => setDetailId(null)}
+          onChanged={onChanged}
+          onError={onError}
+          notify={notify}
+          onDelete={onDelete}
+        />
+      )}
     </section>
   );
 }
@@ -2387,6 +2391,123 @@ function CompanyForm({
   );
 }
 
+function CompanyDetailModal({
+  company,
+  onClose,
+  onChanged,
+  onError,
+  notify,
+  onDelete,
+}: {
+  company: Company;
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+  onError: (message: string | null) => void;
+  notify: (message: string, undo?: () => void) => void;
+  onDelete: (resource: string, id: number, name: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [researching, setResearching] = useState(false);
+  const c = company;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const research = () => {
+    setResearching(true);
+    api
+      .researchCompany(c.id)
+      .then(() => {
+        notify(`Researched ${c.name}`);
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setResearching(false));
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="modal detail-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label={c.name}
+      >
+        <div className="detail-head">
+          <div>
+            <h2>
+              {c.name}
+              {c.is_agency ? <span className="badge"> agency</span> : null}
+            </h2>
+            <span className="muted small">{c.location ?? ""}</span>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        {editing ? (
+          <CompanyForm
+            initial={c}
+            onCancel={() => setEditing(false)}
+            onSubmit={(data) =>
+              api
+                .update("companies", c.id, data)
+                .then(() => {
+                  setEditing(false);
+                  notify("Saved");
+                  return onChanged();
+                })
+                .catch((e) => onError((e as Error).message))
+            }
+          />
+        ) : (
+          <>
+            <div className="detail-fields">
+              {safeHref(c.website) && (
+                <a href={safeHref(c.website)} target="_blank" rel="noreferrer" className="small">
+                  {c.website}
+                </a>
+              )}
+              {c.description && <p className="notes">{c.description}</p>}
+              {c.notes && <p className="notes">{c.notes}</p>}
+              {c.researched_at && (
+                <span className="age">
+                  researched {ageDays(c.researched_at)} ago
+                </span>
+              )}
+            </div>
+
+            <div className="detail-actions">
+              <button
+                disabled={!c.website || researching}
+                onClick={research}
+              >
+                {researching ? "Researching…" : "Research"}
+              </button>
+              <button onClick={() => setEditing(true)}>Edit</button>
+              <button
+                className="danger"
+                onClick={() => {
+                  onDelete("companies", c.id, c.name);
+                  onClose();
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ContactsTab({
   contacts,
   companies,
@@ -2397,7 +2518,8 @@ function ContactsTab({
 }: CrudTabProps & { contacts: Contact[]; companies: Company[] }) {
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [query, setQuery] = useState("");
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const detailContact = contacts.find((c) => c.id === detailId) ?? null;
 
   const q = query.trim().toLowerCase();
   const visible = contacts.filter(
@@ -2449,55 +2571,20 @@ function ContactsTab({
 
       <ul className="cards">
         {visible.map((c) => (
-          <li key={c.id} className="card">
-            <div className="card-body">
-              <div className="card-main">
-                <strong>{c.name}</strong>
-                <span className="muted small">
-                  {[c.role, c.company_name].filter(Boolean).join(" · ")}
-                </span>
-                {c.email && (
-                  <a href={`mailto:${c.email}`} className="small">
-                    {c.email}
-                  </a>
-                )}
-                {c.phone && (
-                  <a href={`tel:${c.phone}`} className="small">
-                    {c.phone}
-                  </a>
-                )}
-                {safeHref(c.linkedin) && (
-                  <a
-                    href={safeHref(c.linkedin)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="small"
-                  >
-                    LinkedIn ↗
-                  </a>
-                )}
-                {c.notes && <p className="notes">{c.notes}</p>}
-              </div>
-              <div className="card-actions">
-                <button
-                  onClick={() =>
-                    setExpandedId(expandedId === c.id ? null : c.id)
-                  }
-                >
-                  Log
-                </button>
-                <button onClick={() => setEditing(c)}>Edit</button>
-                <button
-                  className="danger"
-                  onClick={() => onDelete("contacts", c.id, c.name)}
-                >
-                  Delete
-                </button>
-              </div>
+          <li
+            key={c.id}
+            className="card row2"
+            onClick={() => setDetailId(c.id)}
+          >
+            <div className="l1">
+              <strong>{c.name}</strong>
+              <span className="co">
+                {[c.role, c.company_name].filter(Boolean).join(" · ")}
+              </span>
             </div>
-            {expandedId === c.id && (
-              <Timeline resource="contacts" targetId={c.id} onError={onError} />
-            )}
+            <div className="l2">
+              <span className="co">{c.email ?? c.phone ?? ""}</span>
+            </div>
           </li>
         ))}
         {visible.length === 0 && (
@@ -2508,6 +2595,17 @@ function ContactsTab({
           </li>
         )}
       </ul>
+      {detailContact && (
+        <ContactDetailModal
+          contact={detailContact}
+          companies={companies}
+          onClose={() => setDetailId(null)}
+          onChanged={onChanged}
+          onError={onError}
+          notify={notify}
+          onDelete={onDelete}
+        />
+      )}
     </section>
   );
 }
@@ -2608,5 +2706,112 @@ function ContactForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function ContactDetailModal({
+  contact,
+  companies,
+  onClose,
+  onChanged,
+  onError,
+  notify,
+  onDelete,
+}: {
+  contact: Contact;
+  companies: Company[];
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+  onError: (message: string | null) => void;
+  notify: (message: string, undo?: () => void) => void;
+  onDelete: (resource: string, id: number, name: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const c = contact;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="modal detail-modal"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label={c.name}
+      >
+        <div className="detail-head">
+          <div>
+            <h2>{c.name}</h2>
+            <span className="muted small">
+              {[c.role, c.company_name].filter(Boolean).join(" · ")}
+            </span>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        {editing ? (
+          <ContactForm
+            initial={c}
+            companies={companies}
+            onCancel={() => setEditing(false)}
+            onSubmit={(data) =>
+              api
+                .update("contacts", c.id, data)
+                .then(() => {
+                  setEditing(false);
+                  notify("Saved");
+                  return onChanged();
+                })
+                .catch((e) => onError((e as Error).message))
+            }
+          />
+        ) : (
+          <>
+            <div className="detail-fields">
+              {c.email && (
+                <a href={`mailto:${c.email}`} className="small">
+                  {c.email}
+                </a>
+              )}
+              {c.phone && (
+                <a href={`tel:${c.phone}`} className="small">
+                  {c.phone}
+                </a>
+              )}
+              {safeHref(c.linkedin) && (
+                <a href={safeHref(c.linkedin)} target="_blank" rel="noreferrer" className="small">
+                  LinkedIn ↗
+                </a>
+              )}
+              {c.notes && <p className="notes">{c.notes}</p>}
+            </div>
+
+            <div className="detail-actions">
+              <button onClick={() => setEditing(true)}>Edit</button>
+              <button
+                className="danger"
+                onClick={() => {
+                  onDelete("contacts", c.id, c.name);
+                  onClose();
+                }}
+              >
+                Delete
+              </button>
+            </div>
+
+            <h3 className="detail-sub">Timeline</h3>
+            <Timeline resource="contacts" targetId={c.id} onError={onError} />
+          </>
+        )}
+      </div>
+    </div>
   );
 }

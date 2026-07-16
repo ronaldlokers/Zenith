@@ -219,6 +219,16 @@
   font-family: var(--mono);
 }
 
+.btn-secondary {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1395,8 +1405,108 @@ summary.bcol-head::after {
   cursor: pointer;
 }
 
+/* .form-actions button and button.primary tie in specificity — without
+   this, source order lets the surface background above win over
+   button.primary's teal one, leaving accent-colored (white) text on a
+   white button. */
+.form-actions button.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  border: none;
+}
+
 @media (max-width: 480px) {
   .form {
     grid-template-columns: 1fr;
   }
+}
+
+/* Jobs tab desktop layout — a side panel uses the wide empty column
+   that a single 720px-max list otherwise leaves on any normal
+   desktop viewport (#74). Single column below 1100px, panel hidden
+   entirely below that since it's desktop-space-usage, not core
+   content. */
+.jobs-layout {
+  display: block;
+}
+
+.jobs-side {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .app:has(.jobs-layout) {
+    max-width: 1100px;
+  }
+
+  .jobs-layout {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .jobs-main {
+    min-width: 0;
+  }
+
+  .jobs-side {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    position: sticky;
+    top: 4.5rem;
+  }
+}
+
+.side-h {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 0.7rem;
+}
+
+.side-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.side-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  border-left: 3px solid var(--sc);
+  padding: 0.15rem 0 0.15rem 0.6rem;
+}
+
+.side-date {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  color: var(--faint);
+}
+
+.side-date.today {
+  color: var(--accent);
+}
+
+.side-date.late {
+  color: var(--danger);
+}
+
+.side-title {
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.side-co {
+  font-size: 0.76rem;
+  color: var(--muted);
 }
