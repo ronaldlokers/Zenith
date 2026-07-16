@@ -432,6 +432,9 @@ export default function App() {
   const visibleApps = applications.filter(
     (a) => !hidden.has(`applications:${a.id}`),
   );
+  // Archived applications keep contributing to Stats history but are
+  // hidden from the active pipeline views (header count, Board, Next up).
+  const activeApps = visibleApps.filter((a) => !a.archived_at);
   const visibleCompanies = companies.filter(
     (c) => !hidden.has(`companies:${c.id}`),
   );
@@ -452,10 +455,10 @@ export default function App() {
         <span className="header-actions">
           <span className="open-count">
             {t("header.openCount", {
-              count: applications.filter((a) => !isDead(a.status)).length,
+              count: activeApps.filter((a) => !isDead(a.status)).length,
             })}
-            {applications.filter(isDue).length > 0 &&
-              ` · ${t("header.dueCount", { count: applications.filter(isDue).length })}`}
+            {activeApps.filter(isDue).length > 0 &&
+              ` · ${t("header.dueCount", { count: activeApps.filter(isDue).length })}`}
           </span>
           <button
             className="settings-btn"
@@ -545,7 +548,7 @@ export default function App() {
             )}
             {tab === "board" && (
               <BoardTab
-                applications={visibleApps}
+                applications={activeApps}
                 companies={visibleCompanies}
                 contacts={visibleContacts}
                 roleTypes={roleTypes}
@@ -1994,6 +1997,20 @@ function ApplicationDetailModal({
             <div className="detail-actions">
               <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
               <button
+                onClick={() =>
+                  (a.archived_at
+                    ? api.unarchiveApplication(a.id)
+                    : api.archiveApplication(a.id)
+                  )
+                    .then(onChanged)
+                    .catch((e) => onError((e as Error).message))
+                }
+              >
+                {a.archived_at
+                  ? t("detail.unarchive")
+                  : t("detail.archive")}
+              </button>
+              <button
                 className="danger"
                 onClick={() => {
                   onDelete("applications", a.id, a.title);
@@ -2079,6 +2096,7 @@ function ApplicationsTab({
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
+  const [showArchived, setShowArchived] = useState(false);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"updated" | "applied" | "company">(
     "updated",
@@ -2107,6 +2125,7 @@ function ApplicationsTab({
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
     (a) =>
+      (showArchived || !a.archived_at) &&
       (statusFilter === "all" || a.status === statusFilter) &&
       (roleFilter === "all" || a.role_type === roleFilter) &&
       (companyFilter === "all" || String(a.company_id) === companyFilter) &&
@@ -2278,6 +2297,14 @@ function ApplicationsTab({
           <option value="applied">{t("filters.sortApplied")}</option>
           <option value="company">{t("filters.sortCompany")}</option>
         </select>
+        <label className="show-archived">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={(e) => setShowArchived(e.target.checked)}
+          />
+          {t("filters.showArchived")}
+        </label>
       </div>
 
       {editing && (
@@ -2302,12 +2329,18 @@ function ApplicationsTab({
         {visible.map((a, i) => (
           <li
             key={a.id}
-            className={`card row2 stage-${a.status}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}`}
+            className={`card row2 stage-${a.status}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}${a.archived_at ? " archived" : ""}`}
             onClick={() => setDetailId(a.id)}
           >
             <div className="l1">
               <strong>
                 {a.title}
+                {a.archived_at ? (
+                  <span className="badge" title={t("filters.showArchived")}>
+                    {" "}
+                    {t("detail.archived")}
+                  </span>
+                ) : null}
                 {a.referred_by_contact_id ? (
                   <span className="badge" title={t("referral.referredBy")}>
                     {" "}
@@ -2364,7 +2397,7 @@ function ApplicationsTab({
         )}
       </ul>
       </div>
-      <NextUpPanel applications={applications} />
+      <NextUpPanel applications={applications.filter((a) => !a.archived_at)} />
       </div>
       {detailApp && (
         <ApplicationDetailModal

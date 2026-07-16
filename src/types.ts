@@ -165,6 +165,7 @@ export interface Application {
   next_action: string | null;
   next_action_at: string | null;
   deadline_at: string | null;
+  archived_at: string | null;
   tags: Tag[];
   created_at: string;
   updated_at: string;

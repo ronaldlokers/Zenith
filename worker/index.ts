@@ -288,6 +288,28 @@ app.post("/api/applications", async (c) => {
   return c.json(result, 201);
 });
 
+app.post("/api/applications/:id/archive", async (c) => {
+  const result = await c.env.DB.prepare(
+    `UPDATE applications SET archived_at = datetime('now'), updated_at = datetime('now')
+     WHERE id = ? RETURNING *`,
+  )
+    .bind(c.req.param("id"))
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
+app.post("/api/applications/:id/unarchive", async (c) => {
+  const result = await c.env.DB.prepare(
+    `UPDATE applications SET archived_at = NULL, updated_at = datetime('now')
+     WHERE id = ? RETURNING *`,
+  )
+    .bind(c.req.param("id"))
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
 app.put("/api/applications/:id", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);

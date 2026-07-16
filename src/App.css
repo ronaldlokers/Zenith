@@ -386,6 +386,22 @@
   margin: 0 0 0.75rem;
 }
 
+.show-archived {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 0.4rem 0.2rem;
+}
+
+.card.archived {
+  opacity: 0.6;
+}
+
 .filters select {
   padding: 0.4rem 0.45rem;
   border: 1px solid var(--border);

@@ -153,4 +153,13 @@ export const api = {
     request<void>(`/api/applications/${applicationId}/tags/${tagId}`, {
       method: "DELETE",
     }),
+  archiveApplication: (id: number) =>
+    request<import("./types").Application>(`/api/applications/${id}/archive`, {
+      method: "POST",
+    }),
+  unarchiveApplication: (id: number) =>
+    request<import("./types").Application>(
+      `/api/applications/${id}/unarchive`,
+      { method: "POST" },
+    ),
 };

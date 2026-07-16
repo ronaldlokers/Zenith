@@ -44,6 +44,7 @@
     "allRoles": "All roles",
     "allCompanies": "All companies",
     "allTags": "All tags",
+    "showArchived": "Show archived",
     "sortUpdated": "Last updated",
     "sortApplied": "Applied date",
     "sortCompany": "Company"
@@ -106,6 +107,9 @@
     "notes": "Notes",
     "deadline": "Deadline",
     "addTag": "+ tag",
+    "archived": "Archived",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
     "keywordMatch": "Keyword match",
     "pasteJdPlaceholder": "Paste the job description to check it against your CV skills…",
     "keywordMatchCount": "Your CV mentions {{matched}} of {{total}} keywords found in this posting"
