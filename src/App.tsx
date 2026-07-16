@@ -4809,6 +4809,44 @@ function CVTab({
     load();
   }, [load]);
 
+  // Live PDF preview (#134) — regenerates the actual PDF (not an
+  // approximation) whenever the underlying data or template changes,
+  // instead of edit-then-download-to-check. Overlaps with #95's template
+  // thumbnails, which stay as the small selector; this is the full page.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!profile || !workExp || !education || !languages) return;
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    (async () => {
+      const { generateCvPdf, generateCvPdfTwoColumn } = await import("./pdf");
+      if (cancelled) return;
+      const tCv = i18n.getFixedT(getCvLanguage(i18n.resolvedLanguage ?? "en"));
+      const labels = {
+        present: tCv("cv.present"),
+        workExperience: tCv("cv.workExperience"),
+        education: tCv("cv.education"),
+        languages: tCv("cv.languages"),
+        skills: tCv("cv.skills"),
+      };
+      const cvData = { profile, workExperience: workExp, education, languages };
+      const doc =
+        template === "two-column"
+          ? generateCvPdfTwoColumn(cvData, labels)
+          : generateCvPdf(cvData, labels);
+      objectUrl = doc.output("bloburl") as unknown as string;
+      if (cancelled) {
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+      setPreviewUrl(objectUrl);
+    })();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [profile, workExp, education, languages, template, i18n]);
+
   if (!profile || !workExp || !education || !languages) {
     return <LoadingSkeleton />;
   }
@@ -4928,6 +4966,16 @@ function CVTab({
               <span className="side-co">{languages.length}</span>
             </li>
           </ul>
+          <h3 className="side-h cv-preview-h">{t("cv.livePreview")}</h3>
+          {previewUrl ? (
+            <iframe
+              className="cv-preview-frame"
+              src={previewUrl}
+              title={t("cv.livePreview")}
+            />
+          ) : (
+            <div className="skeleton-card cv-preview-frame" />
+          )}
         </aside>
       </div>
     </section>

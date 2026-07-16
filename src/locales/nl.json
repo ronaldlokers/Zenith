@@ -215,6 +215,7 @@
   "cv": {
     "downloadPdf": "PDF downloaden",
     "completeness": "In het kort",
+    "livePreview": "Live-preview",
     "skills": "Vaardigheden",
     "template": "Sjabloon",
     "templateSingle": "ATS-vriendelijk (één kolom)",
