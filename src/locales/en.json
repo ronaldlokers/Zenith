@@ -128,6 +128,8 @@
     "notes": "Notes",
     "deadline": "Deadline",
     "fitScore": "Fit score",
+    "quiet": "Quieter than usual",
+    "quietDetail": "This employer has gone longer than their own typical response gap without an update",
     "addTag": "+ tag",
     "archived": "Archived",
     "archive": "Archive",
