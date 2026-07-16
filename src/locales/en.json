@@ -123,6 +123,12 @@
       "no_response": "No response"
     }
   },
+  "onboarding": {
+    "title": "Getting started",
+    "profile": "Fill out your CV profile basics",
+    "company": "Add your first company",
+    "firstJob": "Add your first job — use \"+ Add job\" above"
+  },
   "prep": {
     "title": "Interview prep",
     "addStarterChecklist": "+ Add a starter checklist",
