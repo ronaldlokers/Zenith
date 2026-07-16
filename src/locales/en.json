@@ -127,6 +127,10 @@
     "appliedTo": "Applied to",
     "at": "at"
   },
+  "posting": {
+    "staleBadge": "gone?",
+    "staleHint": "This posting may no longer be live — worth a quick check."
+  },
   "referral": {
     "referredBy": "Referred by",
     "badge": "referral",

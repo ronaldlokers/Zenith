@@ -127,6 +127,10 @@
     "appliedTo": "Gesolliciteerd bij",
     "at": "bij"
   },
+  "posting": {
+    "staleBadge": "verlopen?",
+    "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
+  },
   "referral": {
     "referredBy": "Doorverwezen door",
     "badge": "referral",

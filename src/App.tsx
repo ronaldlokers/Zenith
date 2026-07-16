@@ -615,6 +615,12 @@ function BoardTab({
                         {t("referral.badge")}
                       </span>
                     ) : null}
+                    {a.posting_status === "maybe_stale" ? (
+                      <span className="badge warn" title={t("posting.staleHint")}>
+                        {" "}
+                        {t("posting.staleBadge")}
+                      </span>
+                    ) : null}
                   </strong>
                   <span className="co">
                     {a.company_name ?? "—"}
@@ -1666,6 +1672,11 @@ function ApplicationDetailModal({
                 </a>
               )}
               {a.source && <span className="muted small">via {a.source}</span>}
+              {a.posting_status === "maybe_stale" && (
+                <span className="muted small warn-text">
+                  {t("posting.staleHint")}
+                </span>
+              )}
               {a.referred_by_name && (
                 <span className="muted small">
                   {t("referral.referredBy")}: {a.referred_by_name}
@@ -1981,6 +1992,12 @@ function ApplicationsTab({
                   <span className="badge" title={t("referral.referredBy")}>
                     {" "}
                     {t("referral.badge")}
+                  </span>
+                ) : null}
+                {a.posting_status === "maybe_stale" ? (
+                  <span className="badge warn" title={t("posting.staleHint")}>
+                    {" "}
+                    {t("posting.staleBadge")}
                   </span>
                 ) : null}
               </strong>
