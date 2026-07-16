@@ -327,6 +327,29 @@ export default function App() {
     reload();
   }, [reload]);
 
+  // Defensive fallback for mobile browsers whose dynamic address-bar resize
+  // can leave `position: fixed; bottom: 0` anchored below the visible area
+  // (see #91) — track the real gap between the layout and visual viewport
+  // and let .tabs read it instead of assuming bottom: 0 is always correct.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const setOffset = () => {
+      const offset = window.innerHeight - vv.height - vv.offsetTop;
+      document.documentElement.style.setProperty(
+        "--vv-bottom-offset",
+        `${Math.max(0, offset)}px`,
+      );
+    };
+    setOffset();
+    vv.addEventListener("resize", setOffset);
+    vv.addEventListener("scroll", setOffset);
+    return () => {
+      vv.removeEventListener("resize", setOffset);
+      vv.removeEventListener("scroll", setOffset);
+    };
+  }, []);
+
   const notify = useCallback((message: string, undo?: () => void) => {
     const id = Date.now();
     setToast({ id, message, undo });
