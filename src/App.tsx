@@ -123,6 +123,26 @@ function SettingsIcon() {
   );
 }
 
+// Matches the stroke-based hand-drawn style of the Empty*Icon set —
+// the error banner previously had no icon at all (#206).
+function ErrorIcon() {
+  return (
+    <svg
+      className="error-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" strokeWidth="2" />
+      <line x1="12" y1="7.5" x2="12" y2="13" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="16.5" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function RemoveIcon() {
   return (
     <svg
@@ -1212,7 +1232,20 @@ export default function App() {
         </button>
       </nav>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <p className="error">
+          <ErrorIcon />
+          <span className="error-text">{error}</span>
+          <button
+            type="button"
+            className="error-dismiss"
+            onClick={() => setError(null)}
+            aria-label={t("common.close")}
+          >
+            <RemoveIcon />
+          </button>
+        </p>
+      )}
 
       <main className="content">
         {loading ? (
