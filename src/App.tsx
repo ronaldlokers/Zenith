@@ -938,6 +938,18 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // The mobile tab bar has more tabs than fit at 390px and scrolls
+  // horizontally (#48). Keep the active tab in view on every switch —
+  // otherwise a deep link or the keyboard-shortcut palette can land on
+  // a tab scrolled off-screen with no visual cue it's even selected (#204).
+  const tabsRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const active = tabsRef.current?.querySelector(
+      `[data-tab="${tab}"]`,
+    ) as HTMLElement | null;
+    active?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [tab]);
+
   useEffect(() => {
     if (onboardingDismissed) return;
     api.profile().then(setOnboardingProfile).catch(() => {});
@@ -1127,63 +1139,73 @@ export default function App() {
           </button>
         </span>
       </header>
-      <nav className="tabs">
+      <nav className="tabs" ref={tabsRef}>
         <button
           className={tab === "overview" ? "active" : ""}
+          data-tab="overview"
           onClick={() => setTab("overview")}
         >
           {t("tabs.overview")}
         </button>
         <button
           className={tab === "applications" ? "active" : ""}
+          data-tab="applications"
           onClick={() => setTab("applications")}
         >
           {t("tabs.jobs")}
         </button>
         <button
           className={tab === "board" ? "active" : ""}
+          data-tab="board"
           onClick={() => setTab("board")}
         >
           {t("tabs.board")}
         </button>
         <button
           className={tab === "feed" ? "active" : ""}
+          data-tab="feed"
           onClick={() => setTab("feed")}
         >
           {t("tabs.feed")}
         </button>
         <button
           className={tab === "calendar" ? "active" : ""}
+          data-tab="calendar"
           onClick={() => setTab("calendar")}
         >
           {t("tabs.calendar")}
         </button>
         <button
           className={tab === "activity" ? "active" : ""}
+          data-tab="activity"
           onClick={() => setTab("activity")}
         >
           {t("tabs.activity")}
         </button>
         <button
           className={tab === "stats" ? "active" : ""}
+          data-tab="stats"
           onClick={() => setTab("stats")}
         >
           {t("tabs.stats")}
         </button>
         <button
           className={tab === "companies" ? "active" : ""}
+          data-tab="companies"
           onClick={() => setTab("companies")}
         >
           {t("tabs.companies")}
         </button>
         <button
           className={tab === "contacts" ? "active" : ""}
+          data-tab="contacts"
           onClick={() => setTab("contacts")}
         >
           {t("tabs.people")}
         </button>
         <button
           className={tab === "cv" ? "active" : ""}
+          data-tab="cv"
           onClick={() => setTab("cv")}
         >
           {t("tabs.cv")}
