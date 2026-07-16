@@ -3529,11 +3529,23 @@ function WorkExperienceSection({
       .catch((e) => onError((e as Error).message));
   };
 
+  const move = (index: number, dir: -1 | 1) => {
+    const other = items[index + dir];
+    const item = items[index];
+    if (!other) return;
+    Promise.all([
+      api.update("work-experience", item.id, { ...item, sort_order: other.sort_order }),
+      api.update("work-experience", other.id, { ...other, sort_order: item.sort_order }),
+    ])
+      .then(onChanged)
+      .catch((e) => onError((e as Error).message));
+  };
+
   return (
     <div className="cv-section">
       <h3 className="detail-sub">{t("cv.workExperience")}</h3>
       <ul className="cv-list">
-        {items.map((w) => (
+        {items.map((w, i) => (
           <li key={w.id} className="cv-item">
             <div className="cv-item-head">
               <div>
@@ -3546,6 +3558,20 @@ function WorkExperienceSection({
                 </div>
               </div>
               <div className="cv-item-actions">
+                <button
+                  aria-label={t("cv.moveUp")}
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  aria-label={t("cv.moveDown")}
+                  disabled={i === items.length - 1}
+                  onClick={() => move(i, 1)}
+                >
+                  ↓
+                </button>
                 <button onClick={() => setEditing(w)}>{t("common.edit")}</button>
                 <button
                   className="danger"
@@ -3718,11 +3744,23 @@ function EducationSection({
       })
       .catch((e) => onError((e as Error).message));
 
+  const move = (index: number, dir: -1 | 1) => {
+    const other = items[index + dir];
+    const item = items[index];
+    if (!other) return;
+    Promise.all([
+      api.update("education", item.id, { ...item, sort_order: other.sort_order }),
+      api.update("education", other.id, { ...other, sort_order: item.sort_order }),
+    ])
+      .then(onChanged)
+      .catch((e) => onError((e as Error).message));
+  };
+
   return (
     <div className="cv-section">
       <h3 className="detail-sub">{t("cv.education")}</h3>
       <ul className="cv-list">
-        {items.map((ed) => (
+        {items.map((ed, i) => (
           <li key={ed.id} className="cv-item">
             <div className="cv-item-head">
               <div>
@@ -3735,6 +3773,20 @@ function EducationSection({
                 </div>
               </div>
               <div className="cv-item-actions">
+                <button
+                  aria-label={t("cv.moveUp")}
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  aria-label={t("cv.moveDown")}
+                  disabled={i === items.length - 1}
+                  onClick={() => move(i, 1)}
+                >
+                  ↓
+                </button>
                 <button onClick={() => setEditing(ed)}>{t("common.edit")}</button>
                 <button
                   className="danger"
