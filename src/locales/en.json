@@ -366,5 +366,10 @@
     "recentActivity": "Recent activity",
     "noActivity": "Nothing yet — add your first job to get started.",
     "viewAllJobs": "View all jobs"
+  },
+  "jobs": {
+    "density": "Row density",
+    "densityComfortable": "Comfortable",
+    "densityCompact": "Compact"
   }
 }
