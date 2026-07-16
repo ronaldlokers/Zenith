@@ -6,6 +6,13 @@ import './i18n'
 import App from './App.tsx'
 import { AuthGate } from './AuthGate.tsx'
 
+// Applied here (before React renders) rather than in a useEffect, so a
+// persisted "control room" theme choice (#146) doesn't flash the
+// default theme first.
+if (localStorage.getItem('jobseekr_theme') === 'control-room') {
+  document.documentElement.dataset.theme = 'control-room'
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>

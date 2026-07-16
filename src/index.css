@@ -62,6 +62,43 @@
   }
 }
 
+/* Bespoke "control room" theme (#146) — an explicit user choice (see the
+   theme selector in Settings), so this always wins over prefers-color-
+   scheme regardless of OS light/dark, via the attribute selector's
+   higher specificity. Near-black + a cyan accent, tested across
+   header/Jobs/Board.
+   The existing app already scopes mono/uppercase treatment to short
+   chrome only (tab labels, stage pills, column headers) and keeps
+   --sans/regular-case for free text (job titles, company names, notes)
+   — the honest tradeoff this theme's own research flagged (a long real
+   job title going all-caps) never applies, since nothing free-text was
+   ever uppercase to begin with. Just token values change here. */
+:root[data-theme="control-room"] {
+  --bg: #050607;
+  --surface: #0d0f12;
+  --ink: #e2e8f0;
+  --muted: #7b8794;
+  --faint: #4b5563;
+  --border: #1f2937;
+  --track: #161b22;
+  --accent: #22d3ee;
+  --accent-text: #04141a;
+  --danger: #f87171;
+
+  --st-interested: #94a3b8;
+  --st-applied: #eab308;
+  --st-screening: #fb923c;
+  --st-interview: #a78bfa;
+  --st-offer: #34d399;
+  --st-dead: #64748b;
+
+  --heat-watch: #eab308;
+  --heat-quiet: #fb923c;
+  --heat-cold: #f87171;
+
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
