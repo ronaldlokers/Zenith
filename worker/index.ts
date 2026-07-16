@@ -539,23 +539,37 @@ const EXPORT_TABLES = [
   "interactions",
   "status_history",
   "documents",
+  "application_tags",
+  "tags",
+  "profile",
+  "skills",
+  "work_experience",
+  "work_experience_skills",
+  "education",
+  "languages",
+  "interview_prep_items",
+  "role_types",
+  "feed_sources",
+  "feed_role_keywords",
+  "feed_items",
 ] as const;
 
-app.get("/api/export", async (c) => {
+export async function buildFullExport(
+  env: Env,
+): Promise<Record<string, unknown>> {
   const dump: Record<string, unknown[]> = {};
   for (const table of EXPORT_TABLES) {
-    const { results } = await c.env.DB.prepare(
-      `SELECT * FROM ${table}`,
-    ).all();
+    const { results } = await env.DB.prepare(`SELECT * FROM ${table}`).all();
     dump[table] = results;
   }
-  return c.json(
-    { exported_at: new Date().toISOString(), ...dump },
-    200,
-    {
-      "Content-Disposition": `attachment; filename="jobseekr-export-${new Date().toISOString().slice(0, 10)}.json"`,
-    },
-  );
+  return { exported_at: new Date().toISOString(), ...dump };
+}
+
+app.get("/api/export", async (c) => {
+  const dump = await buildFullExport(c.env);
+  return c.json(dump, 200, {
+    "Content-Disposition": `attachment; filename="jobseekr-export-${new Date().toISOString().slice(0, 10)}.json"`,
+  });
 });
 
 function toCsv(rows: Record<string, unknown>[]): string {
@@ -1063,9 +1077,32 @@ export async function logInboundEmail(
   }
 }
 
+// Scheduled full backup to R2 (#116) — the CSV/JSON export was manual-only,
+// so a stale database has no recovery path if D1 has an issue. Keeps the
+// last 14 daily backups, pruning older ones on each run.
+const BACKUP_PREFIX = "backups/";
+const BACKUP_RETENTION = 14;
+
+export async function runScheduledBackup(env: Env): Promise<void> {
+  const dump = await buildFullExport(env);
+  const key = `${BACKUP_PREFIX}${new Date().toISOString().slice(0, 10)}.json`;
+  await env.DOCS.put(key, JSON.stringify(dump), {
+    httpMetadata: { contentType: "application/json" },
+  });
+
+  const listed = await env.DOCS.list({ prefix: BACKUP_PREFIX });
+  const keys = listed.objects.map((o) => o.key).sort();
+  const toDelete = keys.slice(0, Math.max(0, keys.length - BACKUP_RETENTION));
+  await Promise.all(toDelete.map((k) => env.DOCS.delete(k)));
+}
+
 export default {
   fetch: app.fetch,
-  async scheduled(_event, env, ctx) {
+  async scheduled(event, env, ctx) {
+    if (event.cron === "11 3 * * *") {
+      ctx.waitUntil(runScheduledBackup(env));
+      return;
+    }
     ctx.waitUntil(refreshFeed(env));
     ctx.waitUntil(checkStalePostings(env));
   },
