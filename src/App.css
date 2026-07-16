@@ -112,6 +112,7 @@
 .histo .lbl {
   width: 5.4rem;
   text-transform: none;
+  color: var(--sc);
 }
 
 .histo .htrack {
@@ -648,6 +649,11 @@ button.danger {
   border-color: var(--danger);
 }
 
+.badge.stage {
+  color: var(--sc);
+  border-color: var(--sc);
+}
+
 .warn-text {
   color: var(--danger);
 }
@@ -827,6 +833,11 @@ select.status {
   border-radius: 50%;
   background: var(--sc);
   align-self: center;
+}
+
+.stage-name {
+  color: var(--sc);
+  font-weight: 600;
 }
 
 .stat-val {
