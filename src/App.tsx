@@ -99,6 +99,30 @@ function EmptyCvIcon() {
   );
 }
 
+// Matches the stroke-based hand-drawn style of the Empty*Icon set (#203) —
+// the settings button previously used a bare "⚙" glyph, a third icon
+// convention alongside these SVGs and the app's mostly-textual chrome.
+function SettingsIcon() {
+  return (
+    <svg
+      className="settings-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="3.2" strokeWidth="2" />
+      <path
+        d="M12 3.5v2.4M12 18.1v2.4M20.5 12h-2.4M5.9 12H3.5M17.66 6.34l-1.7 1.7M8.04 15.96l-1.7 1.7M17.66 17.66l-1.7-1.7M8.04 8.04l-1.7-1.7"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function RemoveIcon() {
   return (
     <svg
@@ -1099,7 +1123,7 @@ export default function App() {
             title={t("header.settings")}
             aria-label={t("header.settings")}
           >
-            ⚙
+            <SettingsIcon />
           </button>
         </span>
       </header>

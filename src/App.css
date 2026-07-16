@@ -45,13 +45,15 @@
 }
 
 .settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
   border-radius: 6px;
   width: 1.9rem;
   height: 1.9rem;
-  font-size: 0.95rem;
   cursor: pointer;
 }
 
