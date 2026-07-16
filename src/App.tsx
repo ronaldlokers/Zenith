@@ -695,6 +695,11 @@ export default function App() {
   const { tab, id: detailIdFromUrl } = parsePath(location.pathname);
   const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
   const [showSettings, setShowSettings] = useState(false);
+  // Mobile quick-add FAB (#135) — reachable from any tab, not just from
+  // inside the Jobs toolbar. A counter rather than a boolean so repeated
+  // taps re-trigger the effect in ApplicationsTab even if the form was
+  // already open and got closed again.
+  const [quickAddSignal, setQuickAddSignal] = useState(0);
   const [applications, setApplications] = useState<Application[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -1018,6 +1023,7 @@ export default function App() {
                 onDetailIdChange={(id) =>
                   navigate(id ? `/jobs/${id}` : "/jobs")
                 }
+                quickAddSignal={quickAddSignal}
               />
             )}
             {tab === "board" && (
@@ -1088,6 +1094,17 @@ export default function App() {
           </>
         )}
       </main>
+
+      <button
+        className="quick-add-fab"
+        onClick={() => {
+          setTab("applications");
+          setQuickAddSignal((n) => n + 1);
+        }}
+        aria-label={t("toolbar.addJob")}
+      >
+        +
+      </button>
 
       {toast && (
         <div className="toast" role="status">
@@ -3081,6 +3098,7 @@ function ApplicationsTab({
   initialQuery,
   initialDetailId,
   onDetailIdChange,
+  quickAddSignal,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -3090,9 +3108,16 @@ function ApplicationsTab({
   initialQuery?: string;
   initialDetailId?: number | null;
   onDetailIdChange?: (id: number | null) => void;
+  // Mobile quick-add FAB (#135) — reachable from any tab. A counter that
+  // increments on each tap, so opening the form again after closing it
+  // still fires even though 0 -> the initial no-op value never does.
+  quickAddSignal?: number;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Application | "new" | null>(null);
+  useEffect(() => {
+    if (quickAddSignal) setEditing("new");
+  }, [quickAddSignal]);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");

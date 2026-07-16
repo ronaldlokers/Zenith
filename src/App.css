@@ -1074,6 +1074,35 @@ select.status {
 }
 
 /* Toast */
+/* Mobile quick-add FAB (#135) — reachable from any tab, sitting just
+   above the fixed bottom tab bar. Desktop already has "+ Add job" in
+   the Jobs toolbar, so this only needs to exist on narrow viewports. */
+.quick-add-fab {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .quick-add-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 1rem;
+    bottom: calc(4.6rem + var(--vv-bottom-offset, 0px) + env(safe-area-inset-bottom));
+    z-index: 20;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 1.8rem;
+    line-height: 1;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+}
+
 .toast {
   position: fixed;
   bottom: calc(4.2rem + env(safe-area-inset-bottom));
