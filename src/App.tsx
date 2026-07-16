@@ -191,6 +191,13 @@ const LANGUAGES: [string, string][] = [
 
 function SettingsModal({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
