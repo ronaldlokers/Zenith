@@ -112,6 +112,10 @@
     "ghostRate": "Ghost-percentage per bron",
     "unknownSource": "Onbekend",
     "compare": "Vergelijk interviews & aanbiedingen",
+    "downloadOfferComparison": "Download aanbiedingsvergelijking (PDF)",
+    "offerComparisonHeading": "Aanbiedingsvergelijking",
+    "offerComparisonBreakdown": "Opbouw",
+    "offerComparisonEmpty": "Nog geen aanbiedingen.",
     "exportData": "Exporteer je gegevens",
     "streak": {
       "activeTitle_one": "{{count}} week actieve reeks",

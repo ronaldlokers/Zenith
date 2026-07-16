@@ -112,6 +112,10 @@
     "ghostRate": "Ghost rate by source",
     "unknownSource": "Unknown",
     "compare": "Compare interviews & offers",
+    "downloadOfferComparison": "Download offer comparison (PDF)",
+    "offerComparisonHeading": "Offer comparison",
+    "offerComparisonBreakdown": "Breakdown",
+    "offerComparisonEmpty": "No offers yet.",
     "exportData": "Export your data",
     "streak": {
       "activeTitle_one": "{{count}} week active streak",

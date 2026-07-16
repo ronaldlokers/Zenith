@@ -2173,6 +2173,31 @@ function totalComp(a: Application): number | null {
   return base + (a.signing_bonus ?? 0) + bonus + (a.equity_value ?? 0);
 }
 
+// Dynamic import — jsPDF (~400kB) is only needed once someone actually
+// downloads the comparison, not on every Stats page load (#222).
+async function downloadOfferComparisonPdf(
+  offers: Application[],
+  t: (key: string, opts?: Record<string, unknown>) => string,
+) {
+  const { generateOfferComparisonPdf } = await import("./pdf");
+  const rows = offers.map((a) => ({
+    title: a.title,
+    companyName: a.company_name ?? "—",
+    currency: a.salary_currency ?? "",
+    totalComp: totalComp(a),
+    breakdown: totalCompBreakdown(a),
+    benefitsNotes: a.benefits_notes,
+  }));
+  const doc = generateOfferComparisonPdf(rows, {
+    heading: t("stats.offerComparisonHeading"),
+    totalComp: t("offer.totalComp"),
+    breakdown: t("stats.offerComparisonBreakdown"),
+    benefits: t("offer.benefitsNotes"),
+    noOffers: t("stats.offerComparisonEmpty"),
+  });
+  doc.save("offer-comparison.pdf");
+}
+
 function totalCompBreakdown(a: Application): string {
   const base = annualizedComp(a);
   if (base == null) return "";
@@ -2430,6 +2455,15 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
       </ul>
 
       <h2 className="stat-h">{t("stats.compare")}</h2>
+      {comparing.some((a) => a.status === "offer") && (
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => downloadOfferComparisonPdf(comparing.filter((a) => a.status === "offer"), t)}
+        >
+          {t("stats.downloadOfferComparison")}
+        </button>
+      )}
       <div className="compare-wrap">
         <table className="compare-table">
           <thead>
