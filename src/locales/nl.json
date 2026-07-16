@@ -114,6 +114,7 @@
     "description": "Omschrijving",
     "notes": "Notities",
     "deadline": "Deadline",
+    "fitScore": "Fit-score",
     "addTag": "+ label",
     "archived": "Gearchiveerd",
     "archive": "Archiveren",

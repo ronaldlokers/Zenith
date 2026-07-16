@@ -114,6 +114,7 @@
     "description": "Description",
     "notes": "Notes",
     "deadline": "Deadline",
+    "fitScore": "Fit score",
     "addTag": "+ tag",
     "archived": "Archived",
     "archive": "Archive",

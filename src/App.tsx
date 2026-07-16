@@ -1915,6 +1915,12 @@ function ApplicationDetailModal({
                     a.role_type}
                 </span>
               </div>
+              {a.fit_score ? (
+                <div>
+                  <span className="field-label">{t("detail.fitScore")}</span>
+                  <span className="fit-stars">{"★".repeat(a.fit_score)}</span>
+                </div>
+              ) : null}
               {safeHref(a.url) && (
                 <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
                   Job posting ↗
@@ -2040,7 +2046,13 @@ function NextUpPanel({ applications }: { applications: Application[] }) {
   const { t } = useTranslation();
   const upcoming = applications
     .filter((a) => a.next_action_at && !isDead(a.status))
-    .sort((a, b) => (a.next_action_at ?? "").localeCompare(b.next_action_at ?? ""))
+    .sort((a, b) => {
+      const byDate = (a.next_action_at ?? "").localeCompare(
+        b.next_action_at ?? "",
+      );
+      if (byDate !== 0) return byDate;
+      return (b.fit_score ?? 0) - (a.fit_score ?? 0);
+    })
     .slice(0, 6);
 
   return (
@@ -2057,7 +2069,12 @@ function NextUpPanel({ applications }: { applications: Application[] }) {
               >
                 {formatDate(a.next_action_at!)}
               </span>
-              <span className="side-title">{a.title}</span>
+              <span className="side-title">
+                {a.title}
+                {a.fit_score ? (
+                  <span className="fit-stars"> {"★".repeat(a.fit_score)}</span>
+                ) : null}
+              </span>
               <span className="side-co">{a.company_name ?? "—"}</span>
             </li>
           ))}
@@ -2390,6 +2407,12 @@ function ApplicationsTab({
               />
               <strong>
                 {a.title}
+                {a.fit_score ? (
+                  <span className="fit-stars" title={`${a.fit_score}/5`}>
+                    {" "}
+                    {"★".repeat(a.fit_score)}
+                  </span>
+                ) : null}
                 {a.archived_at ? (
                   <span className="badge" title={t("filters.showArchived")}>
                     {" "}
@@ -2811,6 +2834,24 @@ function ApplicationForm({
             value={form.deadline_at ?? ""}
             onChange={(e) => set({ deadline_at: e.target.value || null })}
           />
+        </label>
+        <label>
+          Fit score
+          <select
+            value={form.fit_score ?? ""}
+            onChange={(e) =>
+              set({
+                fit_score: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          >
+            <option value="">—</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>
+                {"★".repeat(n)}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="full">
           Notes

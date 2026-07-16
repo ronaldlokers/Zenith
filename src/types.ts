@@ -166,6 +166,7 @@ export interface Application {
   next_action_at: string | null;
   deadline_at: string | null;
   archived_at: string | null;
+  fit_score: number | null;
   tags: Tag[];
   created_at: string;
   updated_at: string;
