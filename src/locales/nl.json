@@ -89,6 +89,7 @@
     "avgTimeInStage": "Gemiddelde tijd per fase",
     "noHistory": "Nog geen geschiedenis.",
     "ghostRate": "Ghost-percentage per bron",
+    "unknownSource": "Onbekend",
     "compare": "Vergelijk interviews & aanbiedingen",
     "exportData": "Exporteer je gegevens"
   },
