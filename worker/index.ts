@@ -976,10 +976,48 @@ app.onError((err, c) => {
   return c.json({ error: "internal error" }, 500);
 });
 
+// Inbound recruiter emails, forwarded via Cloudflare Email Routing (#111)
+// to a jobseekr.lokilabs.nl address, auto-log as an interaction against
+// the matching contact instead of manual entry. Requires an Email Routing
+// rule (Cloudflare dashboard, zone-level — not configurable from this
+// repo) pointing the inbound address at this Worker.
+export async function logInboundEmail(
+  env: Env,
+  fromAddress: string,
+  subject: string,
+): Promise<void> {
+  fromAddress = fromAddress.toLowerCase();
+
+  const contact = await env.DB.prepare(
+    "SELECT id, outreach_status FROM contacts WHERE lower(email) = ?",
+  )
+    .bind(fromAddress)
+    .first<{ id: number; outreach_status: string }>();
+  if (!contact) return;
+
+  await env.DB.prepare(
+    `INSERT INTO interactions (contact_id, type, notes) VALUES (?, 'email', ?)`,
+  )
+    .bind(contact.id, subject)
+    .run();
+
+  if (contact.outreach_status === "awaiting_reply") {
+    await env.DB.prepare(
+      "UPDATE contacts SET outreach_status = 'replied' WHERE id = ?",
+    )
+      .bind(contact.id)
+      .run();
+  }
+}
+
 export default {
   fetch: app.fetch,
   async scheduled(_event, env, ctx) {
     ctx.waitUntil(refreshFeed(env));
     ctx.waitUntil(checkStalePostings(env));
+  },
+  async email(message, env, ctx) {
+    const subject = message.headers.get("subject") ?? "(no subject)";
+    ctx.waitUntil(logInboundEmail(env, message.from, subject));
   },
 } satisfies ExportedHandler<Env>;
