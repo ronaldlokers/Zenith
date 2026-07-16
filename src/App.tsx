@@ -2028,180 +2028,200 @@ function ApplicationForm({
         onSubmit(form);
       }}
     >
-      <label>
-        Title *
-        <input
-          required
-          value={form.title ?? ""}
-          onChange={(e) => set({ title: e.target.value })}
-        />
-      </label>
-      <label>
-        Role type
-        <select
-          value={form.role_type ?? "other"}
-          onChange={(e) =>
-            set({ role_type: e.target.value as Application["role_type"] })
-          }
-        >
-          {roleTypes.map((r) => (
-            <option key={r.slug} value={r.slug}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Company
-        <select
-          value={form.company_id ?? ""}
-          onChange={(e) =>
-            set({ company_id: e.target.value ? Number(e.target.value) : null })
-          }
-        >
-          <option value="">—</option>
-          {allCompanies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Contact
-        <select
-          value={form.contact_id ?? ""}
-          onChange={(e) =>
-            set({ contact_id: e.target.value ? Number(e.target.value) : null })
-          }
-        >
-          <option value="">—</option>
-          {contacts.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        URL
-        <span className="url-row">
+      <div className="form-group">
+        <h4>Basics</h4>
+        <label>
+          Title *
           <input
-            type="url"
-            value={form.url ?? ""}
-            onChange={(e) => set({ url: e.target.value || null })}
+            required
+            value={form.title ?? ""}
+            onChange={(e) => set({ title: e.target.value })}
           />
-          <button
-            type="button"
-            disabled={!form.url || importing}
-            onClick={importFromUrl}
+        </label>
+        <label>
+          Role type
+          <select
+            value={form.role_type ?? "other"}
+            onChange={(e) =>
+              set({ role_type: e.target.value as Application["role_type"] })
+            }
           >
-            {importing ? "Fetching…" : "Fetch"}
-          </button>
-        </span>
-      </label>
-      <label>
-        Source
-        <input
-          placeholder="LinkedIn, referral, …"
-          value={form.source ?? ""}
-          onChange={(e) => set({ source: e.target.value || null })}
-        />
-      </label>
-      <label>
-        Salary range
-        <input
-          placeholder="freeform, e.g. from a job posting"
-          value={form.salary_range ?? ""}
-          onChange={(e) => set({ salary_range: e.target.value || null })}
-        />
-      </label>
-      <label>
-        Currency
-        <select
-          value={form.salary_currency ?? ""}
-          onChange={(e) => set({ salary_currency: e.target.value || null })}
-        >
-          <option value="">—</option>
-          {["EUR", "USD", "GBP"].map((cur) => (
-            <option key={cur} value={cur}>
-              {cur}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Min
-        <input
-          type="number"
-          min={0}
-          value={form.salary_min ?? ""}
-          onChange={(e) =>
-            set({ salary_min: e.target.value ? Number(e.target.value) : null })
-          }
-        />
-      </label>
-      <label>
-        Max
-        <input
-          type="number"
-          min={0}
-          value={form.salary_max ?? ""}
-          onChange={(e) =>
-            set({ salary_max: e.target.value ? Number(e.target.value) : null })
-          }
-        />
-      </label>
-      <label>
-        Per
-        <select
-          value={form.salary_period ?? ""}
-          onChange={(e) =>
-            set({
-              salary_period: (e.target.value || null) as
-                | "year"
-                | "month"
-                | null,
-            })
-          }
-        >
-          <option value="">—</option>
-          <option value="year">year</option>
-          <option value="month">month</option>
-        </select>
-      </label>
-      <label>
-        Applied on
-        <input
-          type="date"
-          value={form.applied_at ?? ""}
-          onChange={(e) => set({ applied_at: e.target.value || null })}
-        />
-      </label>
-      <label>
-        Next action
-        <input
-          placeholder="Nudge recruiter, prep case study, …"
-          value={form.next_action ?? ""}
-          onChange={(e) => set({ next_action: e.target.value || null })}
-        />
-      </label>
-      <label>
-        Next action due
-        <input
-          type="date"
-          value={form.next_action_at ?? ""}
-          onChange={(e) => set({ next_action_at: e.target.value || null })}
-        />
-      </label>
-      <label className="full">
-        Notes
-        <textarea
-          rows={3}
-          value={form.notes ?? ""}
-          onChange={(e) => set({ notes: e.target.value || null })}
-        />
-      </label>
+            {roleTypes.map((r) => (
+              <option key={r.slug} value={r.slug}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Company
+          <select
+            value={form.company_id ?? ""}
+            onChange={(e) =>
+              set({
+                company_id: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          >
+            <option value="">—</option>
+            {allCompanies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Contact
+          <select
+            value={form.contact_id ?? ""}
+            onChange={(e) =>
+              set({
+                contact_id: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          >
+            <option value="">—</option>
+            {contacts.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="form-group">
+        <h4>Posting &amp; compensation</h4>
+        <label>
+          URL
+          <span className="url-row">
+            <input
+              type="url"
+              value={form.url ?? ""}
+              onChange={(e) => set({ url: e.target.value || null })}
+            />
+            <button
+              type="button"
+              disabled={!form.url || importing}
+              onClick={importFromUrl}
+            >
+              {importing ? "Fetching…" : "Fetch"}
+            </button>
+          </span>
+        </label>
+        <label>
+          Source
+          <input
+            placeholder="LinkedIn, referral, …"
+            value={form.source ?? ""}
+            onChange={(e) => set({ source: e.target.value || null })}
+          />
+        </label>
+        <label>
+          Salary range
+          <input
+            placeholder="freeform, e.g. from a job posting"
+            value={form.salary_range ?? ""}
+            onChange={(e) => set({ salary_range: e.target.value || null })}
+          />
+        </label>
+        <label>
+          Currency
+          <select
+            value={form.salary_currency ?? ""}
+            onChange={(e) => set({ salary_currency: e.target.value || null })}
+          >
+            <option value="">—</option>
+            {["EUR", "USD", "GBP"].map((cur) => (
+              <option key={cur} value={cur}>
+                {cur}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Min
+          <input
+            type="number"
+            min={0}
+            value={form.salary_min ?? ""}
+            onChange={(e) =>
+              set({
+                salary_min: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          />
+        </label>
+        <label>
+          Max
+          <input
+            type="number"
+            min={0}
+            value={form.salary_max ?? ""}
+            onChange={(e) =>
+              set({
+                salary_max: e.target.value ? Number(e.target.value) : null,
+              })
+            }
+          />
+        </label>
+        <label>
+          Per
+          <select
+            value={form.salary_period ?? ""}
+            onChange={(e) =>
+              set({
+                salary_period: (e.target.value || null) as
+                  | "year"
+                  | "month"
+                  | null,
+              })
+            }
+          >
+            <option value="">—</option>
+            <option value="year">year</option>
+            <option value="month">month</option>
+          </select>
+        </label>
+        <label>
+          Applied on
+          <input
+            type="date"
+            value={form.applied_at ?? ""}
+            onChange={(e) => set({ applied_at: e.target.value || null })}
+          />
+        </label>
+      </div>
+
+      <div className="form-group">
+        <h4>Follow-up</h4>
+        <label>
+          Next action
+          <input
+            placeholder="Nudge recruiter, prep case study, …"
+            value={form.next_action ?? ""}
+            onChange={(e) => set({ next_action: e.target.value || null })}
+          />
+        </label>
+        <label>
+          Next action due
+          <input
+            type="date"
+            value={form.next_action_at ?? ""}
+            onChange={(e) => set({ next_action_at: e.target.value || null })}
+          />
+        </label>
+        <label className="full">
+          Notes
+          <textarea
+            rows={3}
+            value={form.notes ?? ""}
+            onChange={(e) => set({ notes: e.target.value || null })}
+          />
+        </label>
+      </div>
+
       <div className="form-actions">
         <button type="submit" className="primary">
           Save

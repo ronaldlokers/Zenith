@@ -540,7 +540,11 @@ button.danger {
    detail modal on click, so the list stays scannable instead of
    carrying a meta row, action buttons, and a rail on every card. */
 .card.row2 {
-  border-left: 3px solid var(--sc);
+  /* Fallback to --accent for rows with no stage color (Companies,
+     People) — --sc is only defined by a .stage-* class, and without
+     a fallback the whole declaration is invalid and silently dropped,
+     leaving those rows with no left inset at all (#76). */
+  border-left: 3px solid var(--sc, var(--accent));
   padding: 0.55rem 0.8rem;
   cursor: pointer;
   min-height: 44px;
@@ -1347,8 +1351,28 @@ summary.bcol-head::after {
 }
 
 .form label.full,
-.form .form-actions {
+.form .form-actions,
+.form .form-group {
   grid-column: 1 / -1;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 0.85rem;
+}
+
+.form-group h4 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
 }
 
 .form label.checkbox {
@@ -1416,7 +1440,8 @@ summary.bcol-head::after {
 }
 
 @media (max-width: 480px) {
-  .form {
+  .form,
+  .form-group {
     grid-template-columns: 1fr;
   }
 }
