@@ -17,12 +17,46 @@
   },
   "common": {
     "loading": "Loading…",
-    "close": "Close"
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Saved",
+    "research": "Research",
+    "researching": "Researching…",
+    "log": "Log",
+    "fetch": "Fetch",
+    "fetching": "Fetching…"
   },
   "toolbar": {
     "searchPlaceholder": "Search title, company, notes… (/)",
     "addJob": "+ Add job",
-    "shortcuts": "Keyboard shortcuts"
+    "shortcuts": "Keyboard shortcuts",
+    "searchCompanies": "Search companies…",
+    "addCompany": "+ Add company",
+    "searchPeople": "Search people…",
+    "addContact": "+ Add contact"
+  },
+  "filters": {
+    "allStatuses": "All statuses",
+    "allRoles": "All roles",
+    "allCompanies": "All companies",
+    "sortUpdated": "Last updated",
+    "sortApplied": "Applied date",
+    "sortCompany": "Company"
+  },
+  "empty": {
+    "noJobs": "No jobs yet. Add your first lead and start the climb.",
+    "noJobsMatch": "No jobs match your search.",
+    "noCompanies": "No companies yet. Add the ones you're targeting — applications and contacts link to them.",
+    "noCompaniesMatch": "No companies match your search.",
+    "noPeople": "No people yet. Add recruiters and hiring managers so you can log every touchpoint.",
+    "noPeopleMatch": "No people match your search.",
+    "boardEmpty": "empty",
+    "boardKeepPushing": "keep pushing",
+    "noFollowUps": "No follow-ups scheduled.",
+    "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit \"Check now\"."
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -39,5 +73,69 @@
     "language": "Language",
     "languageEn": "English",
     "languageNl": "Nederlands"
+  },
+  "feed": {
+    "pulledFrom": "Pulled from Adzuna, HN Who's Hiring, and Arbeitnow every 6 hours.",
+    "settings": "Settings",
+    "hideSettings": "Hide settings",
+    "checkNow": "Check now",
+    "checking": "Checking…"
+  },
+  "stats": {
+    "appsPerWeek": "Applications per week",
+    "pipelineFunnel": "Pipeline funnel — applications that reached each stage",
+    "avgTimeInStage": "Average time in stage",
+    "noHistory": "No history yet.",
+    "ghostRate": "Ghost rate by source",
+    "compare": "Compare interviews & offers",
+    "exportData": "Export your data"
+  },
+  "detail": {
+    "timeline": "Timeline",
+    "documents": "Documents",
+    "attachFile": "Attach file",
+    "noFiles": "No files attached.",
+    "noTouchpoints": "No touchpoints logged yet."
+  },
+  "nextUp": {
+    "title": "Next up"
+  },
+  "company": {
+    "notResearched": "not researched"
+  },
+  "stages": {
+    "interested": "Interested",
+    "applied": "Applied",
+    "screening": "Screening",
+    "interview": "Interview",
+    "offer": "Offer",
+    "rejected": "Rejected",
+    "withdrawn": "Withdrawn",
+    "ghosted": "Ghosted"
+  },
+  "interactionTypes": {
+    "email": "Email",
+    "call": "Call",
+    "message": "Message",
+    "interview": "Interview",
+    "meeting": "Meeting",
+    "other": "Other"
+  },
+  "agenda": {
+    "followUp": "Follow up",
+    "touchpoint": "Touchpoint",
+    "appliedTo": "Applied to",
+    "at": "at"
+  },
+  "feedSettings": {
+    "roleTypes": "Role types",
+    "newRoleType": "New role type…",
+    "add": "Add",
+    "sources": "Sources",
+    "countryCode": "country code, e.g. nl",
+    "locationFilter": "location filter",
+    "searchKeywords": "Search keywords per role",
+    "keywordPlaceholder": "+ keyword",
+    "removeKeyword": "Remove"
   }
 }
