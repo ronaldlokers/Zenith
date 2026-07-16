@@ -83,7 +83,7 @@
     "disableLink": "Disable"
   },
   "feed": {
-    "pulledFrom": "Pulled from Adzuna, HN Who's Hiring, and Arbeitnow every 6 hours.",
+    "pulledFrom": "Pulled from Adzuna and HN Who's Hiring every 6 hours.",
     "settings": "Settings",
     "hideSettings": "Hide settings",
     "checkNow": "Check now",

@@ -79,6 +79,8 @@ export interface AgendaEntry {
 
 export interface FeedItem {
   id: number;
+  // "arbeitnow" no longer gets ingested (#165, German-market focused) but
+  // stays a valid value here for historical feed_items rows.
   source: "adzuna" | "hn" | "arbeitnow";
   external_id: string;
   title: string;

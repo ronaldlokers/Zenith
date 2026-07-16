@@ -57,7 +57,7 @@ function guessRoleType(text: string, keywords: RoleKeywords): string | null {
 }
 
 interface FeedCandidate {
-  source: "adzuna" | "hn" | "arbeitnow";
+  source: "adzuna" | "hn";
   external_id: string;
   title: string;
   company: string | null;
@@ -170,55 +170,6 @@ async function fetchHnWhoIsHiring(
   }
 }
 
-async function fetchArbeitnow(
-  keywords: RoleKeywords,
-  locationFilter: string | null,
-): Promise<FeedCandidate[]> {
-  try {
-    const res = await fetch("https://www.arbeitnow.com/api/job-board-api");
-    if (!res.ok) return [];
-    const data = (await res.json()) as {
-      data: Array<{
-        slug: string;
-        title: string;
-        company_name?: string;
-        location?: string;
-        url?: string;
-        tags?: string[];
-        created_at?: number;
-      }>;
-    };
-    const out: FeedCandidate[] = [];
-    const locNeedle = locationFilter?.toLowerCase() ?? null;
-    for (const job of data.data) {
-      if (
-        locNeedle &&
-        !(job.location ?? "").toLowerCase().includes(locNeedle)
-      ) {
-        continue;
-      }
-      const role = guessRoleType(`${job.title} ${(job.tags ?? []).join(" ")}`, keywords);
-      if (!role) continue;
-      out.push({
-        source: "arbeitnow",
-        external_id: job.slug,
-        title: job.title,
-        company: job.company_name ?? null,
-        location: job.location ?? null,
-        url: job.url ?? null,
-        salary_text: null,
-        role_type: role,
-        posted_at: job.created_at
-          ? new Date(job.created_at * 1000).toISOString()
-          : null,
-      });
-    }
-    return out;
-  } catch {
-    return [];
-  }
-}
-
 export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: number }> {
   const [keywords, configs] = await Promise.all([
     loadRoleKeywords(env),
@@ -231,9 +182,6 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   }
   for (const cfg of configs.filter((c) => c.source === "hn")) {
     jobs.push(fetchHnWhoIsHiring(keywords, cfg.location));
-  }
-  for (const cfg of configs.filter((c) => c.source === "arbeitnow")) {
-    jobs.push(fetchArbeitnow(keywords, cfg.location));
   }
   const candidates = (await Promise.all(jobs)).flat();
 
