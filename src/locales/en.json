@@ -185,7 +185,8 @@
     "title": "Next up"
   },
   "company": {
-    "notResearched": "not researched"
+    "notResearched": "not researched",
+    "contactMap": "Contacts"
   },
   "stages": {
     "interested": "Interested",
