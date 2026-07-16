@@ -2198,6 +2198,57 @@ async function downloadOfferComparisonPdf(
   doc.save("offer-comparison.pdf");
 }
 
+// Negotiation talking-points draft (#223) — a starting point, not a
+// script: pulls together the same total-comp/benchmark numbers already
+// shown on the offer, plus any competing offer, into editable prose
+// rather than a form of fields that would need its own storage.
+function buildNegotiationDraft(
+  a: Application,
+  allApplications: Application[],
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  const lines: string[] = [t("offer.negotiationIntro", { title: a.title, company: a.company_name ?? "" })];
+
+  const total = totalComp(a);
+  if (total != null) {
+    lines.push(
+      t("offer.negotiationComp", {
+        amount: `${a.salary_currency ?? ""} ${Math.round(total).toLocaleString()}`,
+      }),
+    );
+  }
+
+  const otherOffers = allApplications
+    .filter((o) => o.id !== a.id && o.status === "offer" && totalComp(o) != null)
+    .sort((x, y) => (totalComp(y) ?? 0) - (totalComp(x) ?? 0));
+  const bestOther = otherOffers[0];
+  if (bestOther && total != null && (totalComp(bestOther) ?? 0) > total) {
+    lines.push(
+      t("offer.negotiationCompeting", {
+        company: bestOther.company_name ?? t("offer.negotiationAnotherCompany"),
+      }),
+    );
+  }
+
+  const sameRole = allApplications.filter(
+    (o) => o.id !== a.id && o.status === "offer" && o.role_type === a.role_type && totalComp(o) != null,
+  );
+  const pool = sameRole.length ? sameRole : otherOffers;
+  if (total != null && pool.length) {
+    const med = median(pool.map((o) => totalComp(o)!));
+    if (med != null && med > 0 && total < med) {
+      lines.push(
+        t("offer.negotiationBelowMarket", {
+          pct: Math.round(((med - total) / med) * 100),
+        }),
+      );
+    }
+  }
+
+  lines.push(t("offer.negotiationClose"));
+  return lines.join("\n\n");
+}
+
 function totalCompBreakdown(a: Application): string {
   const base = annualizedComp(a);
   if (base == null) return "";
@@ -3442,6 +3493,7 @@ function ApplicationDetailModal({
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [newTag, setNewTag] = useState("");
+  const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
   const a = application;
 
   useEffect(() => {
@@ -3652,6 +3704,36 @@ function ApplicationDetailModal({
                     </span>
                   );
                 })()}
+              {a.status === "offer" && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() =>
+                    setNegotiationDraft((cur) =>
+                      cur == null ? buildNegotiationDraft(a, allApplications, t) : null,
+                    )
+                  }
+                >
+                  {negotiationDraft == null
+                    ? t("offer.draftNegotiation")
+                    : t("offer.hideNegotiationDraft")}
+                </button>
+              )}
+              {negotiationDraft != null && (
+                <div className="negotiation-draft">
+                  <textarea
+                    rows={8}
+                    value={negotiationDraft}
+                    onChange={(e) => setNegotiationDraft(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(negotiationDraft)}
+                  >
+                    {t("offer.copyDraft")}
+                  </button>
+                </div>
+              )}
               {a.applied_at && (
                 <span className="muted small">
                   Applied {formatDate(a.applied_at)}

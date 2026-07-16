@@ -331,7 +331,16 @@
     "totalComp": "Total comp (est.)",
     "benchmark": "{{pct}}% {{direction}} your median tracked offer ({{n}} others)",
     "above": "above",
-    "below": "below"
+    "below": "below",
+    "draftNegotiation": "Draft negotiation talking points",
+    "hideNegotiationDraft": "Hide talking points",
+    "copyDraft": "Copy",
+    "negotiationIntro": "Notes for the {{title}} conversation with {{company}}:",
+    "negotiationComp": "- The total comp estimate on this offer is ~{{amount}}.",
+    "negotiationCompeting": "- I have a competing offer from {{company}} to weigh against this.",
+    "negotiationAnotherCompany": "another company",
+    "negotiationBelowMarket": "- This offer tracks ~{{pct}}% below the median of my other offers for this role — worth raising.",
+    "negotiationClose": "- Ask: is there flexibility on base, signing bonus, or equity before I give a final answer?"
   },
   "feedSettings": {
     "roleTypes": "Role types",
