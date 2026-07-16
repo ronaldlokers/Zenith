@@ -1192,6 +1192,21 @@ button.danger {
   white-space: pre-wrap;
 }
 
+.jd-snapshot {
+  margin-top: 0.3rem;
+}
+
+.jd-snapshot summary {
+  cursor: pointer;
+  font-size: 0.84rem;
+  color: var(--ink);
+}
+
+.jd-snapshot .notes {
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
 .badge {
   font-family: var(--mono);
   font-size: 0.6rem;

@@ -192,6 +192,8 @@ export interface Application {
   archived_at: string | null;
   fit_score: number | null;
   cover_letter: string | null;
+  job_description: string | null;
+  job_description_captured_at: string | null;
   tags: Tag[];
   created_at: string;
   updated_at: string;

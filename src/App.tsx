@@ -3355,6 +3355,23 @@ function ApplicationDetailModal({
                 </span>
               )}
               {a.notes && <p className="notes">{a.notes}</p>}
+              {a.job_description && (
+                <details className="jd-snapshot">
+                  <summary>
+                    {t("detail.jobDescription")}
+                    {a.job_description_captured_at && (
+                      <span className="muted small">
+                        {" "}
+                        —{" "}
+                        {t("detail.jobDescriptionCaptured", {
+                          date: formatDate(a.job_description_captured_at),
+                        })}
+                      </span>
+                    )}
+                  </summary>
+                  <p className="notes">{a.job_description}</p>
+                </details>
+              )}
             </div>
 
             <div className="keyword-chips">
@@ -4507,6 +4524,23 @@ function ApplicationForm({
             rows={3}
             value={form.notes ?? ""}
             onChange={(e) => set({ notes: e.target.value || null })}
+          />
+        </label>
+        <label className="full">
+          {t("detail.jobDescription")}
+          {form.job_description_captured_at && (
+            <span className="muted small">
+              {" "}
+              — {t("detail.jobDescriptionCaptured", {
+                date: formatDate(form.job_description_captured_at),
+              })}
+            </span>
+          )}
+          <textarea
+            rows={6}
+            placeholder={t("detail.jobDescriptionPlaceholder")}
+            value={form.job_description ?? ""}
+            onChange={(e) => set({ job_description: e.target.value || null })}
           />
         </label>
       </div>
