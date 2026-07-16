@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import {
   INTERACTION_TYPES,
@@ -36,6 +37,40 @@ type Tab =
   | "companies"
   | "contacts"
   | "cv";
+
+// URL routing (#73) — a small manual History-API layer via
+// react-router's useLocation/useNavigate rather than a full <Routes>
+// tree, since the app is a flat tab-switcher (no nested routes, no
+// route params beyond an optional record id). Only Jobs/Board deep
+// link to a specific record; other tabs are just /path.
+const TAB_PATHS: Record<Tab, string> = {
+  applications: "/jobs",
+  board: "/board",
+  feed: "/feed",
+  calendar: "/calendar",
+  stats: "/stats",
+  companies: "/companies",
+  contacts: "/people",
+  cv: "/cv",
+};
+
+const PATH_TABS: Record<string, Tab> = {
+  jobs: "applications",
+  board: "board",
+  feed: "feed",
+  calendar: "calendar",
+  stats: "stats",
+  companies: "companies",
+  people: "contacts",
+  cv: "cv",
+};
+
+function parsePath(pathname: string): { tab: Tab; id: number | null } {
+  const match = pathname.match(/^\/([a-z]+)(?:\/(\d+))?\/?$/);
+  const tab = (match && PATH_TABS[match[1]]) || "applications";
+  const id = match && match[2] ? Number(match[2]) : null;
+  return { tab, id };
+}
 
 const PIPELINE: Status[] = [
   "interested",
@@ -219,7 +254,10 @@ interface Toast {
 
 export default function App() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>("applications");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { tab, id: detailIdFromUrl } = parsePath(location.pathname);
+  const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
   const [showSettings, setShowSettings] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -421,6 +459,10 @@ export default function App() {
                 onDelete={deleteWithUndo}
                 onStatus={setStatus}
                 initialQuery={jumpQuery}
+                initialDetailId={detailIdFromUrl}
+                onDetailIdChange={(id) =>
+                  navigate(id ? `/jobs/${id}` : "/jobs")
+                }
               />
             )}
             {tab === "board" && (
@@ -434,6 +476,10 @@ export default function App() {
                 notify={notify}
                 onDelete={deleteWithUndo}
                 onStatus={setStatus}
+                initialDetailId={detailIdFromUrl}
+                onDetailIdChange={(id) =>
+                  navigate(id ? `/board/${id}` : "/board")
+                }
               />
             )}
             {tab === "feed" && (
@@ -518,12 +564,16 @@ function BoardTab({
   notify,
   onDelete,
   onStatus,
+  initialDetailId,
+  onDetailIdChange,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
+  initialDetailId?: number | null;
+  onDetailIdChange?: (id: number | null) => void;
 }) {
   const { t } = useTranslation();
   const move = (a: Application, status: string) =>
@@ -565,7 +615,16 @@ function BoardTab({
   }, []);
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverStage, setDragOverStage] = useState<Status | null>(null);
-  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detailId, setDetailIdState] = useState<number | null>(
+    initialDetailId ?? null,
+  );
+  useEffect(() => {
+    setDetailIdState(initialDetailId ?? null);
+  }, [initialDetailId]);
+  const setDetailId = (id: number | null) => {
+    setDetailIdState(id);
+    onDetailIdChange?.(id);
+  };
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
   return (
@@ -1787,6 +1846,8 @@ function ApplicationsTab({
   onDelete,
   onStatus,
   initialQuery,
+  initialDetailId,
+  onDetailIdChange,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -1794,6 +1855,8 @@ function ApplicationsTab({
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
   initialQuery?: string;
+  initialDetailId?: number | null;
+  onDetailIdChange?: (id: number | null) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Application | "new" | null>(null);
@@ -1807,7 +1870,16 @@ function ApplicationsTab({
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showHelp, setShowHelp] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detailId, setDetailIdState] = useState<number | null>(
+    initialDetailId ?? null,
+  );
+  useEffect(() => {
+    setDetailIdState(initialDetailId ?? null);
+  }, [initialDetailId]);
+  const setDetailId = (id: number | null) => {
+    setDetailIdState(id);
+    onDetailIdChange?.(id);
+  };
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
   const q = query.trim().toLowerCase();
