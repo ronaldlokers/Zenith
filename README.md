@@ -24,6 +24,8 @@ npx wrangler d1 migrations apply jobseekr --remote
 npm run deploy
 ```
 
+Setting up your own instance from scratch (D1/R2 resources, secrets, first login)? See [SELF_HOSTING.md](./SELF_HOSTING.md).
+
 After the first deploy, protect the app with [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/): add a self-hosted application for the Worker's hostname with an email policy so only you can reach it.
 
 ## Data model
