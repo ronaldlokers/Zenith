@@ -9,7 +9,6 @@ import { api } from "./api";
 import {
   INTERACTION_TYPES,
   type Stats,
-  ROLE_TYPES,
   STATUSES,
   type Application,
   type Company,
@@ -17,6 +16,7 @@ import {
   type Document,
   type AgendaEntry,
   type FeedItem,
+  type RoleTypeDef,
   type Interaction,
   type Status,
 } from "./types";
@@ -202,6 +202,7 @@ export default function App() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [roleTypes, setRoleTypes] = useState<RoleTypeDef[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -210,14 +211,16 @@ export default function App() {
 
   const reload = useCallback(async () => {
     try {
-      const [apps, comps, conts] = await Promise.all([
+      const [apps, comps, conts, roles] = await Promise.all([
         api.list<Application>("applications"),
         api.list<Company>("companies"),
         api.list<Contact>("contacts"),
+        api.roleTypes(),
       ]);
       setApplications(apps);
       setCompanies(comps);
       setContacts(conts);
+      setRoleTypes(roles);
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -368,6 +371,7 @@ export default function App() {
                 applications={visibleApps}
                 companies={visibleCompanies}
                 contacts={visibleContacts}
+                roleTypes={roleTypes}
                 onChanged={reload}
                 onError={setError}
                 notify={notify}
@@ -381,6 +385,7 @@ export default function App() {
                 applications={visibleApps}
                 companies={visibleCompanies}
                 contacts={visibleContacts}
+                roleTypes={roleTypes}
                 onChanged={reload}
                 onError={setError}
                 notify={notify}
@@ -389,7 +394,12 @@ export default function App() {
               />
             )}
             {tab === "feed" && (
-              <FeedTab onError={setError} notify={notify} />
+              <FeedTab
+                onError={setError}
+                notify={notify}
+                roleTypes={roleTypes}
+                onRoleTypesChanged={reload}
+              />
             )}
             {tab === "calendar" && (
               <CalendarTab
@@ -457,6 +467,7 @@ function BoardTab({
   applications,
   companies,
   contacts,
+  roleTypes,
   onChanged,
   onError,
   notify,
@@ -466,6 +477,7 @@ function BoardTab({
   applications: Application[];
   companies: Company[];
   contacts: Contact[];
+  roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
 }) {
   const move = (a: Application, status: string) =>
@@ -583,6 +595,7 @@ function BoardTab({
           application={detailApp}
           companies={companies}
           contacts={contacts}
+          roleTypes={roleTypes}
           onClose={() => setDetailId(null)}
           onChanged={onChanged}
           onError={onError}
@@ -1016,15 +1029,209 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   );
 }
 
-function FeedTab({
+function FeedSettings({
+  roleTypes,
+  onRoleTypesChanged,
   onError,
   notify,
 }: {
+  roleTypes: RoleTypeDef[];
+  onRoleTypesChanged: () => Promise<void>;
   onError: (message: string | null) => void;
   notify: (message: string, undo?: () => void) => void;
 }) {
+  const [config, setConfig] = useState<{
+    sources: { source: string; enabled: number; location: string | null }[];
+    keywords: { id: number; role_slug: string; keyword: string }[];
+  } | null>(null);
+  const [newRoleLabel, setNewRoleLabel] = useState("");
+  const [newKeyword, setNewKeyword] = useState<Record<string, string>>({});
+
+  const loadConfig = useCallback(
+    () =>
+      api
+        .feedConfig()
+        .then(setConfig)
+        .catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
+
+  const addRole = (e: FormEvent) => {
+    e.preventDefault();
+    if (!newRoleLabel.trim()) return;
+    api
+      .createRoleType(newRoleLabel.trim())
+      .then(() => {
+        setNewRoleLabel("");
+        notify("Role type added");
+        return onRoleTypesChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const renameRole = (r: RoleTypeDef, label: string) => {
+    if (!label.trim() || label === r.label) return;
+    api
+      .updateRoleType(r.id, { label: label.trim() })
+      .then(onRoleTypesChanged)
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const removeRole = (r: RoleTypeDef) => {
+    if (!confirm(`Delete role type "${r.label}"? Feed keywords for it go too.`))
+      return;
+    api
+      .deleteRoleType(r.id)
+      .then(() => {
+        notify(`Deleted "${r.label}"`);
+        return Promise.all([onRoleTypesChanged(), loadConfig()]);
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const saveSource = (
+    source: string,
+    enabled: boolean,
+    location: string | null,
+  ) => {
+    api
+      .updateFeedSource(source, { enabled, location })
+      .then(() => {
+        notify(`Saved ${source} settings`);
+        return loadConfig();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const addKeyword = (roleSlug: string) => {
+    const kw = (newKeyword[roleSlug] ?? "").trim();
+    if (!kw) return;
+    api
+      .addFeedKeyword(roleSlug, kw)
+      .then(() => {
+        setNewKeyword((m) => ({ ...m, [roleSlug]: "" }));
+        return loadConfig();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const removeKeyword = (id: number) => {
+    api
+      .deleteFeedKeyword(id)
+      .then(loadConfig)
+      .catch((e) => onError((e as Error).message));
+  };
+
+  if (!config) return <p className="muted small">Loading settings…</p>;
+
+  return (
+    <div className="feed-settings">
+      <h3 className="detail-sub">Role types</h3>
+      <ul className="settings-list">
+        {roleTypes.map((r) => (
+          <li key={r.id}>
+            <input
+              defaultValue={r.label}
+              onBlur={(e) => renameRole(r, e.target.value)}
+            />
+            <button className="danger" onClick={() => removeRole(r)}>
+              ×
+            </button>
+          </li>
+        ))}
+      </ul>
+      <form className="settings-add" onSubmit={addRole}>
+        <input
+          placeholder="New role type…"
+          value={newRoleLabel}
+          onChange={(e) => setNewRoleLabel(e.target.value)}
+        />
+        <button type="submit" className="primary">
+          Add
+        </button>
+      </form>
+
+      <h3 className="detail-sub">Sources</h3>
+      <ul className="settings-list">
+        {config.sources.map((s) => (
+          <li key={s.source} className="source-row">
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                defaultChecked={!!s.enabled}
+                onChange={(e) =>
+                  saveSource(s.source, e.target.checked, s.location)
+                }
+              />
+              {s.source}
+            </label>
+            <input
+              placeholder={
+                s.source === "adzuna" ? "country code, e.g. nl" : "location filter"
+              }
+              defaultValue={s.location ?? ""}
+              onBlur={(e) =>
+                saveSource(s.source, !!s.enabled, e.target.value || null)
+              }
+            />
+          </li>
+        ))}
+      </ul>
+
+      <h3 className="detail-sub">Search keywords per role</h3>
+      {roleTypes.map((r) => {
+        const kws = config.keywords.filter((k) => k.role_slug === r.slug);
+        return (
+          <div key={r.id} className="keyword-group">
+            <span className="muted small">{r.label}</span>
+            <div className="keyword-chips">
+              {kws.map((k) => (
+                <span key={k.id} className="chip">
+                  {k.keyword}
+                  <button onClick={() => removeKeyword(k.id)} aria-label="Remove">
+                    ×
+                  </button>
+                </span>
+              ))}
+              <input
+                placeholder="+ keyword"
+                value={newKeyword[r.slug] ?? ""}
+                onChange={(e) =>
+                  setNewKeyword((m) => ({ ...m, [r.slug]: e.target.value }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addKeyword(r.slug);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FeedTab({
+  onError,
+  notify,
+  roleTypes,
+  onRoleTypesChanged,
+}: {
+  onError: (message: string | null) => void;
+  notify: (message: string, undo?: () => void) => void;
+  roleTypes: RoleTypeDef[];
+  onRoleTypesChanged: () => Promise<void>;
+}) {
   const [items, setItems] = useState<FeedItem[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const load = useCallback(
     () => api.feed().then(setItems).catch((e) => onError((e as Error).message)),
@@ -1070,10 +1277,22 @@ function FeedTab({
         <p className="muted small" style={{ margin: 0 }}>
           Pulled from Adzuna, HN Who's Hiring, and Arbeitnow every 6 hours.
         </p>
+        <button onClick={() => setShowSettings((v) => !v)}>
+          {showSettings ? "Hide settings" : "Settings"}
+        </button>
         <button className="primary" disabled={refreshing} onClick={refresh}>
           {refreshing ? "Checking…" : "Check now"}
         </button>
       </div>
+
+      {showSettings && (
+        <FeedSettings
+          roleTypes={roleTypes}
+          onRoleTypesChanged={onRoleTypesChanged}
+          onError={onError}
+          notify={notify}
+        />
+      )}
 
       <ul className="cards">
         {(items ?? []).map((item) => (
@@ -1085,7 +1304,8 @@ function FeedTab({
                   {[item.company, item.location].filter(Boolean).join(" · ")}
                 </span>
                 <span className="muted small">
-                  {item.role_type}
+                  {roleTypes.find((r) => r.slug === item.role_type)?.label ??
+                    item.role_type}
                   {item.salary_text ? ` · ${item.salary_text}` : ""}
                   {" · via "}
                   {item.source}
@@ -1192,6 +1412,7 @@ function ApplicationDetailModal({
   application,
   companies,
   contacts,
+  roleTypes,
   onClose,
   onChanged,
   onError,
@@ -1202,6 +1423,7 @@ function ApplicationDetailModal({
   application: Application;
   companies: Company[];
   contacts: Contact[];
+  roleTypes: RoleTypeDef[];
   onClose: () => void;
   onChanged: () => Promise<void>;
   onError: (message: string | null) => void;
@@ -1246,6 +1468,7 @@ function ApplicationDetailModal({
             initial={a}
             companies={companies}
             contacts={contacts}
+            roleTypes={roleTypes}
             onError={onError}
             onCancel={() => setEditing(false)}
             onSubmit={(data) =>
@@ -1328,6 +1551,7 @@ function ApplicationsTab({
   applications,
   companies,
   contacts,
+  roleTypes,
   onChanged,
   onError,
   notify,
@@ -1338,6 +1562,7 @@ function ApplicationsTab({
   applications: Application[];
   companies: Company[];
   contacts: Contact[];
+  roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
   initialQuery?: string;
 }) {
@@ -1490,9 +1715,9 @@ function ApplicationsTab({
           onChange={(e) => setRoleFilter(e.target.value)}
         >
           <option value="all">All roles</option>
-          {ROLE_TYPES.map((r) => (
-            <option key={r} value={r}>
-              {r}
+          {roleTypes.map((r) => (
+            <option key={r.slug} value={r.slug}>
+              {r.label}
             </option>
           ))}
         </select>
@@ -1522,6 +1747,7 @@ function ApplicationsTab({
           initial={editing === "new" ? null : editing}
           companies={companies}
           contacts={contacts}
+          roleTypes={roleTypes}
           onError={onError}
           onCancel={() => setEditing(null)}
           onSubmit={(data) =>
@@ -1632,6 +1858,7 @@ function ApplicationsTab({
           application={detailApp}
           companies={companies}
           contacts={contacts}
+          roleTypes={roleTypes}
           onClose={() => setDetailId(null)}
           onChanged={onChanged}
           onError={onError}
@@ -1648,6 +1875,7 @@ function ApplicationForm({
   initial,
   companies,
   contacts,
+  roleTypes,
   onSubmit,
   onCancel,
   onError,
@@ -1655,6 +1883,7 @@ function ApplicationForm({
   initial: Application | null;
   companies: Company[];
   contacts: Contact[];
+  roleTypes: RoleTypeDef[];
   onSubmit: (data: Partial<Application>) => void;
   onCancel: () => void;
   onError: (message: string | null) => void;
@@ -1727,9 +1956,9 @@ function ApplicationForm({
             set({ role_type: e.target.value as Application["role_type"] })
           }
         >
-          {ROLE_TYPES.map((r) => (
-            <option key={r} value={r}>
-              {r}
+          {roleTypes.map((r) => (
+            <option key={r.slug} value={r.slug}>
+              {r.label}
             </option>
           ))}
         </select>

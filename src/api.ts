@@ -46,6 +46,39 @@ export const api = {
       body: JSON.stringify(data),
     }),
   stats: () => request<import("./types").Stats>("/api/stats"),
+  roleTypes: () => request<import("./types").RoleTypeDef[]>("/api/role-types"),
+  createRoleType: (label: string) =>
+    request<import("./types").RoleTypeDef>("/api/role-types", {
+      method: "POST",
+      body: JSON.stringify({ label }),
+    }),
+  updateRoleType: (id: number, data: { label: string; sort_order?: number }) =>
+    request<import("./types").RoleTypeDef>(`/api/role-types/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteRoleType: (id: number) =>
+    request<void>(`/api/role-types/${id}`, { method: "DELETE" }),
+  feedConfig: () =>
+    request<{
+      sources: { source: string; enabled: number; location: string | null }[];
+      keywords: { id: number; role_slug: string; keyword: string }[];
+    }>("/api/feed/config"),
+  updateFeedSource: (
+    source: string,
+    data: { enabled: boolean; location: string | null },
+  ) =>
+    request(`/api/feed/config/sources/${source}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  addFeedKeyword: (role_slug: string, keyword: string) =>
+    request("/api/feed/config/keywords", {
+      method: "POST",
+      body: JSON.stringify({ role_slug, keyword }),
+    }),
+  deleteFeedKeyword: (id: number) =>
+    request<void>(`/api/feed/config/keywords/${id}`, { method: "DELETE" }),
   agenda: () => request<import("./types").AgendaEntry[]>("/api/agenda"),
   researchCompany: (id: number) =>
     request<import("./types").Company>(`/api/companies/${id}/research`, {
