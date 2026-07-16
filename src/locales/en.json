@@ -316,6 +316,12 @@
     "resetDemoSuccess": "Demo data reset.",
     "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?"
   },
+  "board": {
+    "groupBy": "Group board by",
+    "byStage": "By stage",
+    "byCompany": "By company",
+    "noCompany": "No company"
+  },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
   },
