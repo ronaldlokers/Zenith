@@ -890,6 +890,21 @@ button.danger {
   min-height: 44px;
 }
 
+/* Response-time heat strip (#142) — a right-edge border, deliberately a
+   different position than the left stage-color border, so the two
+   signals never blur together. heat-0 (recently active) shows nothing. */
+.card.row2.heat-1 {
+  border-right: 3px solid var(--heat-watch);
+}
+
+.card.row2.heat-2 {
+  border-right: 3px solid var(--heat-quiet);
+}
+
+.card.row2.heat-3 {
+  border-right: 3px solid var(--heat-cold);
+}
+
 .card.row2 .l1 {
   display: flex;
   align-items: center;

@@ -3301,15 +3301,23 @@ function ApplicationsTab({
   }
   const nowMs = Date.now();
   const quietFlags = new Set<number>();
+  // Response-time heat strip (#142) — a graded signal (not just the
+  // binary "quiet" badge from #108) of how overdue an application's next
+  // contact is relative to that specific employer's own typical gap,
+  // shown as a colored strip on the row independent of stage color.
+  const FALLBACK_NORM_DAYS = 7;
+  const heatLevel = new Map<number, 0 | 1 | 2 | 3>();
   for (const a of applications) {
-    if (isDead(a.status) || a.archived_at || a.company_id == null) continue;
-    const companyGaps = gapsByCompany.get(a.company_id) ?? [];
-    if (companyGaps.length < 2) continue;
-    const norm = median(companyGaps);
-    if (norm == null) continue;
+    if (isDead(a.status) || a.archived_at) continue;
+    const companyGaps = a.company_id != null ? (gapsByCompany.get(a.company_id) ?? []) : [];
+    const norm =
+      companyGaps.length >= 2 ? (median(companyGaps) ?? FALLBACK_NORM_DAYS) : FALLBACK_NORM_DAYS;
     const last = lastActivity.get(a.id) ?? parseSqlDate(a.created_at);
     const daysSince = (nowMs - last) / 86400000;
-    if (daysSince >= 5 && daysSince > norm * 1.5) quietFlags.add(a.id);
+    const ratio = daysSince / norm;
+    const level = ratio >= 2.5 ? 3 : ratio >= 1.5 ? 2 : ratio >= 1 ? 1 : 0;
+    heatLevel.set(a.id, level);
+    if (companyGaps.length >= 2 && daysSince >= 5 && ratio > 1.5) quietFlags.add(a.id);
   }
 
   const q = query.trim().toLowerCase();
@@ -3565,7 +3573,7 @@ function ApplicationsTab({
         {visible.map((a, i) => (
           <li
             key={a.id}
-            className={`card row2 stage-${a.status}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}${a.archived_at ? " archived" : ""}`}
+            className={`card row2 stage-${a.status} heat-${heatLevel.get(a.id) ?? 0}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}${a.archived_at ? " archived" : ""}`}
             onClick={() => setDetailId(a.id)}
           >
             <div className="l1">
