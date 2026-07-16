@@ -3963,6 +3963,16 @@ function CompaniesTab({
   const [query, setQuery] = useState(initialQuery ?? "");
   const [detailId, setDetailId] = useState<number | null>(null);
   const detailCompany = companies.find((c) => c.id === detailId) ?? null;
+  // Logo-first card grid (#132) — scans faster once tracking a dozen+
+  // companies than the list rows do. Persisted so the choice sticks
+  // across visits/reloads.
+  const [view, setView] = useState<"list" | "grid">(
+    () => (localStorage.getItem("jobseekr_companies_view") as "list" | "grid" | null) ?? "list",
+  );
+  const setViewAndPersist = (v: "list" | "grid") => {
+    setView(v);
+    localStorage.setItem("jobseekr_companies_view", v);
+  };
 
   const q = query.trim().toLowerCase();
   const visible = companies.filter(
@@ -3995,6 +4005,20 @@ function CompaniesTab({
         <button className="primary" onClick={() => setEditing("new")}>
           {t("toolbar.addCompany")}
         </button>
+        <div className="board-group-toggle" role="group" aria-label={t("companies.view")}>
+          <button
+            className={view === "list" ? "active" : ""}
+            onClick={() => setViewAndPersist("list")}
+          >
+            {t("companies.viewList")}
+          </button>
+          <button
+            className={view === "grid" ? "active" : ""}
+            onClick={() => setViewAndPersist("grid")}
+          >
+            {t("companies.viewGrid")}
+          </button>
+        </div>
       </div>
 
       {editing && (
@@ -4011,6 +4035,36 @@ function CompaniesTab({
         />
       )}
 
+      {view === "grid" ? (
+        <ul className="company-grid">
+          {visible.map((c) => (
+            <li
+              key={c.id}
+              className="company-tile"
+              onClick={() => setDetailId(c.id)}
+            >
+              {c.logo_url ? (
+                <img className="company-logo" src={c.logo_url} alt="" />
+              ) : (
+                <div className="company-logo company-logo-placeholder" aria-hidden="true">
+                  {c.name.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <span className="company-tile-name">
+                {c.name}
+                {c.is_agency ? <span className="badge"> agency</span> : null}
+              </span>
+            </li>
+          ))}
+          {visible.length === 0 && (
+            <li className="empty">
+              {companies.length === 0
+                ? t("empty.noCompanies")
+                : t("empty.noCompaniesMatch")}
+            </li>
+          )}
+        </ul>
+      ) : (
       <ul className="cards">
         {visible.map((c) => {
           const referrals = applications.filter(
@@ -4057,6 +4111,7 @@ function CompaniesTab({
           </li>
         )}
       </ul>
+      )}
       {detailCompany && (
         <CompanyDetailModal
           company={detailCompany}
