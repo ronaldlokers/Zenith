@@ -286,5 +286,32 @@
     "searchKeywords": "Search keywords per role",
     "keywordPlaceholder": "+ keyword",
     "removeKeyword": "Remove"
+  },
+  "login": {
+    "subtitle": "Sign in to your pipeline",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "error": "Couldn't sign in — check your email and password.",
+    "inviteOnly": "Accounts are invite-only. Ask your admin for access."
+  },
+  "account": {
+    "signedInAs": "Signed in as {{email}}",
+    "signOut": "Sign out",
+    "adminInvite": "Invite a user",
+    "inviteEmail": "Email",
+    "inviteName": "Name",
+    "invitePassword": "Temporary password",
+    "inviteRole": "Role",
+    "inviteRoleUser": "User",
+    "inviteRoleAdmin": "Admin",
+    "inviteSubmit": "Create account",
+    "inviteSuccess": "Account created for {{email}}. Share the temporary password with them directly.",
+    "inviteError": "Couldn't create that account.",
+    "resetDemo": "Demo account",
+    "resetDemoSubmit": "Reset demo data",
+    "resetDemoSuccess": "Demo data reset.",
+    "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?"
   }
 }

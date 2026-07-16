@@ -3,15 +3,54 @@ import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
+import { getAuth } from "./auth.js";
+import { resetDemoData } from "./demo.js";
 
-const app = new Hono<{ Bindings: Env }>();
+export type AppEnv = {
+  Bindings: Env;
+  Variables: { userId: string; userRole: string | null };
+};
+
+const app = new Hono<AppEnv>();
+
+// Account creation is invite-only/admin-created (#38): the public
+// self-signup route is blocked here before it reaches Better-Auth's
+// handler. New accounts (including the demo account) are created by an
+// existing admin via the admin plugin's /api/auth/admin/create-user
+// endpoint, which already requires an authenticated admin session.
+app.post("/api/auth/sign-up/email", (c) => c.json({ error: "sign-up is invite-only" }, 403));
+
+app.on(["POST", "GET"], "/api/auth/*", (c) => getAuth(c.env).handler(c.req.raw));
+
+// Every other /api route requires a valid session. The public share link
+// (/shared/:token, #113) intentionally stays outside /api and outside this
+// check — it's gated by its own unguessable token instead.
+app.use("/api/*", async (c, next) => {
+  const session = await getAuth(c.env).api.getSession({
+    headers: c.req.raw.headers,
+  });
+  if (!session) return c.json({ error: "unauthorized" }, 401);
+  c.set("userId", session.user.id);
+  c.set("userRole", (session.user as { role?: string | null }).role ?? null);
+  await next();
+});
+
+// Admin-only routes (demo data reset). The admin plugin's own endpoints
+// (e.g. /api/auth/admin/create-user) enforce this themselves — this
+// middleware is only for the custom /api/admin/* routes below.
+app.use("/api/admin/*", async (c, next) => {
+  if (c.get("userRole") !== "admin") return c.json({ error: "forbidden" }, 403);
+  await next();
+});
 
 // --- Companies ---
 
 app.get("/api/companies", async (c) => {
   const { results } = await c.env.DB.prepare(
-    "SELECT * FROM companies ORDER BY name",
-  ).all();
+    "SELECT * FROM companies WHERE user_id = ? ORDER BY name",
+  )
+    .bind(c.get("userId"))
+    .all();
   return c.json(results);
 });
 
@@ -19,10 +58,11 @@ app.post("/api/companies", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO companies (name, website, location, is_agency, notes)
-     VALUES (?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO companies (user_id, name, website, location, is_agency, notes)
+     VALUES (?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
+      c.get("userId"),
       body.name,
       body.website ?? null,
       body.location ?? null,
@@ -38,7 +78,7 @@ app.put("/api/companies/:id", async (c) => {
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
     `UPDATE companies SET name = ?, website = ?, location = ?, is_agency = ?, notes = ?
-     WHERE id = ? RETURNING *`,
+     WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(
       body.name,
@@ -47,6 +87,7 @@ app.put("/api/companies/:id", async (c) => {
       body.is_agency ? 1 : 0,
       body.notes ?? null,
       c.req.param("id"),
+      c.get("userId"),
     )
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
@@ -54,17 +95,17 @@ app.put("/api/companies/:id", async (c) => {
 });
 
 app.delete("/api/companies/:id", async (c) => {
-  await c.env.DB.prepare("DELETE FROM companies WHERE id = ?")
-    .bind(c.req.param("id"))
+  await c.env.DB.prepare("DELETE FROM companies WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
     .run();
   return c.body(null, 204);
 });
 
 app.post("/api/companies/:id/research", async (c) => {
   const company = await c.env.DB.prepare(
-    "SELECT id, website FROM companies WHERE id = ?",
+    "SELECT id, website FROM companies WHERE id = ? AND user_id = ?",
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("userId"))
     .first<{ id: number; website: string | null }>();
   if (!company) return c.json({ error: "not found" }, 404);
   if (!company.website) {
@@ -111,9 +152,9 @@ app.post("/api/companies/:id/research", async (c) => {
 
   const result = await c.env.DB.prepare(
     `UPDATE companies SET description = ?, logo_url = ?, researched_at = datetime('now')
-     WHERE id = ? RETURNING *`,
+     WHERE id = ? AND user_id = ? RETURNING *`,
   )
-    .bind(description, logo, company.id)
+    .bind(description, logo, company.id, c.get("userId"))
     .first();
   return c.json(result);
 });
@@ -124,8 +165,11 @@ app.get("/api/contacts", async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT contacts.*, companies.name AS company_name
      FROM contacts LEFT JOIN companies ON companies.id = contacts.company_id
+     WHERE contacts.user_id = ?
      ORDER BY contacts.name`,
-  ).all();
+  )
+    .bind(c.get("userId"))
+    .all();
   return c.json(results);
 });
 
@@ -133,10 +177,11 @@ app.post("/api/contacts", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO contacts (company_id, name, role, email, phone, linkedin, notes, last_contacted_at, follow_up_at, outreach_status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO contacts (user_id, company_id, name, role, email, phone, linkedin, notes, last_contacted_at, follow_up_at, outreach_status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
+      c.get("userId"),
       body.company_id ?? null,
       body.name,
       body.role ?? null,
@@ -158,7 +203,7 @@ app.put("/api/contacts/:id", async (c) => {
   const result = await c.env.DB.prepare(
     `UPDATE contacts SET company_id = ?, name = ?, role = ?, email = ?, phone = ?, linkedin = ?, notes = ?,
        last_contacted_at = ?, follow_up_at = ?, outreach_status = ?
-     WHERE id = ? RETURNING *`,
+     WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -172,6 +217,7 @@ app.put("/api/contacts/:id", async (c) => {
       body.follow_up_at ?? null,
       body.outreach_status ?? "not_contacted",
       c.req.param("id"),
+      c.get("userId"),
     )
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
@@ -179,8 +225,8 @@ app.put("/api/contacts/:id", async (c) => {
 });
 
 app.delete("/api/contacts/:id", async (c) => {
-  await c.env.DB.prepare("DELETE FROM contacts WHERE id = ?")
-    .bind(c.req.param("id"))
+  await c.env.DB.prepare("DELETE FROM contacts WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
     .run();
   return c.body(null, 204);
 });
@@ -195,13 +241,19 @@ app.get("/api/applications", async (c) => {
      LEFT JOIN companies ON companies.id = applications.company_id
      LEFT JOIN contacts ON contacts.id = applications.contact_id
      LEFT JOIN contacts AS referrer ON referrer.id = applications.referred_by_contact_id
+     WHERE applications.user_id = ?
      ORDER BY applications.updated_at DESC`,
-  ).all<{ id: number }>();
+  )
+    .bind(c.get("userId"))
+    .all<{ id: number }>();
   const { results: tagLinks } = await c.env.DB.prepare(
     `SELECT application_tags.application_id, tags.id, tags.name
      FROM application_tags
-     JOIN tags ON tags.id = application_tags.tag_id`,
-  ).all<{ application_id: number; id: number; name: string }>();
+     JOIN tags ON tags.id = application_tags.tag_id
+     WHERE application_tags.user_id = ?`,
+  )
+    .bind(c.get("userId"))
+    .all<{ application_id: number; id: number; name: string }>();
   const withTags = results.map((a) => ({
     ...a,
     tags: tagLinks
@@ -215,8 +267,10 @@ app.get("/api/applications", async (c) => {
 
 app.get("/api/tags", async (c) => {
   const { results } = await c.env.DB.prepare(
-    "SELECT * FROM tags ORDER BY name",
-  ).all();
+    "SELECT * FROM tags WHERE user_id = ? ORDER BY name",
+  )
+    .bind(c.get("userId"))
+    .all();
   return c.json(results);
 });
 
@@ -224,33 +278,41 @@ app.post("/api/applications/:id/tags", async (c) => {
   const body = await c.req.json();
   const name = (body.name ?? "").trim();
   if (!name) return c.json({ error: "name is required" }, 400);
+  const userId = c.get("userId");
+
+  const application = await c.env.DB.prepare(
+    "SELECT id FROM applications WHERE id = ? AND user_id = ?",
+  )
+    .bind(c.req.param("id"), userId)
+    .first();
+  if (!application) return c.json({ error: "not found" }, 404);
 
   let tag = await c.env.DB.prepare(
-    "SELECT * FROM tags WHERE name = ? COLLATE NOCASE",
+    "SELECT * FROM tags WHERE name = ? COLLATE NOCASE AND user_id = ?",
   )
-    .bind(name)
+    .bind(name, userId)
     .first<{ id: number; name: string }>();
   if (!tag) {
     tag = await c.env.DB.prepare(
-      "INSERT INTO tags (name) VALUES (?) RETURNING *",
+      "INSERT INTO tags (user_id, name) VALUES (?, ?) RETURNING *",
     )
-      .bind(name)
+      .bind(userId, name)
       .first<{ id: number; name: string }>();
   }
   await c.env.DB.prepare(
-    `INSERT INTO application_tags (application_id, tag_id)
-     VALUES (?, ?) ON CONFLICT DO NOTHING`,
+    `INSERT INTO application_tags (application_id, tag_id, user_id)
+     VALUES (?, ?, ?) ON CONFLICT DO NOTHING`,
   )
-    .bind(c.req.param("id"), tag!.id)
+    .bind(c.req.param("id"), tag!.id, userId)
     .run();
   return c.json(tag, 201);
 });
 
 app.delete("/api/applications/:id/tags/:tagId", async (c) => {
   await c.env.DB.prepare(
-    "DELETE FROM application_tags WHERE application_id = ? AND tag_id = ?",
+    "DELETE FROM application_tags WHERE application_id = ? AND tag_id = ? AND user_id = ?",
   )
-    .bind(c.req.param("id"), c.req.param("tagId"))
+    .bind(c.req.param("id"), c.req.param("tagId"), c.get("userId"))
     .run();
   return c.body(null, 204);
 });
@@ -259,9 +321,9 @@ app.delete("/api/applications/:id/tags/:tagId", async (c) => {
 
 app.get("/api/applications/:id/prep-items", async (c) => {
   const { results } = await c.env.DB.prepare(
-    "SELECT * FROM interview_prep_items WHERE application_id = ? ORDER BY sort_order, id",
+    "SELECT * FROM interview_prep_items WHERE application_id = ? AND user_id = ? ORDER BY sort_order, id",
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("userId"))
     .all();
   return c.json(results);
 });
@@ -270,16 +332,25 @@ app.post("/api/applications/:id/prep-items", async (c) => {
   const body = await c.req.json();
   const text = (body.text ?? "").trim();
   if (!text) return c.json({ error: "text is required" }, 400);
+  const userId = c.get("userId");
+
+  const application = await c.env.DB.prepare(
+    "SELECT id FROM applications WHERE id = ? AND user_id = ?",
+  )
+    .bind(c.req.param("id"), userId)
+    .first();
+  if (!application) return c.json({ error: "not found" }, 404);
+
   const maxOrder = await c.env.DB.prepare(
     "SELECT COALESCE(MAX(sort_order), -1) AS m FROM interview_prep_items WHERE application_id = ?",
   )
     .bind(c.req.param("id"))
     .first<{ m: number }>();
   const result = await c.env.DB.prepare(
-    `INSERT INTO interview_prep_items (application_id, text, sort_order)
-     VALUES (?, ?, ?) RETURNING *`,
+    `INSERT INTO interview_prep_items (application_id, user_id, text, sort_order)
+     VALUES (?, ?, ?, ?) RETURNING *`,
   )
-    .bind(c.req.param("id"), text, (maxOrder?.m ?? -1) + 1)
+    .bind(c.req.param("id"), userId, text, (maxOrder?.m ?? -1) + 1)
     .first();
   return c.json(result, 201);
 });
@@ -287,12 +358,13 @@ app.post("/api/applications/:id/prep-items", async (c) => {
 app.put("/api/prep-items/:id", async (c) => {
   const body = await c.req.json();
   const result = await c.env.DB.prepare(
-    "UPDATE interview_prep_items SET text = COALESCE(?, text), done = COALESCE(?, done) WHERE id = ? RETURNING *",
+    "UPDATE interview_prep_items SET text = COALESCE(?, text), done = COALESCE(?, done) WHERE id = ? AND user_id = ? RETURNING *",
   )
     .bind(
       body.text ?? null,
       body.done != null ? (body.done ? 1 : 0) : null,
       c.req.param("id"),
+      c.get("userId"),
     )
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
@@ -300,8 +372,8 @@ app.put("/api/prep-items/:id", async (c) => {
 });
 
 app.delete("/api/prep-items/:id", async (c) => {
-  await c.env.DB.prepare("DELETE FROM interview_prep_items WHERE id = ?")
-    .bind(c.req.param("id"))
+  await c.env.DB.prepare("DELETE FROM interview_prep_items WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
     .run();
   return c.body(null, 204);
 });
@@ -309,11 +381,13 @@ app.delete("/api/prep-items/:id", async (c) => {
 app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
+  const userId = c.get("userId");
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, cover_letter, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (user_id, company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, cover_letter, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
+      userId,
       body.company_id ?? null,
       body.contact_id ?? null,
       body.title,
@@ -341,9 +415,9 @@ app.post("/api/applications", async (c) => {
     )
     .first();
   await c.env.DB.prepare(
-    `INSERT INTO status_history (application_id, from_status, to_status) VALUES (?, NULL, ?)`,
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, NULL, ?)`,
   )
-    .bind((result as { id: number }).id, (result as { status: string }).status)
+    .bind((result as { id: number }).id, userId, (result as { status: string }).status)
     .run();
   return c.json(result, 201);
 });
@@ -351,9 +425,9 @@ app.post("/api/applications", async (c) => {
 app.post("/api/applications/:id/archive", async (c) => {
   const result = await c.env.DB.prepare(
     `UPDATE applications SET archived_at = datetime('now'), updated_at = datetime('now')
-     WHERE id = ? RETURNING *`,
+     WHERE id = ? AND user_id = ? RETURNING *`,
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("userId"))
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
   return c.json(result);
@@ -362,9 +436,9 @@ app.post("/api/applications/:id/archive", async (c) => {
 app.post("/api/applications/:id/unarchive", async (c) => {
   const result = await c.env.DB.prepare(
     `UPDATE applications SET archived_at = NULL, updated_at = datetime('now')
-     WHERE id = ? RETURNING *`,
+     WHERE id = ? AND user_id = ? RETURNING *`,
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("userId"))
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
   return c.json(result);
@@ -373,10 +447,11 @@ app.post("/api/applications/:id/unarchive", async (c) => {
 app.put("/api/applications/:id", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
+  const userId = c.get("userId");
   const existing = await c.env.DB.prepare(
-    "SELECT status FROM applications WHERE id = ?",
+    "SELECT status FROM applications WHERE id = ? AND user_id = ?",
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), userId)
     .first<{ status: string }>();
   if (!existing) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
@@ -388,7 +463,7 @@ app.put("/api/applications/:id", async (c) => {
          signing_bonus = ?, bonus_target_pct = ?, equity_value = ?, benefits_notes = ?,
          referred_by_contact_id = ?,
          updated_at = datetime('now')
-     WHERE id = ? RETURNING *`,
+     WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -416,15 +491,16 @@ app.put("/api/applications/:id", async (c) => {
       body.benefits_notes ?? null,
       body.referred_by_contact_id ?? null,
       c.req.param("id"),
+      userId,
     )
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
   const newStatus = (result as { status: string }).status;
   if (newStatus !== existing.status) {
     await c.env.DB.prepare(
-      `INSERT INTO status_history (application_id, from_status, to_status) VALUES (?, ?, ?)`,
+      `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
     )
-      .bind(c.req.param("id"), existing.status, newStatus)
+      .bind(c.req.param("id"), userId, existing.status, newStatus)
       .run();
   }
   return c.json(result);
@@ -433,32 +509,33 @@ app.put("/api/applications/:id", async (c) => {
 app.patch("/api/applications/:id/status", async (c) => {
   const body = await c.req.json();
   if (!body.status) return c.json({ error: "status is required" }, 400);
+  const userId = c.get("userId");
   const existing = await c.env.DB.prepare(
-    "SELECT status FROM applications WHERE id = ?",
+    "SELECT status FROM applications WHERE id = ? AND user_id = ?",
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), userId)
     .first<{ status: string }>();
   if (!existing) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
     `UPDATE applications SET status = ?, updated_at = datetime('now')
-     WHERE id = ? RETURNING *`,
+     WHERE id = ? AND user_id = ? RETURNING *`,
   )
-    .bind(body.status, c.req.param("id"))
+    .bind(body.status, c.req.param("id"), userId)
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
   if (body.status !== existing.status) {
     await c.env.DB.prepare(
-      `INSERT INTO status_history (application_id, from_status, to_status) VALUES (?, ?, ?)`,
+      `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
     )
-      .bind(c.req.param("id"), existing.status, body.status)
+      .bind(c.req.param("id"), userId, existing.status, body.status)
       .run();
   }
   return c.json(result);
 });
 
 app.delete("/api/applications/:id", async (c) => {
-  await c.env.DB.prepare("DELETE FROM applications WHERE id = ?")
-    .bind(c.req.param("id"))
+  await c.env.DB.prepare("DELETE FROM applications WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
     .run();
   return c.body(null, 204);
 });
@@ -471,24 +548,33 @@ app.get("/api/applications/:id/interactions", async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT i.*, CASE WHEN i.application_id IS NULL THEN 1 ELSE 0 END AS via_contact
      FROM interactions i
-     WHERE i.application_id = ?1
+     WHERE i.user_id = ?2
+       AND (i.application_id = ?1
         OR (i.application_id IS NULL
-            AND i.contact_id = (SELECT contact_id FROM applications WHERE id = ?1))
+            AND i.contact_id = (SELECT contact_id FROM applications WHERE id = ?1 AND user_id = ?2)))
      ORDER BY i.happened_at DESC, i.id DESC`,
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("userId"))
     .all();
   return c.json(results);
 });
 
 app.post("/api/applications/:id/interactions", async (c) => {
   const body = await c.req.json();
+  const userId = c.get("userId");
+  const application = await c.env.DB.prepare(
+    "SELECT id FROM applications WHERE id = ? AND user_id = ?",
+  )
+    .bind(c.req.param("id"), userId)
+    .first();
+  if (!application) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
-    `INSERT INTO interactions (application_id, type, happened_at, notes)
-     VALUES (?, ?, coalesce(?, date('now')), ?) RETURNING *`,
+    `INSERT INTO interactions (application_id, user_id, type, happened_at, notes)
+     VALUES (?, ?, ?, coalesce(?, date('now')), ?) RETURNING *`,
   )
     .bind(
       c.req.param("id"),
+      userId,
       body.type ?? "other",
       body.happened_at ?? null,
       body.notes ?? null,
@@ -499,22 +585,30 @@ app.post("/api/applications/:id/interactions", async (c) => {
 
 app.get("/api/contacts/:id/interactions", async (c) => {
   const { results } = await c.env.DB.prepare(
-    `SELECT i.*, 0 AS via_contact FROM interactions i WHERE i.contact_id = ?
+    `SELECT i.*, 0 AS via_contact FROM interactions i WHERE i.contact_id = ? AND i.user_id = ?
      ORDER BY i.happened_at DESC, i.id DESC`,
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("userId"))
     .all();
   return c.json(results);
 });
 
 app.post("/api/contacts/:id/interactions", async (c) => {
   const body = await c.req.json();
+  const userId = c.get("userId");
+  const contact = await c.env.DB.prepare(
+    "SELECT id FROM contacts WHERE id = ? AND user_id = ?",
+  )
+    .bind(c.req.param("id"), userId)
+    .first();
+  if (!contact) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
-    `INSERT INTO interactions (contact_id, type, happened_at, notes)
-     VALUES (?, ?, coalesce(?, date('now')), ?) RETURNING *`,
+    `INSERT INTO interactions (contact_id, user_id, type, happened_at, notes)
+     VALUES (?, ?, ?, coalesce(?, date('now')), ?) RETURNING *`,
   )
     .bind(
       c.req.param("id"),
+      userId,
       body.type ?? "other",
       body.happened_at ?? null,
       body.notes ?? null,
@@ -524,8 +618,8 @@ app.post("/api/contacts/:id/interactions", async (c) => {
 });
 
 app.delete("/api/interactions/:id", async (c) => {
-  await c.env.DB.prepare("DELETE FROM interactions WHERE id = ?")
-    .bind(c.req.param("id"))
+  await c.env.DB.prepare("DELETE FROM interactions WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
     .run();
   return c.body(null, 204);
 });
@@ -552,7 +646,12 @@ const EXPORT_TABLES = [
   "feed_sources",
   "feed_role_keywords",
   "feed_items",
+  "feed_item_status",
 ] as const;
+
+// feed_items is a shared pool (no user_id — see migration 0024), so it's
+// exported as-is rather than scoped to one user.
+const GLOBAL_EXPORT_TABLES = new Set(["feed_items"]);
 
 export async function buildFullExport(
   env: Env,
@@ -565,8 +664,24 @@ export async function buildFullExport(
   return { exported_at: new Date().toISOString(), ...dump };
 }
 
+async function buildUserExport(
+  env: Env,
+  userId: string,
+): Promise<Record<string, unknown>> {
+  const dump: Record<string, unknown[]> = {};
+  for (const table of EXPORT_TABLES) {
+    const { results } = GLOBAL_EXPORT_TABLES.has(table)
+      ? await env.DB.prepare(`SELECT * FROM ${table}`).all()
+      : await env.DB.prepare(`SELECT * FROM ${table} WHERE user_id = ?`)
+          .bind(userId)
+          .all();
+    dump[table] = results;
+  }
+  return { exported_at: new Date().toISOString(), ...dump };
+}
+
 app.get("/api/export", async (c) => {
-  const dump = await buildFullExport(c.env);
+  const dump = await buildUserExport(c.env, c.get("userId"));
   return c.json(dump, 200, {
     "Content-Disposition": `attachment; filename="jobseekr-export-${new Date().toISOString().slice(0, 10)}.json"`,
   });
@@ -591,7 +706,11 @@ app.get("/api/export/:table", async (c) => {
   if (!(EXPORT_TABLES as readonly string[]).includes(table)) {
     return c.json({ error: "unknown table" }, 404);
   }
-  const { results } = await c.env.DB.prepare(`SELECT * FROM ${table}`).all();
+  const { results } = GLOBAL_EXPORT_TABLES.has(table)
+    ? await c.env.DB.prepare(`SELECT * FROM ${table}`).all()
+    : await c.env.DB.prepare(`SELECT * FROM ${table} WHERE user_id = ?`)
+        .bind(c.get("userId"))
+        .all();
   return c.body(toCsv(results as Record<string, unknown>[]), 200, {
     "Content-Type": "text/csv; charset=utf-8",
     "Content-Disposition": `attachment; filename="jobseekr-${table}.csv"`,
@@ -759,15 +878,19 @@ app.get("/api/import", async (c) => {
 // entering one today) doubles as a scheduled event.
 
 app.get("/api/agenda", async (c) => {
+  const userId = c.get("userId");
   const [dueRes, interactionsRes, appliedRes] = await Promise.all([
     c.env.DB.prepare(
       `SELECT applications.id, applications.title, applications.next_action AS label,
               applications.next_action_at AS date, companies.name AS company_name
        FROM applications
        LEFT JOIN companies ON companies.id = applications.company_id
-       WHERE applications.next_action_at IS NOT NULL
+       WHERE applications.user_id = ?
+         AND applications.next_action_at IS NOT NULL
          AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
-    ).all(),
+    )
+      .bind(userId)
+      .all(),
     c.env.DB.prepare(
       `SELECT interactions.id, interactions.type, interactions.happened_at AS date,
               interactions.notes,
@@ -777,15 +900,21 @@ app.get("/api/agenda", async (c) => {
        LEFT JOIN applications ON applications.id = interactions.application_id
        LEFT JOIN companies ON companies.id = applications.company_id
        LEFT JOIN contacts ON contacts.id = COALESCE(interactions.contact_id, applications.contact_id)
-       WHERE interactions.happened_at >= date('now', '-14 days')`,
-    ).all(),
+       WHERE interactions.user_id = ?
+         AND interactions.happened_at >= date('now', '-14 days')`,
+    )
+      .bind(userId)
+      .all(),
     c.env.DB.prepare(
       `SELECT applications.id, applications.title, applications.applied_at AS date,
               companies.name AS company_name
        FROM applications
        LEFT JOIN companies ON companies.id = applications.company_id
-       WHERE applications.applied_at IS NOT NULL`,
-    ).all(),
+       WHERE applications.user_id = ?
+         AND applications.applied_at IS NOT NULL`,
+    )
+      .bind(userId)
+      .all(),
   ]);
 
   const due = dueRes.results.map((r) => ({ kind: "due" as const, ...r }));
@@ -804,36 +933,46 @@ app.get("/api/agenda", async (c) => {
 // --- Stats ---
 
 app.get("/api/stats", async (c) => {
+  const userId = c.get("userId");
   const [apps, history] = await Promise.all([
     c.env.DB.prepare(
-      "SELECT id, status, source, applied_at, created_at FROM applications",
-    ).all(),
+      "SELECT id, status, source, applied_at, created_at FROM applications WHERE user_id = ?",
+    )
+      .bind(userId)
+      .all(),
     c.env.DB.prepare(
       `SELECT application_id, from_status, to_status, changed_at
-       FROM status_history ORDER BY application_id, changed_at, id`,
-    ).all(),
+       FROM status_history WHERE user_id = ? ORDER BY application_id, changed_at, id`,
+    )
+      .bind(userId)
+      .all(),
   ]);
   return c.json({ applications: apps.results, history: history.results });
 });
 
 // --- Public share link (#113) ---
-// A single unauthenticated route gated by an unguessable token, showing
-// aggregate Stats only (no per-application detail, no edit capability).
-// NOTE: this route is reachable by anyone with the token — it must also
-// be excluded from the Cloudflare Access policy that otherwise protects
-// every route in this Worker, which is a dashboard/zone-level change
-// outside this repo and has to be done by whoever administers Access.
+// A single unauthenticated route (/shared/:token, below) gated by an
+// unguessable per-user token, showing aggregate Stats only (no
+// per-application detail, no edit capability). It intentionally stays
+// outside the /api/* auth requirement — anyone with the token can view it
+// by design — and outside /api entirely so it isn't blocked by that
+// middleware.
 
 app.post("/api/profile/share-token", async (c) => {
   const token = crypto.randomUUID();
-  await c.env.DB.prepare("UPDATE profile SET share_token = ? WHERE id = 1")
-    .bind(token)
+  const userId = c.get("userId");
+  await c.env.DB.prepare(
+    "INSERT INTO profile (user_id, share_token) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET share_token = excluded.share_token",
+  )
+    .bind(userId, token)
     .run();
   return c.json({ share_token: token });
 });
 
 app.delete("/api/profile/share-token", async (c) => {
-  await c.env.DB.prepare("UPDATE profile SET share_token = NULL WHERE id = 1").run();
+  await c.env.DB.prepare("UPDATE profile SET share_token = NULL WHERE user_id = ?")
+    .bind(c.get("userId"))
+    .run();
   return c.body(null, 204);
 });
 
@@ -846,25 +985,29 @@ function shareParseSqlDate(d: string): number {
 app.get("/shared/:token", async (c) => {
   const token = c.req.param("token");
   const profile = await c.env.DB.prepare(
-    "SELECT id FROM profile WHERE id = 1 AND share_token = ?",
+    "SELECT user_id FROM profile WHERE share_token = ?",
   )
     .bind(token)
-    .first();
+    .first<{ user_id: string }>();
   if (!profile) return c.text("Not found", 404);
 
   const [apps, history] = await Promise.all([
     c.env.DB.prepare(
-      "SELECT id, status, applied_at, created_at FROM applications",
-    ).all<{ id: number; status: string; applied_at: string | null; created_at: string }>(),
+      "SELECT id, status, applied_at, created_at FROM applications WHERE user_id = ?",
+    )
+      .bind(profile.user_id)
+      .all<{ id: number; status: string; applied_at: string | null; created_at: string }>(),
     c.env.DB.prepare(
       `SELECT application_id, from_status, to_status, changed_at
-       FROM status_history ORDER BY application_id, changed_at, id`,
-    ).all<{
-      application_id: number;
-      from_status: string | null;
-      to_status: string;
-      changed_at: string;
-    }>(),
+       FROM status_history WHERE user_id = ? ORDER BY application_id, changed_at, id`,
+    )
+      .bind(profile.user_id)
+      .all<{
+        application_id: number;
+        from_status: string | null;
+        to_status: string;
+        changed_at: string;
+      }>(),
   ]);
 
   const reachedByApp = new Map<number, number>();
@@ -966,9 +1109,9 @@ const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 app.get("/api/applications/:id/documents", async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT id, application_id, filename, label, size, content_type, created_at
-     FROM documents WHERE application_id = ? ORDER BY created_at DESC`,
+     FROM documents WHERE application_id = ? AND user_id = ? ORDER BY created_at DESC`,
   )
-    .bind(c.req.param("id"))
+    .bind(c.req.param("id"), c.get("userId"))
     .all();
   return c.json(results);
 });
@@ -981,7 +1124,14 @@ app.post("/api/applications/:id/documents", async (c) => {
   if (size > MAX_DOCUMENT_BYTES) {
     return c.json({ error: "file too large (max 10 MB)" }, 413);
   }
+  const userId = c.get("userId");
   const appId = c.req.param("id");
+  const application = await c.env.DB.prepare(
+    "SELECT id FROM applications WHERE id = ? AND user_id = ?",
+  )
+    .bind(appId, userId)
+    .first();
+  if (!application) return c.json({ error: "not found" }, 404);
   const contentType =
     c.req.header("Content-Type") ?? "application/octet-stream";
   const key = `app-${appId}/${Date.now()}-${filename}`;
@@ -989,18 +1139,18 @@ app.post("/api/applications/:id/documents", async (c) => {
     httpMetadata: { contentType },
   });
   const result = await c.env.DB.prepare(
-    `INSERT INTO documents (application_id, key, filename, label, size, content_type)
-     VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO documents (application_id, user_id, key, filename, label, size, content_type)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      RETURNING id, application_id, filename, label, size, content_type, created_at`,
   )
-    .bind(appId, key, filename, c.req.query("label") ?? null, size, contentType)
+    .bind(appId, userId, key, filename, c.req.query("label") ?? null, size, contentType)
     .first();
   return c.json(result, 201);
 });
 
 app.get("/api/documents/:id/download", async (c) => {
-  const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?")
-    .bind(c.req.param("id"))
+  const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
     .first<{ key: string; filename: string; content_type: string | null }>();
   if (!doc) return c.json({ error: "not found" }, 404);
   const object = await c.env.DOCS.get(doc.key);
@@ -1014,13 +1164,13 @@ app.get("/api/documents/:id/download", async (c) => {
 });
 
 app.delete("/api/documents/:id", async (c) => {
-  const doc = await c.env.DB.prepare("SELECT key FROM documents WHERE id = ?")
-    .bind(c.req.param("id"))
+  const doc = await c.env.DB.prepare("SELECT key FROM documents WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
     .first<{ key: string }>();
   if (doc) {
     await c.env.DOCS.delete(doc.key);
-    await c.env.DB.prepare("DELETE FROM documents WHERE id = ?")
-      .bind(c.req.param("id"))
+    await c.env.DB.prepare("DELETE FROM documents WHERE id = ? AND user_id = ?")
+      .bind(c.req.param("id"), c.get("userId"))
       .run();
   }
   return c.body(null, 204);
@@ -1029,6 +1179,17 @@ app.delete("/api/documents/:id", async (c) => {
 registerFeedRoutes(app);
 registerRoleTypeRoutes(app);
 registerCvRoutes(app);
+
+// Admin-only: wipe and reseed the demo account's data with one example of
+// every shipped feature (#38). The demo account itself is created like any
+// other invited user via the "Invite a user" form in Settings.
+app.post("/api/admin/reset-demo-data", async (c) => {
+  const result = await resetDemoData(c.env);
+  if (!result.seeded) {
+    return c.json({ error: "demo account doesn't exist yet — invite it first" }, 404);
+  }
+  return c.json(result);
+});
 
 app.notFound((c) => c.json({ error: "not found" }, 404));
 
@@ -1055,17 +1216,23 @@ export async function logInboundEmail(
 ): Promise<void> {
   fromAddress = fromAddress.toLowerCase();
 
-  const contact = await env.DB.prepare(
-    "SELECT id, outreach_status FROM contacts WHERE lower(email) = ?",
+  // Contacts are per-user now, so the same sender address could match a
+  // contact belonging to more than one user. Matching purely on address
+  // (see #179 for a real fix distinguishing the original sender) can't
+  // disambiguate that case — skip rather than guess and log against the
+  // wrong user's contact.
+  const { results: contacts } = await env.DB.prepare(
+    "SELECT id, user_id, outreach_status FROM contacts WHERE lower(email) = ?",
   )
     .bind(fromAddress)
-    .first<{ id: number; outreach_status: string }>();
-  if (!contact) return;
+    .all<{ id: number; user_id: string; outreach_status: string }>();
+  if (contacts.length !== 1) return;
+  const contact = contacts[0];
 
   await env.DB.prepare(
-    `INSERT INTO interactions (contact_id, type, notes) VALUES (?, 'email', ?)`,
+    `INSERT INTO interactions (contact_id, user_id, type, notes) VALUES (?, ?, 'email', ?)`,
   )
-    .bind(contact.id, subject)
+    .bind(contact.id, contact.user_id, subject)
     .run();
 
   if (contact.outreach_status === "awaiting_reply") {

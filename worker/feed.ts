@@ -1,16 +1,31 @@
 import type { Hono } from "hono";
+import type { AppEnv } from "./index.js";
 
 // Free job-source ingestion. See issue #16/#34 for the research behind
 // this source list — Indeed and LinkedIn have no usable public API.
 // Role keywords and location filters are configured in the DB
-// (feed_role_keywords / feed_sources, migration 0010) rather than
-// hardcoded, so they can be tuned from the Feed tab without a deploy.
+// (feed_role_keywords / feed_sources, migration 0010, made per-user in
+// 0024) rather than hardcoded, so they can be tuned from the Feed tab
+// without a deploy.
+//
+// feed_items itself stays a single shared pool across all users (#38):
+// re-running these external, rate-limited fetches once per user would
+// multiply API calls (Adzuna's free tier in particular) for no benefit.
+// The cron run below aggregates every user's keywords and (source,
+// location) combinations, fetches each distinct combination once, and
+// tags each item with the role_type slug that matched. Per-user
+// new/dismissed/added state lives in feed_item_status instead of a
+// column on feed_items.
 
 interface RoleKeywords {
   [roleSlug: string]: string[];
 }
 
 async function loadRoleKeywords(env: Env): Promise<RoleKeywords> {
+  // Aggregated across all users — feed content isn't sensitive, so
+  // searching the union of everyone's keywords (then letting each user's
+  // own /api/feed view filter down to their own role_types) gives
+  // broader coverage without extra fetches per user.
   const { results } = await env.DB.prepare(
     "SELECT role_slug, keyword FROM feed_role_keywords",
   ).all<{ role_slug: string; keyword: string }>();
@@ -21,15 +36,16 @@ async function loadRoleKeywords(env: Env): Promise<RoleKeywords> {
   return map;
 }
 
-async function loadSourceConfig(env: Env) {
+interface SourceConfig {
+  source: string;
+  location: string | null;
+}
+
+async function loadDistinctSourceConfigs(env: Env): Promise<SourceConfig[]> {
   const { results } = await env.DB.prepare(
-    "SELECT source, enabled, location FROM feed_sources",
-  ).all<{ source: string; enabled: number; location: string | null }>();
-  const byName: Record<string, { enabled: boolean; location: string | null }> = {};
-  for (const row of results) {
-    byName[row.source] = { enabled: !!row.enabled, location: row.location };
-  }
-  return byName;
+    "SELECT DISTINCT source, location FROM feed_sources WHERE enabled = 1",
+  ).all<{ source: string; location: string | null }>();
+  return results;
 }
 
 function guessRoleType(text: string, keywords: RoleKeywords): string | null {
@@ -204,20 +220,20 @@ async function fetchArbeitnow(
 }
 
 export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: number }> {
-  const [keywords, sources] = await Promise.all([
+  const [keywords, configs] = await Promise.all([
     loadRoleKeywords(env),
-    loadSourceConfig(env),
+    loadDistinctSourceConfigs(env),
   ]);
 
   const jobs: Promise<FeedCandidate[]>[] = [];
-  if (sources.adzuna?.enabled !== false) {
-    jobs.push(fetchAdzuna(env, keywords, sources.adzuna?.location ?? null));
+  for (const cfg of configs.filter((c) => c.source === "adzuna")) {
+    jobs.push(fetchAdzuna(env, keywords, cfg.location));
   }
-  if (sources.hn?.enabled !== false) {
-    jobs.push(fetchHnWhoIsHiring(keywords, sources.hn?.location ?? null));
+  for (const cfg of configs.filter((c) => c.source === "hn")) {
+    jobs.push(fetchHnWhoIsHiring(keywords, cfg.location));
   }
-  if (sources.arbeitnow?.enabled !== false) {
-    jobs.push(fetchArbeitnow(keywords, sources.arbeitnow?.location ?? null));
+  for (const cfg of configs.filter((c) => c.source === "arbeitnow")) {
+    jobs.push(fetchArbeitnow(keywords, cfg.location));
   }
   const candidates = (await Promise.all(jobs)).flat();
 
@@ -245,11 +261,23 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   return { inserted, seen: candidates.length };
 }
 
-export function registerFeedRoutes(app: Hono<{ Bindings: Env }>) {
+export function registerFeedRoutes(app: Hono<AppEnv>) {
   app.get("/api/feed", async (c) => {
+    const userId = c.get("userId");
+    // A feed_item is "new" for this user unless a feed_item_status row
+    // says otherwise (dismissed/added) — that row only exists once the
+    // user has acted on it.
     const { results } = await c.env.DB.prepare(
-      `SELECT * FROM feed_items WHERE status = 'new' ORDER BY posted_at DESC, id DESC`,
-    ).all();
+      `SELECT feed_items.*
+       FROM feed_items
+       LEFT JOIN feed_item_status
+         ON feed_item_status.feed_item_id = feed_items.id
+         AND feed_item_status.user_id = ?
+       WHERE COALESCE(feed_item_status.status, 'new') = 'new'
+       ORDER BY feed_items.posted_at DESC, feed_items.id DESC`,
+    )
+      .bind(userId)
+      .all();
     return c.json(results);
   });
 
@@ -261,14 +289,17 @@ export function registerFeedRoutes(app: Hono<{ Bindings: Env }>) {
 
   app.post("/api/feed/:id/dismiss", async (c) => {
     await c.env.DB.prepare(
-      "UPDATE feed_items SET status = 'dismissed' WHERE id = ?",
+      `INSERT INTO feed_item_status (feed_item_id, user_id, status)
+       VALUES (?, ?, 'dismissed')
+       ON CONFLICT (feed_item_id, user_id) DO UPDATE SET status = 'dismissed'`,
     )
-      .bind(c.req.param("id"))
+      .bind(c.req.param("id"), c.get("userId"))
       .run();
     return c.body(null, 204);
   });
 
   app.post("/api/feed/:id/add", async (c) => {
+    const userId = c.get("userId");
     const item = await c.env.DB.prepare("SELECT * FROM feed_items WHERE id = ?")
       .bind(c.req.param("id"))
       .first<{
@@ -284,27 +315,28 @@ export function registerFeedRoutes(app: Hono<{ Bindings: Env }>) {
     let companyId: number | null = null;
     if (item.company) {
       const existing = await c.env.DB.prepare(
-        "SELECT id FROM companies WHERE lower(name) = lower(?)",
+        "SELECT id FROM companies WHERE lower(name) = lower(?) AND user_id = ?",
       )
-        .bind(item.company)
+        .bind(item.company, userId)
         .first<{ id: number }>();
       if (existing) {
         companyId = existing.id;
       } else {
         const created = await c.env.DB.prepare(
-          "INSERT INTO companies (name) VALUES (?) RETURNING id",
+          "INSERT INTO companies (user_id, name) VALUES (?, ?) RETURNING id",
         )
-          .bind(item.company)
+          .bind(userId, item.company)
           .first<{ id: number }>();
         companyId = created?.id ?? null;
       }
     }
 
     const application = await c.env.DB.prepare(
-      `INSERT INTO applications (company_id, title, role_type, url, source, salary_range, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'interested') RETURNING *`,
+      `INSERT INTO applications (user_id, company_id, title, role_type, url, source, salary_range, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'interested') RETURNING *`,
     )
       .bind(
+        userId,
         companyId,
         item.title,
         item.role_type,
@@ -314,8 +346,18 @@ export function registerFeedRoutes(app: Hono<{ Bindings: Env }>) {
       )
       .first();
 
-    await c.env.DB.prepare("UPDATE feed_items SET status = 'added' WHERE id = ?")
-      .bind(c.req.param("id"))
+    await c.env.DB.prepare(
+      `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, NULL, 'interested')`,
+    )
+      .bind((application as { id: number }).id, userId)
+      .run();
+
+    await c.env.DB.prepare(
+      `INSERT INTO feed_item_status (feed_item_id, user_id, status)
+       VALUES (?, ?, 'added')
+       ON CONFLICT (feed_item_id, user_id) DO UPDATE SET status = 'added'`,
+    )
+      .bind(c.req.param("id"), userId)
       .run();
 
     return c.json(application, 201);
@@ -324,13 +366,18 @@ export function registerFeedRoutes(app: Hono<{ Bindings: Env }>) {
   // --- Feed configuration ---
 
   app.get("/api/feed/config", async (c) => {
+    const userId = c.get("userId");
     const [sources, keywords] = await Promise.all([
       c.env.DB.prepare(
-        "SELECT source, enabled, location FROM feed_sources ORDER BY source",
-      ).all(),
+        "SELECT source, enabled, location FROM feed_sources WHERE user_id = ? ORDER BY source",
+      )
+        .bind(userId)
+        .all(),
       c.env.DB.prepare(
-        "SELECT id, role_slug, keyword FROM feed_role_keywords ORDER BY role_slug, keyword",
-      ).all(),
+        "SELECT id, role_slug, keyword FROM feed_role_keywords WHERE user_id = ? ORDER BY role_slug, keyword",
+      )
+        .bind(userId)
+        .all(),
     ]);
     return c.json({ sources: sources.results, keywords: keywords.results });
   });
@@ -338,10 +385,14 @@ export function registerFeedRoutes(app: Hono<{ Bindings: Env }>) {
   app.put("/api/feed/config/sources/:source", async (c) => {
     const source = c.req.param("source");
     const body = await c.req.json();
+    const userId = c.get("userId");
     const result = await c.env.DB.prepare(
-      `UPDATE feed_sources SET enabled = ?, location = ? WHERE source = ? RETURNING *`,
+      `INSERT INTO feed_sources (user_id, source, enabled, location)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT (user_id, source) DO UPDATE SET enabled = excluded.enabled, location = excluded.location
+       RETURNING *`,
     )
-      .bind(body.enabled ? 1 : 0, body.location || null, source)
+      .bind(userId, source, body.enabled ? 1 : 0, body.location || null)
       .first();
     if (!result) return c.json({ error: "unknown source" }, 404);
     return c.json(result);
@@ -353,16 +404,16 @@ export function registerFeedRoutes(app: Hono<{ Bindings: Env }>) {
       return c.json({ error: "role_slug and keyword are required" }, 400);
     }
     const result = await c.env.DB.prepare(
-      `INSERT INTO feed_role_keywords (role_slug, keyword) VALUES (?, ?) RETURNING *`,
+      `INSERT INTO feed_role_keywords (user_id, role_slug, keyword) VALUES (?, ?, ?) RETURNING *`,
     )
-      .bind(body.role_slug, body.keyword.toLowerCase())
+      .bind(c.get("userId"), body.role_slug, body.keyword.toLowerCase())
       .first();
     return c.json(result, 201);
   });
 
   app.delete("/api/feed/config/keywords/:id", async (c) => {
-    await c.env.DB.prepare("DELETE FROM feed_role_keywords WHERE id = ?")
-      .bind(c.req.param("id"))
+    await c.env.DB.prepare("DELETE FROM feed_role_keywords WHERE id = ? AND user_id = ?")
+      .bind(c.req.param("id"), c.get("userId"))
       .run();
     return c.body(null, 204);
   });

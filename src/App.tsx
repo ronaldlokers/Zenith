@@ -8,6 +8,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
+import { authClient, signOut, useSession } from "./auth-client";
 import {
   INTERACTION_TYPES,
   type Stats,
@@ -394,8 +395,114 @@ function CommandPalette({
   );
 }
 
+function AdminInvite() {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"user" | "admin">("user");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setResult(null);
+    const { error } = await authClient.admin.createUser({
+      email,
+      name,
+      password,
+      role,
+    });
+    setBusy(false);
+    if (error) {
+      setResult({ ok: false, message: t("account.inviteError") });
+      return;
+    }
+    setResult({ ok: true, message: t("account.inviteSuccess", { email }) });
+    setEmail("");
+    setName("");
+    setPassword("");
+    setRole("user");
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.adminInvite")}</h3>
+      <form onSubmit={submit}>
+        <label className="settings-field">
+          <span>{t("account.inviteName")}</span>
+          <input required value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label className="settings-field">
+          <span>{t("account.inviteEmail")}</span>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </label>
+        <label className="settings-field">
+          <span>{t("account.invitePassword")}</span>
+          <input
+            type="text"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        <label className="settings-field">
+          <span>{t("account.inviteRole")}</span>
+          <select value={role} onChange={(e) => setRole(e.target.value as "user" | "admin")}>
+            <option value="user">{t("account.inviteRoleUser")}</option>
+            <option value="admin">{t("account.inviteRoleAdmin")}</option>
+          </select>
+        </label>
+        {result && (
+          <p className={result.ok ? "admin-invite-success" : "login-error"}>
+            {result.message}
+          </p>
+        )}
+        <button type="submit" disabled={busy}>
+          {t("account.inviteSubmit")}
+        </button>
+      </form>
+      <ResetDemoData />
+    </div>
+  );
+}
+
+function ResetDemoData() {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const reset = async () => {
+    setBusy(true);
+    setMessage(null);
+    const res = await fetch("/api/admin/reset-demo-data", { method: "POST" });
+    setBusy(false);
+    setMessage(
+      res.ok ? t("account.resetDemoSuccess") : t("account.resetDemoError"),
+    );
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.resetDemo")}</h3>
+      {message && <p className="admin-invite-success">{message}</p>}
+      <button disabled={busy} onClick={reset}>
+        {t("account.resetDemoSubmit")}
+      </button>
+    </div>
+  );
+}
+
 function SettingsModal({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
+  const { data: session } = useSession();
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
   );
@@ -491,6 +598,15 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
               {t("settings.generateLink")}
             </button>
           )}
+        </div>
+        <div className="account-section">
+          {session && (
+            <div className="account-signed-in">
+              <span>{t("account.signedInAs", { email: session.user.email })}</span>
+              <button onClick={() => signOut()}>{t("account.signOut")}</button>
+            </div>
+          )}
+          {session?.user.role === "admin" && <AdminInvite />}
         </div>
         <button onClick={onClose}>{t("common.close")}</button>
       </div>

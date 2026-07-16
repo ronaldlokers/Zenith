@@ -1,10 +1,11 @@
-import { env, SELF } from "cloudflare:test";
+import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import { authedFetch } from "./helpers";
 
 const BASE = "http://jobseekr.test";
 
 async function post(path: string, body: unknown) {
-  return SELF.fetch(`${BASE}${path}`, {
+  return authedFetch(`${BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -39,17 +40,17 @@ describe("companies", () => {
     };
     expect(company.is_agency).toBe(1);
 
-    const list = await SELF.fetch(`${BASE}/api/companies`);
+    const list = await authedFetch(`${BASE}/api/companies`);
     expect(((await list.json()) as unknown[]).length).toBe(1);
 
-    const updated = await SELF.fetch(`${BASE}/api/companies/${company.id}`, {
+    const updated = await authedFetch(`${BASE}/api/companies/${company.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Acme BV" }),
     });
     expect(((await updated.json()) as { name: string }).name).toBe("Acme BV");
 
-    const del = await SELF.fetch(`${BASE}/api/companies/${company.id}`, {
+    const del = await authedFetch(`${BASE}/api/companies/${company.id}`, {
       method: "DELETE",
     });
     expect(del.status).toBe(204);
@@ -69,7 +70,7 @@ describe("contacts", () => {
       company_id: company.id,
       role: "Recruiter",
     });
-    const list = await SELF.fetch(`${BASE}/api/contacts`);
+    const list = await authedFetch(`${BASE}/api/contacts`);
     const [contact] = (await list.json()) as { company_name: string }[];
     expect(contact.company_name).toBe("Acme");
   });
@@ -110,7 +111,7 @@ describe("applications", () => {
     const app = (await created.json()) as { referred_by_contact_id: number };
     expect(app.referred_by_contact_id).toBe(contactId);
 
-    const list = await SELF.fetch(`${BASE}/api/applications`);
+    const list = await authedFetch(`${BASE}/api/applications`);
     const apps = (await list.json()) as {
       title: string;
       referred_by_name: string | null;
@@ -145,7 +146,7 @@ describe("applications", () => {
     expect(app.equity_value).toBe(8000);
     expect(app.benefits_notes).toBe("Unlimited PTO");
 
-    const updated = await SELF.fetch(`${BASE}/api/applications/${app.id}`, {
+    const updated = await authedFetch(`${BASE}/api/applications/${app.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -161,7 +162,7 @@ describe("applications", () => {
 
   it("changes status and records history", async () => {
     const app = await seedApplication();
-    const patched = await SELF.fetch(
+    const patched = await authedFetch(
       `${BASE}/api/applications/${app.id}/status`,
       {
         method: "PATCH",
@@ -171,7 +172,7 @@ describe("applications", () => {
     );
     expect(patched.status).toBe(200);
 
-    const stats = await SELF.fetch(`${BASE}/api/stats`);
+    const stats = await authedFetch(`${BASE}/api/stats`);
     const { history: allHistory } = (await stats.json()) as {
       history: {
         application_id: number;
@@ -212,7 +213,7 @@ describe("interactions", () => {
       notes: "linkedin ping",
     });
 
-    const timeline = await SELF.fetch(
+    const timeline = await authedFetch(
       `${BASE}/api/applications/${app.id}/interactions`,
     );
     const items = (await timeline.json()) as {
@@ -236,14 +237,14 @@ describe("interactions", () => {
 describe("company research", () => {
   it("requires a website before researching", async () => {
     const company = await seedCompany();
-    const res = await SELF.fetch(`${BASE}/api/companies/${company.id}/research`, {
+    const res = await authedFetch(`${BASE}/api/companies/${company.id}/research`, {
       method: "POST",
     });
     expect(res.status).toBe(400);
   });
 
   it("404s for an unknown company", async () => {
-    const res = await SELF.fetch(`${BASE}/api/companies/999999/research`, {
+    const res = await authedFetch(`${BASE}/api/companies/999999/research`, {
       method: "POST",
     });
     expect(res.status).toBe(404);
@@ -255,7 +256,7 @@ describe("company research", () => {
       website: "javascript:alert(1)",
     });
     const company = (await created.json()) as { id: number };
-    const res = await SELF.fetch(
+    const res = await authedFetch(
       `${BASE}/api/companies/${company.id}/research`,
       { method: "POST" },
     );
@@ -267,7 +268,7 @@ describe("documents", () => {
   it("uploads, downloads, deletes", async () => {
     const app = await seedApplication();
     const content = "fake pdf bytes";
-    const uploaded = await SELF.fetch(
+    const uploaded = await authedFetch(
       `${BASE}/api/applications/${app.id}/documents?filename=cv.pdf&label=CV%20v3`,
       {
         method: "POST",
@@ -282,24 +283,24 @@ describe("documents", () => {
     const doc = (await uploaded.json()) as { id: number; label: string };
     expect(doc.label).toBe("CV v3");
 
-    const download = await SELF.fetch(
+    const download = await authedFetch(
       `${BASE}/api/documents/${doc.id}/download`,
     );
     expect(download.status).toBe(200);
     expect(await download.text()).toBe(content);
     expect(download.headers.get("Content-Disposition")).toContain("cv.pdf");
 
-    const del = await SELF.fetch(`${BASE}/api/documents/${doc.id}`, {
+    const del = await authedFetch(`${BASE}/api/documents/${doc.id}`, {
       method: "DELETE",
     });
     expect(del.status).toBe(204);
-    const gone = await SELF.fetch(`${BASE}/api/documents/${doc.id}/download`);
+    const gone = await authedFetch(`${BASE}/api/documents/${doc.id}/download`);
     expect(gone.status).toBe(404);
   });
 
   it("rejects uploads without a filename", async () => {
     const app = await seedApplication();
-    const res = await SELF.fetch(
+    const res = await authedFetch(
       `${BASE}/api/applications/${app.id}/documents`,
       { method: "POST", body: "x" },
     );
@@ -310,11 +311,11 @@ describe("documents", () => {
 describe("export", () => {
   it("dumps everything as json", async () => {
     const before = (await (
-      await SELF.fetch(`${BASE}/api/export`)
+      await authedFetch(`${BASE}/api/export`)
     ).json()) as { applications: unknown[] };
     await seedCompany();
     await seedApplication();
-    const res = await SELF.fetch(`${BASE}/api/export`);
+    const res = await authedFetch(`${BASE}/api/export`);
     expect(res.status).toBe(200);
     const dump = (await res.json()) as Record<string, unknown>;
     expect(Object.keys(dump)).toEqual(
@@ -335,14 +336,14 @@ describe("export", () => {
 
   it("exports csv per table and 404s unknown tables", async () => {
     await seedApplication({ title: 'Engineer, "Platform"' });
-    const res = await SELF.fetch(`${BASE}/api/export/applications.csv`);
+    const res = await authedFetch(`${BASE}/api/export/applications.csv`);
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toContain("text/csv");
     const csv = await res.text();
     expect(csv.split("\n")[0]).toContain("title");
     expect(csv).toContain('"Engineer, ""Platform"""');
 
-    const bad = await SELF.fetch(`${BASE}/api/export/sqlite_master.csv`);
+    const bad = await authedFetch(`${BASE}/api/export/sqlite_master.csv`);
     expect(bad.status).toBe(404);
   });
 });
@@ -386,26 +387,26 @@ describe("feed", () => {
   it("lists only new items", async () => {
     const item = await seedFeedItem();
     const list = (await (
-      await SELF.fetch(`${BASE}/api/feed`)
+      await authedFetch(`${BASE}/api/feed`)
     ).json()) as { id: number }[];
     expect(list.some((i) => i.id === item.id)).toBe(true);
   });
 
   it("dismiss removes an item from the new list", async () => {
     const item = await seedFeedItem();
-    const res = await SELF.fetch(`${BASE}/api/feed/${item.id}/dismiss`, {
+    const res = await authedFetch(`${BASE}/api/feed/${item.id}/dismiss`, {
       method: "POST",
     });
     expect(res.status).toBe(204);
     const list = (await (
-      await SELF.fetch(`${BASE}/api/feed`)
+      await authedFetch(`${BASE}/api/feed`)
     ).json()) as { id: number }[];
     expect(list.some((i) => i.id === item.id)).toBe(false);
   });
 
   it("add creates an application and a new company, then removes from feed", async () => {
     const item = await seedFeedItem({ company: "Brand New Co" });
-    const res = await SELF.fetch(`${BASE}/api/feed/${item.id}/add`, {
+    const res = await authedFetch(`${BASE}/api/feed/${item.id}/add`, {
       method: "POST",
     });
     expect(res.status).toBe(201);
@@ -425,7 +426,7 @@ describe("feed", () => {
     expect(company?.name).toBe("Brand New Co");
 
     const list = (await (
-      await SELF.fetch(`${BASE}/api/feed`)
+      await authedFetch(`${BASE}/api/feed`)
     ).json()) as { id: number }[];
     expect(list.some((i) => i.id === item.id)).toBe(false);
   });
@@ -434,7 +435,7 @@ describe("feed", () => {
     const existingRes = await post("/api/companies", { name: "Reuse Me" });
     const existing = (await existingRes.json()) as { id: number };
     const item = await seedFeedItem({ company: "reuse me" });
-    const res = await SELF.fetch(`${BASE}/api/feed/${item.id}/add`, {
+    const res = await authedFetch(`${BASE}/api/feed/${item.id}/add`, {
       method: "POST",
     });
     const app = (await res.json()) as { company_id: number };
@@ -457,7 +458,7 @@ describe("agenda", () => {
       happened_at: todayStr,
     });
 
-    const res = await SELF.fetch(`${BASE}/api/agenda`);
+    const res = await authedFetch(`${BASE}/api/agenda`);
     expect(res.status).toBe(200);
     const entries = (await res.json()) as {
       kind: string;
@@ -481,7 +482,7 @@ describe("agenda", () => {
       next_action: "Should not appear",
       status: "rejected",
     });
-    const res = await SELF.fetch(`${BASE}/api/agenda`);
+    const res = await authedFetch(`${BASE}/api/agenda`);
     const entries = (await res.json()) as { kind: string; id: number }[];
     expect(
       entries.some((e) => e.kind === "due" && e.id === app.id),
@@ -491,19 +492,19 @@ describe("agenda", () => {
 
 describe("misc", () => {
   it("404s unknown api routes", async () => {
-    const res = await SELF.fetch(`${BASE}/api/nope`);
+    const res = await authedFetch(`${BASE}/api/nope`);
     expect(res.status).toBe(404);
   });
 
   it("rejects non-http import urls", async () => {
-    const res = await SELF.fetch(`${BASE}/api/import?url=ftp://example.com`);
+    const res = await authedFetch(`${BASE}/api/import?url=ftp://example.com`);
     expect(res.status).toBe(400);
   });
 });
 
 describe("role types", () => {
   it("lists the seeded defaults", async () => {
-    const res = await SELF.fetch(`${BASE}/api/role-types`);
+    const res = await authedFetch(`${BASE}/api/role-types`);
     const types = (await res.json()) as { slug: string }[];
     expect(types.map((t) => t.slug)).toContain("devops");
     expect(types.length).toBe(5);
@@ -520,7 +521,7 @@ describe("role types", () => {
       keyword: "quality engineer",
     });
 
-    const renamed = await SELF.fetch(`${BASE}/api/role-types/${role.id}`, {
+    const renamed = await authedFetch(`${BASE}/api/role-types/${role.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ label: "QA / Test Engineer" }),
@@ -530,12 +531,12 @@ describe("role types", () => {
       "QA / Test Engineer",
     );
 
-    const deleted = await SELF.fetch(`${BASE}/api/role-types/${role.id}`, {
+    const deleted = await authedFetch(`${BASE}/api/role-types/${role.id}`, {
       method: "DELETE",
     });
     expect(deleted.status).toBe(204);
 
-    const config = await SELF.fetch(`${BASE}/api/feed/config`);
+    const config = await authedFetch(`${BASE}/api/feed/config`);
     const { keywords } = (await config.json()) as {
       keywords: { role_slug: string }[];
     };
@@ -555,7 +556,7 @@ describe("role types", () => {
 
 describe("feed config", () => {
   it("returns seeded sources and keywords", async () => {
-    const res = await SELF.fetch(`${BASE}/api/feed/config`);
+    const res = await authedFetch(`${BASE}/api/feed/config`);
     const { sources, keywords } = (await res.json()) as {
       sources: { source: string; enabled: number }[];
       keywords: { role_slug: string; keyword: string }[];
@@ -569,7 +570,7 @@ describe("feed config", () => {
   });
 
   it("toggles a source and updates its location", async () => {
-    const res = await SELF.fetch(`${BASE}/api/feed/config/sources/hn`, {
+    const res = await authedFetch(`${BASE}/api/feed/config/sources/hn`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ enabled: false, location: "berlin" }),
@@ -580,13 +581,16 @@ describe("feed config", () => {
     expect(source.location).toBe("berlin");
   });
 
-  it("404s toggling an unknown source", async () => {
-    const res = await SELF.fetch(`${BASE}/api/feed/config/sources/bogus`, {
+  it("rejects toggling an unknown source", async () => {
+    // feed_sources rows are now created lazily per user (upsert), so an
+    // unknown source name fails the CHECK constraint on insert (400)
+    // rather than a plain "row not found" (404).
+    const res = await authedFetch(`${BASE}/api/feed/config/sources/bogus`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ enabled: true }),
     });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(400);
   });
 
   it("adds and deletes a keyword", async () => {
@@ -598,7 +602,7 @@ describe("feed config", () => {
     const keyword = (await created.json()) as { id: number; keyword: string };
     expect(keyword.keyword).toBe("kubernetes engineer");
 
-    const deleted = await SELF.fetch(
+    const deleted = await authedFetch(
       `${BASE}/api/feed/config/keywords/${keyword.id}`,
       { method: "DELETE" },
     );
@@ -613,12 +617,12 @@ describe("feed config", () => {
 
 describe("cv builder", () => {
   it("profile is a singleton that starts empty and can be updated", async () => {
-    const initial = await SELF.fetch(`${BASE}/api/profile`);
+    const initial = await authedFetch(`${BASE}/api/profile`);
     const profile = (await initial.json()) as { id: number; name: string | null };
     expect(profile.id).toBe(1);
     expect(profile.name).toBeNull();
 
-    const updated = await SELF.fetch(`${BASE}/api/profile`, {
+    const updated = await authedFetch(`${BASE}/api/profile`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Ronald", email: "ronald@example.com" }),
@@ -654,7 +658,7 @@ describe("cv builder", () => {
     const s2 = (await skill2.json()) as { id: number };
     expect(s2.id).toBe(s1.id);
 
-    const list = await SELF.fetch(`${BASE}/api/work-experience`);
+    const list = await authedFetch(`${BASE}/api/work-experience`);
     const items = (await list.json()) as {
       id: number;
       skills: { id: number; name: string }[];
@@ -662,7 +666,7 @@ describe("cv builder", () => {
     const found = items.find((w) => w.id === work.id);
     expect(found?.skills.map((s) => s.name)).toEqual(["TypeScript"]);
 
-    const removed = await SELF.fetch(
+    const removed = await authedFetch(
       `${BASE}/api/work-experience/${work.id}/skills/${s1.id}`,
       { method: "DELETE" },
     );
@@ -685,7 +689,7 @@ describe("cv builder", () => {
     });
     expect(edu.status).toBe(201);
     const eduBody = (await edu.json()) as { id: number };
-    const eduDeleted = await SELF.fetch(
+    const eduDeleted = await authedFetch(
       `${BASE}/api/education/${eduBody.id}`,
       { method: "DELETE" },
     );
@@ -698,7 +702,7 @@ describe("cv builder", () => {
     expect(lang.status).toBe(201);
     const langBody = (await lang.json()) as { id: number; proficiency: string };
     expect(langBody.proficiency).toBe("native");
-    const langDeleted = await SELF.fetch(
+    const langDeleted = await authedFetch(
       `${BASE}/api/languages/${langBody.id}`,
       { method: "DELETE" },
     );
