@@ -16,11 +16,17 @@
   --accent-text: #ffffff;
   --danger: #b91c1c;
 
-  --st-interested: #5a6577;
-  --st-applied: #a06f0b;
-  --st-screening: #bb5314;
-  --st-interview: #6d43c8;
-  --st-offer: #177347;
+  /* Re-tuned for #201: passes WCAG contrast (≥4.5:1 on --surface) and
+     stays pairwise distinguishable under simulated deuteranopia (ΔE ≥
+     16 for every pair, vs. ~1 between applied/screening before). The
+     applied/screening pair specifically leans on a lightness split
+     (gold vs. dark brick) rather than hue alone, since deuteranopia
+     collapses orange/red/brown hues onto nearly the same axis. */
+  --st-interested: #0063a3;
+  --st-applied: #8a6d00;
+  --st-screening: #7a2500;
+  --st-interview: #a3348f;
+  --st-offer: #00795a;
   --st-dead: #79828e;
 
   /* Response-time heat strip (#142) — a separate "gone quiet?" signal,
@@ -49,11 +55,11 @@
     --accent-text: #0c1210;
     --danger: #f87171;
 
-    --st-interested: #8b95a5;
-    --st-applied: #d9a13c;
-    --st-screening: #e07b39;
-    --st-interview: #9d7bea;
-    --st-offer: #4cc38a;
+    --st-interested: #5aa3e0;
+    --st-applied: #d4b13a;
+    --st-screening: #e0784f;
+    --st-interview: #e08fd0;
+    --st-offer: #4ccf9e;
     --st-dead: #6d7684;
 
     --heat-watch: #d9a13c;
@@ -85,10 +91,10 @@
   --accent-text: #04141a;
   --danger: #f87171;
 
-  --st-interested: #94a3b8;
+  --st-interested: #a8b9d6;
   --st-applied: #eab308;
-  --st-screening: #fb923c;
-  --st-interview: #a78bfa;
+  --st-screening: #f4552e;
+  --st-interview: #c084ec;
   --st-offer: #34d399;
   --st-dead: #64748b;
 

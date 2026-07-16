@@ -858,7 +858,7 @@ function StageHistogram({ applications }: { applications: Application[] }) {
       <ul className="ring-legend">
         {PIPELINE.map((s, i) => (
           <li key={s} className={`stage-${s}`}>
-            <span className="ring-dot" />
+            <span className="ring-dot" aria-hidden="true" />
             <span className="lbl">{t(`stages.${s}`)}</span>
             <span className="n">{counts[i]}</span>
           </li>
@@ -2105,7 +2105,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           const d = stageDays.get(s)!;
           return (
             <li key={s} className={`stage-${s}`}>
-              <span className="stat-dot" />
+              <span className="stat-dot" aria-hidden="true" />
               <span className="stage-name">{t(`stages.${s}`)}</span>
               <span className="stat-val">{(d.total / d.n).toFixed(1)}d</span>
             </li>
@@ -3378,6 +3378,7 @@ function OverviewTab({
               <span className="side-date">{ageDays(a.updated_at)}</span>
               <span className="side-title">{a.title}</span>
               <span className="side-co">{a.company_name ?? "—"}</span>
+              <span className="side-stage">{t(`stages.${a.status}`)}</span>
             </li>
           ))}
         </ul>
@@ -3424,6 +3425,7 @@ function NextUpPanel({ applications }: { applications: Application[] }) {
                 ) : null}
               </span>
               <span className="side-co">{a.company_name ?? "—"}</span>
+              <span className="side-stage">{t(`stages.${a.status}`)}</span>
             </li>
           ))}
         </ul>

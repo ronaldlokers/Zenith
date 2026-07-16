@@ -2506,6 +2506,16 @@ summary.bcol-head::after {
   color: var(--muted);
 }
 
+/* Text fallback for the border-left stage color (#201) — the strip
+   alone is color-only and unreadable to CVD users scanning the list. */
+.side-stage {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sc, var(--muted));
+}
+
 /* Overview home screen (#128) */
 .overview {
   display: flex;
