@@ -151,6 +151,10 @@ export interface Application {
   salary_min: number | null;
   salary_max: number | null;
   salary_period: "year" | "month" | null;
+  signing_bonus: number | null;
+  bonus_target_pct: number | null;
+  equity_value: number | null;
+  benefits_notes: string | null;
   status: Status;
   notes: string | null;
   applied_at: string | null;

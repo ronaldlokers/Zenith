@@ -193,8 +193,8 @@ app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, salary_currency, salary_min, salary_max, salary_period)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -213,6 +213,10 @@ app.post("/api/applications", async (c) => {
       body.salary_min ?? null,
       body.salary_max ?? null,
       body.salary_period ?? null,
+      body.signing_bonus ?? null,
+      body.bonus_target_pct ?? null,
+      body.equity_value ?? null,
+      body.benefits_notes ?? null,
     )
     .first();
   await c.env.DB.prepare(
@@ -237,6 +241,7 @@ app.put("/api/applications/:id", async (c) => {
      SET company_id = ?, contact_id = ?, title = ?, role_type = ?, url = ?, source = ?,
          salary_range = ?, status = ?, notes = ?, applied_at = ?, next_action = ?, next_action_at = ?,
          salary_currency = ?, salary_min = ?, salary_max = ?, salary_period = ?,
+         signing_bonus = ?, bonus_target_pct = ?, equity_value = ?, benefits_notes = ?,
          updated_at = datetime('now')
      WHERE id = ? RETURNING *`,
   )
@@ -257,6 +262,10 @@ app.put("/api/applications/:id", async (c) => {
       body.salary_min ?? null,
       body.salary_max ?? null,
       body.salary_period ?? null,
+      body.signing_bonus ?? null,
+      body.bonus_target_pct ?? null,
+      body.equity_value ?? null,
+      body.benefits_notes ?? null,
       c.req.param("id"),
     )
     .first();

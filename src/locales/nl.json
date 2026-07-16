@@ -127,6 +127,14 @@
     "appliedTo": "Gesolliciteerd bij",
     "at": "bij"
   },
+  "offer": {
+    "title": "Aanbod-details",
+    "signingBonus": "Tekenbonus",
+    "bonusTarget": "Jaarlijkse bonus target %",
+    "equityValue": "Aandelenwaarde (geschat, jaarlijks)",
+    "benefitsNotes": "Notities secundaire arbeidsvoorwaarden",
+    "totalComp": "Totale beloning (geschat)"
+  },
   "feedSettings": {
     "roleTypes": "Rollen",
     "newRoleType": "Nieuwe rol…",
