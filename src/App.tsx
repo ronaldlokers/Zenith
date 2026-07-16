@@ -557,6 +557,20 @@ function BoardTab({
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+  // Drag-and-drop is explicitly gated off on touch input (#54) — native
+  // HTML5 DnD doesn't cleanly support touch, and some browsers partially
+  // honor draggable via long-press, producing a half-working gesture that
+  // interferes with scroll. The status <select> stays the only way to
+  // move a card on touch, as documented in #41.
+  const [isCoarsePointer, setIsCoarsePointer] = useState(
+    () => window.matchMedia("(pointer: coarse)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse)");
+    const onChange = () => setIsCoarsePointer(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverStage, setDragOverStage] = useState<Status | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
@@ -590,16 +604,24 @@ function BoardTab({
               <article
                 key={a.id}
                 className={`bcard stage-${a.status}${draggingId === a.id ? " dragging" : ""}`}
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData("text/plain", String(a.id));
-                  e.dataTransfer.effectAllowed = "move";
-                  setDraggingId(a.id);
-                }}
-                onDragEnd={() => {
-                  setDraggingId(null);
-                  setDragOverStage(null);
-                }}
+                draggable={!isCoarsePointer}
+                onDragStart={
+                  isCoarsePointer
+                    ? undefined
+                    : (e) => {
+                        e.dataTransfer.setData("text/plain", String(a.id));
+                        e.dataTransfer.effectAllowed = "move";
+                        setDraggingId(a.id);
+                      }
+                }
+                onDragEnd={
+                  isCoarsePointer
+                    ? undefined
+                    : () => {
+                        setDraggingId(null);
+                        setDragOverStage(null);
+                      }
+                }
               >
                 <div
                   className="bcard-body"
