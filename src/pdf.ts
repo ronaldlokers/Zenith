@@ -31,6 +31,7 @@ export interface CvPdfLabels {
   workExperience: string;
   education: string;
   languages: string;
+  skills: string;
 }
 
 export interface CvPdfData {
@@ -192,6 +193,195 @@ export function generateCvPdf(data: CvPdfData, labels: CvPdfLabels): jsPDF {
       10,
       5,
     );
+  }
+
+  return doc;
+}
+
+export type CvTemplate = "single-column" | "two-column";
+
+// Two-column layout (issue #71) — a sidebar (contact, skills, languages)
+// beside a main column (summary, work experience, education). Built
+// with the same manual x/y positioning as the single-column template:
+// jsPDF has no CSS layout engine, but a fixed two-column split needs
+// none — each column is just text drawn at a different x offset with
+// its own width and its own page-break tracking, so client-side
+// generation still holds up here without reaching for Cloudflare's
+// Browser Rendering API. The sidebar is assumed to fit on page 1 (it's
+// short by nature — contact info, a skills list, languages); if the
+// main column overflows, continuation pages drop the sidebar split and
+// run full width, which is how most two-column resume templates
+// handle the same problem.
+export function generateCvPdfTwoColumn(
+  data: CvPdfData,
+  labels: CvPdfLabels,
+): jsPDF {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const marginX = 14;
+  const marginTop = 20;
+  const bottomLimit = pageHeight - 16;
+  const sidebarWidth = 52;
+  const gutter = 8;
+  const mainXStart = marginX + sidebarWidth + gutter;
+
+  const { profile, workExperience, education, languages } = data;
+
+  // --- Header (full width) ---
+  let headerY = marginTop;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.text(profile.name || "", marginX, headerY);
+  headerY += 7;
+  doc.setDrawColor(60);
+  doc.setLineWidth(0.6);
+  doc.line(marginX, headerY, pageWidth - marginX, headerY);
+  headerY += 6;
+
+  const bodyTop = headerY;
+
+  // --- Sidebar column (contact, skills, languages) ---
+  let sy = bodyTop;
+  const sidebarHeading = (text: string) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.text(text.toUpperCase(), marginX, sy);
+    sy += 4.5;
+    doc.setFont("helvetica", "normal");
+  };
+  const sidebarText = (text: string, size = 9) => {
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(text, sidebarWidth) as string[];
+    for (const line of lines) {
+      doc.text(line, marginX, sy);
+      sy += 4.2;
+    }
+  };
+
+  sidebarHeading("Contact");
+  for (const line of [profile.email, profile.phone, profile.location]) {
+    if (line) sidebarText(line);
+  }
+  sy += 2;
+  const links = [profile.linkedin, profile.github, profile.portfolio].filter(
+    Boolean,
+  ) as string[];
+  if (links.length > 0) {
+    for (const link of links) sidebarText(link, 8);
+    sy += 2;
+  }
+
+  const allSkills = Array.from(
+    new Map(
+      workExperience.flatMap((w) => w.skills).map((s) => [s.name.toLowerCase(), s.name]),
+    ).values(),
+  );
+  if (allSkills.length > 0) {
+    sy += 2;
+    sidebarHeading(labels.skills);
+    sidebarText(allSkills.join(", "), 9);
+  }
+
+  if (languages.length > 0) {
+    sy += 4;
+    sidebarHeading(labels.languages);
+    for (const l of languages) sidebarText(`${l.name} — ${l.proficiency}`);
+  }
+
+  // --- Main column (summary, work experience, education) ---
+  let my = bodyTop;
+  let mainX = mainXStart;
+  let mainWidth = pageWidth - mainXStart - marginX;
+
+  const ensureSpace = (needed: number) => {
+    if (my + needed > bottomLimit) {
+      doc.addPage();
+      my = marginTop;
+      // Continuation pages drop the sidebar split and run full width.
+      mainX = marginX;
+      mainWidth = pageWidth - marginX * 2;
+    }
+  };
+  const addParagraph = (text: string, size: number, lineHeight: number) => {
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(text, mainWidth) as string[];
+    for (const line of lines) {
+      ensureSpace(lineHeight);
+      doc.text(line, mainX, my);
+      my += lineHeight;
+    }
+  };
+  const addSectionHeading = (text: string) => {
+    ensureSpace(10);
+    my += 2;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11.5);
+    doc.text(text.toUpperCase(), mainX, my);
+    my += 1.5;
+    doc.setDrawColor(180);
+    doc.line(mainX, my, mainX + mainWidth, my);
+    my += 5.5;
+    doc.setFont("helvetica", "normal");
+  };
+
+  if (profile.summary) {
+    addParagraph(profile.summary, 10, 4.8);
+    my += 3;
+  }
+
+  if (workExperience.length > 0) {
+    addSectionHeading(labels.workExperience);
+    const sorted = [...workExperience].sort((a, b) => {
+      const ay = a.is_current ? 9999 : (a.end_year ?? a.start_year ?? 0);
+      const by = b.is_current ? 9999 : (b.end_year ?? b.start_year ?? 0);
+      return by - ay;
+    });
+    for (const w of sorted) {
+      ensureSpace(11);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.text(`${w.title} — ${w.company}`, mainX, my);
+      my += 4.8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const range = formatRange(
+        w.start_month,
+        w.start_year,
+        w.end_month,
+        w.end_year,
+        !!w.is_current,
+        labels.present,
+      );
+      if (range) {
+        doc.text(range, mainX, my);
+        my += 4.5;
+      }
+      if (w.description) addParagraph(w.description, 9.5, 4.4);
+      my += 3;
+    }
+  }
+
+  if (education.length > 0) {
+    addSectionHeading(labels.education);
+    const sorted = [...education].sort(
+      (a, b) => (b.end_year ?? b.start_year ?? 0) - (a.end_year ?? a.start_year ?? 0),
+    );
+    for (const ed of sorted) {
+      ensureSpace(9);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.text([ed.institution, ed.degree].filter(Boolean).join(" — "), mainX, my);
+      my += 4.8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const range = formatRange(null, ed.start_year, null, ed.end_year, false, labels.present);
+      if (ed.field || range) {
+        doc.text([ed.field, range].filter(Boolean).join("  ·  "), mainX, my);
+        my += 4.5;
+      }
+      my += 2;
+    }
   }
 
   return doc;

@@ -3065,6 +3065,9 @@ function CVTab({
   const [workExp, setWorkExp] = useState<WorkExperience[] | null>(null);
   const [education, setEducation] = useState<Education[] | null>(null);
   const [languages, setLanguages] = useState<Language[] | null>(null);
+  const [template, setTemplate] = useState<"single-column" | "two-column">(
+    "single-column",
+  );
 
   const load = useCallback(
     () =>
@@ -3088,16 +3091,19 @@ function CVTab({
   const downloadPdf = async () => {
     // Dynamic import — jsPDF (~400kB) is only needed once someone
     // actually downloads a CV, not on every page load.
-    const { generateCvPdf } = await import("./pdf");
-    const doc = generateCvPdf(
-      { profile, workExperience: workExp, education, languages },
-      {
-        present: t("cv.present"),
-        workExperience: t("cv.workExperience"),
-        education: t("cv.education"),
-        languages: t("cv.languages"),
-      },
-    );
+    const { generateCvPdf, generateCvPdfTwoColumn } = await import("./pdf");
+    const labels = {
+      present: t("cv.present"),
+      workExperience: t("cv.workExperience"),
+      education: t("cv.education"),
+      languages: t("cv.languages"),
+      skills: t("cv.skills"),
+    };
+    const cvData = { profile, workExperience: workExp, education, languages };
+    const doc =
+      template === "two-column"
+        ? generateCvPdfTwoColumn(cvData, labels)
+        : generateCvPdf(cvData, labels);
     const filename = profile.name
       ? `${profile.name.replace(/\s+/g, "-")}-CV.pdf`
       : "CV.pdf";
@@ -3107,6 +3113,18 @@ function CVTab({
   return (
     <section className="cv-tab">
       <div className="cv-toolbar">
+        <label className="cv-template-picker">
+          {t("cv.template")}
+          <select
+            value={template}
+            onChange={(e) =>
+              setTemplate(e.target.value as "single-column" | "two-column")
+            }
+          >
+            <option value="single-column">{t("cv.templateSingle")}</option>
+            <option value="two-column">{t("cv.templateTwoColumn")}</option>
+          </select>
+        </label>
         <button className="primary" onClick={downloadPdf}>
           {t("cv.downloadPdf")}
         </button>

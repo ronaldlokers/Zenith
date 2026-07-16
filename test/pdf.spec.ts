@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateCvPdf } from "../src/pdf";
+import { generateCvPdf, generateCvPdfTwoColumn } from "../src/pdf";
 import type { Education, Language, Profile, WorkExperience } from "../src/types";
 
 const labels = {
@@ -7,6 +7,7 @@ const labels = {
   workExperience: "Work Experience",
   education: "Education",
   languages: "Languages",
+  skills: "Skills",
 };
 
 const profile: Profile = {
@@ -84,5 +85,43 @@ describe("generateCvPdf", () => {
       labels,
     );
     expect(empty.output().startsWith("%PDF")).toBe(true);
+  });
+});
+
+describe("generateCvPdfTwoColumn", () => {
+  it("produces a distinct valid PDF containing the same data plus aggregated skills", () => {
+    const doc = generateCvPdfTwoColumn(
+      { profile, workExperience, education, languages },
+      labels,
+    );
+    const raw = doc.output();
+    expect(raw.startsWith("%PDF")).toBe(true);
+    expect(raw.length).toBeGreaterThan(1000);
+    expect(raw).toContain("Ronald Lokers");
+    expect(raw).toContain("Vandelay Industries");
+    expect(raw).toContain("TU Delft");
+    expect(raw).toContain("TypeScript");
+    expect(raw).toContain("Dutch");
+
+    const singleColumn = generateCvPdf(
+      { profile, workExperience, education, languages },
+      labels,
+    );
+    expect(raw).not.toBe(singleColumn.output());
+  });
+
+  it("falls back to a full-width continuation page when work experience overflows", () => {
+    const manyRoles: WorkExperience[] = Array.from({ length: 15 }, (_, i) => ({
+      ...workExperience[0],
+      id: i + 1,
+      title: `Role ${i}`,
+      description:
+        "A long description of the role that takes up several lines of wrapped text in the main column, repeated to force pagination.",
+    }));
+    const doc = generateCvPdfTwoColumn(
+      { profile, workExperience: manyRoles, education, languages },
+      labels,
+    );
+    expect(doc.getNumberOfPages()).toBeGreaterThan(1);
   });
 });
