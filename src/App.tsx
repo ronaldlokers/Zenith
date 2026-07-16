@@ -236,6 +236,47 @@ function getCvLanguage(fallback: string): string {
   return localStorage.getItem(CV_LANG_KEY) || fallback;
 }
 
+function OnboardingChecklist({
+  profileDone,
+  companyDone,
+  onGoToProfile,
+  onGoToCompanies,
+  onDismiss,
+}: {
+  profileDone: boolean;
+  companyDone: boolean;
+  onGoToProfile: () => void;
+  onGoToCompanies: () => void;
+  onDismiss: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="onboarding">
+      <div className="onboarding-head">
+        <h3>{t("onboarding.title")}</h3>
+        <button
+          className="onboarding-dismiss"
+          onClick={onDismiss}
+          aria-label={t("common.close")}
+        >
+          ×
+        </button>
+      </div>
+      <ul>
+        <li className={profileDone ? "done" : ""}>
+          <button onClick={onGoToProfile}>{t("onboarding.profile")}</button>
+        </li>
+        <li className={companyDone ? "done" : ""}>
+          <button onClick={onGoToCompanies}>{t("onboarding.company")}</button>
+        </li>
+        <li>
+          <span>{t("onboarding.firstJob")}</span>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 function CommandPalette({
   applications,
   companies,
@@ -507,6 +548,22 @@ export default function App() {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [jumpQuery, setJumpQuery] = useState("");
   const [showPalette, setShowPalette] = useState(false);
+  const [onboardingProfile, setOnboardingProfile] = useState<Profile | null>(
+    null,
+  );
+  const [onboardingDismissed, setOnboardingDismissed] = useState(
+    () => localStorage.getItem("jobseekr_onboarding_dismissed") === "1",
+  );
+
+  useEffect(() => {
+    if (onboardingDismissed) return;
+    api.profile().then(setOnboardingProfile).catch(() => {});
+  }, [onboardingDismissed]);
+
+  const dismissOnboarding = () => {
+    localStorage.setItem("jobseekr_onboarding_dismissed", "1");
+    setOnboardingDismissed(true);
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -745,6 +802,19 @@ export default function App() {
           <p className="muted small loading">{t("common.loading")}</p>
         ) : (
           <>
+            {tab === "applications" &&
+              applications.length === 0 &&
+              !onboardingDismissed && (
+                <OnboardingChecklist
+                  profileDone={
+                    !!(onboardingProfile?.name && onboardingProfile?.email)
+                  }
+                  companyDone={companies.length > 0}
+                  onGoToProfile={() => setTab("cv")}
+                  onGoToCompanies={() => setTab("companies")}
+                  onDismiss={dismissOnboarding}
+                />
+              )}
             {tab === "applications" && (
               <ApplicationsTab
                 applications={visibleApps}

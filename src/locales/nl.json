@@ -123,6 +123,12 @@
       "no_response": "Geen reactie"
     }
   },
+  "onboarding": {
+    "title": "Aan de slag",
+    "profile": "Vul de basis van je CV-profiel in",
+    "company": "Voeg je eerste bedrijf toe",
+    "firstJob": "Voeg je eerste vacature toe — gebruik \"+ Vacature toevoegen\" hierboven"
+  },
   "prep": {
     "title": "Interviewvoorbereiding",
     "addStarterChecklist": "+ Startchecklist toevoegen",
