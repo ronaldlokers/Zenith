@@ -53,9 +53,9 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
     .run();
   await env.DB.prepare(
     `INSERT INTO feed_sources (user_id, source, enabled, location) VALUES
-     (?, 'adzuna', 1, 'nl'), (?, 'hn', 1, NULL), (?, 'arbeitnow', 0, NULL)`,
+     (?, 'adzuna', 1, 'nl'), (?, 'hn', 1, NULL)`,
   )
-    .bind(userId, userId, userId)
+    .bind(userId, userId)
     .run();
   await env.DB.prepare(
     "INSERT INTO feed_role_keywords (user_id, role_slug, keyword) VALUES (?, 'platform-engineer', 'platform engineer')",

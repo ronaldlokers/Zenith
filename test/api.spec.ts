@@ -349,12 +349,12 @@ describe("export", () => {
 });
 
 describe("feed", () => {
-  // Network sources (Adzuna/HN/Arbeitnow) aren't hit in tests — insert
-  // directly at the DB layer, same as a real refresh would, and test
-  // the review-inbox endpoints on top of that.
+  // Network sources (Adzuna/HN) aren't hit in tests — insert directly at
+  // the DB layer, same as a real refresh would, and test the
+  // review-inbox endpoints on top of that.
   async function seedFeedItem(overrides: Record<string, unknown> = {}) {
     const row = {
-      source: "arbeitnow",
+      source: "adzuna",
       external_id: `test-${crypto.randomUUID()}`,
       title: "Platform Engineer",
       company: "Feed Co",
@@ -416,7 +416,7 @@ describe("feed", () => {
       company_id: number;
     };
     expect(app.title).toBe("Platform Engineer");
-    expect(app.source).toBe("feed:arbeitnow");
+    expect(app.source).toBe("feed:adzuna");
 
     const company = await env.DB.prepare(
       "SELECT name FROM companies WHERE id = ?",
@@ -561,11 +561,7 @@ describe("feed config", () => {
       sources: { source: string; enabled: number }[];
       keywords: { role_slug: string; keyword: string }[];
     };
-    expect(sources.map((s) => s.source).sort()).toEqual([
-      "adzuna",
-      "arbeitnow",
-      "hn",
-    ]);
+    expect(sources.map((s) => s.source).sort()).toEqual(["adzuna", "hn"]);
     expect(keywords.some((k) => k.role_slug === "devops")).toBe(true);
   });
 
