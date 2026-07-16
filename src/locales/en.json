@@ -215,6 +215,7 @@
   "cv": {
     "downloadPdf": "Download PDF",
     "completeness": "At a glance",
+    "livePreview": "Live preview",
     "skills": "Skills",
     "template": "Template",
     "templateSingle": "ATS-friendly (single column)",
