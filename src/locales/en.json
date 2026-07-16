@@ -188,6 +188,7 @@
     "jobDescription": "Job description",
     "jobDescriptionCaptured": "captured {{date}}",
     "jobDescriptionPlaceholder": "Paste the job description here — kept even if the posting is edited or taken down.",
+    "possibleDuplicate": "You already have an open application at this company: \"{{title}}\". Saving will add a separate one.",
     "archived": "Archived",
     "archive": "Archive",
     "unarchive": "Unarchive",
