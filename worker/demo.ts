@@ -95,7 +95,7 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
         applied_at, next_action, next_action_at, deadline_at, fit_score)
      VALUES (?, ?, ?, 'Senior Platform Engineer', 'platform-engineer', 'https://acme.example/jobs/42',
              'referral', 'interview', 'Warm intro via Jamie.', date('now', '-10 days'),
-             'Prep system design round', date('now', '+3 days'), date('now', '+14 days'), 85)
+             'Prep system design round', date('now', '+3 days'), date('now', '+14 days'), 4)
      RETURNING id, status`,
   )
     .bind(userId, acme!.id, contact!.id)
