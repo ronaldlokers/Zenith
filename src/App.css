@@ -1767,6 +1767,23 @@ select.status {
   font-size: 0.8rem;
 }
 
+.tl-retro {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.tl-retro input {
+  flex: 1;
+  min-width: 12rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.8rem;
+}
+
 .tl-add select {
   font-family: var(--mono);
   font-size: 0.68rem;

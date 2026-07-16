@@ -226,7 +226,11 @@
     "message": "Message",
     "interview": "Interview",
     "meeting": "Meeting",
-    "other": "Other"
+    "other": "Other",
+    "retroWentWell": "Went well",
+    "retroToImprove": "To improve",
+    "retroWentWellPlaceholder": "What went well? (optional)",
+    "retroToImprovePlaceholder": "What would you do differently? (optional)"
   },
   "agenda": {
     "followUp": "Follow up",
