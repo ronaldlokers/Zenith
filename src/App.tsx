@@ -1083,6 +1083,7 @@ function BoardTab({
       {detailApp && (
         <ApplicationDetailModal
           application={detailApp}
+          allApplications={applications}
           companies={companies}
           contacts={contacts}
           roleTypes={roleTypes}
@@ -2065,6 +2066,7 @@ function JdKeywordMatch({
 
 function ApplicationDetailModal({
   application,
+  allApplications,
   companies,
   contacts,
   roleTypes,
@@ -2076,6 +2078,7 @@ function ApplicationDetailModal({
   onStatus,
 }: {
   application: Application;
+  allApplications: Application[];
   companies: Company[];
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
@@ -2214,6 +2217,34 @@ function ApplicationDetailModal({
                   {Math.round(totalComp(a)!).toLocaleString()}
                 </span>
               )}
+              {a.status === "offer" &&
+                totalComp(a) != null &&
+                (() => {
+                  const others = allApplications.filter(
+                    (o) =>
+                      o.id !== a.id &&
+                      o.status === "offer" &&
+                      totalComp(o) != null,
+                  );
+                  const sameRole = others.filter(
+                    (o) => o.role_type === a.role_type,
+                  );
+                  const pool = sameRole.length ? sameRole : others;
+                  if (!pool.length) return null;
+                  const med = median(pool.map((o) => totalComp(o)!));
+                  if (med == null || med === 0) return null;
+                  const diffPct = ((totalComp(a)! - med) / med) * 100;
+                  return (
+                    <span className="muted small">
+                      {t("offer.benchmark", {
+                        pct: Math.round(Math.abs(diffPct)),
+                        direction:
+                          diffPct >= 0 ? t("offer.above") : t("offer.below"),
+                        n: pool.length,
+                      })}
+                    </span>
+                  );
+                })()}
               {a.applied_at && (
                 <span className="muted small">
                   Applied {formatDate(a.applied_at)}
@@ -2797,6 +2828,7 @@ function ApplicationsTab({
       {detailApp && (
         <ApplicationDetailModal
           application={detailApp}
+          allApplications={applications}
           companies={companies}
           contacts={contacts}
           roleTypes={roleTypes}
