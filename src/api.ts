@@ -155,6 +155,11 @@ export const api = {
     request<void>(`/api/applications/${applicationId}/tags/${tagId}`, {
       method: "DELETE",
     }),
+  reorderApplicationTag: (applicationId: number, tagId: number, sortOrder: number) =>
+    request<void>(`/api/applications/${applicationId}/tags/${tagId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ sort_order: sortOrder }),
+    }),
   archiveApplication: (id: number) =>
     request<import("./types").Application>(`/api/applications/${id}/archive`, {
       method: "POST",

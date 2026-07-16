@@ -2865,6 +2865,22 @@ function InterviewPrepSection({
       .then(load)
       .catch((e) => onError((e as Error).message));
 
+  // Reorder via sort_order swap (#207) — same pattern as the CV
+  // sections (#94) rather than native drag, which is deliberately
+  // gated off on touch input elsewhere in this app (see Board, #54).
+  const moveItem = (index: number, dir: -1 | 1) => {
+    if (!items) return;
+    const other = items[index + dir];
+    const item = items[index];
+    if (!other) return;
+    Promise.all([
+      api.update("prep-items", item.id, { sort_order: other.sort_order }),
+      api.update("prep-items", other.id, { sort_order: item.sort_order }),
+    ])
+      .then(load)
+      .catch((e) => onError((e as Error).message));
+  };
+
   const addStarterChecklist = () => {
     Promise.all(
       PREP_STARTER_ITEMS.map((key) =>
@@ -2887,7 +2903,7 @@ function InterviewPrepSection({
         </button>
       )}
       <ul>
-        {items.map((item) => (
+        {items.map((item, i) => (
           <li key={item.id} className={item.done ? "done" : ""}>
             <label>
               <input
@@ -2897,13 +2913,29 @@ function InterviewPrepSection({
               />
               {item.text}
             </label>
-            <button
-              className="danger"
-              onClick={() => removeItem(item.id)}
-              aria-label={t("common.delete")}
-            >
-              <RemoveIcon />
-            </button>
+            <span className="prep-item-actions">
+              <button
+                aria-label={t("cv.moveUp")}
+                disabled={i === 0}
+                onClick={() => moveItem(i, -1)}
+              >
+                ↑
+              </button>
+              <button
+                aria-label={t("cv.moveDown")}
+                disabled={i === items.length - 1}
+                onClick={() => moveItem(i, 1)}
+              >
+                ↓
+              </button>
+              <button
+                className="danger"
+                onClick={() => removeItem(item.id)}
+                aria-label={t("common.delete")}
+              >
+                <RemoveIcon />
+              </button>
+            </span>
           </li>
         ))}
       </ul>
@@ -3123,6 +3155,21 @@ function ApplicationDetailModal({
       .catch((e) => onError((e as Error).message));
   };
 
+  // Reorder via sort_order swap (#207), same pattern as prep items and
+  // the CV sections (#94) — array index doubles as the new sort key
+  // since a.tags already arrives ordered by sort_order.
+  const moveTag = (index: number, dir: -1 | 1) => {
+    const other = a.tags[index + dir];
+    const item = a.tags[index];
+    if (!other) return;
+    Promise.all([
+      api.reorderApplicationTag(a.id, item.id, index + dir),
+      api.reorderApplicationTag(a.id, other.id, index),
+    ])
+      .then(onChanged)
+      .catch((e) => onError((e as Error).message));
+  };
+
   const [printingCheatSheet, setPrintingCheatSheet] = useState(false);
   const printCheatSheet = async () => {
     setPrintingCheatSheet(true);
@@ -3311,8 +3358,24 @@ function ApplicationDetailModal({
             </div>
 
             <div className="keyword-chips">
-              {a.tags.map((tg) => (
+              {a.tags.map((tg, i) => (
                 <span key={tg.id} className="chip">
+                  <button
+                    className="chip-move"
+                    aria-label={t("cv.moveUp")}
+                    disabled={i === 0}
+                    onClick={() => moveTag(i, -1)}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    className="chip-move"
+                    aria-label={t("cv.moveDown")}
+                    disabled={i === a.tags.length - 1}
+                    onClick={() => moveTag(i, 1)}
+                  >
+                    ↓
+                  </button>
                   {tg.name}
                   <button
                     onClick={() =>

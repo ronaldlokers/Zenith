@@ -250,7 +250,8 @@ app.get("/api/applications", async (c) => {
     `SELECT application_tags.application_id, tags.id, tags.name
      FROM application_tags
      JOIN tags ON tags.id = application_tags.tag_id
-     WHERE application_tags.user_id = ?`,
+     WHERE application_tags.user_id = ?
+     ORDER BY application_tags.sort_order, application_tags.tag_id`,
   )
     .bind(c.get("userId"))
     .all<{ application_id: number; id: number; name: string }>();
@@ -299,13 +300,34 @@ app.post("/api/applications/:id/tags", async (c) => {
       .bind(userId, name)
       .first<{ id: number; name: string }>();
   }
+  const { next_order } =
+    (await c.env.DB.prepare(
+      `SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order
+       FROM application_tags WHERE application_id = ? AND user_id = ?`,
+    )
+      .bind(c.req.param("id"), userId)
+      .first<{ next_order: number }>()) ?? { next_order: 0 };
   await c.env.DB.prepare(
-    `INSERT INTO application_tags (application_id, tag_id, user_id)
-     VALUES (?, ?, ?) ON CONFLICT DO NOTHING`,
+    `INSERT INTO application_tags (application_id, tag_id, user_id, sort_order)
+     VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING`,
   )
-    .bind(c.req.param("id"), tag!.id, userId)
+    .bind(c.req.param("id"), tag!.id, userId, next_order)
     .run();
   return c.json(tag, 201);
+});
+
+app.patch("/api/applications/:id/tags/:tagId", async (c) => {
+  const body = await c.req.json();
+  if (typeof body.sort_order !== "number") {
+    return c.json({ error: "sort_order is required" }, 400);
+  }
+  await c.env.DB.prepare(
+    `UPDATE application_tags SET sort_order = ?
+     WHERE application_id = ? AND tag_id = ? AND user_id = ?`,
+  )
+    .bind(body.sort_order, c.req.param("id"), c.req.param("tagId"), c.get("userId"))
+    .run();
+  return c.body(null, 204);
 });
 
 app.delete("/api/applications/:id/tags/:tagId", async (c) => {
