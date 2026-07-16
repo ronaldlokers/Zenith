@@ -26,6 +26,7 @@ import {
   type Education,
   type Language,
   type Skill,
+  type StatusHistoryRow,
 } from "./types";
 import "./App.css";
 
@@ -1231,6 +1232,13 @@ function parseSqlDate(d: string): number {
   return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
 }
 
+function median(nums: number[]): number | null {
+  if (!nums.length) return null;
+  const sorted = [...nums].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 // Annualized midpoint, for sorting/comparing offers on a common basis
 function annualizedComp(a: Application): number | null {
   if (a.salary_min == null && a.salary_max == null) return null;
@@ -2309,7 +2317,16 @@ function ApplicationsTab({
   );
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showHelp, setShowHelp] = useState(false);
+  const [history, setHistory] = useState<StatusHistoryRow[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    api
+      .stats()
+      .then((s) => setHistory(s.history))
+      .catch(() => {});
+  }, []);
+
   const [detailId, setDetailIdState] = useState<number | null>(
     initialDetailId ?? null,
   );
@@ -2327,6 +2344,49 @@ function ApplicationsTab({
       applications.flatMap((a) => a.tags).map((tg) => [tg.id, tg]),
     ).values(),
   ].sort((a, b) => a.name.localeCompare(b.name));
+
+  // Flag applications quieter than this employer's own typical gap between
+  // status changes — a sharper signal than a flat days-since-update, since
+  // some companies just move slower than others.
+  const byAppHistory = new Map<number, StatusHistoryRow[]>();
+  for (const row of history) {
+    const list = byAppHistory.get(row.application_id) ?? [];
+    list.push(row);
+    byAppHistory.set(row.application_id, list);
+  }
+  const lastActivity = new Map<number, number>();
+  const gapsByApp = new Map<number, number[]>();
+  for (const a of applications) {
+    lastActivity.set(a.id, parseSqlDate(a.applied_at ?? a.created_at));
+  }
+  for (const [appId, rows] of byAppHistory) {
+    const times = rows.map((r) => parseSqlDate(r.changed_at));
+    if (times.length) lastActivity.set(appId, times[times.length - 1]);
+    const gaps: number[] = [];
+    for (let i = 1; i < times.length; i++) {
+      gaps.push((times[i] - times[i - 1]) / 86400000);
+    }
+    gapsByApp.set(appId, gaps);
+  }
+  const gapsByCompany = new Map<number, number[]>();
+  for (const a of applications) {
+    if (a.company_id == null) continue;
+    const list = gapsByCompany.get(a.company_id) ?? [];
+    list.push(...(gapsByApp.get(a.id) ?? []));
+    gapsByCompany.set(a.company_id, list);
+  }
+  const nowMs = Date.now();
+  const quietFlags = new Set<number>();
+  for (const a of applications) {
+    if (isDead(a.status) || a.archived_at || a.company_id == null) continue;
+    const companyGaps = gapsByCompany.get(a.company_id) ?? [];
+    if (companyGaps.length < 2) continue;
+    const norm = median(companyGaps);
+    if (norm == null) continue;
+    const last = lastActivity.get(a.id) ?? parseSqlDate(a.created_at);
+    const daysSince = (nowMs - last) / 86400000;
+    if (daysSince >= 5 && daysSince > norm * 1.5) quietFlags.add(a.id);
+  }
 
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
@@ -2639,6 +2699,11 @@ function ApplicationsTab({
               {a.deadline_at && (isDeadlineSoon(a) || isDeadlinePast(a)) && (
                 <span className={`due${isDeadlinePast(a) ? " late" : " today"}`}>
                   {t("detail.deadline")}: {formatDate(a.deadline_at)}
+                </span>
+              )}
+              {quietFlags.has(a.id) && (
+                <span className="due late" title={t("detail.quietDetail")}>
+                  {t("detail.quiet")}
                 </span>
               )}
               {a.tags.map((tg) => (

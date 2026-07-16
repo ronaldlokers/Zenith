@@ -128,6 +128,8 @@
     "notes": "Notities",
     "deadline": "Deadline",
     "fitScore": "Fit-score",
+    "quiet": "Stiller dan normaal",
+    "quietDetail": "Dit bedrijf laat langer niets horen dan hun eigen gebruikelijke reactietijd",
     "addTag": "+ label",
     "archived": "Gearchiveerd",
     "archive": "Archiveren",
