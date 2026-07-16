@@ -102,7 +102,10 @@
     "status": "Status",
     "role": "Role",
     "description": "Description",
-    "notes": "Notes"
+    "notes": "Notes",
+    "keywordMatch": "Keyword match",
+    "pasteJdPlaceholder": "Paste the job description to check it against your CV skills…",
+    "keywordMatchCount": "Your CV mentions {{matched}} of {{total}} keywords found in this posting"
   },
   "nextUp": {
     "title": "Next up"

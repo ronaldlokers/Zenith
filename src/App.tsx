@@ -25,6 +25,7 @@ import {
   type WorkExperience,
   type Education,
   type Language,
+  type Skill,
 } from "./types";
 import "./App.css";
 
@@ -1706,6 +1707,79 @@ function CalendarTab({
   );
 }
 
+function JdKeywordMatch({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [jdText, setJdText] = useState("");
+  const [skills, setSkills] = useState<Skill[] | null>(null);
+  const [cvSkillNames, setCvSkillNames] = useState<Set<string> | null>(null);
+
+  const load = () => {
+    if (skills) return;
+    Promise.all([
+      api.list<Skill>("skills"),
+      api.list<WorkExperience>("work-experience"),
+    ])
+      .then(([allSkills, workExp]) => {
+        setSkills(allSkills);
+        setCvSkillNames(
+          new Set(
+            workExp.flatMap((w) => w.skills.map((s) => s.name.toLowerCase())),
+          ),
+        );
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const jdLower = jdText.toLowerCase();
+  const mentioned =
+    jdText.trim() && skills
+      ? skills.filter((s) => {
+          const escaped = s.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          return new RegExp(`\\b${escaped}\\b`, "i").test(jdLower);
+        })
+      : [];
+  const matched = mentioned.filter((s) =>
+    cvSkillNames?.has(s.name.toLowerCase()),
+  );
+
+  return (
+    <div className="jd-match">
+      <textarea
+        className="jd-match-input"
+        placeholder={t("detail.pasteJdPlaceholder")}
+        value={jdText}
+        onFocus={load}
+        onChange={(e) => setJdText(e.target.value)}
+        rows={4}
+      />
+      {jdText.trim() && skills && (
+        <div className="jd-match-result">
+          <strong>
+            {t("detail.keywordMatchCount", {
+              matched: matched.length,
+              total: mentioned.length,
+            })}
+          </strong>
+          <div className="keyword-chips">
+            {mentioned.map((s) => (
+              <span
+                key={s.id}
+                className={`chip${matched.includes(s) ? " chip-matched" : ""}`}
+              >
+                {s.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ApplicationDetailModal({
   application,
   companies,
@@ -1859,6 +1933,9 @@ function ApplicationDetailModal({
                 {t("common.delete")}
               </button>
             </div>
+
+            <h3 className="detail-sub">{t("detail.keywordMatch")}</h3>
+            <JdKeywordMatch onError={onError} />
 
             <h3 className="detail-sub">{t("detail.timeline")}</h3>
             <Timeline resource="applications" targetId={a.id} onError={onError} />

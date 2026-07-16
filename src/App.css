@@ -1137,6 +1137,29 @@ select.status {
   width: 8rem;
 }
 
+.jd-match-input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.jd-match-result {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.keyword-chips .chip.chip-matched {
+  background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* Documents */
 .docs {
   border-top: 1px solid var(--border);
