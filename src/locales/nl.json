@@ -316,6 +316,12 @@
     "resetDemoSuccess": "Demo-data gereset.",
     "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?"
   },
+  "board": {
+    "groupBy": "Bord groeperen op",
+    "byStage": "Op status",
+    "byCompany": "Op bedrijf",
+    "noCompany": "Geen bedrijf"
+  },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
   },

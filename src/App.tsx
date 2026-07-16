@@ -1117,6 +1117,80 @@ interface CrudTabProps extends TabProps {
   onDelete: (resource: string, id: number, name: string) => void;
 }
 
+// Shared card markup for both Board layouts (stage columns and the
+// company-swimlanes mode from #130) — extracted so drag-and-drop, the
+// referral/stale badges, and the stage <select> aren't duplicated.
+function BoardCard({
+  a,
+  draggable,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+  onOpenDetail,
+  onMove,
+}: {
+  a: Application;
+  draggable: boolean;
+  isDragging: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
+  onOpenDetail: () => void;
+  onMove: (status: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <article
+      className={`bcard stage-${a.status}${isDragging ? " dragging" : ""}`}
+      draggable={draggable}
+      onDragStart={draggable ? onDragStart : undefined}
+      onDragEnd={draggable ? onDragEnd : undefined}
+    >
+      <div className="bcard-body" onClick={onOpenDetail}>
+        <strong>
+          {a.title}
+          {a.referred_by_contact_id ? (
+            <span className="badge" title={t("referral.referredBy")}>
+              {" "}
+              {t("referral.badge")}
+            </span>
+          ) : null}
+          {a.posting_status === "maybe_stale" ? (
+            <span className="badge warn" title={t("posting.staleHint")}>
+              {" "}
+              {t("posting.staleBadge")}
+            </span>
+          ) : null}
+        </strong>
+        <span className="co">
+          {a.company_name ?? "—"}
+          {a.contact_name ? ` · ${a.contact_name}` : ""}
+        </span>
+        <span className="bmeta">
+          {isDue(a) && a.next_action ? (
+            <span className={isOverdue(a) ? "late" : "today"}>
+              → {a.next_action}
+            </span>
+          ) : (
+            `upd ${ageDays(a.updated_at)}`
+          )}
+        </span>
+      </div>
+      <select
+        className={`status stage-${a.status}`}
+        value={a.status}
+        onChange={(e) => onMove(e.target.value)}
+        aria-label={`Move ${a.title} to stage`}
+      >
+        {STATUSES.map((s) => (
+          <option key={s} value={s}>
+            {t(`stages.${s}`)}
+          </option>
+        ))}
+      </select>
+    </article>
+  );
+}
+
 function BoardTab({
   applications,
   companies,
@@ -1190,8 +1264,77 @@ function BoardTab({
   };
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
+  // Alternate grouping (#130) — rows are companies, columns stay the
+  // pipeline stages, useful once several applications pile up at the
+  // same company. Swimlane mode has no drag-and-drop (the stage
+  // <select> is the only way to move a card there) to keep this
+  // additive rather than doubling the DnD surface to maintain.
+  const [groupBy, setGroupBy] = useState<"stage" | "company">("stage");
+  const lanes = new Map<number | null, Application[]>();
+  for (const a of open) {
+    const key = a.company_id;
+    (lanes.get(key) ?? lanes.set(key, []).get(key)!).push(a);
+  }
+  const laneEntries = [...lanes.entries()].sort((a, b) => {
+    const nameA = companies.find((c) => c.id === a[0])?.name ?? "";
+    const nameB = companies.find((c) => c.id === b[0])?.name ?? "";
+    return nameA.localeCompare(nameB);
+  });
+
   return (
     <>
+    <div className="board-toolbar">
+      <div className="board-group-toggle" role="group" aria-label={t("board.groupBy")}>
+        <button
+          className={groupBy === "stage" ? "active" : ""}
+          onClick={() => setGroupBy("stage")}
+        >
+          {t("board.byStage")}
+        </button>
+        <button
+          className={groupBy === "company" ? "active" : ""}
+          onClick={() => setGroupBy("company")}
+        >
+          {t("board.byCompany")}
+        </button>
+      </div>
+    </div>
+    {groupBy === "company" ? (
+      <div className="board-swimlanes">
+        {laneEntries.map(([companyId, apps]) => (
+          <div className="lane" key={companyId ?? "none"}>
+            <div className="lane-label">
+              <span>
+                {companies.find((c) => c.id === companyId)?.name ??
+                  t("board.noCompany")}
+              </span>
+              <span className="n">{apps.length}</span>
+            </div>
+            <div className="lane-stages">
+              {PIPELINE.map((stage) => (
+                <div className="lane-cell" key={stage}>
+                  {apps
+                    .filter((a) => a.status === stage)
+                    .map((a) => (
+                      <BoardCard
+                        key={a.id}
+                        a={a}
+                        draggable={false}
+                        isDragging={false}
+                        onOpenDetail={() => setDetailId(a.id)}
+                        onMove={(status) => move(a, status)}
+                      />
+                    ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {laneEntries.length === 0 && (
+          <p className="empty">{t("empty.boardEmpty")}</p>
+        )}
+      </div>
+    ) : (
     <div className="board">
       {PIPELINE.map((stage) => {
         const cards = open.filter((a) => a.status === stage);
@@ -1216,74 +1359,23 @@ function BoardTab({
         const cardList = (
           <>
             {cards.map((a) => (
-              <article
+              <BoardCard
                 key={a.id}
-                className={`bcard stage-${a.status}${draggingId === a.id ? " dragging" : ""}`}
+                a={a}
                 draggable={!isCoarsePointer}
-                onDragStart={
-                  isCoarsePointer
-                    ? undefined
-                    : (e) => {
-                        e.dataTransfer.setData("text/plain", String(a.id));
-                        e.dataTransfer.effectAllowed = "move";
-                        setDraggingId(a.id);
-                      }
-                }
-                onDragEnd={
-                  isCoarsePointer
-                    ? undefined
-                    : () => {
-                        setDraggingId(null);
-                        setDragOverStage(null);
-                      }
-                }
-              >
-                <div
-                  className="bcard-body"
-                  onClick={() => setDetailId(a.id)}
-                >
-                  <strong>
-                    {a.title}
-                    {a.referred_by_contact_id ? (
-                      <span className="badge" title={t("referral.referredBy")}>
-                        {" "}
-                        {t("referral.badge")}
-                      </span>
-                    ) : null}
-                    {a.posting_status === "maybe_stale" ? (
-                      <span className="badge warn" title={t("posting.staleHint")}>
-                        {" "}
-                        {t("posting.staleBadge")}
-                      </span>
-                    ) : null}
-                  </strong>
-                  <span className="co">
-                    {a.company_name ?? "—"}
-                    {a.contact_name ? ` · ${a.contact_name}` : ""}
-                  </span>
-                  <span className="bmeta">
-                    {isDue(a) && a.next_action ? (
-                      <span className={isOverdue(a) ? "late" : "today"}>
-                        → {a.next_action}
-                      </span>
-                    ) : (
-                      `upd ${ageDays(a.updated_at)}`
-                    )}
-                  </span>
-                </div>
-                <select
-                  className={`status stage-${a.status}`}
-                  value={a.status}
-                  onChange={(e) => move(a, e.target.value)}
-                  aria-label={`Move ${a.title} to stage`}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {t(`stages.${s}`)}
-                    </option>
-                  ))}
-                </select>
-              </article>
+                isDragging={draggingId === a.id}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", String(a.id));
+                  e.dataTransfer.effectAllowed = "move";
+                  setDraggingId(a.id);
+                }}
+                onDragEnd={() => {
+                  setDraggingId(null);
+                  setDragOverStage(null);
+                }}
+                onOpenDetail={() => setDetailId(a.id)}
+                onMove={(status) => move(a, status)}
+              />
             ))}
             {cards.length === 0 && (
               <div className="bempty">
@@ -1341,6 +1433,7 @@ function BoardTab({
         );
       })}
       </div>
+    )}
       <div className="board-summary">
         <NextUpPanel applications={applications} />
       </div>
