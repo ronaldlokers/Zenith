@@ -3861,6 +3861,20 @@ function ApplicationsTab({
                     {t("posting.staleBadge")}
                   </span>
                 ) : null}
+                {(() => {
+                  const level = heatLevel.get(a.id) ?? 0;
+                  if (level === 0) return null;
+                  const key = level === 3 ? "cold" : level === 2 ? "quiet" : "watch";
+                  return (
+                    <span
+                      className={`badge heat-badge heat-badge-${level}`}
+                      title={t(`heat.${key}Hint`)}
+                    >
+                      {" "}
+                      {t(`heat.${key}Badge`)}
+                    </span>
+                  );
+                })()}
               </strong>
               <span className="co">
                 {a.company_name ?? "—"}

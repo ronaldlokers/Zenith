@@ -281,6 +281,14 @@
     "staleBadge": "gone?",
     "staleHint": "This posting may no longer be live — worth a quick check."
   },
+  "heat": {
+    "watchBadge": "slow",
+    "watchHint": "Slower than this employer's usual response time — worth watching.",
+    "quietBadge": "quiet",
+    "quietHint": "Well past this employer's usual response time.",
+    "coldBadge": "cold",
+    "coldHint": "Far past this employer's usual response time — likely gone quiet."
+  },
   "referral": {
     "referredBy": "Referred by",
     "badge": "referral",

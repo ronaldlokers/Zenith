@@ -32,7 +32,9 @@
   /* Response-time heat strip (#142) — a separate "gone quiet?" signal,
      deliberately its own color family (blue → red) so it never reads as
      a 6th stage color. */
-  --heat-watch: #eab308;
+  /* --heat-watch re-tuned for #202 — #eab308 measured 1.87:1 against
+     --surface, below the 3:1 floor for a non-text UI indicator. */
+  --heat-watch: #8a6300;
   --heat-quiet: #ea580c;
   --heat-cold: #b91c1c;
 
