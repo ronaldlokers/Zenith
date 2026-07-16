@@ -255,6 +255,57 @@ app.delete("/api/applications/:id/tags/:tagId", async (c) => {
   return c.body(null, 204);
 });
 
+// --- Interview prep checklist ---
+
+app.get("/api/applications/:id/prep-items", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    "SELECT * FROM interview_prep_items WHERE application_id = ? ORDER BY sort_order, id",
+  )
+    .bind(c.req.param("id"))
+    .all();
+  return c.json(results);
+});
+
+app.post("/api/applications/:id/prep-items", async (c) => {
+  const body = await c.req.json();
+  const text = (body.text ?? "").trim();
+  if (!text) return c.json({ error: "text is required" }, 400);
+  const maxOrder = await c.env.DB.prepare(
+    "SELECT COALESCE(MAX(sort_order), -1) AS m FROM interview_prep_items WHERE application_id = ?",
+  )
+    .bind(c.req.param("id"))
+    .first<{ m: number }>();
+  const result = await c.env.DB.prepare(
+    `INSERT INTO interview_prep_items (application_id, text, sort_order)
+     VALUES (?, ?, ?) RETURNING *`,
+  )
+    .bind(c.req.param("id"), text, (maxOrder?.m ?? -1) + 1)
+    .first();
+  return c.json(result, 201);
+});
+
+app.put("/api/prep-items/:id", async (c) => {
+  const body = await c.req.json();
+  const result = await c.env.DB.prepare(
+    "UPDATE interview_prep_items SET text = COALESCE(?, text), done = COALESCE(?, done) WHERE id = ? RETURNING *",
+  )
+    .bind(
+      body.text ?? null,
+      body.done != null ? (body.done ? 1 : 0) : null,
+      c.req.param("id"),
+    )
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
+app.delete("/api/prep-items/:id", async (c) => {
+  await c.env.DB.prepare("DELETE FROM interview_prep_items WHERE id = ?")
+    .bind(c.req.param("id"))
+    .run();
+  return c.body(null, 204);
+});
+
 app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);

@@ -28,6 +28,7 @@ import {
   type Skill,
   type StatusHistoryRow,
   type OutreachStatus,
+  type PrepItem,
 } from "./types";
 import "./App.css";
 
@@ -1991,6 +1992,121 @@ function CalendarTab({
   );
 }
 
+const PREP_STARTER_ITEMS = [
+  "prep.starterResearch",
+  "prep.starterQuestions",
+  "prep.starterJd",
+  "prep.starterStories",
+] as const;
+
+function InterviewPrepSection({
+  applicationId,
+  onError,
+}: {
+  applicationId: number;
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [items, setItems] = useState<PrepItem[] | null>(null);
+  const [newText, setNewText] = useState("");
+
+  const load = useCallback(
+    () =>
+      api
+        .list<PrepItem>(`applications/${applicationId}/prep-items`)
+        .then(setItems)
+        .catch((e) => onError((e as Error).message)),
+    [applicationId, onError],
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const addItem = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    api
+      .create(`applications/${applicationId}/prep-items`, { text: trimmed })
+      .then(() => {
+        setNewText("");
+        return load();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const toggleDone = (item: PrepItem) =>
+    api
+      .update("prep-items", item.id, { done: !item.done })
+      .then(load)
+      .catch((e) => onError((e as Error).message));
+
+  const removeItem = (id: number) =>
+    api
+      .remove("prep-items", id)
+      .then(load)
+      .catch((e) => onError((e as Error).message));
+
+  const addStarterChecklist = () => {
+    Promise.all(
+      PREP_STARTER_ITEMS.map((key) =>
+        api.create(`applications/${applicationId}/prep-items`, {
+          text: t(key),
+        }),
+      ),
+    )
+      .then(load)
+      .catch((e) => onError((e as Error).message));
+  };
+
+  if (!items) return null;
+
+  return (
+    <div className="prep-checklist">
+      {items.length === 0 && (
+        <button onClick={addStarterChecklist}>
+          {t("prep.addStarterChecklist")}
+        </button>
+      )}
+      <ul>
+        {items.map((item) => (
+          <li key={item.id} className={item.done ? "done" : ""}>
+            <label>
+              <input
+                type="checkbox"
+                checked={!!item.done}
+                onChange={() => toggleDone(item)}
+              />
+              {item.text}
+            </label>
+            <button
+              className="danger"
+              onClick={() => removeItem(item.id)}
+              aria-label={t("common.delete")}
+            >
+              ×
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div className="prep-add">
+        <input
+          placeholder={t("prep.addItemPlaceholder")}
+          value={newText}
+          onChange={(e) => setNewText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addItem(newText);
+            }
+          }}
+        />
+        <button onClick={() => addItem(newText)}>{t("common.save")}</button>
+      </div>
+    </div>
+  );
+}
+
 function CoverLetterSection({
   application,
   onChanged,
@@ -2385,6 +2501,9 @@ function ApplicationDetailModal({
                 {t("common.delete")}
               </button>
             </div>
+
+            <h3 className="detail-sub">{t("prep.title")}</h3>
+            <InterviewPrepSection applicationId={a.id} onError={onError} />
 
             <h3 className="detail-sub">{t("coverLetter.title")}</h3>
             <CoverLetterSection

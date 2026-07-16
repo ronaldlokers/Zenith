@@ -205,6 +205,15 @@ export interface Tag {
   name: string;
 }
 
+export interface PrepItem {
+  id: number;
+  application_id: number;
+  text: string;
+  done: boolean | number;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface WorkExperience {
   id: number;
   company: string;
