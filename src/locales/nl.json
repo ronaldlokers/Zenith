@@ -102,7 +102,10 @@
     "status": "Status",
     "role": "Rol",
     "description": "Omschrijving",
-    "notes": "Notities"
+    "notes": "Notities",
+    "keywordMatch": "Trefwoorden-check",
+    "pasteJdPlaceholder": "Plak de vacaturetekst om te vergelijken met je CV-vaardigheden…",
+    "keywordMatchCount": "Je CV noemt {{matched}} van de {{total}} trefwoorden uit deze vacature"
   },
   "nextUp": {
     "title": "Binnenkort"
