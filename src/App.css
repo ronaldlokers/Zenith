@@ -874,6 +874,39 @@ select.status {
   margin-top: 0.75rem;
 }
 
+.momentum {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.2rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.momentum-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+
+.momentum-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.momentum-up .momentum-value {
+  color: var(--st-offer);
+}
+
+.momentum-down .momentum-value {
+  color: var(--danger);
+}
+
 /* Agenda / calendar */
 .agenda {
   margin-top: 0.75rem;

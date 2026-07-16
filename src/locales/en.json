@@ -86,6 +86,14 @@
     "checking": "Checking…"
   },
   "stats": {
+    "momentumLabel": "Pipeline momentum",
+    "momentum": {
+      "up": "Speeding up",
+      "down": "Slowing down",
+      "flat": "Steady",
+      "none": "No recent activity"
+    },
+    "momentumDetail": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that",
     "appsPerWeek": "Applications per week",
     "pipelineFunnel": "Pipeline funnel — applications that reached each stage",
     "avgTimeInStage": "Average time in stage",
