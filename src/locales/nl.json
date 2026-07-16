@@ -1,0 +1,43 @@
+{
+  "tabs": {
+    "jobs": "Vacatures",
+    "board": "Bord",
+    "feed": "Feed",
+    "calendar": "Agenda",
+    "stats": "Statistieken",
+    "companies": "Bedrijven",
+    "people": "Contacten"
+  },
+  "header": {
+    "openCount_one": "{{count}} open",
+    "openCount_other": "{{count}} open",
+    "dueCount_one": "{{count}} actie nodig",
+    "dueCount_other": "{{count}} acties nodig",
+    "settings": "Instellingen"
+  },
+  "common": {
+    "loading": "Laden…",
+    "close": "Sluiten"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Zoek titel, bedrijf, notities… (/)",
+    "addJob": "+ Vacature toevoegen",
+    "shortcuts": "Sneltoetsen"
+  },
+  "shortcuts": {
+    "title": "Sneltoetsen",
+    "subtitle": "Alleen desktop, tab Vacatures.",
+    "focusSearch": "Focus op zoeken",
+    "addJob": "Nieuwe vacature toevoegen",
+    "moveFocus": "Focus omhoog / omlaag in de lijst",
+    "setStatus": "Status van de gefocuste kaart instellen (interested…ghosted)",
+    "closeHelp": "Sluit een formulier, tijdlijn of deze hulp",
+    "toggleHelp": "Deze hulp aan/uit"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "language": "Taal",
+    "languageEn": "English",
+    "languageNl": "Nederlands"
+  }
+}
