@@ -2123,6 +2123,57 @@ summary.bcol-head::after {
   color: var(--muted);
 }
 
+/* Overview home screen (#128) */
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.overview-headline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.overview-number {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-label {
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.overview-sub {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-family: var(--mono);
+}
+
+.overview .jobs-side {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.overview-recent li {
+  cursor: pointer;
+}
+
+.overview-cta {
+  align-self: center;
+}
+
 /* CV builder (#69) */
 .cv-tab {
   display: flex;

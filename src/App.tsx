@@ -69,6 +69,7 @@ function RemoveIcon() {
 }
 
 type Tab =
+  | "overview"
   | "applications"
   | "board"
   | "feed"
@@ -84,6 +85,7 @@ type Tab =
 // route params beyond an optional record id). Only Jobs/Board deep
 // link to a specific record; other tabs are just /path.
 const TAB_PATHS: Record<Tab, string> = {
+  overview: "/",
   applications: "/jobs",
   board: "/board",
   feed: "/feed",
@@ -107,7 +109,7 @@ const PATH_TABS: Record<string, Tab> = {
 
 function parsePath(pathname: string): { tab: Tab; id: number | null } {
   const match = pathname.match(/^\/([a-z]+)(?:\/(\d+))?\/?$/);
-  const tab = (match && PATH_TABS[match[1]]) || "applications";
+  const tab = (match && PATH_TABS[match[1]]) || "overview";
   const id = match && match[2] ? Number(match[2]) : null;
   return { tab, id };
 }
@@ -908,6 +910,12 @@ export default function App() {
       </header>
       <nav className="tabs">
         <button
+          className={tab === "overview" ? "active" : ""}
+          onClick={() => setTab("overview")}
+        >
+          {t("tabs.overview")}
+        </button>
+        <button
           className={tab === "applications" ? "active" : ""}
           onClick={() => setTab("applications")}
         >
@@ -964,7 +972,7 @@ export default function App() {
           <LoadingSkeleton />
         ) : (
           <>
-            {tab === "applications" &&
+            {tab === "overview" &&
               applications.length === 0 &&
               !onboardingDismissed && (
                 <OnboardingChecklist
@@ -977,6 +985,13 @@ export default function App() {
                   onDismiss={dismissOnboarding}
                 />
               )}
+            {tab === "overview" && (
+              <OverviewTab
+                applications={visibleApps}
+                onGoToJobs={() => setTab("applications")}
+                onOpenJob={(id) => navigate(`/jobs/${id}`)}
+              />
+            )}
             {tab === "applications" && (
               <ApplicationsTab
                 applications={visibleApps}
@@ -2761,6 +2776,71 @@ function ApplicationDetailModal({
         )}
       </div>
     </div>
+  );
+}
+
+// Overview home screen (#128) — the new landing tab, replacing "always
+// opens on Jobs." One glanceable screen: a headline pipeline number, the
+// existing next-actions panel, and a recent-activity list built from the
+// same applications data already loaded app-wide (no extra fetch).
+function OverviewTab({
+  applications,
+  onGoToJobs,
+  onOpenJob,
+}: {
+  applications: Application[];
+  onGoToJobs: () => void;
+  onOpenJob: (id: number) => void;
+}) {
+  const { t } = useTranslation();
+  const open = applications.filter((a) => !isDead(a.status));
+  const interviewing = open.filter(
+    (a) => a.status === "interview" || a.status === "offer",
+  ).length;
+
+  const recent = [...applications]
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+    .slice(0, 5);
+
+  return (
+    <section className="overview">
+      <div className="overview-headline">
+        <span className="overview-number">{open.length}</span>
+        <span className="overview-label">
+          {t("overview.openCount", { count: open.length })}
+        </span>
+        {interviewing > 0 && (
+          <span className="overview-sub">
+            {t("overview.interviewingCount", { count: interviewing })}
+          </span>
+        )}
+      </div>
+
+      <NextUpPanel applications={applications} />
+
+      <h3 className="side-h">{t("overview.recentActivity")}</h3>
+      {recent.length === 0 ? (
+        <p className="muted small">{t("overview.noActivity")}</p>
+      ) : (
+        <ul className="side-list overview-recent">
+          {recent.map((a) => (
+            <li
+              key={a.id}
+              className={`stage-${a.status} clickable`}
+              onClick={() => onOpenJob(a.id)}
+            >
+              <span className="side-date">{ageDays(a.updated_at)}</span>
+              <span className="side-title">{a.title}</span>
+              <span className="side-co">{a.company_name ?? "—"}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <button className="primary overview-cta" onClick={onGoToJobs}>
+        {t("overview.viewAllJobs")}
+      </button>
+    </section>
   );
 }
 

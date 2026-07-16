@@ -1,5 +1,6 @@
 {
   "tabs": {
+    "overview": "Overview",
     "jobs": "Jobs",
     "board": "Board",
     "feed": "Feed",
@@ -313,5 +314,14 @@
     "resetDemoSubmit": "Reset demo data",
     "resetDemoSuccess": "Demo data reset.",
     "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?"
+  },
+  "overview": {
+    "openCount_one": "open application",
+    "openCount_other": "open applications",
+    "interviewingCount_one": "{{count}} at interview or offer stage",
+    "interviewingCount_other": "{{count}} at interview or offer stage",
+    "recentActivity": "Recent activity",
+    "noActivity": "Nothing yet — add your first job to get started.",
+    "viewAllJobs": "View all jobs"
   }
 }
