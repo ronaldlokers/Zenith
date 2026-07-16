@@ -123,6 +123,15 @@
       "no_response": "No response"
     }
   },
+  "prep": {
+    "title": "Interview prep",
+    "addStarterChecklist": "+ Add a starter checklist",
+    "addItemPlaceholder": "Add a prep item…",
+    "starterResearch": "Research the interviewer's background and the team",
+    "starterQuestions": "Prepare 3 questions to ask them",
+    "starterJd": "Review the job description line-by-line",
+    "starterStories": "Prepare STAR examples for common questions"
+  },
   "coverLetter": {
     "title": "Cover letter",
     "generateDraft": "Generate draft",

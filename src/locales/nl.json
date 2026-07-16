@@ -123,6 +123,15 @@
       "no_response": "Geen reactie"
     }
   },
+  "prep": {
+    "title": "Interviewvoorbereiding",
+    "addStarterChecklist": "+ Startchecklist toevoegen",
+    "addItemPlaceholder": "Voorbereidingsitem toevoegen…",
+    "starterResearch": "Zoek de achtergrond van de interviewer en het team op",
+    "starterQuestions": "Bereid 3 vragen voor om te stellen",
+    "starterJd": "Neem de vacaturetekst regel voor regel door",
+    "starterStories": "Bereid STAR-voorbeelden voor op veelgestelde vragen"
+  },
   "coverLetter": {
     "title": "Motivatiebrief",
     "generateDraft": "Concept genereren",
