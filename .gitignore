@@ -29,3 +29,6 @@ dist-ssr
 !.dev.vars.example
 .env*
 !.env.example
+
+# generated password-hash SQL from scripts/seed-admin.mjs — never commit
+scripts/.seed-admin.sql

@@ -1,12 +1,13 @@
-import { env, SELF } from "cloudflare:test";
+import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
+import { authedFetch } from "./helpers";
 import { runScheduledBackup } from "../worker/index";
 
 const BASE = "http://jobseekr.test";
 
 describe("runScheduledBackup", () => {
   it("writes a full JSON dump to R2 under backups/", async () => {
-    await SELF.fetch(`${BASE}/api/companies`, {
+    await authedFetch(`${BASE}/api/companies`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Backup Test Co" }),

@@ -286,5 +286,32 @@
     "searchKeywords": "Zoekwoorden per rol",
     "keywordPlaceholder": "+ zoekwoord",
     "removeKeyword": "Verwijderen"
+  },
+  "login": {
+    "subtitle": "Log in op je pipeline",
+    "email": "E-mail",
+    "password": "Wachtwoord",
+    "signIn": "Inloggen",
+    "signingIn": "Inloggen…",
+    "error": "Inloggen mislukt — controleer je e-mail en wachtwoord.",
+    "inviteOnly": "Accounts zijn alleen op uitnodiging. Vraag je beheerder om toegang."
+  },
+  "account": {
+    "signedInAs": "Ingelogd als {{email}}",
+    "signOut": "Uitloggen",
+    "adminInvite": "Gebruiker uitnodigen",
+    "inviteEmail": "E-mail",
+    "inviteName": "Naam",
+    "invitePassword": "Tijdelijk wachtwoord",
+    "inviteRole": "Rol",
+    "inviteRoleUser": "Gebruiker",
+    "inviteRoleAdmin": "Beheerder",
+    "inviteSubmit": "Account aanmaken",
+    "inviteSuccess": "Account aangemaakt voor {{email}}. Deel het tijdelijke wachtwoord rechtstreeks.",
+    "inviteError": "Kon dat account niet aanmaken.",
+    "resetDemo": "Demo-account",
+    "resetDemoSubmit": "Demo-data resetten",
+    "resetDemoSuccess": "Demo-data gereset.",
+    "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?"
   }
 }

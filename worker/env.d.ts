@@ -4,4 +4,6 @@
 interface Env {
   ADZUNA_APP_ID?: string;
   ADZUNA_APP_KEY?: string;
+  BETTER_AUTH_SECRET: string;
+  BETTER_AUTH_URL?: string;
 }
