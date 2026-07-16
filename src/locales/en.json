@@ -31,7 +31,7 @@
     "addJob": "Add a new job",
     "moveFocus": "Move focus down / up the list",
     "setStatus": "Set the focused card's status (interested…ghosted)",
-    "closeHelp": "Close a form, collapse a timeline, or this help",
+    "closeHelp": "Close a form or this help",
     "toggleHelp": "Toggle this help"
   },
   "settings": {
