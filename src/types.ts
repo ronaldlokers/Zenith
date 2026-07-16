@@ -155,6 +155,8 @@ export interface Application {
   bonus_target_pct: number | null;
   equity_value: number | null;
   benefits_notes: string | null;
+  referred_by_contact_id: number | null;
+  referred_by_name?: string | null;
   status: Status;
   notes: string | null;
   applied_at: string | null;

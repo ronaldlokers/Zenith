@@ -127,6 +127,12 @@
     "appliedTo": "Gesolliciteerd bij",
     "at": "bij"
   },
+  "referral": {
+    "referredBy": "Doorverwezen door",
+    "badge": "referral",
+    "badgeCount_one": "{{count}} referral",
+    "badgeCount_other": "{{count}} referrals"
+  },
   "offer": {
     "title": "Aanbod-details",
     "signingBonus": "Tekenbonus",
