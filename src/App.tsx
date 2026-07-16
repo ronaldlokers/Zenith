@@ -488,9 +488,21 @@ function BoardTab({
   // Collapsed by default, except stages with something due — keeps a
   // long mobile scroll from burying the stage that actually needs
   // attention under every earlier one. A manual toggle wins once used.
+  // Desktop's columns sit side by side and never needed this, so it
+  // renders plain always-visible sections there instead — no <details>,
+  // no toggle affordance at all (see #47).
   const [manualOpen, setManualOpen] = useState<Partial<Record<Status, boolean>>>(
     {},
   );
+  const [isDesktop, setIsDesktop] = useState(
+    () => window.matchMedia("(min-width: 900px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 900px)");
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverStage, setDragOverStage] = useState<Status | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
@@ -502,38 +514,24 @@ function BoardTab({
         const cards = open.filter((a) => a.status === stage);
         const hasDue = cards.some(isDue);
         const isOpen = manualOpen[stage] ?? hasDue;
-        return (
-          <details
-            key={stage}
-            className={`bcol stage-${stage}${dragOverStage === stage ? " drag-over" : ""}`}
-            open={isOpen}
-            onToggle={(e) =>
-              setManualOpen((m) => ({
-                ...m,
-                [stage]: (e.target as HTMLDetailsElement).open,
-              }))
-            }
-            onDragOver={(e) => {
-              if (draggingId === null) return;
-              e.preventDefault();
-              setDragOverStage(stage);
-              if (!isOpen) setManualOpen((m) => ({ ...m, [stage]: true }));
-            }}
-            onDragLeave={() =>
-              setDragOverStage((s) => (s === stage ? null : s))
-            }
-            onDrop={(e) => {
-              e.preventDefault();
-              const id = Number(e.dataTransfer.getData("text/plain"));
-              if (id) onStatus(id, stage);
-              setDraggingId(null);
-              setDragOverStage(null);
-            }}
-          >
-            <summary className="bcol-head">
-              {stage}
-              <span className="n">{cards.length}</span>
-            </summary>
+        const className = `bcol stage-${stage}${dragOverStage === stage ? " drag-over" : ""}`;
+        const handleDragOver = (e: React.DragEvent) => {
+          if (draggingId === null) return;
+          e.preventDefault();
+          setDragOverStage(stage);
+          if (!isOpen) setManualOpen((m) => ({ ...m, [stage]: true }));
+        };
+        const handleDragLeave = () =>
+          setDragOverStage((s) => (s === stage ? null : s));
+        const handleDrop = (e: React.DragEvent) => {
+          e.preventDefault();
+          const id = Number(e.dataTransfer.getData("text/plain"));
+          if (id) onStatus(id, stage);
+          setDraggingId(null);
+          setDragOverStage(null);
+        };
+        const cardList = (
+          <>
             {cards.map((a) => (
               <article
                 key={a.id}
@@ -587,6 +585,51 @@ function BoardTab({
                 {stage === "offer" ? "keep pushing" : "empty"}
               </div>
             )}
+          </>
+        );
+
+        // Desktop's columns sit side by side and never needed the
+        // mobile collapse behavior, so it gets a plain always-visible
+        // section with zero toggle affordance — no <details>, no
+        // chevron, no click-to-collapse (#47).
+        if (isDesktop) {
+          return (
+            <div
+              key={stage}
+              className={className}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className="bcol-head">
+                {stage}
+                <span className="n">{cards.length}</span>
+              </div>
+              {cardList}
+            </div>
+          );
+        }
+
+        return (
+          <details
+            key={stage}
+            className={className}
+            open={isOpen}
+            onToggle={(e) =>
+              setManualOpen((m) => ({
+                ...m,
+                [stage]: (e.target as HTMLDetailsElement).open,
+              }))
+            }
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <summary className="bcol-head">
+              {stage}
+              <span className="n">{cards.length}</span>
+            </summary>
+            {cardList}
           </details>
         );
       })}
