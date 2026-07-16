@@ -97,6 +97,26 @@ function isOverdue(a: Application): boolean {
   return !!a.next_action_at && !isDead(a.status) && a.next_action_at < today();
 }
 
+const DEADLINE_SOON_DAYS = 3;
+
+function deadlineDaysLeft(a: Application): number | null {
+  if (!a.deadline_at) return null;
+  return Math.round(
+    (new Date(a.deadline_at).getTime() - new Date(today()).getTime()) /
+      86400000,
+  );
+}
+
+function isDeadlineSoon(a: Application): boolean {
+  const days = deadlineDaysLeft(a);
+  return days !== null && !isDead(a.status) && days <= DEADLINE_SOON_DAYS;
+}
+
+function isDeadlinePast(a: Application): boolean {
+  const days = deadlineDaysLeft(a);
+  return days !== null && !isDead(a.status) && days < 0;
+}
+
 function formatDate(d: string): string {
   return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
     day: "numeric",
@@ -1895,6 +1915,13 @@ function ApplicationDetailModal({
                   {t("referral.referredBy")}: {a.referred_by_name}
                 </span>
               )}
+              {a.deadline_at && (
+                <span
+                  className={`small${isDeadlinePast(a) ? " warn-text" : isDeadlineSoon(a) ? " warn-text" : ""}`}
+                >
+                  {t("detail.deadline")}: {formatDate(a.deadline_at)}
+                </span>
+              )}
               {a.salary_range && (
                 <span className="muted small">{a.salary_range}</span>
               )}
@@ -2246,6 +2273,11 @@ function ApplicationsTab({
                   ? `→ ${a.next_action ?? "follow up"}`
                   : `upd ${ageDays(a.updated_at)}`}
               </span>
+              {a.deadline_at && (isDeadlineSoon(a) || isDeadlinePast(a)) && (
+                <span className={`due${isDeadlinePast(a) ? " late" : " today"}`}>
+                  {t("detail.deadline")}: {formatDate(a.deadline_at)}
+                </span>
+              )}
             </div>
           </li>
         ))}
@@ -2613,6 +2645,14 @@ function ApplicationForm({
             type="date"
             value={form.next_action_at ?? ""}
             onChange={(e) => set({ next_action_at: e.target.value || null })}
+          />
+        </label>
+        <label>
+          Application deadline
+          <input
+            type="date"
+            value={form.deadline_at ?? ""}
+            onChange={(e) => set({ deadline_at: e.target.value || null })}
           />
         </label>
         <label className="full">

@@ -164,6 +164,7 @@ export interface Application {
   applied_at: string | null;
   next_action: string | null;
   next_action_at: string | null;
+  deadline_at: string | null;
   created_at: string;
   updated_at: string;
 }
