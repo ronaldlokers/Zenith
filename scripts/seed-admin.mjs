@@ -5,21 +5,46 @@
 // credential gets set, whether that's you or anyone else self-hosting
 // this app. Run once after migrations are applied:
 //
-//   node scripts/seed-admin.mjs <email> <password>
+//   node scripts/seed-admin.mjs <email>
 //   npx wrangler d1 execute jobseekr --remote --file scripts/.seed-admin.sql
 //
-// The password is hashed locally with better-auth's own scrypt
-// implementation so the stored hash is byte-for-byte what Better-Auth
-// expects — nothing here talks to D1 directly, it just prints the SQL.
+// Prompts for the password interactively (hidden, not echoed) instead of
+// taking it as an argument — a CLI arg would land in shell history and be
+// visible to anyone on the box via `ps`. The password is hashed locally
+// with better-auth's own scrypt implementation so the stored hash is
+// byte-for-byte what Better-Auth expects — nothing here talks to D1
+// directly, it just prints the SQL.
 
 import { hashPassword } from "better-auth/crypto";
 import { writeFileSync } from "node:fs";
+import { createInterface } from "node:readline";
 
-const [email, password] = process.argv.slice(2);
-if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password || password.length < 8) {
-  console.error(
-    "Usage: node scripts/seed-admin.mjs <email> <password (min 8 chars)>",
-  );
+const email = process.argv[2];
+if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  console.error("Usage: node scripts/seed-admin.mjs <email>");
+  process.exit(1);
+}
+
+function promptHidden(question) {
+  return new Promise((resolve) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    // readline has no built-in mask option, so we take over the output
+    // stream's _writeToOutput to swallow everything except the prompt
+    // itself — the raw keystrokes still reach readline's line buffer,
+    // they just never get echoed back to the terminal.
+    process.stdout.write(question);
+    rl._writeToOutput = () => {};
+    rl.question("", (answer) => {
+      rl.close();
+      process.stdout.write("\n");
+      resolve(answer);
+    });
+  });
+}
+
+const password = await promptHidden("Password (min 8 chars): ");
+if (!password || password.length < 8) {
+  console.error("Password must be at least 8 characters.");
   process.exit(1);
 }
 
@@ -39,4 +64,4 @@ console.log("Wrote scripts/.seed-admin.sql — now run:");
 console.log(
   "  npx wrangler d1 execute jobseekr --remote --file scripts/.seed-admin.sql",
 );
-console.log(`\nThen log in with ${email} and the password you just passed in.`);
+console.log(`\nThen log in with ${email} and the password you just entered.`);
