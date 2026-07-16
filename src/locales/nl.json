@@ -185,7 +185,8 @@
     "title": "Binnenkort"
   },
   "company": {
-    "notResearched": "niet onderzocht"
+    "notResearched": "niet onderzocht",
+    "contactMap": "Contacten"
   },
   "stages": {
     "interested": "Interesse",

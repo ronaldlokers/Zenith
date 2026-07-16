@@ -1065,6 +1065,7 @@ export default function App() {
               <CompaniesTab
                 companies={visibleCompanies}
                 applications={visibleApps}
+                contacts={visibleContacts}
                 onChanged={reload}
                 onError={setError}
                 notify={notify}
@@ -3948,6 +3949,7 @@ function ApplicationForm({
 function CompaniesTab({
   companies,
   applications,
+  contacts,
   onChanged,
   onError,
   notify,
@@ -3956,6 +3958,7 @@ function CompaniesTab({
 }: CrudTabProps & {
   companies: Company[];
   applications: Application[];
+  contacts: Contact[];
   initialQuery?: string;
 }) {
   const { t } = useTranslation();
@@ -4115,6 +4118,8 @@ function CompaniesTab({
       {detailCompany && (
         <CompanyDetailModal
           company={detailCompany}
+          contacts={contacts.filter((ct) => ct.company_id === detailCompany.id)}
+          applications={applications.filter((a) => a.company_id === detailCompany.id)}
           onClose={() => setDetailId(null)}
           onChanged={onChanged}
           onError={onError}
@@ -4199,8 +4204,63 @@ function CompanyForm({
   );
 }
 
+// Contact relationship map (#133) — a lightweight org-chart-style view
+// under a company: referral chains (referrer → the contact they connected
+// you with) built from data already on Application (referred_by_name,
+// contact_name), plus any other contacts at the company not part of a
+// chain. No new schema — there's no general "reports to" field, just
+// what the referral link already captures.
+function ContactRelationshipMap({
+  contacts,
+  applications,
+}: {
+  contacts: Contact[];
+  applications: Application[];
+}) {
+  const { t } = useTranslation();
+  if (contacts.length === 0) return null;
+
+  const referralLinks = [
+    ...new Map(
+      applications
+        .filter((a) => a.referred_by_name && a.contact_name)
+        .map((a) => [
+          `${a.referred_by_name}->${a.contact_name}`,
+          { from: a.referred_by_name!, to: a.contact_name! },
+        ]),
+    ).values(),
+  ];
+  const linkedNames = new Set(
+    referralLinks.flatMap((l) => [l.from, l.to]),
+  );
+  const unlinked = contacts.filter((c) => !linkedNames.has(c.name));
+
+  return (
+    <div className="contact-map">
+      <h3 className="detail-sub">{t("company.contactMap")}</h3>
+      {referralLinks.map((l, i) => (
+        <div className="contact-map-link" key={i}>
+          <span className="contact-map-node">{l.from}</span>
+          <span className="contact-map-arrow">→</span>
+          <span className="contact-map-node">{l.to}</span>
+        </div>
+      ))}
+      <ul className="contact-map-list">
+        {unlinked.map((c) => (
+          <li key={c.id}>
+            <span className="contact-map-node">{c.name}</span>
+            {c.role && <span className="muted small"> · {c.role}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function CompanyDetailModal({
   company,
+  contacts,
+  applications,
   onClose,
   onChanged,
   onError,
@@ -4208,6 +4268,8 @@ function CompanyDetailModal({
   onDelete,
 }: {
   company: Company;
+  contacts: Contact[];
+  applications: Application[];
   onClose: () => void;
   onChanged: () => Promise<void>;
   onError: (message: string | null) => void;
@@ -4301,6 +4363,8 @@ function CompanyDetailModal({
                 </span>
               )}
             </div>
+
+            <ContactRelationshipMap contacts={contacts} applications={applications} />
 
             <div className="detail-actions">
               <button
