@@ -95,6 +95,14 @@
     "compare": "Vergelijk interviews & aanbiedingen",
     "exportData": "Exporteer je gegevens"
   },
+  "bulk": {
+    "selectedCount_one": "{{count}} geselecteerd",
+    "selectedCount_other": "{{count}} geselecteerd",
+    "setStatus": "Status instellen…",
+    "archive": "Archiveren",
+    "clearSelection": "Wissen",
+    "selectRow": "Rij selecteren"
+  },
   "detail": {
     "timeline": "Tijdlijn",
     "documents": "Documenten",

@@ -95,6 +95,14 @@
     "compare": "Compare interviews & offers",
     "exportData": "Export your data"
   },
+  "bulk": {
+    "selectedCount_one": "{{count}} selected",
+    "selectedCount_other": "{{count}} selected",
+    "setStatus": "Set status…",
+    "archive": "Archive",
+    "clearSelection": "Clear",
+    "selectRow": "Select row"
+  },
   "detail": {
     "timeline": "Timeline",
     "documents": "Documents",

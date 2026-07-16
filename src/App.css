@@ -402,6 +402,41 @@
   opacity: 0.6;
 }
 
+.card-select {
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  margin-bottom: 0.75rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.bulk-bar select {
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+
+.bulk-bar button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
 .filters select {
   padding: 0.4rem 0.45rem;
   border: 1px solid var(--border);
@@ -581,8 +616,7 @@ button.danger {
 
 .card.row2 .l1 {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -591,6 +625,7 @@ button.danger {
 }
 
 .card.row2 .l1 .co {
+  margin-left: auto;
   color: var(--muted);
   font-size: 0.78rem;
 }
