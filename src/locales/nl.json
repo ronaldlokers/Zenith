@@ -107,7 +107,15 @@
     "ghostRate": "Ghost-percentage per bron",
     "unknownSource": "Onbekend",
     "compare": "Vergelijk interviews & aanbiedingen",
-    "exportData": "Exporteer je gegevens"
+    "exportData": "Exporteer je gegevens",
+    "streak": {
+      "activeTitle_one": "{{count}} week actieve reeks",
+      "activeTitle_other": "{{count}} weken actieve reeks",
+      "milestoneTitle_one": "{{count}} week reeks — goed bezig",
+      "milestoneTitle_other": "{{count}} weken reeks — goed bezig",
+      "brokenTitle": "Geen activiteit deze week",
+      "brokenBody": "Geen probleem — een zoektocht naar een baan verloopt niet lineair. Je resultaten tot nu toe blijven gewoon staan, pak het weer op wanneer je er klaar voor bent."
+    }
   },
   "palette": {
     "title": "Ga naar…",

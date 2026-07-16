@@ -713,6 +713,61 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
 // pipeline funnel (cumulative-reached-per-stage, a different
 // denominator, needs the funnel's decreasing-max shape) are untouched —
 // this consolidates only the one genuinely overlapping chart.
+// Momentum streak tracker (#145) — three states: active streak, a
+// dismissible one-time milestone banner every 4 weeks, and a broken
+// streak. The broken state is deliberately non-punitive: a job search
+// has genuine weeks off, and guilt-tripping a quiet week works against
+// a tool meant to reduce search-related stress.
+const STREAK_MILESTONE_INTERVAL = 4;
+
+function MomentumStreak({
+  streak,
+  broken,
+}: {
+  streak: number;
+  broken: boolean;
+}) {
+  const { t } = useTranslation();
+  const isMilestone = streak > 0 && streak % STREAK_MILESTONE_INTERVAL === 0;
+  const [dismissedMilestone, setDismissedMilestone] = useState(() =>
+    Number(localStorage.getItem("jobseekr_streak_milestone_dismissed") ?? 0),
+  );
+  const dismissMilestone = () => {
+    localStorage.setItem("jobseekr_streak_milestone_dismissed", String(streak));
+    setDismissedMilestone(streak);
+  };
+
+  if (broken) {
+    return (
+      <div className="streak streak-broken">
+        <span className="streak-label">{t("stats.streak.brokenTitle")}</span>
+        <p className="muted small">{t("stats.streak.brokenBody")}</p>
+      </div>
+    );
+  }
+
+  if (streak === 0) return null;
+
+  if (isMilestone && streak > dismissedMilestone) {
+    return (
+      <div className="streak streak-milestone">
+        <span className="streak-label">
+          {t("stats.streak.milestoneTitle", { count: streak })}
+        </span>
+        <button className="modal-close" onClick={dismissMilestone} aria-label={t("common.close")}>
+          ×
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="streak streak-active">
+      <span className="streak-label">{t("stats.streak.activeTitle", { count: streak })}</span>
+    </div>
+  );
+}
+
 function StageHistogram({ applications }: { applications: Application[] }) {
   const { t } = useTranslation();
   const open = applications.filter((a) => !isDead(a.status));
@@ -1874,6 +1929,26 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   });
   const weekMax = Math.max(1, ...weeks.map((w) => w.count));
 
+  // Momentum streak (#145) — consecutive weeks (ending this week) with
+  // any job-search activity: a new application, or any logged status
+  // change. Broader than the applications-per-week count above, since a
+  // week with only interviews/follow-ups and no new application still
+  // counts as an active week.
+  const activityWeeks = weeks.map((w, i) => {
+    const start = now - (7 - i) * WEEK;
+    const hasHistory = history.some((h) => {
+      const t = parseSqlDate(h.changed_at);
+      return t >= start && t < start + WEEK;
+    });
+    return w.count > 0 || hasHistory;
+  });
+  let streak = 0;
+  for (let i = activityWeeks.length - 1; i >= 0; i--) {
+    if (activityWeeks[i]) streak++;
+    else break;
+  }
+  const streakBroken = streak === 0 && activityWeeks.slice(0, -1).some(Boolean);
+
   // Furthest pipeline stage each application ever reached
   const reachedByApp = new Map<number, number>();
   for (const row of history) {
@@ -1956,6 +2031,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           {t("stats.momentumDetail", { recent: recentMoves, prior: priorMoves })}
         </span>
       </div>
+
+      <MomentumStreak streak={streak} broken={streakBroken} />
 
       <h2 className="stat-h">{t("stats.appsPerWeek")}</h2>
       <div className="histo">
