@@ -106,6 +106,8 @@
     "appsPerWeek": "Sollicitaties per week",
     "pipelineFunnel": "Pipeline-funnel — vacatures die elke fase bereikten",
     "avgTimeInStage": "Gemiddelde tijd per fase",
+    "timeToOffer_one": "Typische tijd tot aanbod: {{count}} dag, gebaseerd op {{n}} van je aanbiedingen",
+    "timeToOffer_other": "Typische tijd tot aanbod: {{count}} dagen, gebaseerd op {{n}} van je aanbiedingen",
     "noHistory": "Nog geen geschiedenis.",
     "ghostRate": "Ghost-percentage per bron",
     "unknownSource": "Onbekend",

@@ -2286,6 +2286,23 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
     }
   }
 
+  // Time to offer (#226) — days from the "applied" transition to the
+  // "offer" transition, per application that reached offer. Median
+  // rather than mean since a single very slow (or very fast) employer
+  // shouldn't skew a number meant to set expectations.
+  const offerDurations: number[] = [];
+  for (const rows of byApp.values()) {
+    const appliedRow = rows.find((r) => r.to_status === "applied");
+    const offerRow = rows.find((r) => r.to_status === "offer");
+    if (appliedRow && offerRow) {
+      const days =
+        (parseSqlDate(offerRow.changed_at) - parseSqlDate(appliedRow.changed_at)) /
+        86400000;
+      if (days >= 0) offerDurations.push(days);
+    }
+  }
+  const timeToOffer = median(offerDurations);
+
   // Ghost rate per source
   const bySource = new Map<string, { total: number; ghosted: number }>();
   for (const a of apps) {
@@ -2374,6 +2391,12 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           </div>
         ))}
       </div>
+
+      {timeToOffer != null && (
+        <p className="stat-callout">
+          {t("stats.timeToOffer", { count: Math.round(timeToOffer), n: offerDurations.length })}
+        </p>
+      )}
 
       <h2 className="stat-h">{t("stats.avgTimeInStage")}</h2>
       <ul className="stat-list">

@@ -1675,6 +1675,16 @@ select.status {
   margin-top: 0.4rem;
 }
 
+.stat-callout {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 .accent-fill {
   background: var(--accent);
 }
