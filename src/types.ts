@@ -157,6 +157,8 @@ export interface Application {
   benefits_notes: string | null;
   referred_by_contact_id: number | null;
   referred_by_name?: string | null;
+  posting_status: string | null;
+  posting_checked_at: string | null;
   status: Status;
   notes: string | null;
   applied_at: string | null;

@@ -643,6 +643,15 @@ button.danger {
   vertical-align: middle;
 }
 
+.badge.warn {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.warn-text {
+  color: var(--danger);
+}
+
 .empty {
   text-align: center;
   color: var(--muted);

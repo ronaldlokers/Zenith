@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
+import { checkStalePostings } from "./posting-check.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -745,5 +746,6 @@ export default {
   fetch: app.fetch,
   async scheduled(_event, env, ctx) {
     ctx.waitUntil(refreshFeed(env));
+    ctx.waitUntil(checkStalePostings(env));
   },
 } satisfies ExportedHandler<Env>;
