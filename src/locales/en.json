@@ -123,6 +123,17 @@
       "no_response": "No response"
     }
   },
+  "coverLetter": {
+    "title": "Cover letter",
+    "generateDraft": "Generate draft",
+    "placeholder": "Write or generate a cover letter draft for this application…",
+    "theCompany": "your company",
+    "summaryPlaceholder": "[add a professional summary in your CV profile to improve this draft]",
+    "namePlaceholder": "[your name]",
+    "greeting": "Dear Hiring Team at {{company}},",
+    "body": "I'm writing to apply for the {{title}} role at {{company}}. {{summary}}\n\nI'd welcome the chance to discuss how my background fits this role.",
+    "signoff": "Best regards,\n{{name}}"
+  },
   "bulk": {
     "selectedCount_one": "{{count}} selected",
     "selectedCount_other": "{{count}} selected",

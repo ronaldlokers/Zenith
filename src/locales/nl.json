@@ -123,6 +123,17 @@
       "no_response": "Geen reactie"
     }
   },
+  "coverLetter": {
+    "title": "Motivatiebrief",
+    "generateDraft": "Concept genereren",
+    "placeholder": "Schrijf of genereer een concept-motivatiebrief voor deze sollicitatie…",
+    "theCompany": "jullie bedrijf",
+    "summaryPlaceholder": "[voeg een professionele samenvatting toe aan je CV-profiel om dit concept te verbeteren]",
+    "namePlaceholder": "[je naam]",
+    "greeting": "Geachte heer/mevrouw bij {{company}},",
+    "body": "Hierbij solliciteer ik graag voor de functie {{title}} bij {{company}}. {{summary}}\n\nIk licht mijn achtergrond graag toe in een gesprek.",
+    "signoff": "Met vriendelijke groet,\n{{name}}"
+  },
   "bulk": {
     "selectedCount_one": "{{count}} geselecteerd",
     "selectedCount_other": "{{count}} geselecteerd",
