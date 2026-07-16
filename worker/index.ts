@@ -133,8 +133,8 @@ app.post("/api/contacts", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO contacts (company_id, name, role, email, phone, linkedin, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO contacts (company_id, name, role, email, phone, linkedin, notes, last_contacted_at, follow_up_at, outreach_status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -144,6 +144,9 @@ app.post("/api/contacts", async (c) => {
       body.phone ?? null,
       body.linkedin ?? null,
       body.notes ?? null,
+      body.last_contacted_at ?? null,
+      body.follow_up_at ?? null,
+      body.outreach_status ?? "not_contacted",
     )
     .first();
   return c.json(result, 201);
@@ -153,7 +156,8 @@ app.put("/api/contacts/:id", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `UPDATE contacts SET company_id = ?, name = ?, role = ?, email = ?, phone = ?, linkedin = ?, notes = ?
+    `UPDATE contacts SET company_id = ?, name = ?, role = ?, email = ?, phone = ?, linkedin = ?, notes = ?,
+       last_contacted_at = ?, follow_up_at = ?, outreach_status = ?
      WHERE id = ? RETURNING *`,
   )
     .bind(
@@ -164,6 +168,9 @@ app.put("/api/contacts/:id", async (c) => {
       body.phone ?? null,
       body.linkedin ?? null,
       body.notes ?? null,
+      body.last_contacted_at ?? null,
+      body.follow_up_at ?? null,
+      body.outreach_status ?? "not_contacted",
       c.req.param("id"),
     )
     .first();

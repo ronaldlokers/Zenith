@@ -708,6 +708,33 @@ button.danger {
   color: var(--sc);
 }
 
+/* No stage-* ancestor sets --sc here, so this doesn't reuse .pill (see
+   the #76/#93 --sc-without-fallback bug). */
+.outreach-pill {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--track);
+  color: var(--muted);
+}
+
+.outreach-pill.awaiting_reply {
+  background: color-mix(in srgb, var(--st-applied) 16%, var(--surface));
+  color: var(--st-applied);
+}
+
+.outreach-pill.replied {
+  background: color-mix(in srgb, var(--st-offer) 16%, var(--surface));
+  color: var(--st-offer);
+}
+
+.outreach-pill.no_response {
+  background: color-mix(in srgb, var(--st-dead) 16%, var(--surface));
+  color: var(--st-dead);
+}
+
 .card.row2 .due {
   font-family: var(--mono);
   font-size: 0.66rem;

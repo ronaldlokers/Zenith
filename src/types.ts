@@ -123,6 +123,12 @@ export interface Company {
   created_at: string;
 }
 
+export type OutreachStatus =
+  | "not_contacted"
+  | "awaiting_reply"
+  | "replied"
+  | "no_response";
+
 export interface Contact {
   id: number;
   company_id: number | null;
@@ -133,6 +139,9 @@ export interface Contact {
   phone: string | null;
   linkedin: string | null;
   notes: string | null;
+  last_contacted_at: string | null;
+  follow_up_at: string | null;
+  outreach_status: OutreachStatus;
   created_at: string;
 }
 
