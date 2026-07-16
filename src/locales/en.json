@@ -106,6 +106,8 @@
     "appsPerWeek": "Applications per week",
     "pipelineFunnel": "Pipeline funnel — applications that reached each stage",
     "avgTimeInStage": "Average time in stage",
+    "timeToOffer_one": "Typical time to offer: {{count}} day, based on {{n}} of your offers",
+    "timeToOffer_other": "Typical time to offer: {{count}} days, based on {{n}} of your offers",
     "noHistory": "No history yet.",
     "ghostRate": "Ghost rate by source",
     "unknownSource": "Unknown",
