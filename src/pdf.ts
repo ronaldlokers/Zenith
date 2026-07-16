@@ -198,6 +198,106 @@ export function generateCvPdf(data: CvPdfData, labels: CvPdfLabels): jsPDF {
   return doc;
 }
 
+export interface OfferComparisonRow {
+  title: string;
+  companyName: string;
+  currency: string;
+  totalComp: number | null;
+  breakdown: string;
+  benefitsNotes: string | null;
+}
+
+export interface OfferComparisonLabels {
+  heading: string;
+  totalComp: string;
+  breakdown: string;
+  benefits: string;
+  noOffers: string;
+}
+
+// Multi-offer comparison PDF (#222) — ranks offer-stage applications by
+// the same rough total-comp estimate shown in-app (base + signing +
+// bonus target + equity), so a side-by-side isn't a manual spreadsheet
+// re-entry job. One section per offer rather than a rigid grid table
+// (jsPDF ships no table layout engine, and a 4th/5th offer's benefits
+// notes routinely run longer than a fixed cell would fit).
+export function generateOfferComparisonPdf(
+  offers: OfferComparisonRow[],
+  labels: OfferComparisonLabels,
+): jsPDF {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const marginX = 18;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const maxWidth = pageWidth - marginX * 2;
+  const bottomLimit = pageHeight - 18;
+  let y = 20;
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > bottomLimit) {
+      doc.addPage();
+      y = 20;
+    }
+  };
+
+  const addParagraph = (text: string, size: number, lineHeight: number) => {
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(text, maxWidth) as string[];
+    for (const line of lines) {
+      ensureSpace(lineHeight);
+      doc.text(line, marginX, y);
+      y += lineHeight;
+    }
+  };
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text(labels.heading, marginX, y);
+  y += 10;
+
+  if (offers.length === 0) {
+    doc.setFont("helvetica", "normal");
+    addParagraph(labels.noOffers, 11, 6);
+    return doc;
+  }
+
+  const ranked = [...offers].sort(
+    (a, b) => (b.totalComp ?? -1) - (a.totalComp ?? -1),
+  );
+
+  for (const [i, offer] of ranked.entries()) {
+    ensureSpace(16);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text(`${i + 1}. ${offer.companyName} — ${offer.title}`, marginX, y);
+    y += 6.5;
+    doc.setFont("helvetica", "normal");
+
+    if (offer.totalComp != null) {
+      addParagraph(
+        `${labels.totalComp}: ~${offer.currency} ${Math.round(offer.totalComp).toLocaleString()}`,
+        11,
+        5.5,
+      );
+    }
+    if (offer.breakdown) {
+      addParagraph(`${labels.breakdown}: ${offer.breakdown}`, 10, 5);
+    }
+    if (offer.benefitsNotes) {
+      addParagraph(`${labels.benefits}: ${offer.benefitsNotes}`, 10, 5);
+    }
+    y += 4;
+    if (i < ranked.length - 1) {
+      ensureSpace(4);
+      doc.setDrawColor(210);
+      doc.line(marginX, y, pageWidth - marginX, y);
+      y += 5;
+    }
+  }
+
+  return doc;
+}
+
 export interface InterviewCheatSheetLabels {
   contact: string;
   companyResearch: string;
