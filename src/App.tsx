@@ -40,10 +40,6 @@ const PIPELINE: Status[] = [
   "offer",
 ];
 
-function stageLabel(stage: string): string {
-  return stage.charAt(0).toUpperCase() + stage.slice(1);
-}
-
 function isDead(status: Status): boolean {
   return status === "rejected" || status === "withdrawn" || status === "ghosted";
 }
@@ -184,6 +180,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
 }
 
 function StageHistogram({ applications }: { applications: Application[] }) {
+  const { t } = useTranslation();
   const open = applications.filter((a) => !isDead(a.status));
   const max = Math.max(1, ...PIPELINE.map(
     (s) => open.filter((a) => a.status === s).length,
@@ -194,7 +191,7 @@ function StageHistogram({ applications }: { applications: Application[] }) {
         const count = open.filter((a) => a.status === s).length;
         return (
           <div key={s} className={`hrow stage-${s}`}>
-            <span className="lbl">{stageLabel(s)}</span>
+            <span className="lbl">{t(`stages.${s}`)}</span>
             <span className="htrack">
               <span
                 className="hfill"
@@ -515,6 +512,7 @@ function BoardTab({
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
 }) {
+  const { t } = useTranslation();
   const move = (a: Application, status: string) =>
     onStatus(a.id, status as Status);
 
@@ -631,7 +629,7 @@ function BoardTab({
                 >
                   {STATUSES.map((s) => (
                     <option key={s} value={s}>
-                      {s}
+                      {t(`stages.${s}`)}
                     </option>
                   ))}
                 </select>
@@ -639,7 +637,9 @@ function BoardTab({
             ))}
             {cards.length === 0 && (
               <div className="bempty">
-                {stage === "offer" ? "keep pushing" : "empty"}
+                {stage === "offer"
+                  ? t("empty.boardKeepPushing")
+                  : t("empty.boardEmpty")}
               </div>
             )}
           </>
@@ -659,7 +659,7 @@ function BoardTab({
               onDrop={handleDrop}
             >
               <div className="bcol-head">
-                {stage}
+                {t(`stages.${stage}`)}
                 <span className="n">{cards.length}</span>
               </div>
               {cardList}
@@ -683,7 +683,7 @@ function BoardTab({
             onDrop={handleDrop}
           >
             <summary className="bcol-head">
-              {stage}
+              {t(`stages.${stage}`)}
               <span className="n">{cards.length}</span>
             </summary>
             {cardList}
@@ -717,6 +717,7 @@ function Timeline({
   targetId: number;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Interaction[] | null>(null);
   const [form, setForm] = useState({ type: "email", happened_at: today(), notes: "" });
 
@@ -756,9 +757,9 @@ function Timeline({
           onChange={(e) => setForm({ ...form, type: e.target.value })}
           aria-label="Interaction type"
         >
-          {INTERACTION_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          {INTERACTION_TYPES.map((it) => (
+            <option key={it} value={it}>
+              {t(`interactionTypes.${it}`)}
             </option>
           ))}
         </select>
@@ -774,13 +775,13 @@ function Timeline({
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
         />
         <button type="submit" className="primary">
-          Log
+          {t("common.log")}
         </button>
       </form>
       <ul className="tl-items">
         {(items ?? []).map((it) => (
           <li key={it.id}>
-            <span className="tl-type">{it.type}</span>
+            <span className="tl-type">{t(`interactionTypes.${it.type}`)}</span>
             <span className="tl-date">{formatDate(it.happened_at)}</span>
             <span className="tl-notes">
               {it.notes ?? ""}
@@ -788,7 +789,7 @@ function Timeline({
             </span>
             <button
               className="tl-del danger"
-              aria-label="Delete interaction"
+              aria-label={t("common.delete")}
               onClick={() =>
                 api
                   .remove("interactions", it.id)
@@ -801,7 +802,7 @@ function Timeline({
           </li>
         ))}
         {items?.length === 0 && (
-          <li className="tl-empty">No touchpoints logged yet.</li>
+          <li className="tl-empty">{t("detail.noTouchpoints")}</li>
         )}
       </ul>
     </div>
@@ -820,6 +821,7 @@ function Documents({
   applicationId: number;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Document[] | null>(null);
   const [label, setLabel] = useState("");
   const [busy, setBusy] = useState(false);
@@ -859,7 +861,7 @@ function Documents({
           onChange={(e) => setLabel(e.target.value)}
         />
         <label className={`upload-btn${busy ? " busy" : ""}`}>
-          {busy ? "Uploading…" : "Attach file"}
+          {busy ? "Uploading…" : t("detail.attachFile")}
           <input
             type="file"
             hidden
@@ -881,7 +883,7 @@ function Documents({
             <span className="doc-size">{formatSize(d.size)}</span>
             <button
               className="tl-del danger"
-              aria-label="Delete document"
+              aria-label={t("common.delete")}
               onClick={() => {
                 if (confirm(`Delete "${d.filename}"?`))
                   api
@@ -894,7 +896,7 @@ function Documents({
             </button>
           </li>
         ))}
-        {items?.length === 0 && <li className="tl-empty">No files attached.</li>}
+        {items?.length === 0 && <li className="tl-empty">{t("detail.noFiles")}</li>}
       </ul>
     </div>
   );
@@ -925,6 +927,7 @@ function formatComp(a: Application): string {
 }
 
 function StatsTab({ onError }: { onError: (m: string | null) => void }) {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats | null>(null);
   const [fullApps, setFullApps] = useState<Application[] | null>(null);
 
@@ -1011,7 +1014,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
 
   return (
     <section className="stats">
-      <h2 className="stat-h">Applications per week</h2>
+      <h2 className="stat-h">{t("stats.appsPerWeek")}</h2>
       <div className="histo">
         {weeks.map((w) => (
           <div key={w.label} className="hrow" title={`Week of ${w.label}: ${w.count}`}>
@@ -1027,7 +1030,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         ))}
       </div>
 
-      <h2 className="stat-h">Pipeline funnel — applications that reached each stage</h2>
+      <h2 className="stat-h">{t("stats.pipelineFunnel")}</h2>
       <div className="histo">
         {funnel.map((f) => (
           <div
@@ -1035,7 +1038,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
             className={`hrow stage-${f.stage}`}
             title={`${f.count} reached ${f.stage}`}
           >
-            <span className="lbl">{stageLabel(f.stage)}</span>
+            <span className="lbl">{t(`stages.${f.stage}`)}</span>
             <span className="htrack">
               <span
                 className="hfill"
@@ -1047,22 +1050,22 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         ))}
       </div>
 
-      <h2 className="stat-h">Average time in stage</h2>
+      <h2 className="stat-h">{t("stats.avgTimeInStage")}</h2>
       <ul className="stat-list">
         {PIPELINE.filter((s) => stageDays.has(s)).map((s) => {
           const d = stageDays.get(s)!;
           return (
             <li key={s} className={`stage-${s}`}>
               <span className="stat-dot" />
-              <span>{stageLabel(s)}</span>
+              <span>{t(`stages.${s}`)}</span>
               <span className="stat-val">{(d.total / d.n).toFixed(1)}d</span>
             </li>
           );
         })}
-        {stageDays.size === 0 && <li className="tl-empty">No history yet.</li>}
+        {stageDays.size === 0 && <li className="tl-empty">{t("stats.noHistory")}</li>}
       </ul>
 
-      <h2 className="stat-h">Ghost rate by source</h2>
+      <h2 className="stat-h">{t("stats.ghostRate")}</h2>
       <ul className="stat-list">
         {[...bySource.entries()]
           .sort((a, b) => b[1].total - a[1].total)
@@ -1078,7 +1081,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         {bySource.size === 0 && <li className="tl-empty">No applications yet.</li>}
       </ul>
 
-      <h2 className="stat-h">Compare interviews &amp; offers</h2>
+      <h2 className="stat-h">{t("stats.compare")}</h2>
       <div className="compare-wrap">
         <table className="compare-table">
           <thead>
@@ -1112,7 +1115,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         )}
       </div>
 
-      <h2 className="stat-h">Export your data</h2>
+      <h2 className="stat-h">{t("stats.exportData")}</h2>
       <p className="export-links">
         <a href="/api/export" download>
           Everything (JSON)
@@ -1140,6 +1143,7 @@ function FeedSettings({
   onError: (message: string | null) => void;
   notify: (message: string, undo?: () => void) => void;
 }) {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<{
     sources: { source: string; enabled: number; location: string | null }[];
     keywords: { id: number; role_slug: string; keyword: string }[];
@@ -1230,7 +1234,7 @@ function FeedSettings({
 
   return (
     <div className="feed-settings">
-      <h3 className="detail-sub">Role types</h3>
+      <h3 className="detail-sub">{t("feedSettings.roleTypes")}</h3>
       <ul className="settings-list">
         {roleTypes.map((r) => (
           <li key={r.id}>
@@ -1246,16 +1250,16 @@ function FeedSettings({
       </ul>
       <form className="settings-add" onSubmit={addRole}>
         <input
-          placeholder="New role type…"
+          placeholder={t("feedSettings.newRoleType")}
           value={newRoleLabel}
           onChange={(e) => setNewRoleLabel(e.target.value)}
         />
         <button type="submit" className="primary">
-          Add
+          {t("feedSettings.add")}
         </button>
       </form>
 
-      <h3 className="detail-sub">Sources</h3>
+      <h3 className="detail-sub">{t("feedSettings.sources")}</h3>
       <ul className="settings-list">
         {config.sources.map((s) => (
           <li key={s.source} className="source-row">
@@ -1271,7 +1275,9 @@ function FeedSettings({
             </label>
             <input
               placeholder={
-                s.source === "adzuna" ? "country code, e.g. nl" : "location filter"
+                s.source === "adzuna"
+                  ? t("feedSettings.countryCode")
+                  : t("feedSettings.locationFilter")
               }
               defaultValue={s.location ?? ""}
               onBlur={(e) =>
@@ -1282,7 +1288,7 @@ function FeedSettings({
         ))}
       </ul>
 
-      <h3 className="detail-sub">Search keywords per role</h3>
+      <h3 className="detail-sub">{t("feedSettings.searchKeywords")}</h3>
       {roleTypes.map((r) => {
         const kws = config.keywords.filter((k) => k.role_slug === r.slug);
         return (
@@ -1292,13 +1298,16 @@ function FeedSettings({
               {kws.map((k) => (
                 <span key={k.id} className="chip">
                   {k.keyword}
-                  <button onClick={() => removeKeyword(k.id)} aria-label="Remove">
+                  <button
+                    onClick={() => removeKeyword(k.id)}
+                    aria-label={t("feedSettings.removeKeyword")}
+                  >
                     ×
                   </button>
                 </span>
               ))}
               <input
-                placeholder="+ keyword"
+                placeholder={t("feedSettings.keywordPlaceholder")}
                 value={newKeyword[r.slug] ?? ""}
                 onChange={(e) =>
                   setNewKeyword((m) => ({ ...m, [r.slug]: e.target.value }))
@@ -1329,6 +1338,7 @@ function FeedTab({
   roleTypes: RoleTypeDef[];
   onRoleTypesChanged: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -1375,16 +1385,16 @@ function FeedTab({
     <section>
       <div className="toolbar">
         <p className="muted small" style={{ margin: 0 }}>
-          Pulled from Adzuna, HN Who's Hiring, and Arbeitnow every 6 hours.
+          {t("feed.pulledFrom")}
         </p>
         <button
           className="btn-secondary"
           onClick={() => setShowSettings((v) => !v)}
         >
-          {showSettings ? "Hide settings" : "Settings"}
+          {showSettings ? t("feed.hideSettings") : t("feed.settings")}
         </button>
         <button className="primary" disabled={refreshing} onClick={refresh}>
-          {refreshing ? "Checking…" : "Check now"}
+          {refreshing ? t("feed.checking") : t("feed.checkNow")}
         </button>
       </div>
 
@@ -1429,25 +1439,26 @@ function FeedTab({
           </li>
         ))}
         {items?.length === 0 && (
-          <li className="empty">
-            Nothing new. Feed checks automatically every 6 hours, or hit
-            "Check now".
-          </li>
+          <li className="empty">{t("empty.feedNothingNew")}</li>
         )}
       </ul>
     </section>
   );
 }
 
-function agendaText(e: AgendaEntry): string {
+function agendaText(
+  e: AgendaEntry,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
   const where = [e.company_name, e.contact_name].filter(Boolean).join(" · ");
   if (e.kind === "due") {
-    return `${e.label ?? "Follow up"} — ${e.title ?? ""}${where ? ` (${where})` : ""}`;
+    return `${e.label ?? t("agenda.followUp")} — ${e.title ?? ""}${where ? ` (${where})` : ""}`;
   }
   if (e.kind === "interaction") {
-    return `${e.type ? stageLabel(e.type) : "Touchpoint"}${e.title ? ` — ${e.title}` : ""}${where ? ` (${where})` : ""}`;
+    const label = e.type ? t(`interactionTypes.${e.type}`) : t("agenda.touchpoint");
+    return `${label}${e.title ? ` — ${e.title}` : ""}${where ? ` (${where})` : ""}`;
   }
-  return `Applied to ${e.title ?? ""}${where ? ` at ${where}` : ""}`;
+  return `${t("agenda.appliedTo")} ${e.title ?? ""}${where ? ` ${t("agenda.at")} ${where}` : ""}`;
 }
 
 function CalendarTab({
@@ -1457,6 +1468,7 @@ function CalendarTab({
   onError: (message: string | null) => void;
   onJump: (title: string) => void;
 }) {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<AgendaEntry[] | null>(null);
 
   useEffect(() => {
@@ -1501,7 +1513,7 @@ function CalendarTab({
                 className={`agenda-item kind-${e.kind}`}
                 onClick={() => e.title && onJump(e.title)}
               >
-                {agendaText(e)}
+                {agendaText(e, t)}
               </li>
             ))}
           </ul>
@@ -1534,6 +1546,7 @@ function ApplicationDetailModal({
   onDelete: (resource: string, id: number, name: string) => void;
   onStatus: (id: number, status: Status) => void;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const a = application;
 
@@ -1579,7 +1592,7 @@ function ApplicationDetailModal({
                 .update("applications", a.id, data)
                 .then(() => {
                   setEditing(false);
-                  notify("Saved");
+                  notify(t("common.saved"));
                   return onChanged();
                 })
                 .catch((e) => onError((e as Error).message))
@@ -1595,7 +1608,7 @@ function ApplicationDetailModal({
               >
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {t(`stages.${s}`)}
                   </option>
                 ))}
               </select>
@@ -1629,7 +1642,7 @@ function ApplicationDetailModal({
             </div>
 
             <div className="detail-actions">
-              <button onClick={() => setEditing(true)}>Edit</button>
+              <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
               <button
                 className="danger"
                 onClick={() => {
@@ -1637,14 +1650,14 @@ function ApplicationDetailModal({
                   onClose();
                 }}
               >
-                Delete
+                {t("common.delete")}
               </button>
             </div>
 
-            <h3 className="detail-sub">Timeline</h3>
+            <h3 className="detail-sub">{t("detail.timeline")}</h3>
             <Timeline resource="applications" targetId={a.id} onError={onError} />
 
-            <h3 className="detail-sub">Documents</h3>
+            <h3 className="detail-sub">{t("detail.documents")}</h3>
             <Documents applicationId={a.id} onError={onError} />
           </>
         )}
@@ -1654,6 +1667,7 @@ function ApplicationDetailModal({
 }
 
 function NextUpPanel({ applications }: { applications: Application[] }) {
+  const { t } = useTranslation();
   const upcoming = applications
     .filter((a) => a.next_action_at && !isDead(a.status))
     .sort((a, b) => (a.next_action_at ?? "").localeCompare(b.next_action_at ?? ""))
@@ -1661,9 +1675,9 @@ function NextUpPanel({ applications }: { applications: Application[] }) {
 
   return (
     <aside className="jobs-side">
-      <h3 className="side-h">Next up</h3>
+      <h3 className="side-h">{t("nextUp.title")}</h3>
       {upcoming.length === 0 ? (
-        <p className="muted small">No follow-ups scheduled.</p>
+        <p className="muted small">{t("empty.noFollowUps")}</p>
       ) : (
         <ul className="side-list">
           {upcoming.map((a) => (
@@ -1751,7 +1765,7 @@ function ApplicationsTab({
     fn()
       .then(() => {
         setEditing(null);
-        notify("Saved");
+        notify(t("common.saved"));
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
@@ -1840,10 +1854,10 @@ function ApplicationsTab({
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
         >
-          <option value="all">All statuses</option>
+          <option value="all">{t("filters.allStatuses")}</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {t(`stages.${s}`)}
             </option>
           ))}
         </select>
@@ -1851,7 +1865,7 @@ function ApplicationsTab({
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
         >
-          <option value="all">All roles</option>
+          <option value="all">{t("filters.allRoles")}</option>
           {roleTypes.map((r) => (
             <option key={r.slug} value={r.slug}>
               {r.label}
@@ -1862,7 +1876,7 @@ function ApplicationsTab({
           value={companyFilter}
           onChange={(e) => setCompanyFilter(e.target.value)}
         >
-          <option value="all">All companies</option>
+          <option value="all">{t("filters.allCompanies")}</option>
           {companies.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -1873,9 +1887,9 @@ function ApplicationsTab({
           value={sort}
           onChange={(e) => setSort(e.target.value as typeof sort)}
         >
-          <option value="updated">Last updated</option>
-          <option value="applied">Applied date</option>
-          <option value="company">Company name</option>
+          <option value="updated">{t("filters.sortUpdated")}</option>
+          <option value="applied">{t("filters.sortApplied")}</option>
+          <option value="company">{t("filters.sortCompany")}</option>
         </select>
       </div>
 
@@ -1913,7 +1927,7 @@ function ApplicationsTab({
             </div>
             <div className="l2">
               <span className={`pill stage-${a.status}`}>
-                {stageLabel(a.status)}
+                {t(`stages.${a.status}`)}
               </span>
               <span
                 className={`due${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
@@ -1934,7 +1948,7 @@ function ApplicationsTab({
               <circle cx="53.3" cy="42.7" r="7" fill="currentColor" stroke="none" opacity="0.35" />
               <circle cx="72" cy="24" r="11" strokeWidth="5.5" className="accent-stroke" />
             </svg>
-            No jobs yet. Add your first lead and start the climb.
+            {t("empty.noJobs")}
           </li>
         )}
       </ul>
@@ -1976,6 +1990,7 @@ function ApplicationForm({
   onCancel: () => void;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<Partial<Application>>(
     initial ?? { role_type: "other", status: "interested" },
   );
@@ -2106,7 +2121,7 @@ function ApplicationForm({
               disabled={!form.url || importing}
               onClick={importFromUrl}
             >
-              {importing ? "Fetching…" : "Fetch"}
+              {importing ? t("common.fetching") : t("common.fetch")}
             </button>
           </span>
         </label>
@@ -2224,10 +2239,10 @@ function ApplicationForm({
 
       <div className="form-actions">
         <button type="submit" className="primary">
-          Save
+          {t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     </form>
@@ -2241,6 +2256,7 @@ function CompaniesTab({
   notify,
   onDelete,
 }: CrudTabProps & { companies: Company[] }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState<Company | "new" | null>(null);
   const [query, setQuery] = useState("");
   const [detailId, setDetailId] = useState<number | null>(null);
@@ -2259,7 +2275,7 @@ function CompaniesTab({
     fn()
       .then(() => {
         setEditing(null);
-        notify("Saved");
+        notify(t("common.saved"));
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
@@ -2270,12 +2286,12 @@ function CompaniesTab({
         <input
           type="search"
           className="search"
-          placeholder="Search companies…"
+          placeholder={t("toolbar.searchCompanies")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <button className="primary" onClick={() => setEditing("new")}>
-          + Add company
+          {t("toolbar.addCompany")}
         </button>
       </div>
 
@@ -2312,7 +2328,7 @@ function CompaniesTab({
               <span className="due">
                 {c.researched_at
                   ? `researched ${ageDays(c.researched_at)} ago`
-                  : "not researched"}
+                  : t("company.notResearched")}
               </span>
             </div>
           </li>
@@ -2320,8 +2336,8 @@ function CompaniesTab({
         {visible.length === 0 && (
           <li className="empty">
             {companies.length === 0
-              ? "No companies yet. Add the ones you're targeting — applications and contacts link to them."
-              : "No companies match your search."}
+              ? t("empty.noCompanies")
+              : t("empty.noCompaniesMatch")}
           </li>
         )}
       </ul>
@@ -2348,6 +2364,7 @@ function CompanyForm({
   onSubmit: (data: Partial<Company>) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<Partial<Company>>(initial ?? {});
   const set = (patch: Partial<Company>) =>
     setForm((f) => ({ ...f, ...patch }));
@@ -2401,10 +2418,10 @@ function CompanyForm({
       </label>
       <div className="form-actions">
         <button type="submit" className="primary">
-          Save
+          {t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     </form>
@@ -2426,6 +2443,7 @@ function CompanyDetailModal({
   notify: (message: string, undo?: () => void) => void;
   onDelete: (resource: string, id: number, name: string) => void;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [researching, setResearching] = useState(false);
   const c = company;
@@ -2480,7 +2498,7 @@ function CompanyDetailModal({
                 .update("companies", c.id, data)
                 .then(() => {
                   setEditing(false);
-                  notify("Saved");
+                  notify(t("common.saved"));
                   return onChanged();
                 })
                 .catch((e) => onError((e as Error).message))
@@ -2508,9 +2526,9 @@ function CompanyDetailModal({
                 disabled={!c.website || researching}
                 onClick={research}
               >
-                {researching ? "Researching…" : "Research"}
+                {researching ? t("common.researching") : t("common.research")}
               </button>
-              <button onClick={() => setEditing(true)}>Edit</button>
+              <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
               <button
                 className="danger"
                 onClick={() => {
@@ -2518,7 +2536,7 @@ function CompanyDetailModal({
                   onClose();
                 }}
               >
-                Delete
+                {t("common.delete")}
               </button>
             </div>
           </>
@@ -2536,6 +2554,7 @@ function ContactsTab({
   notify,
   onDelete,
 }: CrudTabProps & { contacts: Contact[]; companies: Company[] }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [query, setQuery] = useState("");
   const [detailId, setDetailId] = useState<number | null>(null);
@@ -2554,7 +2573,7 @@ function ContactsTab({
     fn()
       .then(() => {
         setEditing(null);
-        notify("Saved");
+        notify(t("common.saved"));
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
@@ -2565,12 +2584,12 @@ function ContactsTab({
         <input
           type="search"
           className="search"
-          placeholder="Search people…"
+          placeholder={t("toolbar.searchPeople")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         <button className="primary" onClick={() => setEditing("new")}>
-          + Add contact
+          {t("toolbar.addContact")}
         </button>
       </div>
 
@@ -2610,8 +2629,8 @@ function ContactsTab({
         {visible.length === 0 && (
           <li className="empty">
             {contacts.length === 0
-              ? "No people yet. Add recruiters and hiring managers so you can log every touchpoint."
-              : "No people match your search."}
+              ? t("empty.noPeople")
+              : t("empty.noPeopleMatch")}
           </li>
         )}
       </ul>
@@ -2641,6 +2660,7 @@ function ContactForm({
   onSubmit: (data: Partial<Contact>) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<Partial<Contact>>(initial ?? {});
   const set = (patch: Partial<Contact>) =>
     setForm((f) => ({ ...f, ...patch }));
@@ -2719,10 +2739,10 @@ function ContactForm({
       </label>
       <div className="form-actions">
         <button type="submit" className="primary">
-          Save
+          {t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
-          Cancel
+          {t("common.cancel")}
         </button>
       </div>
     </form>
@@ -2746,6 +2766,7 @@ function ContactDetailModal({
   notify: (message: string, undo?: () => void) => void;
   onDelete: (resource: string, id: number, name: string) => void;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const c = contact;
 
@@ -2787,7 +2808,7 @@ function ContactDetailModal({
                 .update("contacts", c.id, data)
                 .then(() => {
                   setEditing(false);
-                  notify("Saved");
+                  notify(t("common.saved"));
                   return onChanged();
                 })
                 .catch((e) => onError((e as Error).message))
@@ -2815,7 +2836,7 @@ function ContactDetailModal({
             </div>
 
             <div className="detail-actions">
-              <button onClick={() => setEditing(true)}>Edit</button>
+              <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
               <button
                 className="danger"
                 onClick={() => {
@@ -2823,11 +2844,11 @@ function ContactDetailModal({
                   onClose();
                 }}
               >
-                Delete
+                {t("common.delete")}
               </button>
             </div>
 
-            <h3 className="detail-sub">Timeline</h3>
+            <h3 className="detail-sub">{t("detail.timeline")}</h3>
             <Timeline resource="contacts" targetId={c.id} onError={onError} />
           </>
         )}

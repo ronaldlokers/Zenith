@@ -17,12 +17,46 @@
   },
   "common": {
     "loading": "Laden…",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "saved": "Opgeslagen",
+    "research": "Onderzoeken",
+    "researching": "Onderzoeken…",
+    "log": "Log",
+    "fetch": "Ophalen",
+    "fetching": "Ophalen…"
   },
   "toolbar": {
     "searchPlaceholder": "Zoek titel, bedrijf, notities… (/)",
     "addJob": "+ Vacature toevoegen",
-    "shortcuts": "Sneltoetsen"
+    "shortcuts": "Sneltoetsen",
+    "searchCompanies": "Zoek bedrijven…",
+    "addCompany": "+ Bedrijf toevoegen",
+    "searchPeople": "Zoek contacten…",
+    "addContact": "+ Contact toevoegen"
+  },
+  "filters": {
+    "allStatuses": "Alle statussen",
+    "allRoles": "Alle rollen",
+    "allCompanies": "Alle bedrijven",
+    "sortUpdated": "Laatst bijgewerkt",
+    "sortApplied": "Sollicitatiedatum",
+    "sortCompany": "Bedrijf"
+  },
+  "empty": {
+    "noJobs": "Nog geen vacatures. Voeg je eerste lead toe en begin de klim.",
+    "noJobsMatch": "Geen vacatures komen overeen met je zoekopdracht.",
+    "noCompanies": "Nog geen bedrijven. Voeg de bedrijven toe waar je op mikt — vacatures en contacten linken hiernaar.",
+    "noCompaniesMatch": "Geen bedrijven komen overeen met je zoekopdracht.",
+    "noPeople": "Nog geen contacten. Voeg recruiters en hiring managers toe om elk contactmoment te loggen.",
+    "noPeopleMatch": "Geen contacten komen overeen met je zoekopdracht.",
+    "boardEmpty": "leeg",
+    "boardKeepPushing": "blijf doorzetten",
+    "noFollowUps": "Geen vervolgacties gepland.",
+    "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op \"Nu controleren\"."
   },
   "shortcuts": {
     "title": "Sneltoetsen",
@@ -39,5 +73,69 @@
     "language": "Taal",
     "languageEn": "English",
     "languageNl": "Nederlands"
+  },
+  "feed": {
+    "pulledFrom": "Opgehaald van Adzuna, HN Who's Hiring en Arbeitnow, elke 6 uur.",
+    "settings": "Instellingen",
+    "hideSettings": "Instellingen verbergen",
+    "checkNow": "Nu controleren",
+    "checking": "Controleren…"
+  },
+  "stats": {
+    "appsPerWeek": "Sollicitaties per week",
+    "pipelineFunnel": "Pipeline-funnel — vacatures die elke fase bereikten",
+    "avgTimeInStage": "Gemiddelde tijd per fase",
+    "noHistory": "Nog geen geschiedenis.",
+    "ghostRate": "Ghost-percentage per bron",
+    "compare": "Vergelijk interviews & aanbiedingen",
+    "exportData": "Exporteer je gegevens"
+  },
+  "detail": {
+    "timeline": "Tijdlijn",
+    "documents": "Documenten",
+    "attachFile": "Bestand bijvoegen",
+    "noFiles": "Geen bestanden bijgevoegd.",
+    "noTouchpoints": "Nog geen contactmomenten gelogd."
+  },
+  "nextUp": {
+    "title": "Binnenkort"
+  },
+  "company": {
+    "notResearched": "niet onderzocht"
+  },
+  "stages": {
+    "interested": "Interesse",
+    "applied": "Gesolliciteerd",
+    "screening": "Screening",
+    "interview": "Gesprek",
+    "offer": "Aanbod",
+    "rejected": "Afgewezen",
+    "withdrawn": "Ingetrokken",
+    "ghosted": "Geen reactie"
+  },
+  "interactionTypes": {
+    "email": "E-mail",
+    "call": "Telefoontje",
+    "message": "Bericht",
+    "interview": "Gesprek",
+    "meeting": "Meeting",
+    "other": "Anders"
+  },
+  "agenda": {
+    "followUp": "Vervolgactie",
+    "touchpoint": "Contactmoment",
+    "appliedTo": "Gesolliciteerd bij",
+    "at": "bij"
+  },
+  "feedSettings": {
+    "roleTypes": "Rollen",
+    "newRoleType": "Nieuwe rol…",
+    "add": "Toevoegen",
+    "sources": "Bronnen",
+    "countryCode": "landcode, bv. nl",
+    "locationFilter": "locatiefilter",
+    "searchKeywords": "Zoekwoorden per rol",
+    "keywordPlaceholder": "+ zoekwoord",
+    "removeKeyword": "Verwijderen"
   }
 }
