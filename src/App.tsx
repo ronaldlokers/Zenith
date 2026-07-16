@@ -357,6 +357,13 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
   );
+  const [shareToken, setShareToken] = useState<string | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+
+  useEffect(() => {
+    api.profile().then((p) => setShareToken(p.share_token));
+  }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -364,6 +371,27 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const shareUrl = shareToken
+    ? `${window.location.origin}/shared/${shareToken}`
+    : null;
+
+  const generateLink = () => {
+    setShareBusy(true);
+    api
+      .generateShareToken()
+      .then((r) => setShareToken(r.share_token))
+      .finally(() => setShareBusy(false));
+  };
+
+  const disableLink = () => {
+    setShareBusy(true);
+    api
+      .revokeShareToken()
+      .then(() => setShareToken(null))
+      .finally(() => setShareBusy(false));
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -402,6 +430,26 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             ))}
           </select>
         </label>
+        <div className="settings-field share-field">
+          <span>{t("settings.shareLink")}</span>
+          {shareUrl ? (
+            <>
+              <input readOnly value={shareUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
+              <div className="share-actions">
+                <button disabled={shareBusy} onClick={generateLink}>
+                  {t("settings.regenerateLink")}
+                </button>
+                <button disabled={shareBusy} className="danger" onClick={disableLink}>
+                  {t("settings.disableLink")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button disabled={shareBusy} onClick={generateLink}>
+              {t("settings.generateLink")}
+            </button>
+          )}
+        </div>
         <button onClick={onClose}>{t("common.close")}</button>
       </div>
     </div>

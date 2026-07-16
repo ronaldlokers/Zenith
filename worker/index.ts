@@ -749,6 +749,149 @@ app.get("/api/stats", async (c) => {
   return c.json({ applications: apps.results, history: history.results });
 });
 
+// --- Public share link (#113) ---
+// A single unauthenticated route gated by an unguessable token, showing
+// aggregate Stats only (no per-application detail, no edit capability).
+// NOTE: this route is reachable by anyone with the token — it must also
+// be excluded from the Cloudflare Access policy that otherwise protects
+// every route in this Worker, which is a dashboard/zone-level change
+// outside this repo and has to be done by whoever administers Access.
+
+app.post("/api/profile/share-token", async (c) => {
+  const token = crypto.randomUUID();
+  await c.env.DB.prepare("UPDATE profile SET share_token = ? WHERE id = 1")
+    .bind(token)
+    .run();
+  return c.json({ share_token: token });
+});
+
+app.delete("/api/profile/share-token", async (c) => {
+  await c.env.DB.prepare("UPDATE profile SET share_token = NULL WHERE id = 1").run();
+  return c.body(null, 204);
+});
+
+const SHARE_PIPELINE = ["interested", "applied", "screening", "interview", "offer"];
+
+function shareParseSqlDate(d: string): number {
+  return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
+}
+
+app.get("/shared/:token", async (c) => {
+  const token = c.req.param("token");
+  const profile = await c.env.DB.prepare(
+    "SELECT id FROM profile WHERE id = 1 AND share_token = ?",
+  )
+    .bind(token)
+    .first();
+  if (!profile) return c.text("Not found", 404);
+
+  const [apps, history] = await Promise.all([
+    c.env.DB.prepare(
+      "SELECT id, status, applied_at, created_at FROM applications",
+    ).all<{ id: number; status: string; applied_at: string | null; created_at: string }>(),
+    c.env.DB.prepare(
+      `SELECT application_id, from_status, to_status, changed_at
+       FROM status_history ORDER BY application_id, changed_at, id`,
+    ).all<{
+      application_id: number;
+      from_status: string | null;
+      to_status: string;
+      changed_at: string;
+    }>(),
+  ]);
+
+  const reachedByApp = new Map<number, number>();
+  for (const row of history.results) {
+    const idx = SHARE_PIPELINE.indexOf(row.to_status);
+    if (idx < 0) continue;
+    const prev = reachedByApp.get(row.application_id) ?? -1;
+    if (idx > prev) reachedByApp.set(row.application_id, idx);
+  }
+  const funnel = SHARE_PIPELINE.map((stage, i) => ({
+    stage,
+    count: [...reachedByApp.values()].filter((r) => r >= i).length,
+  }));
+  const funnelMax = Math.max(1, funnel[0]?.count ?? 0);
+
+  const now = Date.now();
+  const PERIOD = 14 * 86400000;
+  const isForwardMove = (row: (typeof history.results)[number]) => {
+    const toIdx = SHARE_PIPELINE.indexOf(row.to_status);
+    const fromIdx = row.from_status ? SHARE_PIPELINE.indexOf(row.from_status) : -1;
+    return toIdx >= 0 && toIdx > fromIdx;
+  };
+  const recentMoves = history.results.filter(
+    (h) => isForwardMove(h) && shareParseSqlDate(h.changed_at) >= now - PERIOD,
+  ).length;
+  const priorMoves = history.results.filter(
+    (h) =>
+      isForwardMove(h) &&
+      shareParseSqlDate(h.changed_at) >= now - 2 * PERIOD &&
+      shareParseSqlDate(h.changed_at) < now - PERIOD,
+  ).length;
+  let momentum = "Steady";
+  if (recentMoves === 0 && priorMoves === 0) momentum = "No recent activity";
+  else if (priorMoves === 0) momentum = "Speeding up";
+  else {
+    const change = (recentMoves - priorMoves) / priorMoves;
+    momentum = change > 0.15 ? "Speeding up" : change < -0.15 ? "Slowing down" : "Steady";
+  }
+
+  const totalOpen = apps.results.filter(
+    (a) => !["rejected", "withdrawn", "ghosted"].includes(a.status),
+  ).length;
+
+  const rows = funnel
+    .map(
+      (f) => `
+      <div class="row">
+        <span class="lbl">${f.stage}</span>
+        <span class="track"><span class="fill" style="width:${(f.count / funnelMax) * 100}%"></span></span>
+        <span class="n">${f.count}</span>
+      </div>`,
+    )
+    .join("");
+
+  const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>JobSeekr — shared pipeline</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; background: #101318; color: #e8ebef; margin: 0; padding: 2rem 1.25rem; }
+  .wrap { max-width: 32rem; margin: 0 auto; }
+  h1 { font-size: 1.1rem; font-weight: 600; margin: 0 0 1.5rem; }
+  .momentum { padding: 0.9rem 1rem; margin-bottom: 1.5rem; border-radius: 10px; border: 1px solid #232935; background: #171b22; }
+  .momentum-label { display:block; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6d7684; }
+  .momentum-value { font-size: 1.3rem; font-weight: 700; }
+  .open-count { color: #8b95a5; font-size: 0.85rem; margin-bottom: 1.5rem; display: block; }
+  .row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; font-size: 0.8rem; }
+  .lbl { width: 5.5rem; text-transform: capitalize; color: #8b95a5; }
+  .track { flex: 1; height: 8px; background: #262d3a; border-radius: 4px; overflow: hidden; }
+  .fill { display: block; height: 100%; background: #2dd4bf; }
+  .n { width: 1.5rem; text-align: right; }
+  footer { margin-top: 2rem; font-size: 0.72rem; color: #6d7684; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Shared pipeline</h1>
+    <div class="momentum">
+      <span class="momentum-label">Pipeline momentum</span>
+      <span class="momentum-value">${momentum}</span>
+    </div>
+    <span class="open-count">${totalOpen} open applications</span>
+    ${rows}
+    <footer>Read-only view — no application details, no editing. Powered by JobSeekr.</footer>
+  </div>
+</body>
+</html>`;
+
+  return c.html(html);
+});
+
 // --- Documents (R2) ---
 
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;

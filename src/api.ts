@@ -162,4 +162,10 @@ export const api = {
       `/api/applications/${id}/unarchive`,
       { method: "POST" },
     ),
+  generateShareToken: () =>
+    request<{ share_token: string }>("/api/profile/share-token", {
+      method: "POST",
+    }),
+  revokeShareToken: () =>
+    request<void>("/api/profile/share-token", { method: "DELETE" }),
 };
