@@ -1729,21 +1729,27 @@ function ApplicationDetailModal({
         ) : (
           <>
             <div className="detail-fields">
-              <select
-                className={`status stage-${a.status}`}
-                value={a.status}
-                onChange={(e) => onStatus(a.id, e.target.value as Status)}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {t(`stages.${s}`)}
-                  </option>
-                ))}
-              </select>
-              <span className="muted small">
-                {roleTypes.find((r) => r.slug === a.role_type)?.label ??
-                  a.role_type}
-              </span>
+              <div>
+                <span className="field-label">{t("detail.status")}</span>
+                <select
+                  className={`status stage-${a.status}`}
+                  value={a.status}
+                  onChange={(e) => onStatus(a.id, e.target.value as Status)}
+                >
+                  {STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {t(`stages.${s}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <span className="field-label">{t("detail.role")}</span>
+                <span className="muted small">
+                  {roleTypes.find((r) => r.slug === a.role_type)?.label ??
+                    a.role_type}
+                </span>
+              </div>
               {safeHref(a.url) && (
                 <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
                   Job posting ↗
@@ -2777,8 +2783,18 @@ function CompanyDetailModal({
                   {c.website}
                 </a>
               )}
-              {c.description && <p className="notes">{c.description}</p>}
-              {c.notes && <p className="notes">{c.notes}</p>}
+              {c.description && (
+                <div>
+                  <span className="field-label">{t("detail.description")}</span>
+                  <p className="notes">{c.description}</p>
+                </div>
+              )}
+              {c.notes && (
+                <div>
+                  <span className="field-label">{t("detail.notes")}</span>
+                  <p className="notes">{c.notes}</p>
+                </div>
+              )}
               {c.researched_at && (
                 <span className="age">
                   researched {ageDays(c.researched_at)} ago

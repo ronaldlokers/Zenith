@@ -96,7 +96,11 @@
     "documents": "Documenten",
     "attachFile": "Bestand bijvoegen",
     "noFiles": "Geen bestanden bijgevoegd.",
-    "noTouchpoints": "Nog geen contactmomenten gelogd."
+    "noTouchpoints": "Nog geen contactmomenten gelogd.",
+    "status": "Status",
+    "role": "Rol",
+    "description": "Omschrijving",
+    "notes": "Notities"
   },
   "nextUp": {
     "title": "Binnenkort"
