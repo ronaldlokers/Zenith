@@ -167,3 +167,52 @@ export interface Application {
   created_at: string;
   updated_at: string;
 }
+
+export interface Profile {
+  id: 1;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  linkedin: string | null;
+  github: string | null;
+  portfolio: string | null;
+  summary: string | null;
+}
+
+export interface Skill {
+  id: number;
+  name: string;
+}
+
+export interface WorkExperience {
+  id: number;
+  company: string;
+  title: string;
+  description: string | null;
+  start_month: number | null;
+  start_year: number | null;
+  end_month: number | null;
+  end_year: number | null;
+  is_current: number;
+  sort_order: number;
+  skills: Skill[];
+}
+
+export interface Education {
+  id: number;
+  institution: string;
+  degree: string | null;
+  field: string | null;
+  start_month: number | null;
+  start_year: number | null;
+  end_month: number | null;
+  end_year: number | null;
+  sort_order: number;
+}
+
+export interface Language {
+  id: number;
+  name: string;
+  proficiency: "conversational" | "fluent" | "native";
+}

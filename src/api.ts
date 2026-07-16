@@ -126,4 +126,21 @@ export const api = {
     }
     return res.json() as Promise<import("./types").Document>;
   },
+  profile: () => request<import("./types").Profile>("/api/profile"),
+  updateProfile: (data: Partial<import("./types").Profile>) =>
+    request<import("./types").Profile>("/api/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  skills: () => request<import("./types").Skill[]>("/api/skills"),
+  addWorkExperienceSkill: (workExperienceId: number, name: string) =>
+    request<import("./types").Skill>(
+      `/api/work-experience/${workExperienceId}/skills`,
+      { method: "POST", body: JSON.stringify({ name }) },
+    ),
+  removeWorkExperienceSkill: (workExperienceId: number, skillId: number) =>
+    request<void>(
+      `/api/work-experience/${workExperienceId}/skills/${skillId}`,
+      { method: "DELETE" },
+    ),
 };

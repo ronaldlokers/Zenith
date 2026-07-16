@@ -6,7 +6,8 @@
     "calendar": "Calendar",
     "stats": "Stats",
     "companies": "Companies",
-    "people": "People"
+    "people": "People",
+    "cv": "CV"
   },
   "header": {
     "openCount_one": "{{count}} open",
@@ -126,6 +127,44 @@
     "touchpoint": "Touchpoint",
     "appliedTo": "Applied to",
     "at": "at"
+  },
+  "cv": {
+    "profile": "Profile",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "linkedin": "LinkedIn",
+    "github": "GitHub",
+    "portfolio": "Portfolio",
+    "summary": "Summary",
+    "workExperience": "Work experience",
+    "company": "Company",
+    "jobTitle": "Title",
+    "startMonth": "Start month",
+    "startYear": "Start year",
+    "endMonth": "End month",
+    "endYear": "End year",
+    "current": "Current role",
+    "present": "Present",
+    "description": "Description",
+    "addSkill": "+ skill",
+    "addWorkExperience": "+ Add work experience",
+    "noWorkExperience": "No work experience added yet.",
+    "education": "Education",
+    "institution": "Institution",
+    "degree": "Degree",
+    "field": "Field of study",
+    "addEducation": "+ Add education",
+    "noEducation": "No education added yet.",
+    "languages": "Languages",
+    "languageName": "Language",
+    "noLanguages": "No languages added yet.",
+    "proficiency": {
+      "conversational": "Conversational",
+      "fluent": "Fluent",
+      "native": "Native"
+    }
   },
   "posting": {
     "staleBadge": "gone?",

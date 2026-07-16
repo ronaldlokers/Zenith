@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { checkStalePostings } from "./posting-check.js";
+import { registerCvRoutes } from "./cv.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -728,6 +729,7 @@ app.delete("/api/documents/:id", async (c) => {
 
 registerFeedRoutes(app);
 registerRoleTypeRoutes(app);
+registerCvRoutes(app);
 
 app.notFound((c) => c.json({ error: "not found" }, 404));
 

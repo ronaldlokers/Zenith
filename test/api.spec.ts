@@ -610,3 +610,98 @@ describe("feed config", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("cv builder", () => {
+  it("profile is a singleton that starts empty and can be updated", async () => {
+    const initial = await SELF.fetch(`${BASE}/api/profile`);
+    const profile = (await initial.json()) as { id: number; name: string | null };
+    expect(profile.id).toBe(1);
+    expect(profile.name).toBeNull();
+
+    const updated = await SELF.fetch(`${BASE}/api/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Ronald", email: "ronald@example.com" }),
+    });
+    expect(updated.status).toBe(200);
+    const saved = (await updated.json()) as { name: string; email: string };
+    expect(saved.name).toBe("Ronald");
+    expect(saved.email).toBe("ronald@example.com");
+  });
+
+  it("creates work experience, reuses skills by name, and lists them joined", async () => {
+    const created = await post("/api/work-experience", {
+      company: "Vandelay Industries",
+      title: "Platform Engineer",
+      start_month: 3,
+      start_year: 2021,
+      is_current: true,
+    });
+    expect(created.status).toBe(201);
+    const work = (await created.json()) as { id: number; skills: unknown[] };
+    expect(work.skills).toEqual([]);
+
+    const skill1 = await post(`/api/work-experience/${work.id}/skills`, {
+      name: "TypeScript",
+    });
+    expect(skill1.status).toBe(201);
+    const s1 = (await skill1.json()) as { id: number; name: string };
+
+    // Re-adding the same name (different case) reuses the existing skill
+    const skill2 = await post(`/api/work-experience/${work.id}/skills`, {
+      name: "typescript",
+    });
+    const s2 = (await skill2.json()) as { id: number };
+    expect(s2.id).toBe(s1.id);
+
+    const list = await SELF.fetch(`${BASE}/api/work-experience`);
+    const items = (await list.json()) as {
+      id: number;
+      skills: { id: number; name: string }[];
+    }[];
+    const found = items.find((w) => w.id === work.id);
+    expect(found?.skills.map((s) => s.name)).toEqual(["TypeScript"]);
+
+    const removed = await SELF.fetch(
+      `${BASE}/api/work-experience/${work.id}/skills/${s1.id}`,
+      { method: "DELETE" },
+    );
+    expect(removed.status).toBe(204);
+  });
+
+  it("validates required fields for work experience, education, languages", async () => {
+    expect((await post("/api/work-experience", {})).status).toBe(400);
+    expect((await post("/api/education", {})).status).toBe(400);
+    expect((await post("/api/languages", { name: "Dutch" })).status).toBe(400);
+  });
+
+  it("creates and deletes education and languages", async () => {
+    const edu = await post("/api/education", {
+      institution: "TU Delft",
+      degree: "MSc",
+      field: "Computer Science",
+      start_year: 2010,
+      end_year: 2014,
+    });
+    expect(edu.status).toBe(201);
+    const eduBody = (await edu.json()) as { id: number };
+    const eduDeleted = await SELF.fetch(
+      `${BASE}/api/education/${eduBody.id}`,
+      { method: "DELETE" },
+    );
+    expect(eduDeleted.status).toBe(204);
+
+    const lang = await post("/api/languages", {
+      name: "Dutch",
+      proficiency: "native",
+    });
+    expect(lang.status).toBe(201);
+    const langBody = (await lang.json()) as { id: number; proficiency: string };
+    expect(langBody.proficiency).toBe("native");
+    const langDeleted = await SELF.fetch(
+      `${BASE}/api/languages/${langBody.id}`,
+      { method: "DELETE" },
+    );
+    expect(langDeleted.status).toBe(204);
+  });
+});
