@@ -103,6 +103,7 @@
     "role": "Rol",
     "description": "Omschrijving",
     "notes": "Notities",
+    "deadline": "Deadline",
     "keywordMatch": "Trefwoorden-check",
     "pasteJdPlaceholder": "Plak de vacaturetekst om te vergelijken met je CV-vaardigheden…",
     "keywordMatchCount": "Je CV noemt {{matched}} van de {{total}} trefwoorden uit deze vacature"

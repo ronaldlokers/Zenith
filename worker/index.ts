@@ -197,8 +197,8 @@ app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, deadline_at, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
       body.company_id ?? null,
@@ -213,6 +213,7 @@ app.post("/api/applications", async (c) => {
       body.applied_at ?? null,
       body.next_action ?? null,
       body.next_action_at ?? null,
+      body.deadline_at ?? null,
       body.salary_currency ?? null,
       body.salary_min ?? null,
       body.salary_max ?? null,
@@ -245,6 +246,7 @@ app.put("/api/applications/:id", async (c) => {
     `UPDATE applications
      SET company_id = ?, contact_id = ?, title = ?, role_type = ?, url = ?, source = ?,
          salary_range = ?, status = ?, notes = ?, applied_at = ?, next_action = ?, next_action_at = ?,
+         deadline_at = ?,
          salary_currency = ?, salary_min = ?, salary_max = ?, salary_period = ?,
          signing_bonus = ?, bonus_target_pct = ?, equity_value = ?, benefits_notes = ?,
          referred_by_contact_id = ?,
@@ -264,6 +266,7 @@ app.put("/api/applications/:id", async (c) => {
       body.applied_at ?? null,
       body.next_action ?? null,
       body.next_action_at ?? null,
+      body.deadline_at ?? null,
       body.salary_currency ?? null,
       body.salary_min ?? null,
       body.salary_max ?? null,
