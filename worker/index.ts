@@ -404,9 +404,10 @@ app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const userId = c.get("userId");
+  const jobDescription = body.job_description ?? null;
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (user_id, company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, cover_letter, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (user_id, company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, cover_letter, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id, job_description, job_description_captured_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
   )
     .bind(
       userId,
@@ -434,6 +435,8 @@ app.post("/api/applications", async (c) => {
       body.equity_value ?? null,
       body.benefits_notes ?? null,
       body.referred_by_contact_id ?? null,
+      jobDescription,
+      jobDescription ? new Date().toISOString() : null,
     )
     .first();
   await c.env.DB.prepare(
@@ -471,11 +474,22 @@ app.put("/api/applications/:id", async (c) => {
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const userId = c.get("userId");
   const existing = await c.env.DB.prepare(
-    "SELECT status FROM applications WHERE id = ? AND user_id = ?",
+    "SELECT status, job_description, job_description_captured_at FROM applications WHERE id = ? AND user_id = ?",
   )
     .bind(c.req.param("id"), userId)
-    .first<{ status: string }>();
+    .first<{
+      status: string;
+      job_description: string | null;
+      job_description_captured_at: string | null;
+    }>();
   if (!existing) return c.json({ error: "not found" }, 404);
+  // A snapshot is captured once, the first time job_description goes
+  // from empty to non-empty — later edits to the text don't re-stamp
+  // the capture date, since the point is recording what was applied to.
+  const jobDescription = body.job_description ?? existing.job_description;
+  const jobDescriptionCapturedAt =
+    existing.job_description_captured_at ??
+    (jobDescription ? new Date().toISOString() : null);
   const result = await c.env.DB.prepare(
     `UPDATE applications
      SET company_id = ?, contact_id = ?, title = ?, role_type = ?, url = ?, source = ?,
@@ -483,7 +497,7 @@ app.put("/api/applications/:id", async (c) => {
          deadline_at = ?, fit_score = ?, cover_letter = ?,
          salary_currency = ?, salary_min = ?, salary_max = ?, salary_period = ?,
          signing_bonus = ?, bonus_target_pct = ?, equity_value = ?, benefits_notes = ?,
-         referred_by_contact_id = ?,
+         referred_by_contact_id = ?, job_description = ?, job_description_captured_at = ?,
          updated_at = datetime('now')
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
@@ -512,6 +526,8 @@ app.put("/api/applications/:id", async (c) => {
       body.equity_value ?? null,
       body.benefits_notes ?? null,
       body.referred_by_contact_id ?? null,
+      jobDescription,
+      jobDescriptionCapturedAt,
       c.req.param("id"),
       userId,
     )
