@@ -1242,6 +1242,29 @@ select.status {
   }
 }
 
+/* Board's columns already fill the full grid width at >=900px, so
+   there's no room for a side panel the way Jobs got one — the actual
+   wasted space is vertical, below short columns. A summary strip
+   below the grid uses that instead (#93). */
+.board-summary {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .board-summary {
+    display: block;
+    margin-top: 1.5rem;
+    max-width: 22rem;
+  }
+
+  /* NextUpPanel's .jobs-side is display:none outside the >=1100px
+     Jobs layout — override here since Board shows it at its own,
+     wider-columns breakpoint instead. */
+  .board-summary .jobs-side {
+    display: block;
+  }
+}
+
 .bcol-head {
   display: flex;
   align-items: center;
@@ -1491,12 +1514,22 @@ summary.bcol-head::after {
   display: none;
 }
 
+.cv-layout {
+  display: block;
+}
+
+.cv-main {
+  min-width: 0;
+}
+
 @media (min-width: 1100px) {
-  .app:has(.jobs-layout) {
+  .app:has(.jobs-layout),
+  .app:has(.cv-layout) {
     max-width: 1100px;
   }
 
-  .jobs-layout {
+  .jobs-layout,
+  .cv-layout {
     display: grid;
     grid-template-columns: 2.2fr 1fr;
     gap: 1.25rem;
@@ -1540,7 +1573,10 @@ summary.bcol-head::after {
   display: flex;
   flex-direction: column;
   gap: 0.05rem;
-  border-left: 3px solid var(--sc);
+  /* Fallback for rows with no stage class (e.g. CV completeness) —
+     --sc unresolved would otherwise drop the whole declaration, same
+     bug fixed for .card.row2 in #76. */
+  border-left: 3px solid var(--sc, var(--accent));
   padding: 0.15rem 0 0.15rem 0.6rem;
 }
 

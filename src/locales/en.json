@@ -134,6 +134,7 @@
   },
   "cv": {
     "downloadPdf": "Download PDF",
+    "completeness": "At a glance",
     "skills": "Skills",
     "template": "Template",
     "templateSingle": "ATS-friendly (single column)",
