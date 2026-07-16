@@ -842,6 +842,71 @@ function MomentumStreak({
   );
 }
 
+// Weekly application goal (#224) — a personal target next to the
+// momentum streak. Persisted client-side like the density/theme
+// toggles elsewhere in this app, since it's a display preference, not
+// data that needs to sync across devices or show up in exports.
+const WEEKLY_GOAL_KEY = "jobseekr_weekly_goal";
+
+function WeeklyGoal({ thisWeekCount }: { thisWeekCount: number }) {
+  const { t } = useTranslation();
+  const [goal, setGoal] = useState(() =>
+    Number(localStorage.getItem(WEEKLY_GOAL_KEY) ?? 5),
+  );
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(goal));
+
+  const save = () => {
+    const n = Math.max(1, Math.round(Number(draft)) || goal);
+    setGoal(n);
+    localStorage.setItem(WEEKLY_GOAL_KEY, String(n));
+    setEditing(false);
+  };
+
+  const pct = Math.min(100, Math.round((thisWeekCount / goal) * 100));
+  const met = thisWeekCount >= goal;
+
+  return (
+    <div className={`weekly-goal${met ? " met" : ""}`}>
+      <span className="weekly-goal-label">
+        {t("stats.weeklyGoal.progress", { count: thisWeekCount, goal })}
+      </span>
+      <span className="htrack">
+        <span
+          className="hfill accent-fill"
+          style={{ width: `${pct}%`, display: "block" }}
+        />
+      </span>
+      {editing ? (
+        <span className="weekly-goal-edit">
+          <input
+            type="number"
+            min={1}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && save()}
+            autoFocus
+          />
+          <button className="primary" onClick={save}>
+            {t("common.save")}
+          </button>
+        </span>
+      ) : (
+        <button
+          type="button"
+          className="btn-secondary weekly-goal-btn"
+          onClick={() => {
+            setDraft(String(goal));
+            setEditing(true);
+          }}
+        >
+          {t("stats.weeklyGoal.edit")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Milestone/wins journal (#225) — a personal log of small wins (good
 // feedback, a strong interview, a callback) that don't necessarily map
 // to a pipeline status change worth recording on an application.
@@ -2269,6 +2334,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
       </div>
 
       <MomentumStreak streak={streak} broken={streakBroken} />
+
+      <WeeklyGoal thisWeekCount={weeks[weeks.length - 1].count} />
 
       <WinsJournal onError={onError} />
 

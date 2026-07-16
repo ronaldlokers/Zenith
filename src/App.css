@@ -1519,6 +1519,49 @@ select.status {
   margin: 0.3rem 0 0;
 }
 
+.weekly-goal {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1.2rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.weekly-goal .htrack {
+  flex: 1;
+}
+
+.weekly-goal-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.weekly-goal.met .weekly-goal-label {
+  color: var(--st-offer);
+  font-weight: 600;
+}
+
+.weekly-goal-btn {
+  white-space: nowrap;
+}
+
+.weekly-goal-edit {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.weekly-goal-edit input {
+  width: 3.5rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
 /* Agenda / calendar */
 .agenda {
   margin-top: 0.75rem;

@@ -119,6 +119,10 @@
       "brokenTitle": "Geen activiteit deze week",
       "brokenBody": "Geen probleem — een zoektocht naar een baan verloopt niet lineair. Je resultaten tot nu toe blijven gewoon staan, pak het weer op wanneer je er klaar voor bent."
     },
+    "weeklyGoal": {
+      "progress": "{{count}} van {{goal}} sollicitaties deze week",
+      "edit": "Doel instellen"
+    },
     "journal": {
       "title": "Overwinningen",
       "placeholder": "Leg een kleine overwinning vast — goede feedback, een sterk gesprek…",
