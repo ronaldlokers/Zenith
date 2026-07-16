@@ -366,5 +366,10 @@
     "recentActivity": "Recente activiteit",
     "noActivity": "Nog niets — voeg je eerste vacature toe om te beginnen.",
     "viewAllJobs": "Bekijk alle vacatures"
+  },
+  "jobs": {
+    "density": "Rijdichtheid",
+    "densityComfortable": "Comfortabel",
+    "densityCompact": "Compact"
   }
 }

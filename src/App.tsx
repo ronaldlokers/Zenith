@@ -3616,6 +3616,21 @@ function ApplicationsTab({
   const [showArchived, setShowArchived] = useState(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState(initialQuery ?? "");
+  // Compact density (#209) — persisted like the Companies view toggle
+  // (#132), lets a long Jobs list trade the 2-line row for a tighter
+  // 1-line one without losing the detail-modal round trip for anything
+  // that doesn't fit.
+  const [density, setDensity] = useState<"comfortable" | "compact">(
+    () =>
+      (localStorage.getItem("jobseekr_jobs_density") as
+        | "comfortable"
+        | "compact"
+        | null) ?? "comfortable",
+  );
+  const setDensityAndPersist = (d: "comfortable" | "compact") => {
+    setDensity(d);
+    localStorage.setItem("jobseekr_jobs_density", d);
+  };
   const [sort, setSort] = useState<"updated" | "applied" | "company">(
     "updated",
   );
@@ -3854,6 +3869,20 @@ function ApplicationsTab({
         >
           ?
         </button>
+        <div className="board-group-toggle" role="group" aria-label={t("jobs.density")}>
+          <button
+            className={density === "comfortable" ? "active" : ""}
+            onClick={() => setDensityAndPersist("comfortable")}
+          >
+            {t("jobs.densityComfortable")}
+          </button>
+          <button
+            className={density === "compact" ? "active" : ""}
+            onClick={() => setDensityAndPersist("compact")}
+          >
+            {t("jobs.densityCompact")}
+          </button>
+        </div>
       </div>
       <div className="filters">
         <select
@@ -3961,7 +3990,7 @@ function ApplicationsTab({
         />
       )}
 
-      <ul className="cards">
+      <ul className={`cards${density === "compact" ? " compact" : ""}`}>
         {visible.map((a, i) => (
           <li
             key={a.id}
