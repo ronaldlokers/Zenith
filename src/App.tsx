@@ -218,6 +218,123 @@ function getCvLanguage(fallback: string): string {
   return localStorage.getItem(CV_LANG_KEY) || fallback;
 }
 
+function CommandPalette({
+  applications,
+  companies,
+  contacts,
+  onClose,
+  onJumpToApplication,
+  onJumpToCompany,
+  onJumpToContact,
+}: {
+  applications: Application[];
+  companies: Company[];
+  contacts: Contact[];
+  onClose: () => void;
+  onJumpToApplication: (id: number) => void;
+  onJumpToCompany: (name: string) => void;
+  onJumpToContact: (name: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const matchedApps = q
+    ? applications.filter((a) => a.title.toLowerCase().includes(q)).slice(0, 6)
+    : [];
+  const matchedCompanies = q
+    ? companies.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6)
+    : [];
+  const matchedContacts = q
+    ? contacts.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6)
+    : [];
+  const empty =
+    q && !matchedApps.length && !matchedCompanies.length && !matchedContacts.length;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="modal command-palette"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-label={t("palette.title")}
+      >
+        <input
+          ref={inputRef}
+          type="search"
+          className="palette-input"
+          placeholder={t("palette.placeholder")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {q && (
+          <div className="palette-results">
+            {matchedApps.length > 0 && (
+              <div className="palette-group">
+                <span className="palette-group-label">{t("tabs.jobs")}</span>
+                {matchedApps.map((a) => (
+                  <button
+                    key={a.id}
+                    className="palette-item"
+                    onClick={() => onJumpToApplication(a.id)}
+                  >
+                    {a.title}
+                    {a.company_name ? (
+                      <span className="muted small"> — {a.company_name}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            )}
+            {matchedCompanies.length > 0 && (
+              <div className="palette-group">
+                <span className="palette-group-label">{t("tabs.companies")}</span>
+                {matchedCompanies.map((c) => (
+                  <button
+                    key={c.id}
+                    className="palette-item"
+                    onClick={() => onJumpToCompany(c.name)}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {matchedContacts.length > 0 && (
+              <div className="palette-group">
+                <span className="palette-group-label">{t("tabs.people")}</span>
+                {matchedContacts.map((c) => (
+                  <button
+                    key={c.id}
+                    className="palette-item"
+                    onClick={() => onJumpToContact(c.name)}
+                  >
+                    {c.name}
+                    {c.company_name ? (
+                      <span className="muted small"> — {c.company_name}</span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            )}
+            {empty && <p className="muted small">{t("palette.noResults")}</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SettingsModal({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const [cvLang, setCvLang] = useState(() =>
@@ -323,6 +440,18 @@ export default function App() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [jumpQuery, setJumpQuery] = useState("");
+  const [showPalette, setShowPalette] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowPalette((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const reload = useCallback(async () => {
     try {
@@ -446,6 +575,28 @@ export default function App() {
     <div className="app">
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+      {showPalette && (
+        <CommandPalette
+          applications={activeApps}
+          companies={visibleCompanies}
+          contacts={visibleContacts}
+          onClose={() => setShowPalette(false)}
+          onJumpToApplication={(id) => {
+            navigate(`/jobs/${id}`);
+            setShowPalette(false);
+          }}
+          onJumpToCompany={(name) => {
+            setJumpQuery(name);
+            setTab("companies");
+            setShowPalette(false);
+          }}
+          onJumpToContact={(name) => {
+            setJumpQuery(name);
+            setTab("contacts");
+            setShowPalette(false);
+          }}
+        />
       )}
       <header className="header">
         <div className="brand">
@@ -589,6 +740,7 @@ export default function App() {
                 onError={setError}
                 notify={notify}
                 onDelete={deleteWithUndo}
+                initialQuery={jumpQuery}
               />
             )}
             {tab === "contacts" && (
@@ -599,6 +751,7 @@ export default function App() {
                 onError={setError}
                 notify={notify}
                 onDelete={deleteWithUndo}
+                initialQuery={jumpQuery}
               />
             )}
             {tab === "cv" && <CVTab onError={setError} notify={notify} />}
@@ -2882,10 +3035,15 @@ function CompaniesTab({
   onError,
   notify,
   onDelete,
-}: CrudTabProps & { companies: Company[]; applications: Application[] }) {
+  initialQuery,
+}: CrudTabProps & {
+  companies: Company[];
+  applications: Application[];
+  initialQuery?: string;
+}) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Company | "new" | null>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [detailId, setDetailId] = useState<number | null>(null);
   const detailCompany = companies.find((c) => c.id === detailId) ?? null;
 
@@ -3204,10 +3362,15 @@ function ContactsTab({
   onError,
   notify,
   onDelete,
-}: CrudTabProps & { contacts: Contact[]; companies: Company[] }) {
+  initialQuery,
+}: CrudTabProps & {
+  contacts: Contact[];
+  companies: Company[];
+  initialQuery?: string;
+}) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [detailId, setDetailId] = useState<number | null>(null);
   const detailContact = contacts.find((c) => c.id === detailId) ?? null;
 

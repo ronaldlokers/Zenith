@@ -95,6 +95,11 @@
     "compare": "Compare interviews & offers",
     "exportData": "Export your data"
   },
+  "palette": {
+    "title": "Jump to…",
+    "placeholder": "Search jobs, companies, people… (⌘K)",
+    "noResults": "No matches."
+  },
   "bulk": {
     "selectedCount_one": "{{count}} selected",
     "selectedCount_other": "{{count}} selected",
