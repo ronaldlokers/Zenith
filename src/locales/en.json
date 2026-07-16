@@ -319,7 +319,9 @@
     "locationFilter": "location filter",
     "searchKeywords": "Search keywords per role",
     "keywordPlaceholder": "+ keyword",
-    "removeKeyword": "Remove"
+    "removeKeyword": "Remove",
+    "blocklist": "Blocked companies",
+    "blocklistPlaceholder": "+ company name…"
   },
   "login": {
     "subtitle": "Sign in to your pipeline",

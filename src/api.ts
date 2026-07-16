@@ -97,6 +97,15 @@ export const api = {
     request<import("./types").Application>(`/api/feed/${id}/add`, {
       method: "POST",
     }),
+  feedBlocklist: () =>
+    request<{ id: number; company: string }[]>("/api/feed/blocklist"),
+  blockFeedCompany: (company: string) =>
+    request<{ id: number; company: string }>("/api/feed/blocklist", {
+      method: "POST",
+      body: JSON.stringify({ company }),
+    }),
+  unblockFeedCompany: (id: number) =>
+    request<void>(`/api/feed/blocklist/${id}`, { method: "DELETE" }),
   importUrl: (url: string) =>
     request<import("./types").ImportResult>(
       `/api/import?url=${encodeURIComponent(url)}`,

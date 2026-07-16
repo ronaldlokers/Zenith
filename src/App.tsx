@@ -2287,6 +2287,10 @@ function FeedSettings({
   } | null>(null);
   const [newRoleLabel, setNewRoleLabel] = useState("");
   const [newKeyword, setNewKeyword] = useState<Record<string, string>>({});
+  const [blocklist, setBlocklist] = useState<
+    { id: number; company: string }[] | null
+  >(null);
+  const [newBlockedCompany, setNewBlockedCompany] = useState("");
 
   const loadConfig = useCallback(
     () =>
@@ -2297,9 +2301,39 @@ function FeedSettings({
     [onError],
   );
 
+  const loadBlocklist = useCallback(
+    () =>
+      api
+        .feedBlocklist()
+        .then(setBlocklist)
+        .catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+
   useEffect(() => {
     loadConfig();
-  }, [loadConfig]);
+    loadBlocklist();
+  }, [loadConfig, loadBlocklist]);
+
+  const addBlockedCompany = (e: FormEvent) => {
+    e.preventDefault();
+    const company = newBlockedCompany.trim();
+    if (!company) return;
+    api
+      .blockFeedCompany(company)
+      .then(() => {
+        setNewBlockedCompany("");
+        return loadBlocklist();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const removeBlockedCompany = (id: number) => {
+    api
+      .unblockFeedCompany(id)
+      .then(loadBlocklist)
+      .catch((e) => onError((e as Error).message));
+  };
 
   const addRole = (e: FormEvent) => {
     e.preventDefault();
@@ -2460,6 +2494,28 @@ function FeedSettings({
           </div>
         );
       })}
+
+      <h3 className="detail-sub">{t("feedSettings.blocklist")}</h3>
+      <div className="keyword-chips">
+        {(blocklist ?? []).map((b) => (
+          <span key={b.id} className="chip">
+            {b.company}
+            <button
+              onClick={() => removeBlockedCompany(b.id)}
+              aria-label={t("feedSettings.removeKeyword")}
+            >
+              <RemoveIcon />
+            </button>
+          </span>
+        ))}
+        <form onSubmit={addBlockedCompany}>
+          <input
+            placeholder={t("feedSettings.blocklistPlaceholder")}
+            value={newBlockedCompany}
+            onChange={(e) => setNewBlockedCompany(e.target.value)}
+          />
+        </form>
+      </div>
     </div>
   );
 }
