@@ -526,12 +526,12 @@ button.danger {
   font-size: 0.82rem;
 }
 
-/* 2-line job rows (#48 #1/#7) — everything else lives in the detail
-   modal on click, so the list stays scannable instead of carrying a
-   meta row, action buttons, and a rail on every card. */
+/* 2-line job rows (#48 mockup #7) — everything else lives in the
+   detail modal on click, so the list stays scannable instead of
+   carrying a meta row, action buttons, and a rail on every card. */
 .card.row2 {
   border-left: 3px solid var(--sc);
-  padding: 0.55rem 0.85rem;
+  padding: 0.55rem 0.8rem;
   cursor: pointer;
   min-height: 44px;
 }
@@ -550,16 +550,13 @@ button.danger {
 .card.row2 .l1 .co {
   color: var(--muted);
   font-size: 0.78rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .card.row2 .l2 {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
 }
 
 .card.row2 .pill {
