@@ -129,6 +129,7 @@
     "at": "at"
   },
   "cv": {
+    "downloadPdf": "Download PDF",
     "profile": "Profile",
     "name": "Name",
     "email": "Email",

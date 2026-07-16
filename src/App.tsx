@@ -3085,8 +3085,32 @@ function CVTab({
     return <p className="muted small">{t("common.loading")}</p>;
   }
 
+  const downloadPdf = async () => {
+    // Dynamic import — jsPDF (~400kB) is only needed once someone
+    // actually downloads a CV, not on every page load.
+    const { generateCvPdf } = await import("./pdf");
+    const doc = generateCvPdf(
+      { profile, workExperience: workExp, education, languages },
+      {
+        present: t("cv.present"),
+        workExperience: t("cv.workExperience"),
+        education: t("cv.education"),
+        languages: t("cv.languages"),
+      },
+    );
+    const filename = profile.name
+      ? `${profile.name.replace(/\s+/g, "-")}-CV.pdf`
+      : "CV.pdf";
+    doc.save(filename);
+  };
+
   return (
     <section className="cv-tab">
+      <div className="cv-toolbar">
+        <button className="primary" onClick={downloadPdf}>
+          {t("cv.downloadPdf")}
+        </button>
+      </div>
       <ProfileSection
         profile={profile}
         onChanged={load}
