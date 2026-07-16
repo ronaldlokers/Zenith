@@ -17,7 +17,9 @@
 
 import { hashPassword } from "better-auth/crypto";
 import { writeFileSync } from "node:fs";
-import { createInterface } from "node:readline";
+
+const CTRL_C = "\x03";
+const BACKSPACE = "\x7f";
 
 const email = process.argv[2];
 if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -25,26 +27,66 @@ if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
   process.exit(1);
 }
 
-function promptHidden(question) {
-  return new Promise((resolve) => {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    // readline has no built-in mask option, so we take over the output
-    // stream's _writeToOutput to swallow everything except the prompt
-    // itself — the raw keystrokes still reach readline's line buffer,
-    // they just never get echoed back to the terminal.
-    process.stdout.write(question);
-    rl._writeToOutput = () => {};
-    rl.question("", (answer) => {
-      rl.close();
-      process.stdout.write("\n");
-      resolve(answer);
-    });
-  });
+if (!process.stdin.isTTY) {
+  console.error(
+    "This needs an interactive terminal to prompt for a password (stdin isn't a TTY).",
+  );
+  process.exit(1);
 }
 
-const password = await promptHidden("Password (min 8 chars): ");
+// A single long-lived raw-mode reader for both prompts below. Both typed
+// lines (e.g. password + confirmation, typed quickly) can arrive as one
+// buffered chunk, processed synchronously in the 'data' handler below —
+// but the *second* promptHidden() call only registers its resolver in a
+// microtask after the first one's promise resolves, i.e. after that
+// handler returns. So a completed line has nowhere to go if nobody's
+// waiting for it yet — this queues finished lines too (not just waiting
+// resolvers), like a small unbounded channel, so whichever side is ready
+// first, isn't lost waiting on the other.
+let lineBuffer = "";
+const waitingResolvers = [];
+const completedLines = [];
+
+process.stdin.setRawMode(true);
+process.stdin.resume();
+process.stdin.on("data", (chunk) => {
+  for (const char of chunk.toString("utf8")) {
+    if (char === CTRL_C) {
+      process.stdout.write("\n");
+      process.exit(130);
+    } else if (char === "\n" || char === "\r") {
+      const line = lineBuffer;
+      lineBuffer = "";
+      process.stdout.write("\n");
+      const resolve = waitingResolvers.shift();
+      if (resolve) resolve(line);
+      else completedLines.push(line);
+    } else if (char === BACKSPACE || char === "\b") {
+      lineBuffer = lineBuffer.slice(0, -1);
+    } else {
+      lineBuffer += char;
+    }
+  }
+});
+
+function promptHidden(question) {
+  process.stdout.write(question);
+  if (completedLines.length > 0) {
+    return Promise.resolve(completedLines.shift());
+  }
+  return new Promise((resolve) => waitingResolvers.push(resolve));
+}
+
+const password = await promptHidden("Password: ");
 if (!password || password.length < 8) {
   console.error("Password must be at least 8 characters.");
+  process.exit(1);
+}
+const confirmed = await promptHidden("Confirm password: ");
+process.stdin.setRawMode(false);
+process.stdin.pause();
+if (confirmed !== password) {
+  console.error("Passwords didn't match — nothing was written.");
   process.exit(1);
 }
 
