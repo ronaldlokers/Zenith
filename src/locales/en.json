@@ -127,6 +127,14 @@
     "appliedTo": "Applied to",
     "at": "at"
   },
+  "offer": {
+    "title": "Offer details",
+    "signingBonus": "Signing bonus",
+    "bonusTarget": "Annual bonus target %",
+    "equityValue": "Equity value (annualized est.)",
+    "benefitsNotes": "Benefits notes",
+    "totalComp": "Total comp (est.)"
+  },
   "feedSettings": {
     "roleTypes": "Role types",
     "newRoleType": "New role type…",

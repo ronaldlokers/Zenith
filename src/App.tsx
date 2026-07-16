@@ -926,6 +926,32 @@ function formatComp(a: Application): string {
   return one != null ? `${cur} ${one.toLocaleString()}${per}` : "—";
 }
 
+// Rough total-comp estimate for offer-stage applications: base +
+// signing bonus + bonus target (% of base) + a flat annualized equity
+// estimate. Deliberately approximate (issue #63) — equity/bonus
+// numbers are estimates, not contractual, so this is never shown as
+// a bare precise figure, only prefixed with "~" and paired with a
+// hover breakdown.
+function totalComp(a: Application): number | null {
+  const base = annualizedComp(a);
+  if (base == null) return null;
+  const bonus = a.bonus_target_pct != null ? (base * a.bonus_target_pct) / 100 : 0;
+  return base + (a.signing_bonus ?? 0) + bonus + (a.equity_value ?? 0);
+}
+
+function totalCompBreakdown(a: Application): string {
+  const base = annualizedComp(a);
+  if (base == null) return "";
+  const parts = [`base ~${Math.round(base).toLocaleString()}`];
+  if (a.signing_bonus) parts.push(`signing ${a.signing_bonus.toLocaleString()}`);
+  if (a.bonus_target_pct) {
+    const bonus = Math.round((base * a.bonus_target_pct) / 100);
+    parts.push(`bonus target ${a.bonus_target_pct}% (~${bonus.toLocaleString()})`);
+  }
+  if (a.equity_value) parts.push(`equity ~${a.equity_value.toLocaleString()}/yr`);
+  return parts.join(" + ");
+}
+
 function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   const { t } = useTranslation();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -1090,21 +1116,30 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
               <th>Company</th>
               <th>Stage</th>
               <th>Comp</th>
+              <th>{t("offer.totalComp")}</th>
               <th>Notes</th>
             </tr>
           </thead>
           <tbody>
-            {comparing.map((a) => (
-              <tr key={a.id} className={`stage-${a.status}`}>
-                <td>{a.title}</td>
-                <td>{a.company_name ?? "—"}</td>
-                <td>
-                  <span className="badge">{a.status}</span>
-                </td>
-                <td className="compare-comp">{formatComp(a)}</td>
-                <td className="compare-notes">{a.notes ?? ""}</td>
-              </tr>
-            ))}
+            {comparing.map((a) => {
+              const total = totalComp(a);
+              return (
+                <tr key={a.id} className={`stage-${a.status}`}>
+                  <td>{a.title}</td>
+                  <td>{a.company_name ?? "—"}</td>
+                  <td>
+                    <span className="badge">{t(`stages.${a.status}`)}</span>
+                  </td>
+                  <td className="compare-comp">{formatComp(a)}</td>
+                  <td className="compare-comp" title={totalCompBreakdown(a)}>
+                    {total != null
+                      ? `~${a.salary_currency ?? ""} ${Math.round(total).toLocaleString()}`
+                      : "—"}
+                  </td>
+                  <td className="compare-notes">{a.notes ?? ""}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {comparing.length === 0 && (
@@ -1624,6 +1659,13 @@ function ApplicationDetailModal({
               {a.source && <span className="muted small">via {a.source}</span>}
               {a.salary_range && (
                 <span className="muted small">{a.salary_range}</span>
+              )}
+              {a.status === "offer" && totalComp(a) != null && (
+                <span className="muted small" title={totalCompBreakdown(a)}>
+                  {t("offer.totalComp")}: ~
+                  {a.salary_currency ?? ""}{" "}
+                  {Math.round(totalComp(a)!).toLocaleString()}
+                </span>
               )}
               {a.applied_at && (
                 <span className="muted small">
@@ -2208,6 +2250,64 @@ function ApplicationForm({
           />
         </label>
       </div>
+
+      {form.status === "offer" && (
+        <div className="form-group">
+          <h4>{t("offer.title")}</h4>
+          <label>
+            {t("offer.signingBonus")}
+            <input
+              type="number"
+              min={0}
+              value={form.signing_bonus ?? ""}
+              onChange={(e) =>
+                set({
+                  signing_bonus: e.target.value ? Number(e.target.value) : null,
+                })
+              }
+            />
+          </label>
+          <label>
+            {t("offer.bonusTarget")}
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={form.bonus_target_pct ?? ""}
+              onChange={(e) =>
+                set({
+                  bonus_target_pct: e.target.value
+                    ? Number(e.target.value)
+                    : null,
+                })
+              }
+            />
+          </label>
+          <label>
+            {t("offer.equityValue")}
+            <input
+              type="number"
+              min={0}
+              value={form.equity_value ?? ""}
+              onChange={(e) =>
+                set({
+                  equity_value: e.target.value ? Number(e.target.value) : null,
+                })
+              }
+            />
+          </label>
+          <label className="full">
+            {t("offer.benefitsNotes")}
+            <textarea
+              rows={2}
+              value={form.benefits_notes ?? ""}
+              onChange={(e) =>
+                set({ benefits_notes: e.target.value || null })
+              }
+            />
+          </label>
+        </div>
+      )}
 
       <div className="form-group">
         <h4>Follow-up</h4>

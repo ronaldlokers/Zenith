@@ -98,6 +98,46 @@ describe("applications", () => {
     expect(noTitle.status).toBe(400);
   });
 
+  it("persists offer-stage compensation fields", async () => {
+    const created = await post("/api/applications", {
+      title: "Staff Engineer",
+      status: "offer",
+      salary_min: 90000,
+      salary_max: 90000,
+      salary_currency: "EUR",
+      salary_period: "year",
+      signing_bonus: 5000,
+      bonus_target_pct: 10,
+      equity_value: 8000,
+      benefits_notes: "Unlimited PTO",
+    });
+    expect(created.status).toBe(201);
+    const app = (await created.json()) as {
+      id: number;
+      signing_bonus: number;
+      bonus_target_pct: number;
+      equity_value: number;
+      benefits_notes: string;
+    };
+    expect(app.signing_bonus).toBe(5000);
+    expect(app.bonus_target_pct).toBe(10);
+    expect(app.equity_value).toBe(8000);
+    expect(app.benefits_notes).toBe("Unlimited PTO");
+
+    const updated = await SELF.fetch(`${BASE}/api/applications/${app.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "Staff Engineer",
+        status: "offer",
+        signing_bonus: 6000,
+      }),
+    });
+    expect(updated.status).toBe(200);
+    const updatedApp = (await updated.json()) as { signing_bonus: number };
+    expect(updatedApp.signing_bonus).toBe(6000);
+  });
+
   it("changes status and records history", async () => {
     const app = await seedApplication();
     const patched = await SELF.fetch(
