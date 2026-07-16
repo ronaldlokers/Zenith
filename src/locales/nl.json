@@ -319,7 +319,9 @@
     "locationFilter": "locatiefilter",
     "searchKeywords": "Zoekwoorden per rol",
     "keywordPlaceholder": "+ zoekwoord",
-    "removeKeyword": "Verwijderen"
+    "removeKeyword": "Verwijderen",
+    "blocklist": "Geblokkeerde bedrijven",
+    "blocklistPlaceholder": "+ bedrijfsnaam…"
   },
   "login": {
     "subtitle": "Log in op je pipeline",

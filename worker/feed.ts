@@ -214,7 +214,8 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     const userId = c.get("userId");
     // A feed_item is "new" for this user unless a feed_item_status row
     // says otherwise (dismissed/added) — that row only exists once the
-    // user has acted on it.
+    // user has acted on it. Blocked companies (#218) are filtered the
+    // same way: per-user, at read time, since feed_items is shared.
     const { results } = await c.env.DB.prepare(
       `SELECT feed_items.*
        FROM feed_items
@@ -222,11 +223,47 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
          ON feed_item_status.feed_item_id = feed_items.id
          AND feed_item_status.user_id = ?
        WHERE COALESCE(feed_item_status.status, 'new') = 'new'
+         AND NOT EXISTS (
+           SELECT 1 FROM feed_company_blocklist
+           WHERE feed_company_blocklist.user_id = ?
+             AND feed_company_blocklist.company = feed_items.company COLLATE NOCASE
+         )
        ORDER BY feed_items.posted_at DESC, feed_items.id DESC`,
     )
-      .bind(userId)
+      .bind(userId, userId)
       .all();
     return c.json(results);
+  });
+
+  app.get("/api/feed/blocklist", async (c) => {
+    const { results } = await c.env.DB.prepare(
+      "SELECT * FROM feed_company_blocklist WHERE user_id = ? ORDER BY company COLLATE NOCASE",
+    )
+      .bind(c.get("userId"))
+      .all();
+    return c.json(results);
+  });
+
+  app.post("/api/feed/blocklist", async (c) => {
+    const body = await c.req.json();
+    const company = (body.company ?? "").trim();
+    if (!company) return c.json({ error: "company is required" }, 400);
+    const result = await c.env.DB.prepare(
+      `INSERT INTO feed_company_blocklist (user_id, company) VALUES (?, ?)
+       ON CONFLICT DO NOTHING RETURNING *`,
+    )
+      .bind(c.get("userId"), company)
+      .first();
+    return c.json(result, 201);
+  });
+
+  app.delete("/api/feed/blocklist/:id", async (c) => {
+    await c.env.DB.prepare(
+      "DELETE FROM feed_company_blocklist WHERE id = ? AND user_id = ?",
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
   });
 
   // Manual trigger for testing/on-demand refresh (cron does this automatically)
