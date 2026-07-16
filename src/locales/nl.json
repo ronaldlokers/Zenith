@@ -316,6 +316,11 @@
     "resetDemoSuccess": "Demo-data gereset.",
     "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?"
   },
+  "companies": {
+    "view": "Weergave",
+    "viewList": "Lijst",
+    "viewGrid": "Raster"
+  },
   "board": {
     "groupBy": "Bord groeperen op",
     "byStage": "Op status",

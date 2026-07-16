@@ -316,6 +316,11 @@
     "resetDemoSuccess": "Demo data reset.",
     "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?"
   },
+  "companies": {
+    "view": "View",
+    "viewList": "List",
+    "viewGrid": "Grid"
+  },
   "board": {
     "groupBy": "Group board by",
     "byStage": "By stage",
