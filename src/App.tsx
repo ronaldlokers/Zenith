@@ -1110,7 +1110,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           return (
             <li key={s} className={`stage-${s}`}>
               <span className="stat-dot" />
-              <span>{t(`stages.${s}`)}</span>
+              <span className="stage-name">{t(`stages.${s}`)}</span>
               <span className="stat-val">{(d.total / d.n).toFixed(1)}d</span>
             </li>
           );
@@ -1155,7 +1155,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
                   <td>{a.title}</td>
                   <td>{a.company_name ?? "—"}</td>
                   <td>
-                    <span className="badge">{t(`stages.${a.status}`)}</span>
+                    <span className="badge stage">{t(`stages.${a.status}`)}</span>
                   </td>
                   <td className="compare-comp">{formatComp(a)}</td>
                   <td className="compare-comp" title={totalCompBreakdown(a)}>
