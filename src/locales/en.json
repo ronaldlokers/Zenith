@@ -118,6 +118,15 @@
       "milestoneTitle_other": "{{count}} week streak — nice work",
       "brokenTitle": "No activity this week",
       "brokenBody": "That's fine — job searches aren't linear. Your best is still on record whenever you're ready to pick it back up."
+    },
+    "journal": {
+      "title": "Wins journal",
+      "placeholder": "Log a small win — good feedback, a strong interview…",
+      "add": "Add",
+      "empty": "Nothing logged yet.",
+      "showAll_one": "Show all ({{count}})",
+      "showAll_other": "Show all ({{count}})",
+      "showLess": "Show less"
     }
   },
   "palette": {

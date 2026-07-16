@@ -400,6 +400,36 @@ app.delete("/api/prep-items/:id", async (c) => {
   return c.body(null, 204);
 });
 
+// --- Wins journal (#225) ---
+
+app.get("/api/journal-entries", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    "SELECT * FROM journal_entries WHERE user_id = ? ORDER BY created_at DESC, id DESC",
+  )
+    .bind(c.get("userId"))
+    .all();
+  return c.json(results);
+});
+
+app.post("/api/journal-entries", async (c) => {
+  const body = await c.req.json();
+  const text = (body.text ?? "").trim();
+  if (!text) return c.json({ error: "text is required" }, 400);
+  const result = await c.env.DB.prepare(
+    "INSERT INTO journal_entries (user_id, text) VALUES (?, ?) RETURNING *",
+  )
+    .bind(c.get("userId"), text)
+    .first();
+  return c.json(result, 201);
+});
+
+app.delete("/api/journal-entries/:id", async (c) => {
+  await c.env.DB.prepare("DELETE FROM journal_entries WHERE id = ? AND user_id = ?")
+    .bind(c.req.param("id"), c.get("userId"))
+    .run();
+  return c.body(null, 204);
+});
+
 app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
