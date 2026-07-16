@@ -1552,6 +1552,11 @@ summary.bcol-head::after {
   gap: 1.4rem;
 }
 
+.cv-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .cv-section {
   background: var(--surface);
   border: 1px solid var(--border);
