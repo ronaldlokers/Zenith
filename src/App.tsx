@@ -27,6 +27,7 @@ import {
   type Language,
   type Skill,
   type StatusHistoryRow,
+  type OutreachStatus,
 } from "./types";
 import "./App.css";
 
@@ -82,6 +83,13 @@ const PIPELINE: Status[] = [
   "offer",
 ];
 
+const OUTREACH_STATUSES: OutreachStatus[] = [
+  "not_contacted",
+  "awaiting_reply",
+  "replied",
+  "no_response",
+];
+
 function isDead(status: Status): boolean {
   return status === "rejected" || status === "withdrawn" || status === "ghosted";
 }
@@ -96,6 +104,14 @@ function isDue(a: Application): boolean {
 
 function isOverdue(a: Application): boolean {
   return !!a.next_action_at && !isDead(a.status) && a.next_action_at < today();
+}
+
+function isFollowUpDue(c: Contact): boolean {
+  return !!c.follow_up_at && c.follow_up_at <= today();
+}
+
+function isFollowUpOverdue(c: Contact): boolean {
+  return !!c.follow_up_at && c.follow_up_at < today();
 }
 
 const DEADLINE_SOON_DAYS = 3;
@@ -3537,6 +3553,18 @@ function ContactsTab({
             </div>
             <div className="l2">
               <span className="co">{c.email ?? c.phone ?? ""}</span>
+              {c.outreach_status !== "not_contacted" && (
+                <span className={`outreach-pill ${c.outreach_status}`}>
+                  {t(`outreach.statuses.${c.outreach_status}`)}
+                </span>
+              )}
+              {c.follow_up_at && (isFollowUpDue(c) || isFollowUpOverdue(c)) && (
+                <span
+                  className={`due${isFollowUpOverdue(c) ? " late" : " today"}`}
+                >
+                  {t("outreach.followUpDue")}: {formatDate(c.follow_up_at)}
+                </span>
+              )}
             </div>
           </li>
         ))}
@@ -3601,6 +3629,37 @@ function ContactForm({
           placeholder="Recruiter, hiring manager, …"
           value={form.role ?? ""}
           onChange={(e) => set({ role: e.target.value || null })}
+        />
+      </label>
+      <label>
+        {t("outreach.status")}
+        <select
+          value={form.outreach_status ?? "not_contacted"}
+          onChange={(e) =>
+            set({ outreach_status: e.target.value as OutreachStatus })
+          }
+        >
+          {OUTREACH_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {t(`outreach.statuses.${s}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        {t("outreach.lastContacted")}
+        <input
+          type="date"
+          value={form.last_contacted_at ?? ""}
+          onChange={(e) => set({ last_contacted_at: e.target.value || null })}
+        />
+      </label>
+      <label>
+        {t("outreach.followUpDue")}
+        <input
+          type="date"
+          value={form.follow_up_at ?? ""}
+          onChange={(e) => set({ follow_up_at: e.target.value || null })}
         />
       </label>
       <label>
@@ -3745,6 +3804,24 @@ function ContactDetailModal({
                 <a href={safeHref(c.linkedin)} target="_blank" rel="noreferrer" className="small">
                   LinkedIn ↗
                 </a>
+              )}
+              <div>
+                <span className="field-label">{t("outreach.status")}</span>
+                <span className="muted small">
+                  {t(`outreach.statuses.${c.outreach_status}`)}
+                </span>
+              </div>
+              {c.last_contacted_at && (
+                <span className="muted small">
+                  {t("outreach.lastContacted")}: {formatDate(c.last_contacted_at)}
+                </span>
+              )}
+              {c.follow_up_at && (
+                <span
+                  className={`small${isFollowUpOverdue(c) ? " warn-text" : isFollowUpDue(c) ? " warn-text" : ""}`}
+                >
+                  {t("outreach.followUpDue")}: {formatDate(c.follow_up_at)}
+                </span>
               )}
               {c.notes && <p className="notes">{c.notes}</p>}
             </div>

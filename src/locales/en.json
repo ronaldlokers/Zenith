@@ -108,6 +108,17 @@
     "placeholder": "Search jobs, companies, people… (⌘K)",
     "noResults": "No matches."
   },
+  "outreach": {
+    "status": "Outreach status",
+    "lastContacted": "Last contacted",
+    "followUpDue": "Follow-up due",
+    "statuses": {
+      "not_contacted": "Not contacted",
+      "awaiting_reply": "Awaiting reply",
+      "replied": "Replied",
+      "no_response": "No response"
+    }
+  },
   "bulk": {
     "selectedCount_one": "{{count}} selected",
     "selectedCount_other": "{{count}} selected",

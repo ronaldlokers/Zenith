@@ -108,6 +108,17 @@
     "placeholder": "Zoek vacatures, bedrijven, contacten… (⌘K)",
     "noResults": "Geen resultaten."
   },
+  "outreach": {
+    "status": "Outreach-status",
+    "lastContacted": "Laatst benaderd",
+    "followUpDue": "Vervolgactie nodig",
+    "statuses": {
+      "not_contacted": "Niet benaderd",
+      "awaiting_reply": "Wacht op reactie",
+      "replied": "Gereageerd",
+      "no_response": "Geen reactie"
+    }
+  },
   "bulk": {
     "selectedCount_one": "{{count}} geselecteerd",
     "selectedCount_other": "{{count}} geselecteerd",
