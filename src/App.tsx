@@ -2680,6 +2680,7 @@ function ApplicationDetailModal({
   notify,
   onDelete,
   onStatus,
+  asPane,
 }: {
   application: Application;
   allApplications: Application[];
@@ -2692,6 +2693,11 @@ function ApplicationDetailModal({
   notify: (message: string, undo?: () => void) => void;
   onDelete: (resource: string, id: number, name: string) => void;
   onStatus: (id: number, status: Status) => void;
+  // Split-pane mode (#131) — rendered inline in the Jobs sidebar on wide
+  // desktop viewports instead of an overlay modal. Same content either
+  // way; only the outer wrapper (backdrop, click-outside-to-close,
+  // Escape-to-close) differs.
+  asPane?: boolean;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -2699,12 +2705,13 @@ function ApplicationDetailModal({
   const a = application;
 
   useEffect(() => {
+    if (asPane) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, asPane]);
 
   const addTag = () => {
     const name = newTag.trim();
@@ -2718,12 +2725,11 @@ function ApplicationDetailModal({
       .catch((e) => onError((e as Error).message));
   };
 
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
+  const pane = (
       <div
-        className="modal detail-modal"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
+        className={asPane ? "detail-pane" : "modal detail-modal"}
+        onClick={asPane ? undefined : (e) => e.stopPropagation()}
+        role={asPane ? "region" : "dialog"}
         aria-label={a.title}
       >
         <div className="detail-head">
@@ -2944,6 +2950,12 @@ function ApplicationDetailModal({
           </>
         )}
       </div>
+  );
+
+  if (asPane) return pane;
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      {pane}
     </div>
   );
 }
@@ -3094,6 +3106,18 @@ function ApplicationsTab({
   const [showHelp, setShowHelp] = useState(false);
   const [history, setHistory] = useState<StatusHistoryRow[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
+  // Split-pane detail on wide desktop (#131) — same >=1100px breakpoint
+  // the two-column .jobs-layout already switches on. Below it, the
+  // detail stays a modal overlay (mobile/narrow).
+  const [isWideDesktop, setIsWideDesktop] = useState(
+    () => window.matchMedia("(min-width: 1100px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1100px)");
+    const onChange = () => setIsWideDesktop(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     api
@@ -3503,9 +3527,26 @@ function ApplicationsTab({
         )}
       </ul>
       </div>
-      <NextUpPanel applications={applications.filter((a) => !a.archived_at)} />
+      {isWideDesktop && detailApp ? (
+        <ApplicationDetailModal
+          application={detailApp}
+          allApplications={applications}
+          companies={companies}
+          contacts={contacts}
+          roleTypes={roleTypes}
+          onClose={() => setDetailId(null)}
+          onChanged={onChanged}
+          onError={onError}
+          notify={notify}
+          onDelete={onDelete}
+          onStatus={onStatus}
+          asPane
+        />
+      ) : (
+        <NextUpPanel applications={applications.filter((a) => !a.archived_at)} />
+      )}
       </div>
-      {detailApp && (
+      {!isWideDesktop && detailApp && (
         <ApplicationDetailModal
           application={detailApp}
           allApplications={applications}
