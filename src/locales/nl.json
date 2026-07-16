@@ -76,7 +76,11 @@
     "language": "Taal",
     "languageEn": "English",
     "languageNl": "Nederlands",
-    "cvLanguage": "CV-taal"
+    "cvLanguage": "CV-taal",
+    "shareLink": "Openbare deel-link",
+    "generateLink": "Link genereren",
+    "regenerateLink": "Opnieuw genereren",
+    "disableLink": "Uitschakelen"
   },
   "feed": {
     "pulledFrom": "Opgehaald van Adzuna, HN Who's Hiring en Arbeitnow, elke 6 uur.",

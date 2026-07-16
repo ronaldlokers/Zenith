@@ -191,6 +191,7 @@ export interface Profile {
   github: string | null;
   portfolio: string | null;
   summary: string | null;
+  share_token: string | null;
 }
 
 export interface Skill {
