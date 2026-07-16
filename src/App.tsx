@@ -40,16 +40,8 @@ const PIPELINE: Status[] = [
   "offer",
 ];
 
-const STAGE_ABBR: Record<string, string> = {
-  interested: "int",
-  applied: "app",
-  screening: "scr",
-  interview: "ivw",
-  offer: "off",
-};
-
-function stageIndex(status: Status): number {
-  return PIPELINE.indexOf(status);
+function stageLabel(stage: string): string {
+  return stage.charAt(0).toUpperCase() + stage.slice(1);
 }
 
 function isDead(status: Status): boolean {
@@ -118,17 +110,6 @@ function Logo({ size = 26 }: { size?: number }) {
       </g>
       <circle cx="106" cy="28" r="4" fill="var(--accent)" />
     </svg>
-  );
-}
-
-function StageRail({ status }: { status: Status }) {
-  const idx = isDead(status) ? stageIndex("applied") : stageIndex(status);
-  return (
-    <div className={`rail${isDead(status) ? " dead" : ""}`}>
-      {PIPELINE.map((s, i) => (
-        <i key={s} className={i <= idx ? `on stage-${status}` : ""} />
-      ))}
-    </div>
   );
 }
 
@@ -213,7 +194,7 @@ function StageHistogram({ applications }: { applications: Application[] }) {
         const count = open.filter((a) => a.status === s).length;
         return (
           <div key={s} className={`hrow stage-${s}`}>
-            <span className="lbl">{STAGE_ABBR[s]}</span>
+            <span className="lbl">{stageLabel(s)}</span>
             <span className="htrack">
               <span
                 className="hfill"
@@ -1054,7 +1035,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
             className={`hrow stage-${f.stage}`}
             title={`${f.count} reached ${f.stage}`}
           >
-            <span className="lbl">{STAGE_ABBR[f.stage]}</span>
+            <span className="lbl">{stageLabel(f.stage)}</span>
             <span className="htrack">
               <span
                 className="hfill"
@@ -1694,7 +1675,6 @@ function ApplicationsTab({
   const [sort, setSort] = useState<"updated" | "applied" | "company">(
     "updated",
   );
-  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showHelp, setShowHelp] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -1755,7 +1735,6 @@ function ApplicationsTab({
       if (e.key === "Escape") {
         if (showHelp) return setShowHelp(false);
         if (editing) return setEditing(null);
-        if (expandedId !== null) return setExpandedId(null);
         (e.target as HTMLElement).blur?.();
         return;
       }
@@ -1784,7 +1763,7 @@ function ApplicationsTab({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [visible, editing, expandedId, showHelp, focusedIndex, onStatus]);
+  }, [visible, editing, showHelp, focusedIndex, onStatus]);
 
   useEffect(() => {
     if (focusedIndex < 0) return;
@@ -1884,80 +1863,28 @@ function ApplicationsTab({
         {visible.map((a, i) => (
           <li
             key={a.id}
-            className={`card stage-${a.status}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}`}
+            className={`card row2 stage-${a.status}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}`}
+            onClick={() => setDetailId(a.id)}
           >
-            <div className="card-body">
-              <div
-                className="card-main clickable"
-                onClick={() => setDetailId(a.id)}
-              >
-                <strong>{a.title}</strong>
-                {(a.next_action || a.next_action_at) && (
-                  <span
-                    className={`due-line${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
-                  >
-                    → {a.next_action ?? "follow up"}
-                    {a.next_action_at ? ` · ${formatDate(a.next_action_at)}` : ""}
-                  </span>
-                )}
-                <span className="muted small">
-                  {a.company_name ?? "—"}
-                  {a.contact_name ? ` · ${a.contact_name}` : ""}
-                </span>
-                <span className="muted small">
-                  {a.role_type}
-                  {a.source ? ` · via ${a.source}` : ""}
-                  {a.salary_range ? ` · ${a.salary_range}` : ""}
-                </span>
-                {safeHref(a.url) && (
-                  <a
-                    href={safeHref(a.url)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="small"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Job posting ↗
-                  </a>
-                )}
-                {a.notes && <p className="notes">{a.notes}</p>}
-              </div>
-              <div className="card-actions">
-                <select
-                  className={`status stage-${a.status}`}
-                  value={a.status}
-                  onChange={(e) => onStatus(a.id, e.target.value as Status)}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-                <span className="age">upd {ageDays(a.updated_at)}</span>
-                <button
-                  onClick={() =>
-                    setExpandedId(expandedId === a.id ? null : a.id)
-                  }
-                >
-                  Log
-                </button>
-                <button onClick={() => setEditing(a)}>Edit</button>
-                <button
-                  className="danger"
-                  onClick={() => onDelete("applications", a.id, a.title)}
-                >
-                  Delete
-                </button>
-              </div>
+            <div className="l1">
+              <strong>{a.title}</strong>
+              <span className="co">
+                {a.company_name ?? "—"}
+                {a.contact_name ? ` · ${a.contact_name}` : ""}
+              </span>
             </div>
-            {expandedId === a.id && (
-              <>
-                <Timeline resource="applications" targetId={a.id} onError={onError} />
-                <Documents applicationId={a.id} onError={onError} />
-              </>
-            )}
-            <StageRail status={a.status} />
+            <div className="l2">
+              <span className={`pill stage-${a.status}`}>
+                {stageLabel(a.status)}
+              </span>
+              <span
+                className={`due${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
+              >
+                {isDue(a) || isOverdue(a)
+                  ? `→ ${a.next_action ?? "follow up"}`
+                  : `upd ${ageDays(a.updated_at)}`}
+              </span>
+            </div>
           </li>
         ))}
         {visible.length === 0 && (
