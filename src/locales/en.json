@@ -96,7 +96,11 @@
     "documents": "Documents",
     "attachFile": "Attach file",
     "noFiles": "No files attached.",
-    "noTouchpoints": "No touchpoints logged yet."
+    "noTouchpoints": "No touchpoints logged yet.",
+    "status": "Status",
+    "role": "Role",
+    "description": "Description",
+    "notes": "Notes"
   },
   "nextUp": {
     "title": "Next up"
