@@ -1127,6 +1127,23 @@ button.danger {
   border-color: var(--sc);
 }
 
+/* Text fallback for the heat strip (#202) — the border-right color was
+   the only cue, with no tooltip or text alternative. */
+.heat-badge-1 {
+  color: var(--heat-watch);
+  border-color: var(--heat-watch);
+}
+
+.heat-badge-2 {
+  color: var(--heat-quiet);
+  border-color: var(--heat-quiet);
+}
+
+.heat-badge-3 {
+  color: var(--heat-cold);
+  border-color: var(--heat-cold);
+}
+
 .warn-text {
   color: var(--danger);
 }

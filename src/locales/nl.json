@@ -281,6 +281,14 @@
     "staleBadge": "verlopen?",
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
   },
+  "heat": {
+    "watchBadge": "traag",
+    "watchHint": "Trager dan de gebruikelijke reactietijd van deze werkgever — in de gaten houden.",
+    "quietBadge": "stil",
+    "quietHint": "Ruim voorbij de gebruikelijke reactietijd van deze werkgever.",
+    "coldBadge": "koud",
+    "coldHint": "Ver voorbij de gebruikelijke reactietijd van deze werkgever — waarschijnlijk stilgevallen."
+  },
   "referral": {
     "referredBy": "Doorverwezen door",
     "badge": "referral",
