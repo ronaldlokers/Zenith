@@ -348,6 +348,15 @@
        scroll rather than let items overflow off-screen unreachable. */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* Fade the trailing edge so a cut-off tab reads as "more, scroll
+       for it" instead of looking like the bar just ends there (#204). */
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 0.75rem,
+      black calc(100% - 1.5rem),
+      transparent 100%
+    );
   }
 
   .tabs button {
