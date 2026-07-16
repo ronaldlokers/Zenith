@@ -1754,6 +1754,12 @@ function Timeline({
   const { t } = useTranslation();
   const [items, setItems] = useState<Interaction[] | null>(null);
   const [form, setForm] = useState({ type: "email", happened_at: today(), notes: "" });
+  // Retrospective prompt (#221) — only surfaces for the "interview" type,
+  // since that's the interaction worth reflecting on right after it
+  // happens. Answers fold into the same interaction's notes rather than
+  // a separate record, so the timeline stays a single source of truth.
+  const [wentWell, setWentWell] = useState("");
+  const [toImprove, setToImprove] = useState("");
 
   const load = useCallback(
     () =>
@@ -1770,14 +1776,23 @@ function Timeline({
 
   const add = (e: FormEvent) => {
     e.preventDefault();
+    const retro = [
+      wentWell.trim() && `${t("interactionTypes.retroWentWell")}: ${wentWell.trim()}`,
+      toImprove.trim() && `${t("interactionTypes.retroToImprove")}: ${toImprove.trim()}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+    const notes = [form.notes.trim(), retro].filter(Boolean).join("\n\n");
     api
       .addInteraction(resource, targetId, {
         type: form.type,
         happened_at: form.happened_at,
-        notes: form.notes || null,
+        notes: notes || null,
       })
       .then(() => {
         setForm({ type: "email", happened_at: today(), notes: "" });
+        setWentWell("");
+        setToImprove("");
         return load();
       })
       .catch((err) => onError((err as Error).message));
@@ -1808,6 +1823,20 @@ function Timeline({
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
         />
+        {form.type === "interview" && (
+          <div className="tl-retro">
+            <input
+              placeholder={t("interactionTypes.retroWentWellPlaceholder")}
+              value={wentWell}
+              onChange={(e) => setWentWell(e.target.value)}
+            />
+            <input
+              placeholder={t("interactionTypes.retroToImprovePlaceholder")}
+              value={toImprove}
+              onChange={(e) => setToImprove(e.target.value)}
+            />
+          </div>
+        )}
         <button type="submit" className="primary">
           {t("common.log")}
         </button>

@@ -226,7 +226,11 @@
     "message": "Bericht",
     "interview": "Gesprek",
     "meeting": "Meeting",
-    "other": "Anders"
+    "other": "Anders",
+    "retroWentWell": "Ging goed",
+    "retroToImprove": "Te verbeteren",
+    "retroWentWellPlaceholder": "Wat ging goed? (optioneel)",
+    "retroToImprovePlaceholder": "Wat zou je anders doen? (optioneel)"
   },
   "agenda": {
     "followUp": "Vervolgactie",
