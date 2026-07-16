@@ -159,6 +159,8 @@
     "present": "Present",
     "description": "Description",
     "addSkill": "+ skill",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
     "addWorkExperience": "+ Add work experience",
     "noWorkExperience": "No work experience added yet.",
     "education": "Education",

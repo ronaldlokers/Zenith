@@ -159,6 +159,8 @@
     "present": "Heden",
     "description": "Omschrijving",
     "addSkill": "+ vaardigheid",
+    "moveUp": "Omhoog verplaatsen",
+    "moveDown": "Omlaag verplaatsen",
     "addWorkExperience": "+ Werkervaring toevoegen",
     "noWorkExperience": "Nog geen werkervaring toegevoegd.",
     "education": "Opleiding",

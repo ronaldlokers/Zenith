@@ -1684,3 +1684,8 @@ summary.bcol-head::after {
   font-size: 0.78rem;
   cursor: pointer;
 }
+
+.cv-item-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
