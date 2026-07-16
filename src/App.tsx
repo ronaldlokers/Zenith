@@ -2097,6 +2097,7 @@ function ApplicationsTab({
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"updated" | "applied" | "company">(
     "updated",
@@ -2162,6 +2163,29 @@ function ApplicationsTab({
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
+
+  const toggleSelect = (id: number) =>
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const bulkArchive = () => {
+    Promise.all([...selected].map((id) => api.archiveApplication(id)))
+      .then(() => {
+        setSelected(new Set());
+        notify(t("common.saved"));
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const bulkSetStatus = (status: Status) => {
+    selected.forEach((id) => onStatus(id, status));
+    setSelected(new Set());
+  };
 
   // Desktop keyboard shortcuts: / search, n new job, Esc close,
   // j/k move focus, 1-8 set status on the focused card, ? for help.
@@ -2307,6 +2331,29 @@ function ApplicationsTab({
         </label>
       </div>
 
+      {selected.size > 0 && (
+        <div className="bulk-bar">
+          <span>{t("bulk.selectedCount", { count: selected.size })}</span>
+          <select
+            value=""
+            onChange={(e) => {
+              if (e.target.value) bulkSetStatus(e.target.value as Status);
+            }}
+          >
+            <option value="">{t("bulk.setStatus")}</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {t(`stages.${s}`)}
+              </option>
+            ))}
+          </select>
+          <button onClick={bulkArchive}>{t("bulk.archive")}</button>
+          <button onClick={() => setSelected(new Set())}>
+            {t("bulk.clearSelection")}
+          </button>
+        </div>
+      )}
+
       {editing && (
         <ApplicationForm
           initial={editing === "new" ? null : editing}
@@ -2333,6 +2380,14 @@ function ApplicationsTab({
             onClick={() => setDetailId(a.id)}
           >
             <div className="l1">
+              <input
+                type="checkbox"
+                className="card-select"
+                checked={selected.has(a.id)}
+                onClick={(e) => e.stopPropagation()}
+                onChange={() => toggleSelect(a.id)}
+                aria-label={t("bulk.selectRow")}
+              />
               <strong>
                 {a.title}
                 {a.archived_at ? (
