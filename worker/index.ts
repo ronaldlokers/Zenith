@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { refreshFeed, registerFeedRoutes } from "./feed.js";
+import { registerRoleTypeRoutes } from "./role-types.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -214,12 +215,23 @@ app.post("/api/applications", async (c) => {
       body.salary_period ?? null,
     )
     .first();
+  await c.env.DB.prepare(
+    `INSERT INTO status_history (application_id, from_status, to_status) VALUES (?, NULL, ?)`,
+  )
+    .bind((result as { id: number }).id, (result as { status: string }).status)
+    .run();
   return c.json(result, 201);
 });
 
 app.put("/api/applications/:id", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
+  const existing = await c.env.DB.prepare(
+    "SELECT status FROM applications WHERE id = ?",
+  )
+    .bind(c.req.param("id"))
+    .first<{ status: string }>();
+  if (!existing) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
     `UPDATE applications
      SET company_id = ?, contact_id = ?, title = ?, role_type = ?, url = ?, source = ?,
@@ -249,12 +261,26 @@ app.put("/api/applications/:id", async (c) => {
     )
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
+  const newStatus = (result as { status: string }).status;
+  if (newStatus !== existing.status) {
+    await c.env.DB.prepare(
+      `INSERT INTO status_history (application_id, from_status, to_status) VALUES (?, ?, ?)`,
+    )
+      .bind(c.req.param("id"), existing.status, newStatus)
+      .run();
+  }
   return c.json(result);
 });
 
 app.patch("/api/applications/:id/status", async (c) => {
   const body = await c.req.json();
   if (!body.status) return c.json({ error: "status is required" }, 400);
+  const existing = await c.env.DB.prepare(
+    "SELECT status FROM applications WHERE id = ?",
+  )
+    .bind(c.req.param("id"))
+    .first<{ status: string }>();
+  if (!existing) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
     `UPDATE applications SET status = ?, updated_at = datetime('now')
      WHERE id = ? RETURNING *`,
@@ -262,6 +288,13 @@ app.patch("/api/applications/:id/status", async (c) => {
     .bind(body.status, c.req.param("id"))
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
+  if (body.status !== existing.status) {
+    await c.env.DB.prepare(
+      `INSERT INTO status_history (application_id, from_status, to_status) VALUES (?, ?, ?)`,
+    )
+      .bind(c.req.param("id"), existing.status, body.status)
+      .run();
+  }
   return c.json(result);
 });
 
@@ -679,12 +712,16 @@ app.delete("/api/documents/:id", async (c) => {
 });
 
 registerFeedRoutes(app);
+registerRoleTypeRoutes(app);
 
 app.notFound((c) => c.json({ error: "not found" }, 404));
 
 app.onError((err, c) => {
   if (err.message.includes("CHECK constraint failed")) {
     return c.json({ error: "invalid value" }, 400);
+  }
+  if (err.message.includes("UNIQUE constraint failed")) {
+    return c.json({ error: "already exists" }, 409);
   }
   console.error(err);
   return c.json({ error: "internal error" }, 500);

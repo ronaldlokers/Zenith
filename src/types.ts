@@ -11,15 +11,16 @@ export const STATUSES = [
 
 export type Status = (typeof STATUSES)[number];
 
-export const ROLE_TYPES = [
-  "devops",
-  "platform-engineer",
-  "front-end",
-  "typescript",
-  "other",
-] as const;
+// Role types are configurable (issue #45) — fetched from /api/role-types
+// rather than a fixed union, since the list can change without a deploy.
+export type RoleType = string;
 
-export type RoleType = (typeof ROLE_TYPES)[number];
+export interface RoleTypeDef {
+  id: number;
+  slug: string;
+  label: string;
+  sort_order: number;
+}
 
 export const INTERACTION_TYPES = [
   "email",

@@ -439,3 +439,113 @@ describe("misc", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("role types", () => {
+  it("lists the seeded defaults", async () => {
+    const res = await SELF.fetch(`${BASE}/api/role-types`);
+    const types = (await res.json()) as { slug: string }[];
+    expect(types.map((t) => t.slug)).toContain("devops");
+    expect(types.length).toBe(5);
+  });
+
+  it("creates, renames, deletes, and cascades keyword cleanup", async () => {
+    const created = await post("/api/role-types", { label: "QA Engineer" });
+    expect(created.status).toBe(201);
+    const role = (await created.json()) as { id: number; slug: string };
+    expect(role.slug).toBe("qa-engineer");
+
+    await post("/api/feed/config/keywords", {
+      role_slug: role.slug,
+      keyword: "quality engineer",
+    });
+
+    const renamed = await SELF.fetch(`${BASE}/api/role-types/${role.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label: "QA / Test Engineer" }),
+    });
+    expect(renamed.status).toBe(200);
+    expect(((await renamed.json()) as { label: string }).label).toBe(
+      "QA / Test Engineer",
+    );
+
+    const deleted = await SELF.fetch(`${BASE}/api/role-types/${role.id}`, {
+      method: "DELETE",
+    });
+    expect(deleted.status).toBe(204);
+
+    const config = await SELF.fetch(`${BASE}/api/feed/config`);
+    const { keywords } = (await config.json()) as {
+      keywords: { role_slug: string }[];
+    };
+    expect(keywords.some((k) => k.role_slug === role.slug)).toBe(false);
+  });
+
+  it("rejects a label with no letters or numbers", async () => {
+    const res = await post("/api/role-types", { label: "***" });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects a duplicate slug", async () => {
+    const res = await post("/api/role-types", { label: "DevOps" });
+    expect(res.status).toBe(409);
+  });
+});
+
+describe("feed config", () => {
+  it("returns seeded sources and keywords", async () => {
+    const res = await SELF.fetch(`${BASE}/api/feed/config`);
+    const { sources, keywords } = (await res.json()) as {
+      sources: { source: string; enabled: number }[];
+      keywords: { role_slug: string; keyword: string }[];
+    };
+    expect(sources.map((s) => s.source).sort()).toEqual([
+      "adzuna",
+      "arbeitnow",
+      "hn",
+    ]);
+    expect(keywords.some((k) => k.role_slug === "devops")).toBe(true);
+  });
+
+  it("toggles a source and updates its location", async () => {
+    const res = await SELF.fetch(`${BASE}/api/feed/config/sources/hn`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: false, location: "berlin" }),
+    });
+    expect(res.status).toBe(200);
+    const source = (await res.json()) as { enabled: number; location: string };
+    expect(source.enabled).toBe(0);
+    expect(source.location).toBe("berlin");
+  });
+
+  it("404s toggling an unknown source", async () => {
+    const res = await SELF.fetch(`${BASE}/api/feed/config/sources/bogus`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: true }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  it("adds and deletes a keyword", async () => {
+    const created = await post("/api/feed/config/keywords", {
+      role_slug: "devops",
+      keyword: "Kubernetes Engineer",
+    });
+    expect(created.status).toBe(201);
+    const keyword = (await created.json()) as { id: number; keyword: string };
+    expect(keyword.keyword).toBe("kubernetes engineer");
+
+    const deleted = await SELF.fetch(
+      `${BASE}/api/feed/config/keywords/${keyword.id}`,
+      { method: "DELETE" },
+    );
+    expect(deleted.status).toBe(204);
+  });
+
+  it("requires role_slug and keyword", async () => {
+    const res = await post("/api/feed/config/keywords", { role_slug: "devops" });
+    expect(res.status).toBe(400);
+  });
+});
