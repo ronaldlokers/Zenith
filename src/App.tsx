@@ -635,6 +635,7 @@ function BoardTab({
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
   return (
+    <>
     <div className="board">
       {PIPELINE.map((stage) => {
         const cards = open.filter((a) => a.status === stage);
@@ -783,6 +784,10 @@ function BoardTab({
           </details>
         );
       })}
+      </div>
+      <div className="board-summary">
+        <NextUpPanel applications={applications} />
+      </div>
       {detailApp && (
         <ApplicationDetailModal
           application={detailApp}
@@ -797,7 +802,7 @@ function BoardTab({
           onStatus={onStatus}
         />
       )}
-    </div>
+    </>
   );
 }
 
@@ -3224,30 +3229,57 @@ function CVTab({
           {t("cv.downloadPdf")}
         </button>
       </div>
-      <ProfileSection
-        profile={profile}
-        onChanged={load}
-        onError={onError}
-        notify={notify}
-      />
-      <WorkExperienceSection
-        items={workExp}
-        onChanged={load}
-        onError={onError}
-        notify={notify}
-      />
-      <EducationSection
-        items={education}
-        onChanged={load}
-        onError={onError}
-        notify={notify}
-      />
-      <LanguagesSection
-        items={languages}
-        onChanged={load}
-        onError={onError}
-        notify={notify}
-      />
+      <div className="cv-layout">
+        <div className="cv-main">
+          <ProfileSection
+            profile={profile}
+            onChanged={load}
+            onError={onError}
+            notify={notify}
+          />
+          <WorkExperienceSection
+            items={workExp}
+            onChanged={load}
+            onError={onError}
+            notify={notify}
+          />
+          <EducationSection
+            items={education}
+            onChanged={load}
+            onError={onError}
+            notify={notify}
+          />
+          <LanguagesSection
+            items={languages}
+            onChanged={load}
+            onError={onError}
+            notify={notify}
+          />
+        </div>
+        <aside className="jobs-side">
+          <h3 className="side-h">{t("cv.completeness")}</h3>
+          <ul className="side-list">
+            <li>
+              <span className="side-title">{t("cv.profile")}</span>
+              <span className="side-co">
+                {[profile.name, profile.email, profile.summary].filter(Boolean).length}/3
+              </span>
+            </li>
+            <li>
+              <span className="side-title">{t("cv.workExperience")}</span>
+              <span className="side-co">{workExp.length}</span>
+            </li>
+            <li>
+              <span className="side-title">{t("cv.education")}</span>
+              <span className="side-co">{education.length}</span>
+            </li>
+            <li>
+              <span className="side-title">{t("cv.languages")}</span>
+              <span className="side-co">{languages.length}</span>
+            </li>
+          </ul>
+        </aside>
+      </div>
     </section>
   );
 }

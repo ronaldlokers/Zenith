@@ -134,6 +134,7 @@
   },
   "cv": {
     "downloadPdf": "PDF downloaden",
+    "completeness": "In het kort",
     "skills": "Vaardigheden",
     "template": "Sjabloon",
     "templateSingle": "ATS-vriendelijk (één kolom)",
