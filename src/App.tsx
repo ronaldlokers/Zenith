@@ -3213,18 +3213,42 @@ function CVTab({
   return (
     <section className="cv-tab">
       <div className="cv-toolbar">
-        <label className="cv-template-picker">
-          {t("cv.template")}
-          <select
-            value={template}
-            onChange={(e) =>
-              setTemplate(e.target.value as "single-column" | "two-column")
-            }
-          >
-            <option value="single-column">{t("cv.templateSingle")}</option>
-            <option value="two-column">{t("cv.templateTwoColumn")}</option>
-          </select>
-        </label>
+        <div className="cv-template-picker">
+          <span className="cv-template-picker-label">{t("cv.template")}</span>
+          <div className="cv-template-options">
+            <button
+              type="button"
+              className={`cv-template-option${template === "single-column" ? " selected" : ""}`}
+              aria-pressed={template === "single-column"}
+              onClick={() => setTemplate("single-column")}
+            >
+              <span className="cv-template-thumb cv-template-thumb-single">
+                <span className="cv-t-line" />
+                <span className="cv-t-line" />
+                <span className="cv-t-line short" />
+              </span>
+              {t("cv.templateSingle")}
+            </button>
+            <button
+              type="button"
+              className={`cv-template-option${template === "two-column" ? " selected" : ""}`}
+              aria-pressed={template === "two-column"}
+              onClick={() => setTemplate("two-column")}
+            >
+              <span className="cv-template-thumb cv-template-thumb-two-col">
+                <span className="cv-t-col">
+                  <span className="cv-t-line" />
+                  <span className="cv-t-line short" />
+                </span>
+                <span className="cv-t-col wide">
+                  <span className="cv-t-line" />
+                  <span className="cv-t-line" />
+                </span>
+              </span>
+              {t("cv.templateTwoColumn")}
+            </button>
+          </div>
+        </div>
         <button className="primary" onClick={downloadPdf}>
           {t("cv.downloadPdf")}
         </button>

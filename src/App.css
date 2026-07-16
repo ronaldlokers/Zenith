@@ -1620,8 +1620,11 @@ summary.bcol-head::after {
 
 .cv-template-picker {
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cv-template-picker-label {
   font-family: var(--mono);
   font-size: 0.66rem;
   text-transform: uppercase;
@@ -1629,16 +1632,69 @@ summary.bcol-head::after {
   color: var(--muted);
 }
 
-.cv-template-picker select {
-  font-family: var(--sans);
-  font-size: 0.82rem;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 0.35rem 0.5rem;
+.cv-template-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cv-template-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--bg);
   color: var(--ink);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.cv-template-option.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.cv-template-thumb {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  width: 2.6rem;
+  height: 2rem;
+  padding: 0.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.cv-template-thumb-two-col {
+  flex-direction: row;
+  gap: 0.15rem;
+}
+
+.cv-t-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.cv-t-col.wide {
+  flex: 1.6;
+}
+
+.cv-t-line {
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--faint);
+}
+
+.cv-t-line.short {
+  width: 60%;
 }
 
 .cv-section {
