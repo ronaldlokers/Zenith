@@ -118,6 +118,15 @@
       "milestoneTitle_other": "{{count}} weken reeks — goed bezig",
       "brokenTitle": "Geen activiteit deze week",
       "brokenBody": "Geen probleem — een zoektocht naar een baan verloopt niet lineair. Je resultaten tot nu toe blijven gewoon staan, pak het weer op wanneer je er klaar voor bent."
+    },
+    "journal": {
+      "title": "Overwinningen",
+      "placeholder": "Leg een kleine overwinning vast — goede feedback, een sterk gesprek…",
+      "add": "Toevoegen",
+      "empty": "Nog niets vastgelegd.",
+      "showAll_one": "Toon alles ({{count}})",
+      "showAll_other": "Toon alles ({{count}})",
+      "showLess": "Toon minder"
     }
   },
   "palette": {

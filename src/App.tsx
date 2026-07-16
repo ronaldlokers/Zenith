@@ -31,6 +31,7 @@ import {
   type StatusHistoryRow,
   type OutreachStatus,
   type PrepItem,
+  type JournalEntry,
 } from "./types";
 import "./App.css";
 
@@ -837,6 +838,104 @@ function MomentumStreak({
   return (
     <div className="streak streak-active">
       <span className="streak-label">{t("stats.streak.activeTitle", { count: streak })}</span>
+    </div>
+  );
+}
+
+// Milestone/wins journal (#225) — a personal log of small wins (good
+// feedback, a strong interview, a callback) that don't necessarily map
+// to a pipeline status change worth recording on an application.
+function WinsJournal({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [entries, setEntries] = useState<JournalEntry[] | null>(null);
+  const [text, setText] = useState("");
+  const [expanded, setExpanded] = useState(false);
+
+  const load = useCallback(
+    () =>
+      api
+        .list<JournalEntry>("journal-entries")
+        .then(setEntries)
+        .catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const add = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    api
+      .create("journal-entries", { text: trimmed })
+      .then(() => {
+        setText("");
+        return load();
+      })
+      .catch((err) => onError((err as Error).message));
+  };
+
+  const remove = (id: number) =>
+    api
+      .remove("journal-entries", id)
+      .then(load)
+      .catch((e) => onError((e as Error).message));
+
+  if (!entries) return null;
+
+  const visible = expanded ? entries : entries.slice(0, 3);
+
+  return (
+    <div className="wins-journal">
+      <h2 className="stat-h">{t("stats.journal.title")}</h2>
+      <form className="tl-add" onSubmit={add}>
+        <input
+          placeholder={t("stats.journal.placeholder")}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button type="submit" className="primary">
+          {t("stats.journal.add")}
+        </button>
+      </form>
+      {entries.length === 0 ? (
+        <p className="muted small">{t("stats.journal.empty")}</p>
+      ) : (
+        <>
+          <ul className="tl-items">
+            {visible.map((entry) => (
+              <li key={entry.id}>
+                <span className="tl-date">{formatDate(entry.created_at)}</span>
+                <span className="tl-notes">{entry.text}</span>
+                <button
+                  className="tl-del danger"
+                  aria-label={t("common.delete")}
+                  onClick={() => remove(entry.id)}
+                >
+                  <RemoveIcon />
+                </button>
+              </li>
+            ))}
+          </ul>
+          {entries.length > 3 && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded
+                ? t("stats.journal.showLess")
+                : t("stats.journal.showAll", { count: entries.length })}
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -2170,6 +2269,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
       </div>
 
       <MomentumStreak streak={streak} broken={streakBroken} />
+
+      <WinsJournal onError={onError} />
 
       <h2 className="stat-h">{t("stats.appsPerWeek")}</h2>
       <div className="histo">

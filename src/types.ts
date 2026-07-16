@@ -232,6 +232,12 @@ export interface PrepItem {
   created_at: string;
 }
 
+export interface JournalEntry {
+  id: number;
+  text: string;
+  created_at: string;
+}
+
 export interface WorkExperience {
   id: number;
   company: string;
