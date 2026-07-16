@@ -49,6 +49,56 @@ function LoadingSkeleton() {
   );
 }
 
+// Empty-state illustrations (#136) — extending Jobs' hand-drawn SVG
+// (the climbing-dots motif above) to the other tabs, in the same
+// line-art style: currentColor strokes, one accent-stroked highlight.
+function EmptyBoardIcon() {
+  return (
+    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+      <rect x="14" y="20" width="20" height="56" rx="4" strokeWidth="4" opacity="0.28" />
+      <rect x="38" y="34" width="20" height="42" rx="4" strokeWidth="4" opacity="0.5" />
+      <rect x="62" y="14" width="20" height="62" rx="4" strokeWidth="5" className="accent-stroke" />
+    </svg>
+  );
+}
+
+function EmptyCompaniesIcon() {
+  return (
+    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+      <rect x="18" y="24" width="60" height="52" rx="4" strokeWidth="4" opacity="0.3" />
+      <line x1="32" y1="38" x2="40" y2="38" strokeWidth="4" strokeLinecap="round" />
+      <line x1="56" y1="38" x2="64" y2="38" strokeWidth="4" strokeLinecap="round" />
+      <line x1="32" y1="54" x2="40" y2="54" strokeWidth="4" strokeLinecap="round" />
+      <line x1="56" y1="54" x2="64" y2="54" strokeWidth="4" strokeLinecap="round" className="accent-stroke" />
+      <line x1="42" y1="76" x2="54" y2="76" strokeWidth="5" opacity="0.5" />
+    </svg>
+  );
+}
+
+function EmptyPeopleIcon() {
+  return (
+    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+      <circle cx="36" cy="34" r="14" strokeWidth="4" opacity="0.35" />
+      <path d="M14 78c2-16 14-24 22-24s20 8 22 24" strokeWidth="4" opacity="0.35" strokeLinecap="round" />
+      <circle cx="66" cy="30" r="12" strokeWidth="5" className="accent-stroke" />
+      <path d="M48 78c2-14 12-21 18-21s16 7 18 21" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function EmptyCvIcon() {
+  return (
+    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+      <rect x="24" y="12" width="48" height="72" rx="4" strokeWidth="4" opacity="0.3" />
+      <line x1="34" y1="28" x2="62" y2="28" strokeWidth="4" strokeLinecap="round" opacity="0.5" />
+      <line x1="34" y1="40" x2="62" y2="40" strokeWidth="4" strokeLinecap="round" opacity="0.35" />
+      <line x1="34" y1="52" x2="52" y2="52" strokeWidth="4" strokeLinecap="round" opacity="0.35" />
+      <line x1="34" y1="66" x2="62" y2="66" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
+      <line x1="34" y1="76" x2="50" y2="76" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function RemoveIcon() {
   return (
     <svg
@@ -1349,7 +1399,10 @@ function BoardTab({
           </div>
         ))}
         {laneEntries.length === 0 && (
-          <p className="empty">{t("empty.boardEmpty")}</p>
+          <p className="empty">
+            <EmptyBoardIcon />
+            {t("empty.boardEmpty")}
+          </p>
         )}
       </div>
     ) : (
@@ -4086,6 +4139,7 @@ function CompaniesTab({
           ))}
           {visible.length === 0 && (
             <li className="empty">
+              <EmptyCompaniesIcon />
               {companies.length === 0
                 ? t("empty.noCompanies")
                 : t("empty.noCompaniesMatch")}
@@ -4133,6 +4187,7 @@ function CompaniesTab({
         })}
         {visible.length === 0 && (
           <li className="empty">
+            <EmptyCompaniesIcon />
             {companies.length === 0
               ? t("empty.noCompanies")
               : t("empty.noCompaniesMatch")}
@@ -4515,6 +4570,7 @@ function ContactsTab({
         ))}
         {visible.length === 0 && (
           <li className="empty">
+            <EmptyPeopleIcon />
             {contacts.length === 0
               ? t("empty.noPeople")
               : t("empty.noPeopleMatch")}
@@ -5352,7 +5408,12 @@ function WorkExperienceSection({
             )}
           </li>
         ))}
-        {items.length === 0 && <li className="empty">{t("cv.noWorkExperience")}</li>}
+        {items.length === 0 && (
+          <li className="empty">
+            <EmptyCvIcon />
+            {t("cv.noWorkExperience")}
+          </li>
+        )}
       </ul>
       {editing === "new" ? (
         <WorkExperienceForm
