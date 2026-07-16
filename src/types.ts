@@ -165,6 +165,7 @@ export interface Application {
   next_action: string | null;
   next_action_at: string | null;
   deadline_at: string | null;
+  tags: Tag[];
   created_at: string;
   updated_at: string;
 }
@@ -182,6 +183,11 @@ export interface Profile {
 }
 
 export interface Skill {
+  id: number;
+  name: string;
+}
+
+export interface Tag {
   id: number;
   name: string;
 }

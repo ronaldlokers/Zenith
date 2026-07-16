@@ -43,6 +43,7 @@
     "allStatuses": "All statuses",
     "allRoles": "All roles",
     "allCompanies": "All companies",
+    "allTags": "All tags",
     "sortUpdated": "Last updated",
     "sortApplied": "Applied date",
     "sortCompany": "Company"
@@ -104,6 +105,7 @@
     "description": "Description",
     "notes": "Notes",
     "deadline": "Deadline",
+    "addTag": "+ tag",
     "keywordMatch": "Keyword match",
     "pasteJdPlaceholder": "Paste the job description to check it against your CV skills…",
     "keywordMatchCount": "Your CV mentions {{matched}} of {{total}} keywords found in this posting"

@@ -189,8 +189,63 @@ app.get("/api/applications", async (c) => {
      LEFT JOIN contacts ON contacts.id = applications.contact_id
      LEFT JOIN contacts AS referrer ON referrer.id = applications.referred_by_contact_id
      ORDER BY applications.updated_at DESC`,
+  ).all<{ id: number }>();
+  const { results: tagLinks } = await c.env.DB.prepare(
+    `SELECT application_tags.application_id, tags.id, tags.name
+     FROM application_tags
+     JOIN tags ON tags.id = application_tags.tag_id`,
+  ).all<{ application_id: number; id: number; name: string }>();
+  const withTags = results.map((a) => ({
+    ...a,
+    tags: tagLinks
+      .filter((l) => l.application_id === a.id)
+      .map((l) => ({ id: l.id, name: l.name })),
+  }));
+  return c.json(withTags);
+});
+
+// --- Tags ---
+
+app.get("/api/tags", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    "SELECT * FROM tags ORDER BY name",
   ).all();
   return c.json(results);
+});
+
+app.post("/api/applications/:id/tags", async (c) => {
+  const body = await c.req.json();
+  const name = (body.name ?? "").trim();
+  if (!name) return c.json({ error: "name is required" }, 400);
+
+  let tag = await c.env.DB.prepare(
+    "SELECT * FROM tags WHERE name = ? COLLATE NOCASE",
+  )
+    .bind(name)
+    .first<{ id: number; name: string }>();
+  if (!tag) {
+    tag = await c.env.DB.prepare(
+      "INSERT INTO tags (name) VALUES (?) RETURNING *",
+    )
+      .bind(name)
+      .first<{ id: number; name: string }>();
+  }
+  await c.env.DB.prepare(
+    `INSERT INTO application_tags (application_id, tag_id)
+     VALUES (?, ?) ON CONFLICT DO NOTHING`,
+  )
+    .bind(c.req.param("id"), tag!.id)
+    .run();
+  return c.json(tag, 201);
+});
+
+app.delete("/api/applications/:id/tags/:tagId", async (c) => {
+  await c.env.DB.prepare(
+    "DELETE FROM application_tags WHERE application_id = ? AND tag_id = ?",
+  )
+    .bind(c.req.param("id"), c.req.param("tagId"))
+    .run();
+  return c.body(null, 204);
 });
 
 app.post("/api/applications", async (c) => {
