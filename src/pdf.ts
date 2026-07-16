@@ -198,6 +198,137 @@ export function generateCvPdf(data: CvPdfData, labels: CvPdfLabels): jsPDF {
   return doc;
 }
 
+export interface InterviewCheatSheetLabels {
+  contact: string;
+  companyResearch: string;
+  prepChecklist: string;
+  pastInteractions: string;
+  noNotes: string;
+}
+
+export interface InterviewCheatSheetData {
+  title: string;
+  companyName: string | null;
+  companyWebsite: string | null;
+  companyDescription: string | null;
+  contactName: string | null;
+  contactRole: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  notes: string | null;
+  prepItems: { text: string; done: boolean | number }[];
+  interactions: { type: string; happened_at: string; notes: string | null }[];
+}
+
+// One-page interview cheat sheet (#137) — a print/PDF-friendly summary
+// distinct from the CV PDF: company research, contact, prep checklist,
+// and past interactions in one place instead of switching between the
+// detail modal's sections mid-interview.
+export function generateInterviewCheatSheet(
+  data: InterviewCheatSheetData,
+  labels: InterviewCheatSheetLabels,
+): jsPDF {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const marginX = 18;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const maxWidth = pageWidth - marginX * 2;
+  const bottomLimit = pageHeight - 18;
+  let y = 20;
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > bottomLimit) {
+      doc.addPage();
+      y = 20;
+    }
+  };
+
+  const addParagraph = (text: string, size: number, lineHeight: number) => {
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(text, maxWidth) as string[];
+    for (const line of lines) {
+      ensureSpace(lineHeight);
+      doc.text(line, marginX, y);
+      y += lineHeight;
+    }
+  };
+
+  const addSectionHeading = (text: string) => {
+    ensureSpace(10);
+    y += 2;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(text.toUpperCase(), marginX, y);
+    y += 1.5;
+    doc.setDrawColor(180);
+    doc.line(marginX, y, pageWidth - marginX, y);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+  };
+
+  // --- Header ---
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text(data.title, marginX, y);
+  y += 7;
+  if (data.companyName) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(data.companyName, marginX, y);
+    y += 8;
+  }
+
+  // --- Contact ---
+  addSectionHeading(labels.contact);
+  const contactLine = [data.contactName, data.contactRole]
+    .filter(Boolean)
+    .join(" — ");
+  if (contactLine) addParagraph(contactLine, 11, 5.5);
+  const contactDetails = [data.contactEmail, data.contactPhone]
+    .filter(Boolean)
+    .join("  ·  ");
+  if (contactDetails) addParagraph(contactDetails, 10, 5);
+  if (!contactLine && !contactDetails) addParagraph(labels.noNotes, 10, 5);
+
+  // --- Company research ---
+  addSectionHeading(labels.companyResearch);
+  if (data.companyWebsite) addParagraph(data.companyWebsite, 10, 5);
+  if (data.companyDescription) addParagraph(data.companyDescription, 10.5, 5);
+  if (!data.companyWebsite && !data.companyDescription) {
+    addParagraph(labels.noNotes, 10, 5);
+  }
+  if (data.notes) {
+    y += 2;
+    addParagraph(data.notes, 10.5, 5);
+  }
+
+  // --- Prep checklist ---
+  addSectionHeading(labels.prepChecklist);
+  if (data.prepItems.length === 0) {
+    addParagraph(labels.noNotes, 10, 5);
+  } else {
+    for (const item of data.prepItems) {
+      addParagraph(`${item.done ? "[x]" : "[ ]"} ${item.text}`, 10.5, 5.5);
+    }
+  }
+
+  // --- Past interactions ---
+  addSectionHeading(labels.pastInteractions);
+  if (data.interactions.length === 0) {
+    addParagraph(labels.noNotes, 10, 5);
+  } else {
+    const sorted = [...data.interactions].sort((a, b) =>
+      a.happened_at.localeCompare(b.happened_at),
+    );
+    for (const it of sorted) {
+      const line = `${it.happened_at.slice(0, 10)} — ${it.type}${it.notes ? `: ${it.notes}` : ""}`;
+      addParagraph(line, 10, 5);
+    }
+  }
+
+  return doc;
+}
+
 export type CvTemplate = "single-column" | "two-column";
 
 // Two-column layout (issue #71) — a sidebar (contact, skills, languages)

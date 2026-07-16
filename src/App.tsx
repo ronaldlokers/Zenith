@@ -2796,6 +2796,47 @@ function ApplicationDetailModal({
       .catch((e) => onError((e as Error).message));
   };
 
+  const [printingCheatSheet, setPrintingCheatSheet] = useState(false);
+  const printCheatSheet = async () => {
+    setPrintingCheatSheet(true);
+    try {
+      const company = companies.find((c) => c.id === a.company_id) ?? null;
+      const contact = contacts.find((c) => c.id === a.contact_id) ?? null;
+      const [prepItems, interactions] = await Promise.all([
+        api.list<PrepItem>(`applications/${a.id}/prep-items`),
+        api.interactions("applications", a.id),
+      ]);
+      const { generateInterviewCheatSheet } = await import("./pdf");
+      const doc = generateInterviewCheatSheet(
+        {
+          title: a.title,
+          companyName: company?.name ?? a.company_name ?? null,
+          companyWebsite: company?.website ?? null,
+          companyDescription: company?.description ?? null,
+          contactName: contact?.name ?? a.contact_name ?? null,
+          contactRole: contact?.role ?? null,
+          contactEmail: contact?.email ?? null,
+          contactPhone: contact?.phone ?? null,
+          notes: a.notes,
+          prepItems,
+          interactions,
+        },
+        {
+          contact: t("detail.cheatSheet.contact"),
+          companyResearch: t("detail.cheatSheet.companyResearch"),
+          prepChecklist: t("prep.title"),
+          pastInteractions: t("detail.timeline"),
+          noNotes: t("detail.cheatSheet.noNotes"),
+        },
+      );
+      doc.save(`${a.title.replace(/\s+/g, "-")}-cheat-sheet.pdf`);
+    } catch (e) {
+      onError((e as Error).message);
+    } finally {
+      setPrintingCheatSheet(false);
+    }
+  };
+
   const pane = (
       <div
         className={asPane ? "detail-pane" : "modal detail-modal"}
@@ -2974,6 +3015,11 @@ function ApplicationDetailModal({
 
             <div className="detail-actions">
               <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
+              <button disabled={printingCheatSheet} onClick={printCheatSheet}>
+                {printingCheatSheet
+                  ? t("detail.cheatSheet.printing")
+                  : t("detail.cheatSheet.print")}
+              </button>
               <button
                 onClick={() =>
                   (a.archived_at
