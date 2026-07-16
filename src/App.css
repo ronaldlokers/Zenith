@@ -2778,3 +2778,49 @@ summary.bcol-head::after {
   opacity: 0.35;
   cursor: default;
 }
+
+/* Print stylesheet (#208) — the app previously only had print rules
+   inside the two dedicated jsPDF exports (CV, cheat sheet). This
+   covers Ctrl/Cmd+P from any other view: the main tab content, or a
+   detail modal if one happens to be open. */
+@media print {
+  .header,
+  .tabs,
+  .quick-add-fab,
+  .toast,
+  .error-dismiss,
+  .card-select,
+  .modal-close,
+  button,
+  .toolbar .search,
+  input[type="search"] {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .content {
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Let a detail modal print as a normal full-width page instead of a
+     small centered overlay box. */
+  .modal-backdrop {
+    position: static;
+    background: none;
+    padding: 0;
+    display: block;
+  }
+
+  .modal {
+    max-width: none;
+    width: auto;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+}
