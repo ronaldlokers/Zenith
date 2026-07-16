@@ -1100,12 +1100,7 @@ select.status {
   letter-spacing: 0.08em;
   color: var(--sc);
   padding: 0.3rem 0.1rem 0.45rem;
-  cursor: pointer;
   list-style: none;
-}
-
-.bcol-head::-webkit-details-marker {
-  display: none;
 }
 
 .bcol-head::before {
@@ -1117,14 +1112,25 @@ select.status {
   flex-shrink: 0;
 }
 
-.bcol-head::after {
+/* Toggle affordance (chevron, pointer cursor) only applies where the
+   column is actually a <summary> — mobile. Desktop renders a plain
+   div.bcol-head with zero collapse affordance (#47). */
+summary.bcol-head {
+  cursor: pointer;
+}
+
+summary.bcol-head::-webkit-details-marker {
+  display: none;
+}
+
+summary.bcol-head::after {
   content: "▸";
   color: var(--faint);
   font-size: 0.6rem;
   transition: transform 0.15s ease;
 }
 
-.bcol[open] > .bcol-head::after {
+.bcol[open] > summary.bcol-head::after {
   transform: rotate(90deg);
 }
 
