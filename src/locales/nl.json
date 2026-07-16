@@ -130,6 +130,10 @@
   },
   "cv": {
     "downloadPdf": "PDF downloaden",
+    "skills": "Vaardigheden",
+    "template": "Sjabloon",
+    "templateSingle": "ATS-vriendelijk (één kolom)",
+    "templateTwoColumn": "Twee kolommen",
     "profile": "Profiel",
     "name": "Naam",
     "email": "E-mail",

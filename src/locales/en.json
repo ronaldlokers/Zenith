@@ -130,6 +130,10 @@
   },
   "cv": {
     "downloadPdf": "Download PDF",
+    "skills": "Skills",
+    "template": "Template",
+    "templateSingle": "ATS-friendly (single column)",
+    "templateTwoColumn": "Two-column",
     "profile": "Profile",
     "name": "Name",
     "email": "Email",
