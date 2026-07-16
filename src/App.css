@@ -806,6 +806,30 @@ button.danger {
   gap: 0.6rem;
 }
 
+/* Rows entering after a filter/search change (#210) fade+settle in
+   instead of snapping into place — each <li> is freshly mounted when
+   it starts matching, so this fires naturally on the filtered set. */
+.cards > .card {
+  animation: card-enter 0.15s ease-out;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cards > .card {
+    animation: none;
+  }
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -998,6 +1022,9 @@ button.danger {
   padding: 0.55rem 0.8rem;
   cursor: pointer;
   min-height: 44px;
+  /* Filter/status changes (#210) previously snapped instantly — a
+     stage move now eases the border color instead of hard-cutting. */
+  transition: border-left-color 0.18s ease, padding 0.15s ease, min-height 0.15s ease;
 }
 
 /* Response-time heat strip (#142) — a right-edge border, deliberately a
@@ -1238,6 +1265,7 @@ select.status {
   background: color-mix(in srgb, var(--sc) 14%, transparent);
   color: var(--sc);
   cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 /* Toast */
