@@ -86,6 +86,14 @@
     "checking": "Controleren…"
   },
   "stats": {
+    "momentumLabel": "Pipeline-momentum",
+    "momentum": {
+      "up": "Versnelt",
+      "down": "Vertraagt",
+      "flat": "Stabiel",
+      "none": "Geen recente activiteit"
+    },
+    "momentumDetail": "{{recent}} stap-vooruitgangen in de afgelopen 2 weken vs {{prior}} in de 2 weken daarvoor",
     "appsPerWeek": "Sollicitaties per week",
     "pipelineFunnel": "Pipeline-funnel — vacatures die elke fase bereikten",
     "avgTimeInStage": "Gemiddelde tijd per fase",

@@ -1363,8 +1363,43 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
     bySource.set(src, cur);
   }
 
+  // Pipeline velocity: forward stage advances (never backward/lateral) in
+  // the last 14 days vs the 14 days before that — a single headline signal
+  // for whether the search overall is speeding up or stalling, distinct
+  // from the per-stage funnel/time-in-stage breakdowns below.
+  const PERIOD = 14 * 86400000;
+  const isForwardMove = (row: (typeof history)[number]) => {
+    const toIdx = PIPELINE.indexOf(row.to_status);
+    const fromIdx = row.from_status ? PIPELINE.indexOf(row.from_status) : -1;
+    return toIdx >= 0 && toIdx > fromIdx;
+  };
+  const recentMoves = history.filter(
+    (h) => isForwardMove(h) && parseSqlDate(h.changed_at) >= now - PERIOD,
+  ).length;
+  const priorMoves = history.filter(
+    (h) =>
+      isForwardMove(h) &&
+      parseSqlDate(h.changed_at) >= now - 2 * PERIOD &&
+      parseSqlDate(h.changed_at) < now - PERIOD,
+  ).length;
+  let momentum: "up" | "down" | "flat" | "none";
+  if (recentMoves === 0 && priorMoves === 0) momentum = "none";
+  else if (priorMoves === 0) momentum = "up";
+  else {
+    const change = (recentMoves - priorMoves) / priorMoves;
+    momentum = change > 0.15 ? "up" : change < -0.15 ? "down" : "flat";
+  }
+
   return (
     <section className="stats">
+      <div className={`momentum momentum-${momentum}`}>
+        <span className="momentum-label">{t("stats.momentumLabel")}</span>
+        <span className="momentum-value">{t(`stats.momentum.${momentum}`)}</span>
+        <span className="muted small">
+          {t("stats.momentumDetail", { recent: recentMoves, prior: priorMoves })}
+        </span>
+      </div>
+
       <h2 className="stat-h">{t("stats.appsPerWeek")}</h2>
       <div className="histo">
         {weeks.map((w) => (
