@@ -143,4 +143,14 @@ export const api = {
       `/api/work-experience/${workExperienceId}/skills/${skillId}`,
       { method: "DELETE" },
     ),
+  tags: () => request<import("./types").Tag[]>("/api/tags"),
+  addApplicationTag: (applicationId: number, name: string) =>
+    request<import("./types").Tag>(
+      `/api/applications/${applicationId}/tags`,
+      { method: "POST", body: JSON.stringify({ name }) },
+    ),
+  removeApplicationTag: (applicationId: number, tagId: number) =>
+    request<void>(`/api/applications/${applicationId}/tags/${tagId}`, {
+      method: "DELETE",
+    }),
 };

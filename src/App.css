@@ -581,8 +581,9 @@ button.danger {
 
 .card.row2 .l2 {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 0.4rem;
   margin-top: 0.2rem;
 }
 
@@ -608,6 +609,17 @@ button.danger {
 
 .card.row2 .due.late {
   color: var(--danger);
+}
+
+.tag-chip {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
 }
 
 .due-line {

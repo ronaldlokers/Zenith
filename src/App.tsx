@@ -1825,6 +1825,7 @@ function ApplicationDetailModal({
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
+  const [newTag, setNewTag] = useState("");
   const a = application;
 
   useEffect(() => {
@@ -1834,6 +1835,18 @@ function ApplicationDetailModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const addTag = () => {
+    const name = newTag.trim();
+    if (!name) return;
+    api
+      .addApplicationTag(a.id, name)
+      .then(() => {
+        setNewTag("");
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -1948,6 +1961,36 @@ function ApplicationDetailModal({
               {a.notes && <p className="notes">{a.notes}</p>}
             </div>
 
+            <div className="keyword-chips">
+              {a.tags.map((tg) => (
+                <span key={tg.id} className="chip">
+                  {tg.name}
+                  <button
+                    onClick={() =>
+                      api
+                        .removeApplicationTag(a.id, tg.id)
+                        .then(onChanged)
+                        .catch((e) => onError((e as Error).message))
+                    }
+                    aria-label={t("feedSettings.removeKeyword")}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <input
+                placeholder={t("detail.addTag")}
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addTag();
+                  }
+                }}
+              />
+            </div>
+
             <div className="detail-actions">
               <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
               <button
@@ -2035,6 +2078,7 @@ function ApplicationsTab({
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
+  const [tagFilter, setTagFilter] = useState<string>("all");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"updated" | "applied" | "company">(
     "updated",
@@ -2054,12 +2098,19 @@ function ApplicationsTab({
   };
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
+  const allTags = [
+    ...new Map(
+      applications.flatMap((a) => a.tags).map((tg) => [tg.id, tg]),
+    ).values(),
+  ].sort((a, b) => a.name.localeCompare(b.name));
+
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
     (a) =>
       (statusFilter === "all" || a.status === statusFilter) &&
       (roleFilter === "all" || a.role_type === roleFilter) &&
       (companyFilter === "all" || String(a.company_id) === companyFilter) &&
+      (tagFilter === "all" || a.tags.some((tg) => String(tg.id) === tagFilter)) &&
       (!q ||
         [a.title, a.company_name, a.contact_name, a.notes, a.source]
           .filter(Boolean)
@@ -2206,6 +2257,19 @@ function ApplicationsTab({
             </option>
           ))}
         </select>
+        {allTags.length > 0 && (
+          <select
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value)}
+          >
+            <option value="all">{t("filters.allTags")}</option>
+            {allTags.map((tg) => (
+              <option key={tg.id} value={tg.id}>
+                {tg.name}
+              </option>
+            ))}
+          </select>
+        )}
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as typeof sort)}
@@ -2278,6 +2342,11 @@ function ApplicationsTab({
                   {t("detail.deadline")}: {formatDate(a.deadline_at)}
                 </span>
               )}
+              {a.tags.map((tg) => (
+                <span key={tg.id} className="tag-chip">
+                  {tg.name}
+                </span>
+              ))}
             </div>
           </li>
         ))}
