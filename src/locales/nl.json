@@ -51,7 +51,7 @@
     "load": "Voorbeelddata laden",
     "loadedHint": "Je account is gevuld met voorbeelddata. Wis die om met je eigen pijplijn te beginnen.",
     "clear": "Voorbeelddata verwijderen",
-    "clearConfirm": "Alle voorbeelddata uit je account verwijderen? Dit kan niet ongedaan worden gemaakt."
+    "clearConfirm": "Dit verwijdert permanent ALLE data in je account — inclusief alles wat je sindsdien hebt toegevoegd — en zet het terug naar leeg. Je login, API-sleutel en deellinks blijven behouden. Dit kan niet ongedaan worden gemaakt."
   },
   "apiDocs": {
     "title": "API-referentie",
