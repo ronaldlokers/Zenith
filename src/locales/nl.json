@@ -53,6 +53,20 @@
     "clear": "Voorbeelddata verwijderen",
     "clearConfirm": "Alle voorbeelddata uit je account verwijderen? Dit kan niet ongedaan worden gemaakt."
   },
+  "apiDocs": {
+    "title": "API-referentie",
+    "intro": "Alleen-lezen toegang tot je sollicitaties met je API-sleutel. Basis-URL:",
+    "authHeading": "Authenticatie",
+    "auth": "Stuur je sleutel als Bearer-token bij elk verzoek:",
+    "endpointsHeading": "Endpoints",
+    "listDesc": "Lijst je sollicitaties, nieuwste eerst.",
+    "getDesc": "Haal één sollicitatie op via id (404 als het niet de jouwe is).",
+    "fieldsNote": "Antwoorden bevatten: id, title, status, company_id, role_type, url, source, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, created_at, updated_at. Salaris en beloning worden nooit blootgesteld.",
+    "exampleHeading": "Voorbeeld",
+    "webhooksHeading": "Webhooks",
+    "webhookIntro": "Wanneer de status van een sollicitatie verandert, POST JobSeekr deze JSON naar elk van je webhook-URL's:",
+    "signatureNote": "Elke levering bevat een X-JobSeekr-Signature-header — een hex HMAC-SHA256 van de ruwe request-body met je webhook-secret als sleutel. Controleer die voordat je een payload vertrouwt:"
+  },
   "forms": {
     "appliedOn": "Gesolliciteerd op",
     "basics": "Basis",
