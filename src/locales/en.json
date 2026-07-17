@@ -88,7 +88,9 @@
     "shareLink": "Public share link",
     "generateLink": "Generate link",
     "regenerateLink": "Regenerate",
-    "disableLink": "Disable"
+    "disableLink": "Disable",
+    "calendarLink": "Calendar subscribe link",
+    "calendarLinkHint": "Add this URL as a subscribed calendar in Google/Outlook/Apple Calendar — follow-ups, deadlines, and interviews stay in sync automatically. Read-only, updates whenever your calendar app refreshes."
   },
   "feed": {
     "pulledFrom": "Pulled from Adzuna and HN Who's Hiring every 6 hours.",

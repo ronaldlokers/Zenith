@@ -190,4 +190,10 @@ export const api = {
     }),
   revokeShareToken: () =>
     request<void>("/api/profile/share-token", { method: "DELETE" }),
+  generateCalendarToken: () =>
+    request<{ calendar_token: string }>("/api/profile/calendar-token", {
+      method: "POST",
+    }),
+  revokeCalendarToken: () =>
+    request<void>("/api/profile/calendar-token", { method: "DELETE" }),
 };

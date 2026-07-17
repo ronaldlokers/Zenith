@@ -88,7 +88,9 @@
     "shareLink": "Openbare deel-link",
     "generateLink": "Link genereren",
     "regenerateLink": "Opnieuw genereren",
-    "disableLink": "Uitschakelen"
+    "disableLink": "Uitschakelen",
+    "calendarLink": "Agenda-abonneerlink",
+    "calendarLinkHint": "Voeg deze URL toe als geabonneerde agenda in Google/Outlook/Apple Calendar — vervolgacties, deadlines en gesprekken blijven automatisch synchroon. Alleen-lezen, wordt bijgewerkt telkens als je agenda-app ververst."
   },
   "feed": {
     "pulledFrom": "Opgehaald van Adzuna en HN Who's Hiring, elke 6 uur.",
