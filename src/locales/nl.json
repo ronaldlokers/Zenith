@@ -362,7 +362,15 @@
     "signIn": "Inloggen",
     "signingIn": "Inloggen…",
     "error": "Inloggen mislukt — controleer je e-mail en wachtwoord.",
-    "inviteOnly": "Accounts zijn alleen op uitnodiging. Vraag je beheerder om toegang."
+    "inviteOnly": "Accounts zijn alleen op uitnodiging. Vraag je beheerder om toegang.",
+    "enterTwoFactorCode": "Voer de code uit je authenticator-app in.",
+    "enterBackupCode": "Voer een van je back-upcodes in.",
+    "twoFactorCode": "Authenticatiecode",
+    "backupCode": "Back-upcode",
+    "twoFactorError": "Kon die code niet verifiëren.",
+    "verify": "Verifiëren",
+    "useBackupCode": "Gebruik een back-upcode",
+    "useTwoFactorCode": "Gebruik je authenticator-app"
   },
   "account": {
     "signedInAs": "Ingelogd als {{email}}",
@@ -380,7 +388,18 @@
     "resetDemo": "Demo-account",
     "resetDemoSubmit": "Demo-data resetten",
     "resetDemoSuccess": "Demo-data gereset.",
-    "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?"
+    "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?",
+    "twoFactor": "Tweestapsverificatie",
+    "twoFactorEnabledHint": "2FA staat aan. Uitschakelen verwijdert de authenticator-app-vereiste bij het inloggen.",
+    "twoFactorDisabledHint": "Voeg een authenticator-app-code toe als tweede stap bij het inloggen.",
+    "twoFactorEnable": "2FA inschakelen",
+    "twoFactorDisable": "2FA uitschakelen",
+    "twoFactorError": "Kon dit niet doen — controleer je wachtwoord.",
+    "twoFactorScanHint": "Voeg dit geheim toe aan je authenticator-app (Google Authenticator, 1Password, etc.):",
+    "twoFactorBackupCodesHint": "Bewaar deze back-upcodes op een veilige plek — elke werkt eenmalig als je geen toegang meer hebt tot je authenticator-app.",
+    "twoFactorCodePlaceholder": "Code uit je app",
+    "twoFactorVerified": "Geverifieerd — 2FA werkt.",
+    "twoFactorVerifyError": "Die code kon niet worden geverifieerd. 2FA staat nog steeds aan — probeer het opnieuw."
   },
   "companies": {
     "view": "Weergave",

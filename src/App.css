@@ -160,6 +160,36 @@
   font-size: 0.8rem;
 }
 
+.tfa-secret {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  word-break: break-all;
+}
+
+.tfa-backup-codes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.3rem 0.6rem;
+  list-style: none;
+  margin: 0.4rem 0;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+.tfa-verify {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
 .share-field input {
   font-size: 0.8rem;
   padding: 0.4rem 0.5rem;
