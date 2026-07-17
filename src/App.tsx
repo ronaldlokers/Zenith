@@ -5492,9 +5492,9 @@ function ApplicationForm({
         </p>
       )}
       <div className="form-group">
-        <h4>Basics</h4>
+        <h4>{t("forms.basics")}</h4>
         <label>
-          Title *
+          {t("forms.title")} *
           <input
             required
             value={form.title ?? ""}
@@ -5502,7 +5502,7 @@ function ApplicationForm({
           />
         </label>
         <label>
-          Role type
+          {t("forms.roleType")}
           <select
             value={form.role_type ?? "other"}
             onChange={(e) =>
@@ -5517,7 +5517,7 @@ function ApplicationForm({
           </select>
         </label>
         <label>
-          Company
+          {t("forms.company")}
           <select
             value={form.company_id ?? ""}
             onChange={(e) =>
@@ -5535,7 +5535,7 @@ function ApplicationForm({
           </select>
         </label>
         <label>
-          Contact
+          {t("forms.contact")}
           <select
             value={form.contact_id ?? ""}
             onChange={(e) =>
@@ -5575,9 +5575,9 @@ function ApplicationForm({
       </div>
 
       <div className="form-group">
-        <h4>Posting &amp; compensation</h4>
+        <h4>{t("forms.postingCompensation")}</h4>
         <label>
-          URL
+          {t("forms.url")}
           <span className="url-row">
             <input
               type="url"
@@ -5594,23 +5594,23 @@ function ApplicationForm({
           </span>
         </label>
         <label>
-          Source
+          {t("forms.source")}
           <input
-            placeholder="LinkedIn, referral, …"
+            placeholder={t("forms.sourcePlaceholder")}
             value={form.source ?? ""}
             onChange={(e) => set({ source: e.target.value || null })}
           />
         </label>
         <label>
-          Salary range
+          {t("forms.salaryRange")}
           <input
-            placeholder="freeform, e.g. from a job posting"
+            placeholder={t("forms.salaryRangePlaceholder")}
             value={form.salary_range ?? ""}
             onChange={(e) => set({ salary_range: e.target.value || null })}
           />
         </label>
         <label>
-          Currency
+          {t("forms.currency")}
           <select
             value={form.salary_currency ?? ""}
             onChange={(e) => set({ salary_currency: e.target.value || null })}
@@ -5624,7 +5624,7 @@ function ApplicationForm({
           </select>
         </label>
         <label>
-          Min
+          {t("forms.min")}
           <input
             type="number"
             min={0}
@@ -5637,7 +5637,7 @@ function ApplicationForm({
           />
         </label>
         <label>
-          Max
+          {t("forms.max")}
           <input
             type="number"
             min={0}
@@ -5650,7 +5650,7 @@ function ApplicationForm({
           />
         </label>
         <label>
-          Per
+          {t("forms.per")}
           <select
             value={form.salary_period ?? ""}
             onChange={(e) =>
@@ -5663,12 +5663,12 @@ function ApplicationForm({
             }
           >
             <option value="">—</option>
-            <option value="year">year</option>
-            <option value="month">month</option>
+            <option value="year">{t("forms.year")}</option>
+            <option value="month">{t("forms.month")}</option>
           </select>
         </label>
         <label>
-          Applied on
+          {t("forms.appliedOn")}
           <input
             type="date"
             value={form.applied_at ?? ""}
@@ -5736,17 +5736,17 @@ function ApplicationForm({
       )}
 
       <div className="form-group">
-        <h4>Follow-up</h4>
+        <h4>{t("forms.followUp")}</h4>
         <label>
-          Next action
+          {t("forms.nextAction")}
           <input
-            placeholder="Nudge recruiter, prep case study, …"
+            placeholder={t("forms.nextActionPlaceholder")}
             value={form.next_action ?? ""}
             onChange={(e) => set({ next_action: e.target.value || null })}
           />
         </label>
         <label>
-          Next action due
+          {t("forms.nextActionDue")}
           <input
             type="date"
             value={form.next_action_at ?? ""}
@@ -5754,7 +5754,7 @@ function ApplicationForm({
           />
         </label>
         <label>
-          Application deadline
+          {t("forms.deadline")}
           <input
             type="date"
             value={form.deadline_at ?? ""}
@@ -5762,7 +5762,7 @@ function ApplicationForm({
           />
         </label>
         <label>
-          Fit score
+          {t("forms.fitScore")}
           <select
             value={form.fit_score ?? ""}
             onChange={(e) =>
@@ -5780,7 +5780,7 @@ function ApplicationForm({
           </select>
         </label>
         <label className="full">
-          Notes
+          {t("forms.notes")}
           <textarea
             rows={3}
             value={form.notes ?? ""}
@@ -6029,7 +6029,7 @@ function CompanyForm({
       }}
     >
       <label>
-        Name *
+        {t("forms.name")} *
         <input
           required
           value={form.name ?? ""}
@@ -6037,7 +6037,7 @@ function CompanyForm({
         />
       </label>
       <label>
-        Website
+        {t("forms.website")}
         <input
           type="url"
           value={form.website ?? ""}
@@ -6045,7 +6045,7 @@ function CompanyForm({
         />
       </label>
       <label>
-        Location
+        {t("forms.location")}
         <input
           value={form.location ?? ""}
           onChange={(e) => set({ location: e.target.value || null })}
@@ -6057,10 +6057,10 @@ function CompanyForm({
           checked={!!form.is_agency}
           onChange={(e) => set({ is_agency: e.target.checked ? 1 : 0 })}
         />
-        Recruitment agency
+        {t("forms.recruitmentAgency")}
       </label>
       <label className="full">
-        Notes
+        {t("forms.notes")}
         <textarea
           rows={3}
           value={form.notes ?? ""}
@@ -6416,7 +6416,7 @@ function ContactForm({
       }}
     >
       <label>
-        Name *
+        {t("forms.name")} *
         <input
           required
           value={form.name ?? ""}
@@ -6424,9 +6424,9 @@ function ContactForm({
         />
       </label>
       <label>
-        Role
+        {t("forms.role")}
         <input
-          placeholder="Recruiter, hiring manager, …"
+          placeholder={t("forms.rolePlaceholder")}
           value={form.role ?? ""}
           onChange={(e) => set({ role: e.target.value || null })}
         />
@@ -6463,7 +6463,7 @@ function ContactForm({
         />
       </label>
       <label>
-        Company
+        {t("forms.company")}
         <select
           value={form.company_id ?? ""}
           onChange={(e) =>
@@ -6479,7 +6479,7 @@ function ContactForm({
         </select>
       </label>
       <label>
-        Email
+        {t("forms.email")}
         <input
           type="email"
           value={form.email ?? ""}
@@ -6487,7 +6487,7 @@ function ContactForm({
         />
       </label>
       <label>
-        Phone
+        {t("forms.phone")}
         <input
           type="tel"
           value={form.phone ?? ""}
@@ -6495,7 +6495,7 @@ function ContactForm({
         />
       </label>
       <label>
-        LinkedIn
+        {t("forms.linkedin")}
         <input
           type="url"
           value={form.linkedin ?? ""}
@@ -6503,7 +6503,7 @@ function ContactForm({
         />
       </label>
       <label className="full">
-        Notes
+        {t("forms.notes")}
         <textarea
           rows={3}
           value={form.notes ?? ""}
