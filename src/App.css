@@ -548,6 +548,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.5rem 0 0.75rem;
 }
@@ -592,6 +593,12 @@
   padding: 1.2rem 1.4rem;
   max-width: 26rem;
   width: 100%;
+  /* Long modals (Settings, forms) must scroll on short/mobile screens
+     instead of overflowing past the viewport (#273). dvh accounts for
+     mobile browser chrome; detail/command modals override below. */
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
 }
 
 .command-palette {
@@ -858,6 +865,7 @@
 .bulk-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.5rem 0.7rem;
   margin-bottom: 0.75rem;
@@ -2817,10 +2825,21 @@ summary.bcol-head::after {
   border: none;
 }
 
-@media (max-width: 480px) {
+/* Single-column forms on phones — two columns get cramped below ~600px,
+   where most editing happens on mobile (#273). */
+@media (max-width: 600px) {
   .form,
   .form-group {
     grid-template-columns: 1fr;
+  }
+
+  /* Comfortable touch targets for filter/toolbar controls. */
+  .filters select,
+  .toolbar select,
+  .toolbar button,
+  .bulk-bar select,
+  .bulk-bar button {
+    min-height: 40px;
   }
 }
 
