@@ -362,7 +362,15 @@
     "signIn": "Sign in",
     "signingIn": "Signing in…",
     "error": "Couldn't sign in — check your email and password.",
-    "inviteOnly": "Accounts are invite-only. Ask your admin for access."
+    "inviteOnly": "Accounts are invite-only. Ask your admin for access.",
+    "enterTwoFactorCode": "Enter the code from your authenticator app.",
+    "enterBackupCode": "Enter one of your backup codes.",
+    "twoFactorCode": "Authentication code",
+    "backupCode": "Backup code",
+    "twoFactorError": "Couldn't verify that code.",
+    "verify": "Verify",
+    "useBackupCode": "Use a backup code instead",
+    "useTwoFactorCode": "Use your authenticator app instead"
   },
   "account": {
     "signedInAs": "Signed in as {{email}}",
@@ -380,7 +388,18 @@
     "resetDemo": "Demo account",
     "resetDemoSubmit": "Reset demo data",
     "resetDemoSuccess": "Demo data reset.",
-    "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?"
+    "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?",
+    "twoFactor": "Two-factor authentication",
+    "twoFactorEnabledHint": "2FA is on. Disabling it removes the authenticator-app requirement at login.",
+    "twoFactorDisabledHint": "Add an authenticator-app code as a second step at login.",
+    "twoFactorEnable": "Enable 2FA",
+    "twoFactorDisable": "Disable 2FA",
+    "twoFactorError": "Couldn't do that — check your password.",
+    "twoFactorScanHint": "Add this secret to your authenticator app (Google Authenticator, 1Password, etc.):",
+    "twoFactorBackupCodesHint": "Save these backup codes somewhere safe — each works once if you lose access to your authenticator app.",
+    "twoFactorCodePlaceholder": "Code from your app",
+    "twoFactorVerified": "Verified — 2FA is working.",
+    "twoFactorVerifyError": "That code didn't verify. 2FA is still enabled — try again."
   },
   "companies": {
     "view": "View",

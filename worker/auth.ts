@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { admin } from "better-auth/plugins";
+import { admin, twoFactor } from "better-auth/plugins";
 
 function buildAuth(env: Env) {
   return betterAuth({
@@ -9,7 +9,12 @@ function buildAuth(env: Env) {
     emailAndPassword: {
       enabled: true,
     },
-    plugins: [admin()],
+    // TOTP-based 2FA (#211) — an authenticator-app second factor on top
+    // of the existing invite-only email/password login. Passkey/WebAuthn
+    // support needs a separate plugin package and browser-level testing
+    // this pass didn't cover; tracked as a follow-up rather than bundled
+    // in half-tested here.
+    plugins: [admin(), twoFactor()],
     // Account creation is invite-only: the public sign-up route is blocked
     // in worker/index.ts before it reaches this handler. New accounts are
     // created by an existing admin via the admin plugin's create-user API.

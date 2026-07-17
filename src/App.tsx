@@ -636,6 +636,117 @@ function ResetDemoData() {
   );
 }
 
+// TOTP-based 2FA setup (#211) — no QR image (no new dependency for
+// one settings field); the otpauth:// URI and its embedded secret are
+// both shown so any authenticator app can add it, by scan-free manual
+// entry if needed. Enabling immediately turns 2FA on server-side; the
+// code-verify step here is just a "does this actually work" check.
+function TwoFactorSettings() {
+  const { t } = useTranslation();
+  const { data: session } = useSession();
+  const enabled = !!(session?.user as { twoFactorEnabled?: boolean } | undefined)
+    ?.twoFactorEnabled;
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [setup, setSetup] = useState<{ totpURI: string; backupCodes: string[] } | null>(
+    null,
+  );
+  const [verifyCode, setVerifyCode] = useState("");
+  const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
+
+  const enable = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const { data, error: enableError } = await authClient.twoFactor.enable({ password });
+    setBusy(false);
+    if (enableError || !data) {
+      setError(t("account.twoFactorError"));
+      return;
+    }
+    setSetup(data);
+    setPassword("");
+  };
+
+  const disable = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const { error: disableError } = await authClient.twoFactor.disable({ password });
+    setBusy(false);
+    if (disableError) {
+      setError(t("account.twoFactorError"));
+      return;
+    }
+    setPassword("");
+    setSetup(null);
+  };
+
+  const verify = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error: verifyError } = await authClient.twoFactor.verifyTotp({
+      code: verifyCode,
+    });
+    setBusy(false);
+    setVerifyMessage(
+      verifyError ? t("account.twoFactorVerifyError") : t("account.twoFactorVerified"),
+    );
+  };
+
+  const secret = setup ? new URL(setup.totpURI).searchParams.get("secret") : null;
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.twoFactor")}</h3>
+      {setup ? (
+        <>
+          <p className="muted small">{t("account.twoFactorScanHint")}</p>
+          <p className="tfa-secret">{secret}</p>
+          <p className="muted small">{t("account.twoFactorBackupCodesHint")}</p>
+          <ul className="tfa-backup-codes">
+            {setup.backupCodes.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+          <form onSubmit={verify} className="tfa-verify">
+            <input
+              placeholder={t("account.twoFactorCodePlaceholder")}
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value)}
+            />
+            <button type="submit" disabled={busy}>
+              {t("login.verify")}
+            </button>
+          </form>
+          {verifyMessage && <p className="muted small">{verifyMessage}</p>}
+          <button onClick={() => setSetup(null)}>{t("common.close")}</button>
+        </>
+      ) : (
+        <form onSubmit={enabled ? disable : enable}>
+          <p className="muted small">
+            {enabled ? t("account.twoFactorEnabledHint") : t("account.twoFactorDisabledHint")}
+          </p>
+          <label className="settings-field">
+            <span>{t("login.password")}</span>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          {error && <p className="login-error">{error}</p>}
+          <button type="submit" disabled={busy} className={enabled ? "danger" : ""}>
+            {enabled ? t("account.twoFactorDisable") : t("account.twoFactorEnable")}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 const THEME_KEY = "jobseekr_theme";
 
 // Applies the persisted theme choice — called on initial load (see App())
@@ -771,6 +882,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
               <button onClick={() => signOut()}>{t("account.signOut")}</button>
             </div>
           )}
+          {session && <TwoFactorSettings />}
           {session?.user.role === "admin" && <AdminInvite />}
         </div>
         <button onClick={onClose}>{t("common.close")}</button>
