@@ -48,6 +48,22 @@ async function loadDistinctSourceConfigs(env: Env): Promise<SourceConfig[]> {
   return results;
 }
 
+interface AtsBoard {
+  source: "greenhouse" | "ashby";
+  slug: string;
+}
+
+async function loadDistinctAtsBoards(env: Env): Promise<AtsBoard[]> {
+  // Aggregated across users like the other source configs — a board
+  // any one user asked to watch gets fetched once; board_slug on the
+  // stored item is what actually scopes visibility back to that user
+  // in GET /api/feed, not this fetch step.
+  const { results } = await env.DB.prepare(
+    "SELECT DISTINCT source, slug FROM feed_ats_boards",
+  ).all<AtsBoard>();
+  return results;
+}
+
 function guessRoleType(text: string, keywords: RoleKeywords): string | null {
   const lower = text.toLowerCase();
   for (const [role, kws] of Object.entries(keywords)) {
@@ -57,7 +73,7 @@ function guessRoleType(text: string, keywords: RoleKeywords): string | null {
 }
 
 interface FeedCandidate {
-  source: "adzuna" | "hn";
+  source: "adzuna" | "hn" | "greenhouse" | "ashby";
   external_id: string;
   title: string;
   company: string | null;
@@ -66,6 +82,7 @@ interface FeedCandidate {
   salary_text: string | null;
   role_type: string;
   posted_at: string | null;
+  board_slug?: string;
 }
 
 async function fetchAdzuna(
@@ -170,10 +187,87 @@ async function fetchHnWhoIsHiring(
   }
 }
 
+// Direct ATS sourcing (#219) — Greenhouse and Ashby both publish free,
+// keyless public APIs for one company's own job board. No keyword
+// filtering: a user who explicitly asked to watch a company's board
+// wants everything on it, not a role-guessed subset (role_type still
+// gets tagged, best-effort, for consistency with the rest of the feed
+// UI, but a miss doesn't drop the listing the way it does for HN).
+async function fetchGreenhouse(
+  slug: string,
+  keywords: RoleKeywords,
+): Promise<FeedCandidate[]> {
+  try {
+    const res = await fetch(
+      `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(slug)}/jobs?content=true`,
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as {
+      jobs?: Array<{
+        id: number;
+        title: string;
+        absolute_url?: string;
+        location?: { name?: string };
+        updated_at?: string;
+      }>;
+    };
+    return (data.jobs ?? []).map((job) => ({
+      source: "greenhouse" as const,
+      external_id: String(job.id),
+      title: job.title,
+      company: slug,
+      location: job.location?.name ?? null,
+      url: job.absolute_url ?? null,
+      salary_text: null,
+      role_type: guessRoleType(job.title, keywords) ?? "other",
+      posted_at: job.updated_at ?? null,
+      board_slug: slug,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchAshby(
+  slug: string,
+  keywords: RoleKeywords,
+): Promise<FeedCandidate[]> {
+  try {
+    const res = await fetch(
+      `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(slug)}`,
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as {
+      jobs?: Array<{
+        id: string;
+        title: string;
+        jobUrl?: string;
+        location?: string;
+        publishedAt?: string;
+      }>;
+    };
+    return (data.jobs ?? []).map((job) => ({
+      source: "ashby" as const,
+      external_id: job.id,
+      title: job.title,
+      company: slug,
+      location: job.location ?? null,
+      url: job.jobUrl ?? null,
+      salary_text: null,
+      role_type: guessRoleType(job.title, keywords) ?? "other",
+      posted_at: job.publishedAt ?? null,
+      board_slug: slug,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: number }> {
-  const [keywords, configs] = await Promise.all([
+  const [keywords, configs, atsBoards] = await Promise.all([
     loadRoleKeywords(env),
     loadDistinctSourceConfigs(env),
+    loadDistinctAtsBoards(env),
   ]);
 
   const jobs: Promise<FeedCandidate[]>[] = [];
@@ -183,13 +277,19 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   for (const cfg of configs.filter((c) => c.source === "hn")) {
     jobs.push(fetchHnWhoIsHiring(keywords, cfg.location));
   }
+  for (const board of atsBoards.filter((b) => b.source === "greenhouse")) {
+    jobs.push(fetchGreenhouse(board.slug, keywords));
+  }
+  for (const board of atsBoards.filter((b) => b.source === "ashby")) {
+    jobs.push(fetchAshby(board.slug, keywords));
+  }
   const candidates = (await Promise.all(jobs)).flat();
 
   let inserted = 0;
   for (const c of candidates) {
     const result = await env.DB.prepare(
-      `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at, board_slug)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (source, external_id) DO NOTHING`,
     )
       .bind(
@@ -202,6 +302,7 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
         c.salary_text,
         c.role_type,
         c.posted_at,
+        c.board_slug ?? null,
       )
       .run();
     if (result.meta.changes > 0) inserted++;
@@ -216,6 +317,10 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     // says otherwise (dismissed/added) — that row only exists once the
     // user has acted on it. Blocked companies (#218) are filtered the
     // same way: per-user, at read time, since feed_items is shared.
+    // ATS-board items (#219) are the one exception to the shared pool —
+    // board_slug scopes them to only the user(s) who configured that
+    // board, since (unlike Adzuna/HN) fetching one is a specific,
+    // deliberate "watch this company" request.
     const { results } = await c.env.DB.prepare(
       `SELECT feed_items.*
        FROM feed_items
@@ -228,11 +333,54 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
            WHERE feed_company_blocklist.user_id = ?
              AND feed_company_blocklist.company = feed_items.company COLLATE NOCASE
          )
+         AND (
+           feed_items.board_slug IS NULL
+           OR EXISTS (
+             SELECT 1 FROM feed_ats_boards
+             WHERE feed_ats_boards.user_id = ?
+               AND feed_ats_boards.source = feed_items.source
+               AND feed_ats_boards.slug = feed_items.board_slug
+           )
+         )
        ORDER BY feed_items.posted_at DESC, feed_items.id DESC`,
     )
-      .bind(userId, userId)
+      .bind(userId, userId, userId)
       .all();
     return c.json(results);
+  });
+
+  app.get("/api/feed/ats-boards", async (c) => {
+    const { results } = await c.env.DB.prepare(
+      "SELECT * FROM feed_ats_boards WHERE user_id = ? ORDER BY source, slug",
+    )
+      .bind(c.get("userId"))
+      .all();
+    return c.json(results);
+  });
+
+  app.post("/api/feed/ats-boards", async (c) => {
+    const body = await c.req.json();
+    const slug = (body.slug ?? "").trim();
+    const source = body.source;
+    if (!slug || (source !== "greenhouse" && source !== "ashby")) {
+      return c.json({ error: "source and slug are required" }, 400);
+    }
+    const result = await c.env.DB.prepare(
+      `INSERT INTO feed_ats_boards (user_id, source, slug) VALUES (?, ?, ?)
+       ON CONFLICT DO NOTHING RETURNING *`,
+    )
+      .bind(c.get("userId"), source, slug)
+      .first();
+    return c.json(result, 201);
+  });
+
+  app.delete("/api/feed/ats-boards/:id", async (c) => {
+    await c.env.DB.prepare(
+      "DELETE FROM feed_ats_boards WHERE id = ? AND user_id = ?",
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
   });
 
   app.get("/api/feed/blocklist", async (c) => {

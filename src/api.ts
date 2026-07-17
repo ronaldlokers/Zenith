@@ -106,6 +106,14 @@ export const api = {
     }),
   unblockFeedCompany: (id: number) =>
     request<void>(`/api/feed/blocklist/${id}`, { method: "DELETE" }),
+  atsBoards: () => request<import("./types").AtsBoard[]>("/api/feed/ats-boards"),
+  addAtsBoard: (source: "greenhouse" | "ashby", slug: string) =>
+    request<import("./types").AtsBoard>("/api/feed/ats-boards", {
+      method: "POST",
+      body: JSON.stringify({ source, slug }),
+    }),
+  removeAtsBoard: (id: number) =>
+    request<void>(`/api/feed/ats-boards/${id}`, { method: "DELETE" }),
   notifications: () =>
     request<import("./types").AppNotification[]>("/api/notifications"),
   markNotificationRead: (id: number) =>
