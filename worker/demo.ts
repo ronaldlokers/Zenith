@@ -72,23 +72,44 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
     .bind(userId)
     .first<{ id: number }>();
   const globex = await env.DB.prepare(
-    `INSERT INTO companies (user_id, name, website, location) VALUES (?, 'Globex Recruiting', 'https://globex.example', 'Remote')
+    `INSERT INTO companies (user_id, name, website, location, is_agency) VALUES (?, 'Globex Recruiting', 'https://globex.example', 'Remote', 1)
      RETURNING id`,
   )
     .bind(userId)
     .first<{ id: number }>();
-  const hooli = await env.DB.prepare(
-    `INSERT INTO companies (user_id, name, website, location, description) VALUES (?, 'Hooli Systems', 'https://hooli.example', 'Rotterdam, NL', 'Design-systems and frontend tooling company.')
-     RETURNING id`,
-  )
-    .bind(userId)
-    .first<{ id: number }>();
-  const vandelay = await env.DB.prepare(
-    `INSERT INTO companies (user_id, name, website, location) VALUES (?, 'Vandelay Data', 'https://vandelay.example', 'Utrecht, NL')
-     RETURNING id`,
-  )
-    .bind(userId)
-    .first<{ id: number }>();
+
+  // More companies so the board's company/role-type filters have variety
+  // (#182). is_agency flags recruitment agencies (agency-looking names).
+  const companyIds = new Map<string, number>([
+    ["Acme Cloud", acme!.id],
+    ["Globex Recruiting", globex!.id],
+  ]);
+  const moreCompanies: [name: string, location: string, isAgency: boolean][] = [
+    ["Hooli Systems", "Rotterdam, NL", false],
+    ["Vandelay Data", "Utrecht, NL", false],
+    ["Zenith Robotics", "Eindhoven, NL", false],
+    ["Bluewave Fintech", "Amsterdam, NL", false],
+    ["Northwind Logistics", "Rotterdam, NL", false],
+    ["Pied Piper", "Remote", false],
+    ["Umbrella Analytics", "The Hague, NL", false],
+    ["Stark Industries", "Amsterdam, NL", false],
+    ["Wonka Labs", "Utrecht, NL", false],
+    ["Aperture Labs", "Delft, NL", false],
+    ["Cyberdyne Systems", "Eindhoven, NL", false],
+    ["Massive Dynamic", "Remote", false],
+    ["TalentBridge Recruitment", "Amsterdam, NL", true],
+    ["Peak Search Partners", "Remote", true],
+    ["Nimbus Staffing", "Rotterdam, NL", true],
+    ["Catalyst Talent Group", "Utrecht, NL", true],
+  ];
+  for (const [name, location, isAgency] of moreCompanies) {
+    const row = await env.DB.prepare(
+      `INSERT INTO companies (user_id, name, location, is_agency) VALUES (?, ?, ?, ?) RETURNING id`,
+    )
+      .bind(userId, name, location, isAgency ? 1 : 0)
+      .first<{ id: number }>();
+    companyIds.set(name, row!.id);
+  }
 
   // --- Contacts + outreach tracking (#110) ---
   const contact = await env.DB.prepare(
@@ -170,84 +191,87 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
     .bind(ghosted!.id, userId)
     .run();
 
-  // --- One application per remaining stage so the demo Board looks fully
-  // populated (#182): interested, applied, screening, rejected, withdrawn.
-  // interview/offer/ghosted are seeded above. ---
-  const interested = await env.DB.prepare(
-    `INSERT INTO applications (user_id, company_id, title, role_type, url, source, status, notes)
-     VALUES (?, ?, 'Frontend Engineer, Design Systems', 'front-end', 'https://hooli.example/careers/17',
-             'feed:adzuna', 'interested', 'Saw the posting in the Adzuna feed — strong design-systems focus.')
-     RETURNING id`,
-  )
-    .bind(userId, hooli!.id)
-    .first<{ id: number }>();
-  await env.DB.prepare(
-    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, NULL, 'interested')`,
-  )
-    .bind(interested!.id, userId)
-    .run();
+  // --- Bulk applications scattered (unevenly) across every stage so the
+  // demo Board looks like a real, in-progress search (#182). The three
+  // feature-rich examples above (interview/offer/ghosted) stay; these fill
+  // out the columns. Each gets a plausible status_history trail derived
+  // from its final status. ---
+  const FUNNEL = ["interested", "applied", "screening", "interview", "offer"];
+  // Ordered stage path a row passed through before landing on its status.
+  function historyFor(status: string): (string | null)[] {
+    if (FUNNEL.includes(status)) {
+      return [null, ...FUNNEL.slice(0, FUNNEL.indexOf(status) + 1)];
+    }
+    const terminal: Record<string, string[]> = {
+      rejected: ["interested", "applied", "screening", "rejected"],
+      withdrawn: ["interested", "applied", "withdrawn"],
+      ghosted: ["interested", "applied", "ghosted"],
+    };
+    return [null, ...terminal[status]];
+  }
 
-  const applied = await env.DB.prepare(
-    `INSERT INTO applications (user_id, company_id, title, role_type, url, source, status, notes,
-        applied_at, next_action, next_action_at)
-     VALUES (?, ?, 'Platform Engineer', 'platform-engineer', 'https://globex.example/jobs/88',
-             'company-site', 'applied', 'Applied via their careers page.', date('now', '-5 days'),
-             'Follow up if no reply', date('now', '+2 days'))
-     RETURNING id`,
-  )
-    .bind(userId, globex!.id)
-    .first<{ id: number }>();
-  await env.DB.prepare(
-    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
-     (?, ?, NULL, 'interested'), (?, ?, 'interested', 'applied')`,
-  )
-    .bind(applied!.id, userId, applied!.id, userId)
-    .run();
-
-  const screening = await env.DB.prepare(
-    `INSERT INTO applications (user_id, company_id, title, role_type, url, source, status, notes, applied_at)
-     VALUES (?, ?, 'Site Reliability Engineer', 'other', 'https://vandelay.example/jobs/3',
-             'referral', 'screening', 'Recruiter reached out — screening call scheduled.', date('now', '-8 days'))
-     RETURNING id`,
-  )
-    .bind(userId, vandelay!.id)
-    .first<{ id: number }>();
-  await env.DB.prepare(
-    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
-     (?, ?, NULL, 'applied'), (?, ?, 'applied', 'screening')`,
-  )
-    .bind(screening!.id, userId, screening!.id, userId)
-    .run();
-
-  const rejected = await env.DB.prepare(
-    `INSERT INTO applications (user_id, company_id, title, role_type, status, notes, applied_at)
-     VALUES (?, ?, 'Senior Frontend Engineer', 'front-end', 'rejected',
-             'Rejected after the take-home — not enough React depth, per their feedback.', date('now', '-20 days'))
-     RETURNING id`,
-  )
-    .bind(userId, hooli!.id)
-    .first<{ id: number }>();
-  await env.DB.prepare(
-    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
-     (?, ?, NULL, 'applied'), (?, ?, 'applied', 'screening'), (?, ?, 'screening', 'rejected')`,
-  )
-    .bind(rejected!.id, userId, rejected!.id, userId, rejected!.id, userId)
-    .run();
-
-  const withdrawn = await env.DB.prepare(
-    `INSERT INTO applications (user_id, company_id, title, role_type, status, notes, applied_at)
-     VALUES (?, ?, 'Backend Engineer', 'other', 'withdrawn',
-             'Withdrew — accepted another process further along.', date('now', '-15 days'))
-     RETURNING id`,
-  )
-    .bind(userId, vandelay!.id)
-    .first<{ id: number }>();
-  await env.DB.prepare(
-    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
-     (?, ?, NULL, 'applied'), (?, ?, 'applied', 'withdrawn')`,
-  )
-    .bind(withdrawn!.id, userId, withdrawn!.id, userId)
-    .run();
+  type DemoApp = {
+    company: string;
+    title: string;
+    role: string;
+    status: string;
+    daysAgo?: number; // applied_at; omit for leads not yet applied to
+    notes?: string;
+  };
+  const demoApps: DemoApp[] = [
+    // interested (8) — top of funnel, most rows
+    { company: "Zenith Robotics", title: "Platform Engineer", role: "platform-engineer", status: "interested", notes: "Interesting robotics infra role." },
+    { company: "Bluewave Fintech", title: "Frontend Engineer", role: "front-end", status: "interested" },
+    { company: "TalentBridge Recruitment", title: "Senior Platform Engineer", role: "platform-engineer", status: "interested", notes: "Agency reached out on LinkedIn." },
+    { company: "Pied Piper", title: "Full-stack Engineer", role: "other", status: "interested" },
+    { company: "Umbrella Analytics", title: "Data Platform Engineer", role: "platform-engineer", status: "interested" },
+    { company: "Wonka Labs", title: "Frontend Engineer", role: "front-end", status: "interested", notes: "Saw it in the Adzuna feed." },
+    { company: "Peak Search Partners", title: "DevOps Engineer", role: "other", status: "interested" },
+    { company: "Massive Dynamic", title: "Frontend Platform Engineer", role: "front-end", status: "interested" },
+    // applied (7)
+    { company: "Northwind Logistics", title: "Platform Engineer", role: "platform-engineer", status: "applied", daysAgo: 4 },
+    { company: "Stark Industries", title: "Senior Frontend Engineer", role: "front-end", status: "applied", daysAgo: 6, notes: "Strong design-systems team." },
+    { company: "Nimbus Staffing", title: "Kubernetes Engineer", role: "platform-engineer", status: "applied", daysAgo: 3 },
+    { company: "Aperture Labs", title: "Site Reliability Engineer", role: "other", status: "applied", daysAgo: 9 },
+    { company: "Cyberdyne Systems", title: "Platform Engineer", role: "platform-engineer", status: "applied", daysAgo: 2 },
+    { company: "Bluewave Fintech", title: "React Engineer", role: "front-end", status: "applied", daysAgo: 7 },
+    { company: "Catalyst Talent Group", title: "Cloud Engineer", role: "other", status: "applied", daysAgo: 5, notes: "Via agency." },
+    // screening (4)
+    { company: "Zenith Robotics", title: "Senior Platform Engineer", role: "platform-engineer", status: "screening", daysAgo: 11 },
+    { company: "Umbrella Analytics", title: "Frontend Engineer", role: "front-end", status: "screening", daysAgo: 8, notes: "Recruiter screen next week." },
+    { company: "TalentBridge Recruitment", title: "DevOps Engineer", role: "other", status: "screening", daysAgo: 10 },
+    { company: "Pied Piper", title: "Platform Engineer", role: "platform-engineer", status: "screening", daysAgo: 13 },
+    // interview (2)
+    { company: "Stark Industries", title: "Staff Platform Engineer", role: "platform-engineer", status: "interview", daysAgo: 16, notes: "Onsite loop scheduled." },
+    { company: "Wonka Labs", title: "Senior Frontend Engineer", role: "front-end", status: "interview", daysAgo: 14 },
+    // offer (1)
+    { company: "Northwind Logistics", title: "Platform Engineer", role: "platform-engineer", status: "offer", daysAgo: 28, notes: "Verbal offer — awaiting written." },
+    // rejected (4)
+    { company: "Cyberdyne Systems", title: "Frontend Engineer", role: "front-end", status: "rejected", daysAgo: 22, notes: "Not enough React depth, per feedback." },
+    { company: "Peak Search Partners", title: "Platform Engineer", role: "platform-engineer", status: "rejected", daysAgo: 25 },
+    { company: "Massive Dynamic", title: "Site Reliability Engineer", role: "other", status: "rejected", daysAgo: 30 },
+    { company: "Aperture Labs", title: "Frontend Engineer", role: "front-end", status: "rejected", daysAgo: 19 },
+    // withdrawn (1)
+    { company: "Nimbus Staffing", title: "Backend Engineer", role: "other", status: "withdrawn", daysAgo: 18, notes: "Withdrew — accepted another process." },
+  ];
+  for (const app of demoApps) {
+    const companyId = companyIds.get(app.company)!;
+    const appliedAt = app.daysAgo ? `date('now', '-${app.daysAgo} days')` : "NULL";
+    const row = await env.DB.prepare(
+      `INSERT INTO applications (user_id, company_id, title, role_type, status, notes, applied_at)
+       VALUES (?, ?, ?, ?, ?, ?, ${appliedAt}) RETURNING id`,
+    )
+      .bind(userId, companyId, app.title, app.role, app.status, app.notes ?? null)
+      .first<{ id: number }>();
+    const path = historyFor(app.status);
+    for (let i = 1; i < path.length; i++) {
+      await env.DB.prepare(
+        `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
+      )
+        .bind(row!.id, userId, path[i - 1], path[i])
+        .run();
+    }
+  }
 
   // --- Tags (#102) ---
   const dreamTag = await env.DB.prepare(
