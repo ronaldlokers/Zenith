@@ -1523,6 +1523,13 @@ select.status {
   padding: 0.2rem 0;
 }
 
+/* Keyboard focus ring for rows made operable via role="button" (#261) */
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 /* Paginated "load more" control (#261) */
 .load-more {
   display: flex;

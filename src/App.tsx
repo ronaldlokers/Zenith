@@ -71,6 +71,59 @@ function useSubmitGuard<T>(onSubmit: (value: T) => void | Promise<void>) {
   return [submitting, submit] as const;
 }
 
+// Makes a non-button clickable row keyboard-operable (#261): announces as
+// a button and fires the same action on Enter/Space. Spread onto the
+// element that carries the row's onClick.
+function rowActivate(onActivate: () => void) {
+  return {
+    role: "button",
+    tabIndex: 0,
+    onClick: onActivate,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onActivate();
+      }
+    },
+  } as const;
+}
+
+// Dialog focus management (#261) — moves focus into the dialog on open and
+// traps Tab within it, so keyboard/AT users can't tab out to the page
+// behind the modal. Attach the returned ref to the dialog element.
+function useFocusTrap<T extends HTMLElement>(active = true) {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    if (!active) return;
+    const node = ref.current;
+    if (!node) return;
+    const selector =
+      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    const focusable = () =>
+      Array.from(node.querySelectorAll<HTMLElement>(selector)).filter(
+        (el) => el.offsetParent !== null,
+      );
+    focusable()[0]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const els = focusable();
+      if (els.length === 0) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    node.addEventListener("keydown", onKey);
+    return () => node.removeEventListener("keydown", onKey);
+  }, [active]);
+  return ref;
+}
+
 // Terminal error state for a tab whose data fetch failed (#261). Without
 // it, a failed load left the "Loading…" placeholder up forever while the
 // only signal was the easy-to-miss top banner.
@@ -395,12 +448,15 @@ const SHORTCUT_KEYS: [string, string][] = [
 
 function ShortcutHelp({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
+  const dialogRef = useFocusTrap<HTMLDivElement>();
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="modal shortcut-help"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label={t("shortcuts.title")}
       >
         <h2>{t("shortcuts.title")}</h2>
@@ -1163,7 +1219,7 @@ function NotificationBell() {
                 <li
                   key={n.id}
                   className={n.read_at ? "read" : "unread"}
-                  onClick={() => openNotification(n)}
+                  {...rowActivate(() => openNotification(n))}
                 >
                   <span className="notification-title">{n.title}</span>
                   {n.body && <span className="muted small">{n.body}</span>}
@@ -1197,6 +1253,7 @@ function applyTheme(value: string) {
 
 function SettingsModal({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
+  const dialogRef = useFocusTrap<HTMLDivElement>();
   const { data: session } = useSession();
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
@@ -1268,9 +1325,11 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="modal settings-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label={t("settings.title")}
       >
         <h2>{t("settings.title")}</h2>
@@ -3871,7 +3930,7 @@ function CalendarTab({
               <li
                 key={`${e.kind}-${e.id}`}
                 className={`agenda-item kind-${e.kind}`}
-                onClick={() => e.title && onJump(e.title)}
+                {...rowActivate(() => e.title && onJump(e.title))}
               >
                 {agendaText(e, t)}
               </li>
@@ -3932,7 +3991,7 @@ function ActivityTab({
           <li
             key={i}
             className={`activity-item kind-${e.kind}`}
-            onClick={() => onOpenJob(e.application_id)}
+            {...rowActivate(() => onOpenJob(e.application_id))}
           >
             <span className="activity-date">{formatDate(e.ts.slice(0, 10))}</span>
             <span className="activity-text">{activityText(e, t)}</span>
@@ -4274,6 +4333,7 @@ function ApplicationDetailModal({
   asPane?: boolean;
 }) {
   const { t } = useTranslation();
+  const dialogRef = useFocusTrap<HTMLDivElement>(!asPane);
   const [editing, setEditing] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
@@ -4358,9 +4418,11 @@ function ApplicationDetailModal({
 
   const pane = (
       <div
+        ref={dialogRef}
         className={asPane ? "detail-pane" : "modal detail-modal"}
         onClick={asPane ? undefined : (e) => e.stopPropagation()}
         role={asPane ? "region" : "dialog"}
+        aria-modal={asPane ? undefined : true}
         aria-label={a.title}
       >
         <div className="detail-head">
@@ -4708,7 +4770,7 @@ function OverviewTab({
             <li
               key={a.id}
               className={`stage-${a.status} clickable`}
-              onClick={() => onOpenJob(a.id)}
+              {...rowActivate(() => onOpenJob(a.id))}
             >
               <span className="side-date">{ageDays(a.updated_at)}</span>
               <span className="side-title">{a.title}</span>
@@ -5854,7 +5916,7 @@ function CompaniesTab({
             <li
               key={c.id}
               className="company-tile"
-              onClick={() => setDetailId(c.id)}
+              {...rowActivate(() => setDetailId(c.id))}
             >
               {c.logo_url ? (
                 <img className="company-logo" src={c.logo_url} alt="" />
@@ -5891,7 +5953,7 @@ function CompaniesTab({
           <li
             key={c.id}
             className="card row2"
-            onClick={() => setDetailId(c.id)}
+            {...rowActivate(() => setDetailId(c.id))}
           >
             <div className="l1">
               <strong>
@@ -6093,6 +6155,7 @@ function CompanyDetailModal({
   const [editing, setEditing] = useState(false);
   const [researching, setResearching] = useState(false);
   const c = company;
+  const dialogRef = useFocusTrap<HTMLDivElement>();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -6117,9 +6180,11 @@ function CompanyDetailModal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="modal detail-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label={c.name}
       >
         <div className="detail-head">
@@ -6276,7 +6341,7 @@ function ContactsTab({
           <li
             key={c.id}
             className="card row2"
-            onClick={() => setDetailId(c.id)}
+            {...rowActivate(() => setDetailId(c.id))}
           >
             <div className="l1">
               <strong>{c.name}</strong>
@@ -6475,6 +6540,7 @@ function ContactDetailModal({
   onDelete: (resource: string, id: number, name: string) => void;
 }) {
   const { t } = useTranslation();
+  const dialogRef = useFocusTrap<HTMLDivElement>();
   const [editing, setEditing] = useState(false);
   const c = contact;
 
@@ -6489,9 +6555,11 @@ function ContactDetailModal({
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="modal detail-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label={c.name}
       >
         <div className="detail-head">
