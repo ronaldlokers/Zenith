@@ -196,7 +196,12 @@
     "colStage": "Stage",
     "colComp": "Comp",
     "colNotes": "Notes",
-    "exportAllJson": "Everything (JSON)"
+    "exportAllJson": "Everything (JSON)",
+    "responseRate": "{{responded}} of {{applied}} applications advanced past “applied” — {{pct}}% response rate",
+    "conversion": "Stage-to-stage conversion",
+    "avgLabel": "avg",
+    "medianLabel": "median",
+    "compareEmpty": "Nothing at interview or offer stage yet. Add min/max/currency on a job's edit form once it gets there."
   },
   "palette": {
     "title": "Jump to…",

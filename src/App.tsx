@@ -10,6 +10,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { authClient, signOut, useSession } from "./auth-client";
 import {
+  funnelConversions,
+  responseRate,
+  medianTimeInStageDays,
+} from "./stats";
+import {
   INTERACTION_TYPES,
   type Stats,
   STATUSES,
@@ -3112,6 +3117,14 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
     momentum = change > 0.15 ? "up" : change < -0.15 ? "down" : "flat";
   }
 
+  // Stats v2 (#275) — conversion, response rate, median time-in-stage,
+  // computed by the pure helpers in stats.ts.
+  const conversions = funnelConversions(history);
+  const response = responseRate(history);
+  const medianStage = new Map(
+    medianTimeInStageDays(history, now).map((s) => [s.stage, s.median]),
+  );
+
   return (
     <section className="stats">
       <div className={`momentum momentum-${momentum}`}>
@@ -3164,6 +3177,35 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         ))}
       </div>
 
+      {response.applied > 0 && (
+        <p className="stat-callout">
+          {t("stats.responseRate", {
+            responded: response.responded,
+            applied: response.applied,
+            pct: Math.round(response.rate * 100),
+          })}
+        </p>
+      )}
+
+      {conversions.some((c) => c.prev > 0) && (
+        <>
+          <h2 className="stat-h">{t("stats.conversion")}</h2>
+          <ul className="stat-list">
+            {conversions
+              .filter((c) => c.prev > 0)
+              .map((c) => (
+                <li key={`${c.from}-${c.to}`} className={`stage-${c.to}`}>
+                  <span className="stat-dot" aria-hidden="true" />
+                  <span className="stage-name">
+                    {t(`stages.${c.from}`)} → {t(`stages.${c.to}`)}
+                  </span>
+                  <span className="stat-val">{Math.round(c.rate * 100)}%</span>
+                </li>
+              ))}
+          </ul>
+        </>
+      )}
+
       {timeToOffer != null && (
         <p className="stat-callout">
           {t("stats.timeToOffer", { count: Math.round(timeToOffer), n: offerDurations.length })}
@@ -3174,11 +3216,17 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
       <ul className="stat-list">
         {PIPELINE.filter((s) => stageDays.has(s)).map((s) => {
           const d = stageDays.get(s)!;
+          const med = medianStage.get(s);
           return (
             <li key={s} className={`stage-${s}`}>
               <span className="stat-dot" aria-hidden="true" />
               <span className="stage-name">{t(`stages.${s}`)}</span>
-              <span className="stat-val">{(d.total / d.n).toFixed(1)}d</span>
+              <span className="stat-val">
+                {(d.total / d.n).toFixed(1)}d {t("stats.avgLabel")}
+                {med != null
+                  ? ` · ${med.toFixed(1)}d ${t("stats.medianLabel")}`
+                  : ""}
+              </span>
             </li>
           );
         })}
@@ -3246,10 +3294,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           </tbody>
         </table>
         {comparing.length === 0 && (
-          <p className="tl-empty">
-            Nothing at interview or offer stage yet. Add min/max/currency on a
-            job's edit form once it gets there.
-          </p>
+          <p className="tl-empty">{t("stats.compareEmpty")}</p>
         )}
       </div>
 
@@ -3259,9 +3304,9 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           {t("stats.exportAllJson")}
         </a>
         {["applications", "companies", "contacts", "interactions"].map(
-          (t) => (
-            <a key={t} href={`/api/export/${t}.csv`} download>
-              {t} (CSV)
+          (res) => (
+            <a key={res} href={`/api/export/${res}.csv`} download>
+              {res} (CSV)
             </a>
           ),
         )}
