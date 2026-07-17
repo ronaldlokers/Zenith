@@ -7,6 +7,7 @@ import { getAuth } from "./auth.js";
 import { resetDemoData } from "./demo.js";
 import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { registerCalendarRoutes } from "./calendar.js";
+import { registerPushRoutes } from "./push.js";
 
 export type AppEnv = {
   Bindings: Env;
@@ -1299,6 +1300,7 @@ registerRoleTypeRoutes(app);
 registerCvRoutes(app);
 registerNotificationRoutes(app);
 registerCalendarRoutes(app);
+registerPushRoutes(app);
 
 // Admin-only: wipe and reseed the demo account's data with one example of
 // every shipped feature (#38). The demo account itself is created like any

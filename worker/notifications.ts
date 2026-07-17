@@ -1,10 +1,33 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
+import { sendPushToUser } from "./push.js";
 
 // In-app notification center (#213) — generated on the existing 6h
 // feed/stale-posting cron rather than a new trigger. Idempotent via
 // dedup_key + ON CONFLICT DO NOTHING, so re-running the same scan
-// never produces duplicate rows.
+// never produces duplicate rows. Each newly-inserted row (via
+// RETURNING, so only genuinely new ones, not no-op conflicts) also
+// fires a push notification (#214) — best effort, silently skipped
+// for users with no push subscription or no VAPID keys configured.
+
+async function insertAndPush(
+  env: Env,
+  sql: string,
+  bind: unknown[],
+): Promise<void> {
+  const { results } = await env.DB.prepare(sql)
+    .bind(...bind)
+    .all<{ user_id: string; title: string; body: string | null; link: string | null }>();
+  await Promise.all(
+    results.map((n) =>
+      sendPushToUser(env, n.user_id, {
+        title: n.title,
+        body: n.body ?? undefined,
+        url: n.link ?? "/",
+      }),
+    ),
+  );
+}
 
 export async function generateNotifications(
   env: Env,
@@ -15,7 +38,8 @@ export async function generateNotifications(
   // Due/overdue follow-ups — one per application per next_action_at
   // value, so editing the date naturally produces a fresh notification
   // instead of silently staying dismissed.
-  await env.DB.prepare(
+  await insertAndPush(
+    env,
     `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
      SELECT applications.user_id, 'due_followup', applications.title,
             COALESCE(applications.next_action, ''), '/jobs/' || applications.id,
@@ -24,35 +48,41 @@ export async function generateNotifications(
      WHERE applications.next_action_at IS NOT NULL
        AND applications.next_action_at <= date('now')
        AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')
-     ON CONFLICT (user_id, dedup_key) DO NOTHING`,
-  ).run();
+     ON CONFLICT (user_id, dedup_key) DO NOTHING
+     RETURNING user_id, title, body, link`,
+    [],
+  );
 
   // Stale postings — one-time per application, mirroring the soft
   // "may be gone" badge posting-check.ts already sets.
-  await env.DB.prepare(
+  await insertAndPush(
+    env,
     `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
      SELECT applications.user_id, 'stale_posting', applications.title,
             NULL, '/jobs/' || applications.id, 'stale:' || applications.id
      FROM applications
      WHERE applications.posting_status = 'maybe_stale'
-     ON CONFLICT (user_id, dedup_key) DO NOTHING`,
-  ).run();
+     ON CONFLICT (user_id, dedup_key) DO NOTHING
+     RETURNING user_id, title, body, link`,
+    [],
+  );
 
   // New Feed matches — one aggregate notification per user per day
   // (not per item) so a 6-hourly cron with a healthy source list
   // doesn't spam the panel.
   if (feedInsertedCount > 0) {
-    await env.DB.prepare(
+    await insertAndPush(
+      env,
       `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
        SELECT DISTINCT feed_sources.user_id, 'feed_match',
               ? || ' new listing(s) in your Feed', NULL, '/feed',
               'feed:' || ?
        FROM feed_sources
        WHERE feed_sources.enabled = 1
-       ON CONFLICT (user_id, dedup_key) DO NOTHING`,
-    )
-      .bind(feedInsertedCount, today)
-      .run();
+       ON CONFLICT (user_id, dedup_key) DO NOTHING
+       RETURNING user_id, title, body, link`,
+      [feedInsertedCount, today],
+    );
   }
 }
 
