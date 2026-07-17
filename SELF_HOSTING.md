@@ -80,11 +80,7 @@ node scripts/seed-admin.mjs you@example.com
 npx wrangler d1 execute jobseekr --remote --file scripts/.seed-admin.sql
 ```
 
-You'll be prompted for a password (hidden input, 8+ characters). Log in with that email/password at your deployed URL. Once in, add any other accounts you want from the admin panel — see Better Auth's [admin plugin docs](https://www.better-auth.com/docs/plugins/admin) for what that covers.
-
-## 7. (Recommended) Add Cloudflare Access as a second layer
-
-Better Auth handles login, but putting [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/) in front of the Worker's hostname costs nothing extra and blocks unauthenticated requests before they reach the app at all — add a self-hosted Access application with an email policy for your own address(es).
+You'll be prompted for a password (hidden input, 8+ characters). Log in with that email/password at your deployed URL. Once in, invite any other accounts you want from Settings — the seed admin has an "Invite user" form there (Better Auth's admin plugin under the hood).
 
 ## Local development
 
