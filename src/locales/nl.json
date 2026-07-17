@@ -196,7 +196,12 @@
     "colStage": "Fase",
     "colComp": "Beloning",
     "colNotes": "Notities",
-    "exportAllJson": "Alles (JSON)"
+    "exportAllJson": "Alles (JSON)",
+    "responseRate": "{{responded}} van {{applied}} sollicitaties kwamen voorbij “gesolliciteerd” — {{pct}}% responspercentage",
+    "conversion": "Conversie per fase",
+    "avgLabel": "gem.",
+    "medianLabel": "mediaan",
+    "compareEmpty": "Nog niets in de interview- of aanbodfase. Voeg min/max/valuta toe op het bewerkformulier zodra het zover is."
   },
   "palette": {
     "title": "Ga naar…",
