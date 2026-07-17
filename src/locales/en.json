@@ -399,7 +399,12 @@
     "twoFactorBackupCodesHint": "Save these backup codes somewhere safe — each works once if you lose access to your authenticator app.",
     "twoFactorCodePlaceholder": "Code from your app",
     "twoFactorVerified": "Verified — 2FA is working.",
-    "twoFactorVerifyError": "That code didn't verify. 2FA is still enabled — try again."
+    "twoFactorVerifyError": "That code didn't verify. 2FA is still enabled — try again.",
+    "sessions": "Active sessions",
+    "unknownDevice": "Unknown device",
+    "thisDevice": "this device",
+    "revoke": "Sign out",
+    "revokeOthers": "Sign out other devices"
   },
   "companies": {
     "view": "View",

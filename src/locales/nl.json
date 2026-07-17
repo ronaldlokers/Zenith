@@ -399,7 +399,12 @@
     "twoFactorBackupCodesHint": "Bewaar deze back-upcodes op een veilige plek — elke werkt eenmalig als je geen toegang meer hebt tot je authenticator-app.",
     "twoFactorCodePlaceholder": "Code uit je app",
     "twoFactorVerified": "Geverifieerd — 2FA werkt.",
-    "twoFactorVerifyError": "Die code kon niet worden geverifieerd. 2FA staat nog steeds aan — probeer het opnieuw."
+    "twoFactorVerifyError": "Die code kon niet worden geverifieerd. 2FA staat nog steeds aan — probeer het opnieuw.",
+    "sessions": "Actieve sessies",
+    "unknownDevice": "Onbekend apparaat",
+    "thisDevice": "dit apparaat",
+    "revoke": "Uitloggen",
+    "revokeOthers": "Log andere apparaten uit"
   },
   "companies": {
     "view": "Weergave",

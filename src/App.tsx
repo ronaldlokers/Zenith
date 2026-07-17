@@ -747,6 +747,80 @@ function TwoFactorSettings() {
   );
 }
 
+// Active session list + revoke (#212) — Better-Auth's core session
+// endpoints (list/revoke/revoke-other), not a plugin, so no schema
+// change needed. currentToken comes from useSession() so the current
+// device's row can be marked and can't accidentally revoke itself via
+// the "sign out other devices" bulk action.
+function SessionManagement() {
+  const { t } = useTranslation();
+  const { data: session } = useSession();
+  const [sessions, setSessions] = useState<
+    { token: string; ipAddress?: string | null; userAgent?: string | null; createdAt: string | Date }[]
+    | null
+  >(null);
+  const [busyToken, setBusyToken] = useState<string | null>(null);
+
+  const load = () => {
+    authClient.listSessions().then(({ data }) => {
+      if (data) setSessions(data);
+    });
+  };
+
+  useEffect(load, []);
+
+  const revoke = async (token: string) => {
+    setBusyToken(token);
+    await authClient.revokeSession({ token });
+    setBusyToken(null);
+    load();
+  };
+
+  const revokeOthers = async () => {
+    setBusyToken("__others__");
+    await authClient.revokeOtherSessions();
+    setBusyToken(null);
+    load();
+  };
+
+  if (!sessions) return null;
+
+  const currentToken = session?.session.token;
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.sessions")}</h3>
+      <ul className="session-list">
+        {sessions.map((s) => (
+          <li key={s.token} className={s.token === currentToken ? "current" : ""}>
+            <span className="session-info">
+              <span>{s.userAgent ?? t("account.unknownDevice")}</span>
+              <span className="muted small">
+                {s.ipAddress ?? "—"} · {formatDate(String(s.createdAt))}
+                {s.token === currentToken ? ` · ${t("account.thisDevice")}` : ""}
+              </span>
+            </span>
+            {s.token !== currentToken && (
+              <button
+                className="danger"
+                disabled={busyToken === s.token}
+                onClick={() => revoke(s.token)}
+              >
+                {t("account.revoke")}
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {sessions.length > 1 && (
+        <button disabled={busyToken === "__others__"} onClick={revokeOthers}>
+          {t("account.revokeOthers")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 const THEME_KEY = "jobseekr_theme";
 
 // Applies the persisted theme choice — called on initial load (see App())
@@ -883,6 +957,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
           {session && <TwoFactorSettings />}
+          {session && <SessionManagement />}
           {session?.user.role === "admin" && <AdminInvite />}
         </div>
         <button onClick={onClose}>{t("common.close")}</button>
