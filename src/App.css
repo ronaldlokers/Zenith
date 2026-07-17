@@ -94,8 +94,8 @@
   max-width: calc(100vw - 2rem);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
   overflow: hidden;
 }
 
@@ -589,7 +589,8 @@
 .modal {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
   padding: 1.2rem 1.4rem;
   max-width: 26rem;
   width: 100%;
@@ -717,7 +718,8 @@
 .detail-pane {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
   padding: 1.2rem 1.4rem;
   position: sticky;
   top: 4.5rem;
@@ -1046,7 +1048,8 @@ button.danger {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
   overflow: hidden;
 }
 
@@ -1981,6 +1984,30 @@ select.status {
   align-self: center;
 }
 
+/* Stage-spectrum legend (#279) */
+.stage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 var(--space-3);
+}
+
+.stage-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.stage-legend-item .stat-dot {
+  width: 7px;
+  height: 7px;
+}
+
 .stage-name {
   color: var(--sc);
   font-weight: 600;
@@ -2707,7 +2734,8 @@ summary.bcol-head::after {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--sc);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
   padding: 0.6rem 0.75rem;
   margin-bottom: 0.55rem;
   display: flex;
@@ -2774,7 +2802,8 @@ summary.bcol-head::after {
 .form {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
   padding: 0.9rem;
   margin-bottom: 0.75rem;
   display: grid;

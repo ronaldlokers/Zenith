@@ -148,6 +148,23 @@ function LoadFailed({ onRetry }: { onRetry?: () => void }) {
   );
 }
 
+// Stage-spectrum legend (#279) — teaches the pipeline colors, which are
+// otherwise only implicit. The dot color comes from each stage-* class via
+// --sc, the same token the board/stats dots use.
+function StageLegend() {
+  const { t } = useTranslation();
+  return (
+    <div className="stage-legend">
+      {PIPELINE.map((s) => (
+        <span key={s} className={`stage-legend-item stage-${s}`}>
+          <span className="stat-dot" aria-hidden="true" />
+          {t(`stages.${s}`)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // Empty-state illustrations (#136) — extending Jobs' hand-drawn SVG
 // (the climbing-dots motif above) to the other tabs, in the same
 // line-art style: currentColor strokes, one accent-stroked highlight.
@@ -2412,6 +2429,7 @@ function BoardTab({
         </button>
       </div>
     </div>
+    <StageLegend />
     {groupBy === "company" ? (
       <div className="board-swimlanes">
         {laneEntries.map(([companyId, apps]) => (
