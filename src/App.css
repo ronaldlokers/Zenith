@@ -1523,6 +1523,22 @@ select.status {
   padding: 0.2rem 0;
 }
 
+/* Terminal fetch-failure state (#261) */
+.load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.load-error p {
+  margin: 0;
+}
+
 .skeleton-card {
   height: 3.6rem;
   border-radius: 10px;
@@ -2426,6 +2442,25 @@ select.status {
   .board {
     grid-template-columns: repeat(5, 1fr);
     align-items: start;
+  }
+
+  /* Give each column a fixed frame so a busy stage scrolls internally
+     instead of growing the whole page (#261). The head stays put; only
+     the card list beneath it scrolls. */
+  .board > .bcol {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 8rem);
+  }
+
+  .board > .bcol > .bcol-head {
+    flex: 0 0 auto;
+  }
+
+  .bcol-cards {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
 }
 

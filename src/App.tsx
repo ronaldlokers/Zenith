@@ -53,6 +53,23 @@ function LoadingSkeleton() {
   );
 }
 
+// Terminal error state for a tab whose data fetch failed (#261). Without
+// it, a failed load left the "Loading…" placeholder up forever while the
+// only signal was the easy-to-miss top banner.
+function LoadFailed({ onRetry }: { onRetry?: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="load-error" role="alert">
+      <p className="muted small">{t("common.loadError")}</p>
+      {onRetry && (
+        <button type="button" onClick={onRetry}>
+          {t("common.retry")}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Empty-state illustrations (#136) — extending Jobs' hand-drawn SVG
 // (the climbing-dots motif above) to the other tabs, in the same
 // line-art style: currentColor strokes, one accent-stroked highlight.
@@ -642,11 +659,16 @@ function ResetDemoData() {
   const reset = async () => {
     setBusy(true);
     setMessage(null);
-    const res = await fetch("/api/admin/reset-demo-data", { method: "POST" });
-    setBusy(false);
-    setMessage(
-      res.ok ? t("account.resetDemoSuccess") : t("account.resetDemoError"),
-    );
+    try {
+      const res = await fetch("/api/admin/reset-demo-data", { method: "POST" });
+      setMessage(
+        res.ok ? t("account.resetDemoSuccess") : t("account.resetDemoError"),
+      );
+    } catch {
+      setMessage(t("account.resetDemoError"));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -2414,7 +2436,7 @@ function BoardTab({
                 {t(`stages.${stage}`)}
                 <span className="n">{cards.length}</span>
               </div>
-              {cardList}
+              <div className="bcol-cards">{cardList}</div>
             </div>
           );
         }
@@ -2843,19 +2865,32 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   const { t } = useTranslation();
   const [stats, setStats] = useState<Stats | null>(null);
   const [fullApps, setFullApps] = useState<Application[] | null>(null);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setFailed(false);
     api
       .stats()
       .then(setStats)
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => {
+        setFailed(true);
+        onError((e as Error).message);
+      });
     api
       .list<Application>("applications")
       .then(setFullApps)
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => {
+        setFailed(true);
+        onError((e as Error).message);
+      });
   }, [onError]);
 
-  if (!stats) return <p className="muted small">Loading stats…</p>;
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (failed && !stats) return <LoadFailed onRetry={load} />;
+  if (!stats) return <p className="muted small">{t("common.loading")}</p>;
   const { applications: apps, history } = stats;
 
   const comparing = (fullApps ?? [])
@@ -2864,11 +2899,14 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
 
   // Applications per week, last 8 weeks. Uses applied_at (when the lead
   // actually moved) rather than created_at (when it was logged in the
-  // app, which can be days or weeks after the fact).
+  // app, which can be days or weeks after the fact). Buckets are
+  // [now-(8-i)·WEEK, ...+WEEK): i=0 is 8 weeks ago, i=7 is the current
+  // week ending now. (8-i), not (7-i) — the latter pushed the last
+  // bucket into the future and dropped the oldest week.
   const WEEK = 7 * 86400000;
   const now = Date.now();
   const weeks = Array.from({ length: 8 }, (_, i) => {
-    const start = now - (7 - i) * WEEK;
+    const start = now - (8 - i) * WEEK;
     const count = apps.filter((a) => {
       const t = parseSqlDate(a.applied_at ?? a.created_at);
       return t >= start && t < start + WEEK;
@@ -2889,7 +2927,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   // week with only interviews/follow-ups and no new application still
   // counts as an active week.
   const activityWeeks = weeks.map((w, i) => {
-    const start = now - (7 - i) * WEEK;
+    const start = now - (8 - i) * WEEK;
     const hasHistory = history.some((h) => {
       const t = parseSqlDate(h.changed_at);
       return t >= start && t < start + WEEK;
@@ -3179,12 +3217,19 @@ function FeedSettings({
   );
   const [newBoardSlug, setNewBoardSlug] = useState("");
 
+  const [failed, setFailed] = useState(false);
   const loadConfig = useCallback(
     () =>
       api
         .feedConfig()
-        .then(setConfig)
-        .catch((e) => onError((e as Error).message)),
+        .then((c) => {
+          setFailed(false);
+          setConfig(c);
+        })
+        .catch((e) => {
+          setFailed(true);
+          onError((e as Error).message);
+        }),
     [onError],
   );
 
@@ -3318,7 +3363,8 @@ function FeedSettings({
       .catch((e) => onError((e as Error).message));
   };
 
-  if (!config) return <p className="muted small">Loading settings…</p>;
+  if (failed && !config) return <LoadFailed onRetry={loadConfig} />;
+  if (!config) return <p className="muted small">{t("common.loading")}</p>;
 
   return (
     <div className="feed-settings">
@@ -3524,6 +3570,14 @@ function FeedTab({
       .catch((e) => onError((e as Error).message));
   };
 
+  // Keep focus in range after add/dismiss shrinks the list (#261) —
+  // otherwise j/k could point past the end and land nowhere.
+  useEffect(() => {
+    setFocusedIndex((i) =>
+      Math.min(i, Math.max(0, (items?.length ?? 1) - 1)),
+    );
+  }, [items]);
+
   // Desktop keyboard triage (#144) — mirrors the Jobs tab's j/k pattern
   // (#39): j/k move focus, a adds the focused item, d dismisses it. The
   // swipe gesture from the same issue is mobile-only (a mouse-drag
@@ -3702,15 +3756,25 @@ function CalendarTab({
 }) {
   const { t } = useTranslation();
   const [entries, setEntries] = useState<AgendaEntry[] | null>(null);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setFailed(false);
     api
       .agenda()
       .then(setEntries)
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => {
+        setFailed(true);
+        onError((e as Error).message);
+      });
   }, [onError]);
 
-  if (!entries) return <p className="muted small">Loading agenda…</p>;
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (failed && !entries) return <LoadFailed onRetry={load} />;
+  if (!entries) return <p className="muted small">{t("common.loading")}</p>;
 
   const todayStr = today();
   const groups = new Map<string, AgendaEntry[]>();

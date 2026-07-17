@@ -23,6 +23,8 @@
   },
   "common": {
     "loading": "Loading…",
+    "loadError": "Couldn’t load this — the request failed.",
+    "retry": "Retry",
     "close": "Close",
     "edit": "Edit",
     "delete": "Delete",
