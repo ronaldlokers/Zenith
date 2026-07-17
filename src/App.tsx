@@ -53,6 +53,23 @@ function LoadingSkeleton() {
   );
 }
 
+// Guards an async submit against double-fire (#261) and exposes a busy
+// flag for disabling the button. The wrapped handler already returns a
+// promise (the api chain), so we just await it and reset when it settles.
+function useSubmitGuard<T>(onSubmit: (value: T) => void | Promise<void>) {
+  const [submitting, setSubmitting] = useState(false);
+  const submit = async (value: T) => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(value);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  return [submitting, submit] as const;
+}
+
 // Terminal error state for a tab whose data fetch failed (#261). Without
 // it, a failed load left the "Loading…" placeholder up forever while the
 // only signal was the easy-to-miss top banner.
@@ -2525,8 +2542,10 @@ function Timeline({
     load();
   }, [load]);
 
+  const [logging, setLogging] = useState(false);
   const add = (e: FormEvent) => {
     e.preventDefault();
+    if (logging) return;
     const retro = [
       wentWell.trim() && `${t("interactionTypes.retroWentWell")}: ${wentWell.trim()}`,
       toImprove.trim() && `${t("interactionTypes.retroToImprove")}: ${toImprove.trim()}`,
@@ -2534,6 +2553,7 @@ function Timeline({
       .filter(Boolean)
       .join("\n");
     const notes = [form.notes.trim(), retro].filter(Boolean).join("\n\n");
+    setLogging(true);
     api
       .addInteraction(resource, targetId, {
         type: form.type,
@@ -2548,7 +2568,8 @@ function Timeline({
         setInterviewers("");
         return load();
       })
-      .catch((err) => onError((err as Error).message));
+      .catch((err) => onError((err as Error).message))
+      .finally(() => setLogging(false));
   };
 
   return (
@@ -2595,7 +2616,7 @@ function Timeline({
             />
           </div>
         )}
-        <button type="submit" className="primary">
+        <button type="submit" className="primary" disabled={logging}>
           {t("common.log")}
         </button>
       </form>
@@ -3560,14 +3581,24 @@ function FeedTab({
       .catch((e) => onError((e as Error).message));
   };
 
+  const [addingIds, setAddingIds] = useState<Set<number>>(new Set());
   const add = (item: FeedItem) => {
+    if (addingIds.has(item.id)) return;
+    setAddingIds((s) => new Set(s).add(item.id));
     api
       .addFeedItem(item.id)
       .then(() => {
         setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
         notify(`Added "${item.title}" to Jobs`);
       })
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => onError((e as Error).message))
+      .finally(() =>
+        setAddingIds((s) => {
+          const next = new Set(s);
+          next.delete(item.id);
+          return next;
+        }),
+      );
   };
 
   // Keep focus in range after add/dismiss shrinks the list (#261) —
@@ -3645,6 +3676,7 @@ function FeedTab({
             item={item}
             roleLabel={roleTypes.find((r) => r.slug === item.role_type)?.label ?? item.role_type}
             focused={i === focusedIndex}
+            adding={addingIds.has(item.id)}
             onAdd={() => add(item)}
             onDismiss={() => dismiss(item)}
           />
@@ -3667,12 +3699,14 @@ function FeedCard({
   item,
   roleLabel,
   focused,
+  adding,
   onAdd,
   onDismiss,
 }: {
   item: FeedItem;
   roleLabel: string;
   focused: boolean;
+  adding: boolean;
   onAdd: () => void;
   onDismiss: () => void;
 }) {
@@ -3722,7 +3756,7 @@ function FeedCard({
           )}
         </div>
         <div className="card-actions">
-          <button className="primary" onClick={onAdd}>
+          <button className="primary" onClick={onAdd} disabled={adding}>
             Add to Jobs
           </button>
           <button onClick={onDismiss}>Dismiss</button>
@@ -3910,16 +3944,19 @@ function InterviewPrepSection({
     load();
   }, [load]);
 
+  const [adding, setAdding] = useState(false);
   const addItem = (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || adding) return;
+    setAdding(true);
     api
       .create(`applications/${applicationId}/prep-items`, { text: trimmed })
       .then(() => {
         setNewText("");
         return load();
       })
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setAdding(false));
   };
 
   const toggleDone = (item: PrepItem) =>
@@ -4020,7 +4057,9 @@ function InterviewPrepSection({
             }
           }}
         />
-        <button onClick={() => addItem(newText)}>{t("common.save")}</button>
+        <button disabled={adding} onClick={() => addItem(newText)}>
+          {t("common.save")}
+        </button>
       </div>
     </div>
   );
@@ -4045,7 +4084,10 @@ function CoverLetterSection({
     setText(application.cover_letter ?? "");
   }, [application.id, application.cover_letter]);
 
+  const [generating, setGenerating] = useState(false);
   const generate = () => {
+    if (generating) return;
+    setGenerating(true);
     api
       .profile()
       .then((profile) => {
@@ -4061,7 +4103,8 @@ function CoverLetterSection({
         });
         setText(`${greeting}\n\n${body}\n\n${signoff}`);
       })
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setGenerating(false));
   };
 
   const save = () => {
@@ -4079,7 +4122,9 @@ function CoverLetterSection({
   return (
     <div className="cover-letter">
       <div className="cover-letter-actions">
-        <button onClick={generate}>{t("coverLetter.generateDraft")}</button>
+        <button onClick={generate} disabled={generating}>
+          {t("coverLetter.generateDraft")}
+        </button>
         <button className="primary" disabled={saving} onClick={save}>
           {t("common.save")}
         </button>
@@ -5287,6 +5332,7 @@ function ApplicationForm({
   );
   const [extraCompanies, setExtraCompanies] = useState<Company[]>([]);
   const [importing, setImporting] = useState(false);
+  const [submitting, submit] = useSubmitGuard(onSubmit);
   const set = (patch: Partial<Application>) =>
     setForm((f) => ({ ...f, ...patch }));
 
@@ -5342,7 +5388,7 @@ function ApplicationForm({
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        submit(form);
       }}
     >
       {possibleDuplicate && (
@@ -5669,8 +5715,8 @@ function ApplicationForm({
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="primary">
-          {t("common.save")}
+        <button type="submit" className="primary" disabled={submitting}>
+          {submitting ? t("common.saving") : t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
           {t("common.cancel")}
@@ -5878,6 +5924,7 @@ function CompanyForm({
 }) {
   const { t } = useTranslation();
   const [form, setForm] = useState<Partial<Company>>(initial ?? {});
+  const [submitting, submit] = useSubmitGuard(onSubmit);
   const set = (patch: Partial<Company>) =>
     setForm((f) => ({ ...f, ...patch }));
 
@@ -5886,7 +5933,7 @@ function CompanyForm({
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        submit(form);
       }}
     >
       <label>
@@ -5929,8 +5976,8 @@ function CompanyForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          {t("common.save")}
+        <button type="submit" className="primary" disabled={submitting}>
+          {submitting ? t("common.saving") : t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
           {t("common.cancel")}
@@ -6261,6 +6308,7 @@ function ContactForm({
 }) {
   const { t } = useTranslation();
   const [form, setForm] = useState<Partial<Contact>>(initial ?? {});
+  const [submitting, submit] = useSubmitGuard(onSubmit);
   const set = (patch: Partial<Contact>) =>
     setForm((f) => ({ ...f, ...patch }));
 
@@ -6269,7 +6317,7 @@ function ContactForm({
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        submit(form);
       }}
     >
       <label>
@@ -6368,8 +6416,8 @@ function ContactForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          {t("common.save")}
+        <button type="submit" className="primary" disabled={submitting}>
+          {submitting ? t("common.saving") : t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
           {t("common.cancel")}
@@ -6734,15 +6782,18 @@ function ProfileSection({
   const [form, setForm] = useState(profile);
   const set = (patch: Partial<Profile>) => setForm((f) => ({ ...f, ...patch }));
 
-  const save = (e: FormEvent) => {
-    e.preventDefault();
-    api
+  const [submitting, submit] = useSubmitGuard(async () => {
+    await api
       .updateProfile(form)
       .then(() => {
         notify(t("common.saved"));
         return onChanged();
       })
       .catch((e) => onError((e as Error).message));
+  });
+  const save = (e: FormEvent) => {
+    e.preventDefault();
+    submit(undefined);
   };
 
   return (
@@ -6806,8 +6857,8 @@ function ProfileSection({
         </label>
       </div>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          {t("common.save")}
+        <button type="submit" className="primary" disabled={submitting}>
+          {submitting ? t("common.saving") : t("common.save")}
         </button>
       </div>
     </form>
@@ -6825,6 +6876,7 @@ function WorkExperienceForm({
 }) {
   const { t } = useTranslation();
   const [form, setForm] = useState<Partial<WorkExperience>>(initial ?? {});
+  const [submitting, submit] = useSubmitGuard(onSubmit);
   const set = (patch: Partial<WorkExperience>) =>
     setForm((f) => ({ ...f, ...patch }));
 
@@ -6833,7 +6885,7 @@ function WorkExperienceForm({
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        submit(form);
       }}
     >
       <label>
@@ -6917,8 +6969,8 @@ function WorkExperienceForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          {t("common.save")}
+        <button type="submit" className="primary" disabled={submitting}>
+          {submitting ? t("common.saving") : t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
           {t("common.cancel")}
@@ -7097,6 +7149,7 @@ function EducationForm({
 }) {
   const { t } = useTranslation();
   const [form, setForm] = useState<Partial<Education>>(initial ?? {});
+  const [submitting, submit] = useSubmitGuard(onSubmit);
   const set = (patch: Partial<Education>) => setForm((f) => ({ ...f, ...patch }));
 
   return (
@@ -7104,7 +7157,7 @@ function EducationForm({
       className="form"
       onSubmit={(e) => {
         e.preventDefault();
-        onSubmit(form);
+        submit(form);
       }}
     >
       <label>
@@ -7150,8 +7203,8 @@ function EducationForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary">
-          {t("common.save")}
+        <button type="submit" className="primary" disabled={submitting}>
+          {submitting ? t("common.saving") : t("common.save")}
         </button>
         <button type="button" onClick={onCancel}>
           {t("common.cancel")}
