@@ -23,6 +23,8 @@
   },
   "common": {
     "loading": "Laden…",
+    "loadError": "Laden mislukt — de aanvraag is niet gelukt.",
+    "retry": "Opnieuw",
     "close": "Sluiten",
     "edit": "Bewerken",
     "delete": "Verwijderen",
