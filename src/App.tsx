@@ -670,6 +670,178 @@ function CommandPalette({
   );
 }
 
+// Self-serve change-password (#285) — closes the "invited users are stuck
+// on the admin's temporary password, with no way to change it" gap.
+function ChangePassword() {
+  const { t } = useTranslation();
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setMsg(null);
+    const { error } = await authClient.changePassword({
+      currentPassword: current,
+      newPassword: next,
+      revokeOtherSessions: true,
+    });
+    setBusy(false);
+    if (error) {
+      setMsg({ ok: false, text: t("account.changePasswordError") });
+      return;
+    }
+    setMsg({ ok: true, text: t("account.changePasswordSuccess") });
+    setCurrent("");
+    setNext("");
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.changePassword")}</h3>
+      <form onSubmit={submit}>
+        <label className="settings-field">
+          <span>{t("account.currentPassword")}</span>
+          <input
+            type="password"
+            required
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+          />
+        </label>
+        <label className="settings-field">
+          <span>{t("account.newPassword")}</span>
+          <input
+            type="password"
+            required
+            minLength={8}
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+          />
+        </label>
+        {msg && (
+          <p className={msg.ok ? "admin-invite-success" : "login-error"}>
+            {msg.text}
+          </p>
+        )}
+        <button type="submit" disabled={busy}>
+          {t("account.changePasswordSubmit")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// Admin user management (#285) — the recovery path for a locked-out user:
+// list users, reset a forgotten password to a new temporary one, reset a
+// lost 2FA, or remove an account. Without this, recovery meant editing D1
+// by hand.
+type AdminUser = {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string | null;
+  twoFactorEnabled: boolean | null;
+};
+function AdminUsers({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const { data: session } = useSession();
+  const [users, setUsers] = useState<AdminUser[] | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await authClient.admin.listUsers({ query: { limit: 100 } });
+    if (res.error) {
+      onError(t("account.usersLoadError"));
+      return;
+    }
+    // twoFactorEnabled is a real user column but not in the client's typed
+    // UserWithRole, so widen through unknown.
+    setUsers((res.data?.users ?? []) as unknown as AdminUser[]);
+  }, [onError, t]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const resetPassword = async (u: AdminUser) => {
+    // A readable one-off temporary password the admin relays; the user
+    // changes it themselves via ChangePassword after logging in.
+    const temp = `Reset-${crypto.randomUUID().slice(0, 8)}`;
+    const { error } = await authClient.admin.setUserPassword({
+      userId: u.id,
+      newPassword: temp,
+    });
+    if (error) {
+      onError(t("account.resetPasswordError"));
+      return;
+    }
+    setNotice(t("account.tempPasswordSet", { email: u.email, password: temp }));
+  };
+
+  const reset2fa = (u: AdminUser) =>
+    api
+      .resetUser2fa(u.id)
+      .then(() => {
+        setNotice(t("account.twoFactorReset", { email: u.email }));
+        return load();
+      })
+      .catch((e) => onError((e as Error).message));
+
+  const remove = async (u: AdminUser) => {
+    if (!window.confirm(t("account.removeUserConfirm", { email: u.email })))
+      return;
+    const { error } = await authClient.admin.removeUser({ userId: u.id });
+    if (error) {
+      onError(t("account.removeUserError"));
+      return;
+    }
+    return load();
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.manageUsers")}</h3>
+      {notice && <p className="admin-invite-success">{notice}</p>}
+      <ul className="settings-list">
+        {(users ?? []).map((u) => (
+          <li key={u.id} className="admin-user">
+            <span className="admin-user-id">
+              {u.name ?? u.email}
+              <span className="muted small"> · {u.email}</span>
+              {u.twoFactorEnabled ? (
+                <span className="badge"> 2FA</span>
+              ) : null}
+            </span>
+            {u.id !== session?.user.id && (
+              <span className="admin-user-actions">
+                <button onClick={() => resetPassword(u)}>
+                  {t("account.resetPassword")}
+                </button>
+                {u.twoFactorEnabled ? (
+                  <button onClick={() => reset2fa(u)}>
+                    {t("account.reset2fa")}
+                  </button>
+                ) : null}
+                <button className="danger" onClick={() => remove(u)}>
+                  {t("account.removeUser")}
+                </button>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function AdminInvite() {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
@@ -1590,7 +1762,9 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
           {session && <PushSettings />}
           {session && <TwoFactorSettings />}
           {session && <SessionManagement />}
+          {session && <ChangePassword />}
           {session && <SampleDataSettings onError={setApiError} />}
+          {session?.user.role === "admin" && <AdminUsers onError={setApiError} />}
           {session?.user.role === "admin" && <AdminInvite />}
         </div>
         <button onClick={onClose}>{t("common.close")}</button>

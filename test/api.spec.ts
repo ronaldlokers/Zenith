@@ -65,6 +65,50 @@ describe("saved views", () => {
   });
 });
 
+describe("admin: reset 2FA", () => {
+  it("clears a user's TOTP secret and disables 2FA", async () => {
+    const u = await env.DB.prepare(
+      'SELECT id FROM "user" WHERE email = ?',
+    )
+      .bind("ronald@lokers.email")
+      .first<{ id: string }>();
+    await env.DB.prepare(
+      'INSERT INTO "twoFactor" (id, secret, "backupCodes", "userId") VALUES (?, ?, ?, ?)',
+    )
+      .bind("tf-test", "SECRET123", "[]", u!.id)
+      .run();
+    await env.DB.prepare('UPDATE "user" SET "twoFactorEnabled" = 1 WHERE id = ?')
+      .bind(u!.id)
+      .run();
+
+    const res = await authedFetch(
+      `${BASE}/api/admin/users/${u!.id}/reset-2fa`,
+      { method: "POST" },
+    );
+    expect(res.status).toBe(204);
+
+    const tf = await env.DB.prepare(
+      'SELECT id FROM "twoFactor" WHERE "userId" = ?',
+    )
+      .bind(u!.id)
+      .first();
+    expect(tf).toBeNull();
+    const usr = await env.DB.prepare(
+      'SELECT "twoFactorEnabled" AS e FROM "user" WHERE id = ?',
+    )
+      .bind(u!.id)
+      .first<{ e: number }>();
+    expect(usr!.e).toBe(0);
+  });
+
+  it("404s for an unknown user", async () => {
+    const res = await authedFetch(`${BASE}/api/admin/users/nope/reset-2fa`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(404);
+  });
+});
+
 describe("companies", () => {
   it("creates, lists, updates, deletes", async () => {
     const created = await post("/api/companies", {
