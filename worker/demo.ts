@@ -16,6 +16,7 @@ const USER_TABLES = [
   "contacts",
   "companies",
   "tags",
+  "saved_views",
   "skills",
   "work_experience",
   "education",

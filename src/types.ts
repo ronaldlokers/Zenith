@@ -116,6 +116,24 @@ export interface FeedCursor {
   id: number;
 }
 
+// Saved views (#277) — a named snapshot of the Jobs tab filter/sort state.
+export interface JobFilters {
+  query: string;
+  statusFilter: string;
+  roleFilter: string;
+  companyFilter: string;
+  tagFilter: string;
+  showArchived: boolean;
+  sort: string;
+}
+
+export interface SavedView {
+  id: number;
+  name: string;
+  filters: JobFilters;
+  created_at: string;
+}
+
 export interface AtsBoard {
   id: number;
   source: "greenhouse" | "ashby";

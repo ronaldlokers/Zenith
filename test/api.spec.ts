@@ -26,6 +26,45 @@ async function seedApplication(overrides: Record<string, unknown> = {}) {
   return (await res.json()) as { id: number };
 }
 
+describe("saved views", () => {
+  it("creates, lists, and deletes a named filter snapshot", async () => {
+    const filters = {
+      query: "platform",
+      statusFilter: "applied",
+      roleFilter: "all",
+      companyFilter: "all",
+      tagFilter: "all",
+      showArchived: false,
+      sort: "updated",
+    };
+    const created = (await (
+      await post("/api/saved-views", { name: "Interviewing", filters })
+    ).json()) as { id: number; name: string; filters: typeof filters };
+    expect(created.name).toBe("Interviewing");
+    expect(created.filters.statusFilter).toBe("applied");
+
+    const list = (await (
+      await authedFetch(`${BASE}/api/saved-views`)
+    ).json()) as { id: number; filters: typeof filters }[];
+    const found = list.find((v) => v.id === created.id);
+    expect(found?.filters.query).toBe("platform");
+
+    const del = await authedFetch(`${BASE}/api/saved-views/${created.id}`, {
+      method: "DELETE",
+    });
+    expect(del.status).toBe(204);
+    const after = (await (
+      await authedFetch(`${BASE}/api/saved-views`)
+    ).json()) as { id: number }[];
+    expect(after.some((v) => v.id === created.id)).toBe(false);
+  });
+
+  it("rejects a view with no name", async () => {
+    const res = await post("/api/saved-views", { filters: {} });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("companies", () => {
   it("creates, lists, updates, deletes", async () => {
     const created = await post("/api/companies", {

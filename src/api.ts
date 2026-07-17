@@ -32,6 +32,15 @@ export const api = {
     }),
   remove: (resource: string, id: number) =>
     request<void>(`/api/${resource}/${id}`, { method: "DELETE" }),
+  savedViews: () =>
+    request<import("./types").SavedView[]>("/api/saved-views"),
+  createSavedView: (name: string, filters: import("./types").JobFilters) =>
+    request<import("./types").SavedView>("/api/saved-views", {
+      method: "POST",
+      body: JSON.stringify({ name, filters }),
+    }),
+  deleteSavedView: (id: number) =>
+    request<void>(`/api/saved-views/${id}`, { method: "DELETE" }),
   interactions: (resource: "applications" | "contacts", id: number) =>
     request<import("./types").Interaction[]>(
       `/api/${resource}/${id}/interactions`,

@@ -26,6 +26,8 @@ import {
   type ActivityEvent,
   type FeedItem,
   type FeedCursor,
+  type SavedView,
+  type JobFilters,
   type RoleTypeDef,
   type Interaction,
   type Status,
@@ -4938,6 +4940,58 @@ function ApplicationsTab({
   const [showHelp, setShowHelp] = useState(false);
   const [history, setHistory] = useState<StatusHistoryRow[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Saved views (#277) — named snapshots of the filter/sort state.
+  const [savedViews, setSavedViews] = useState<SavedView[]>([]);
+  const loadViews = useCallback(
+    () =>
+      api
+        .savedViews()
+        .then(setSavedViews)
+        .catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+  useEffect(() => {
+    loadViews();
+  }, [loadViews]);
+
+  const currentFilters = (): JobFilters => ({
+    query,
+    statusFilter,
+    roleFilter,
+    companyFilter,
+    tagFilter,
+    showArchived,
+    sort,
+  });
+  const applyView = (v: SavedView) => {
+    const f = v.filters;
+    setQuery(f.query ?? "");
+    setStatusFilter((f.statusFilter as Status | "all") ?? "all");
+    setRoleFilter(f.roleFilter ?? "all");
+    setCompanyFilter(f.companyFilter ?? "all");
+    setTagFilter(f.tagFilter ?? "all");
+    setShowArchived(!!f.showArchived);
+    setSort((f.sort as typeof sort) ?? "updated");
+  };
+  const saveCurrentView = () => {
+    const name = window.prompt(t("savedViews.namePrompt"))?.trim();
+    if (!name) return;
+    api
+      .createSavedView(name, currentFilters())
+      .then((v) => {
+        setSavedViews((vs) => [...vs, v]);
+        notify(t("savedViews.saved", { name }));
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+  const deleteView = (id: number) => {
+    api
+      .deleteSavedView(id)
+      .then(() => setSavedViews((vs) => vs.filter((v) => v.id !== id)))
+      .catch((e) => onError((e as Error).message));
+  };
+  const curFilterKey = JSON.stringify(currentFilters());
   // Split-pane detail on wide desktop (#131) — same >=1100px breakpoint
   // the two-column .jobs-layout already switches on. Below it, the
   // detail stays a modal overlay (mobile/narrow).
@@ -5247,6 +5301,29 @@ function ApplicationsTab({
           />
           {t("filters.showArchived")}
         </label>
+      </div>
+
+      <div className="saved-views">
+        {savedViews.map((v) => (
+          <span
+            key={v.id}
+            className={`view-chip${JSON.stringify(v.filters) === curFilterKey ? " active" : ""}`}
+          >
+            <button className="view-apply" onClick={() => applyView(v)}>
+              {v.name}
+            </button>
+            <button
+              className="view-del"
+              aria-label={t("savedViews.delete", { name: v.name })}
+              onClick={() => deleteView(v.id)}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <button className="view-save" onClick={saveCurrentView}>
+          {t("savedViews.save")}
+        </button>
       </div>
 
       {selected.size > 0 && (

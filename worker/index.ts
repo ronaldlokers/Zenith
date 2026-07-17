@@ -286,6 +286,44 @@ app.get("/api/tags", async (c) => {
   return c.json(results);
 });
 
+// Saved views (#277) — named Jobs-filter snapshots. `filters` is stored as
+// a JSON string and returned parsed so the client works with an object.
+app.get("/api/saved-views", async (c) => {
+  const { results } = await c.env.DB.prepare(
+    "SELECT id, name, filters, created_at FROM saved_views WHERE user_id = ? ORDER BY created_at",
+  )
+    .bind(c.get("userId"))
+    .all<{ id: number; name: string; filters: string; created_at: string }>();
+  return c.json(
+    results.map((r) => ({ ...r, filters: JSON.parse(r.filters) })),
+  );
+});
+
+app.post("/api/saved-views", async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const name = (body.name ?? "").trim();
+  if (!name) return c.json({ error: "name is required" }, 400);
+  if (body.filters == null || typeof body.filters !== "object") {
+    return c.json({ error: "filters is required" }, 400);
+  }
+  const row = await c.env.DB.prepare(
+    "INSERT INTO saved_views (user_id, name, filters) VALUES (?, ?, ?) RETURNING id, name, filters, created_at",
+  )
+    .bind(c.get("userId"), name, JSON.stringify(body.filters))
+    .first<{ id: number; name: string; filters: string; created_at: string }>();
+  return c.json({ ...row!, filters: JSON.parse(row!.filters) }, 201);
+});
+
+app.delete("/api/saved-views/:id", async (c) => {
+  const res = await c.env.DB.prepare(
+    "DELETE FROM saved_views WHERE id = ? AND user_id = ?",
+  )
+    .bind(c.req.param("id"), c.get("userId"))
+    .run();
+  if (res.meta.changes === 0) return c.json({ error: "not found" }, 404);
+  return c.body(null, 204);
+});
+
 app.post("/api/applications/:id/tags", async (c) => {
   const body = await c.req.json();
   const name = (body.name ?? "").trim();
