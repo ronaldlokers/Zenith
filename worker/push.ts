@@ -22,12 +22,16 @@ function vapidFromEnv(env: Env) {
 // /api/push/subscribe from being usable as an open SSRF proxy, and
 // keeps sendPushToUser's later fetch() (which attaches a signed VAPID
 // JWT to the request) from ever firing at an attacker-chosen host.
-const ALLOWED_PUSH_HOSTS = [
+//
+// Exact hostnames only, no wildcard/regex matching — a mis-escaped
+// wildcard pattern silently widens the allowlist, which defeats the
+// point. notify.windows.com (legacy Edge/IE push) uses a per-channel
+// subdomain and is deliberately left off rather than approximated.
+const ALLOWED_PUSH_HOSTS = new Set([
   "fcm.googleapis.com",
   "updates.push.services.mozilla.com",
   "web.push.apple.com",
-  "wns2-*.notify.windows.com",
-];
+]);
 
 function isAllowedPushEndpoint(endpoint: string): boolean {
   let url: URL;
@@ -36,12 +40,7 @@ function isAllowedPushEndpoint(endpoint: string): boolean {
   } catch {
     return false;
   }
-  if (url.protocol !== "https:") return false;
-  return ALLOWED_PUSH_HOSTS.some((pattern) =>
-    pattern.includes("*")
-      ? new RegExp(`^${pattern.replace(".", "\\.").replace("*", "[a-z0-9]+")}$`).test(url.hostname)
-      : url.hostname === pattern,
-  );
+  return url.protocol === "https:" && ALLOWED_PUSH_HOSTS.has(url.hostname);
 }
 
 export async function sendPushToUser(
