@@ -32,6 +32,7 @@ import {
   type OutreachStatus,
   type PrepItem,
   type JournalEntry,
+  type AppNotification,
 } from "./types";
 import "./App.css";
 
@@ -140,6 +141,27 @@ function ErrorIcon() {
       <circle cx="12" cy="12" r="9" strokeWidth="2" />
       <line x1="12" y1="7.5" x2="12" y2="13" strokeWidth="2" strokeLinecap="round" />
       <circle cx="12" cy="16.5" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg
+      className="bell-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        d="M6 9a6 6 0 0 1 12 0c0 4.5 1.5 6 1.5 6h-15S6 13.5 6 9Z"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M10 19a2 2 0 0 0 4 0" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -818,6 +840,91 @@ function SessionManagement() {
         </button>
       )}
     </div>
+  );
+}
+
+// In-app notification center (#213) — due/overdue follow-ups, stale
+// postings, and new Feed matches, generated server-side on the
+// existing 6h cron (see worker/notifications.ts). Polled rather than
+// pushed since there's no realtime transport in this app; a stale
+// unread count for a few minutes is a fine tradeoff against adding one.
+const NOTIFICATION_POLL_MS = 120_000;
+
+function NotificationBell() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<AppNotification[] | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const load = useCallback(() => {
+    api.notifications().then(setNotifications).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, NOTIFICATION_POLL_MS);
+    return () => clearInterval(interval);
+  }, [load]);
+
+  const unreadCount = (notifications ?? []).filter((n) => !n.read_at).length;
+
+  const openNotification = (n: AppNotification) => {
+    setOpen(false);
+    if (!n.read_at) {
+      api.markNotificationRead(n.id).then(load);
+    }
+    if (n.link) navigate(n.link);
+  };
+
+  const markAllRead = () => {
+    api.markAllNotificationsRead().then(load);
+  };
+
+  return (
+    <span className="notification-bell">
+      <button
+        className="settings-btn"
+        onClick={() => setOpen((v) => !v)}
+        title={t("header.notifications")}
+        aria-label={t("header.notifications")}
+      >
+        <BellIcon />
+        {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
+      </button>
+      {open && (
+        <>
+          <div className="notification-backdrop" onClick={() => setOpen(false)} />
+          <div className="notification-panel" role="dialog" aria-label={t("header.notifications")}>
+            <div className="notification-panel-head">
+              <span>{t("header.notifications")}</span>
+              {unreadCount > 0 && (
+                <button className="btn-secondary" onClick={markAllRead}>
+                  {t("header.markAllRead")}
+                </button>
+              )}
+            </div>
+            <ul className="notification-list">
+              {(notifications ?? []).map((n) => (
+                <li
+                  key={n.id}
+                  className={n.read_at ? "read" : "unread"}
+                  onClick={() => openNotification(n)}
+                >
+                  <span className="notification-title">{n.title}</span>
+                  {n.body && <span className="muted small">{n.body}</span>}
+                  <span className="muted small">{formatDate(n.created_at)}</span>
+                </li>
+              ))}
+              {notifications && notifications.length === 0 && (
+                <li className="notification-empty muted small">
+                  {t("header.notificationsEmpty")}
+                </li>
+              )}
+            </ul>
+          </div>
+        </>
+      )}
+    </span>
   );
 }
 
@@ -1500,6 +1607,7 @@ export default function App() {
             {activeApps.filter(isDue).length > 0 &&
               ` · ${t("header.dueCount", { count: activeApps.filter(isDue).length })}`}
           </span>
+          <NotificationBell />
           <button
             className="settings-btn"
             onClick={() => setShowSettings(true)}

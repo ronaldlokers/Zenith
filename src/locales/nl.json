@@ -16,7 +16,10 @@
     "openCount_other": "{{count}} open",
     "dueCount_one": "{{count}} actie nodig",
     "dueCount_other": "{{count}} acties nodig",
-    "settings": "Instellingen"
+    "settings": "Instellingen",
+    "notifications": "Meldingen",
+    "notificationsEmpty": "Nog niets.",
+    "markAllRead": "Alles als gelezen markeren"
   },
   "common": {
     "loading": "Laden…",

@@ -106,6 +106,12 @@ export const api = {
     }),
   unblockFeedCompany: (id: number) =>
     request<void>(`/api/feed/blocklist/${id}`, { method: "DELETE" }),
+  notifications: () =>
+    request<import("./types").AppNotification[]>("/api/notifications"),
+  markNotificationRead: (id: number) =>
+    request<void>(`/api/notifications/${id}/read`, { method: "POST" }),
+  markAllNotificationsRead: () =>
+    request<void>("/api/notifications/read-all", { method: "POST" }),
   importUrl: (url: string) =>
     request<import("./types").ImportResult>(
       `/api/import?url=${encodeURIComponent(url)}`,
