@@ -77,6 +77,18 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
   )
     .bind(userId)
     .first<{ id: number }>();
+  const hooli = await env.DB.prepare(
+    `INSERT INTO companies (user_id, name, website, location, description) VALUES (?, 'Hooli Systems', 'https://hooli.example', 'Rotterdam, NL', 'Design-systems and frontend tooling company.')
+     RETURNING id`,
+  )
+    .bind(userId)
+    .first<{ id: number }>();
+  const vandelay = await env.DB.prepare(
+    `INSERT INTO companies (user_id, name, website, location) VALUES (?, 'Vandelay Data', 'https://vandelay.example', 'Utrecht, NL')
+     RETURNING id`,
+  )
+    .bind(userId)
+    .first<{ id: number }>();
 
   // --- Contacts + outreach tracking (#110) ---
   const contact = await env.DB.prepare(
@@ -156,6 +168,85 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
     `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, NULL, 'ghosted')`,
   )
     .bind(ghosted!.id, userId)
+    .run();
+
+  // --- One application per remaining stage so the demo Board looks fully
+  // populated (#182): interested, applied, screening, rejected, withdrawn.
+  // interview/offer/ghosted are seeded above. ---
+  const interested = await env.DB.prepare(
+    `INSERT INTO applications (user_id, company_id, title, role_type, url, source, status, notes)
+     VALUES (?, ?, 'Frontend Engineer, Design Systems', 'front-end', 'https://hooli.example/careers/17',
+             'feed:adzuna', 'interested', 'Saw the posting in the Adzuna feed — strong design-systems focus.')
+     RETURNING id`,
+  )
+    .bind(userId, hooli!.id)
+    .first<{ id: number }>();
+  await env.DB.prepare(
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, NULL, 'interested')`,
+  )
+    .bind(interested!.id, userId)
+    .run();
+
+  const applied = await env.DB.prepare(
+    `INSERT INTO applications (user_id, company_id, title, role_type, url, source, status, notes,
+        applied_at, next_action, next_action_at)
+     VALUES (?, ?, 'Platform Engineer', 'platform-engineer', 'https://globex.example/jobs/88',
+             'company-site', 'applied', 'Applied via their careers page.', date('now', '-5 days'),
+             'Follow up if no reply', date('now', '+2 days'))
+     RETURNING id`,
+  )
+    .bind(userId, globex!.id)
+    .first<{ id: number }>();
+  await env.DB.prepare(
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
+     (?, ?, NULL, 'interested'), (?, ?, 'interested', 'applied')`,
+  )
+    .bind(applied!.id, userId, applied!.id, userId)
+    .run();
+
+  const screening = await env.DB.prepare(
+    `INSERT INTO applications (user_id, company_id, title, role_type, url, source, status, notes, applied_at)
+     VALUES (?, ?, 'Site Reliability Engineer', 'other', 'https://vandelay.example/jobs/3',
+             'referral', 'screening', 'Recruiter reached out — screening call scheduled.', date('now', '-8 days'))
+     RETURNING id`,
+  )
+    .bind(userId, vandelay!.id)
+    .first<{ id: number }>();
+  await env.DB.prepare(
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
+     (?, ?, NULL, 'applied'), (?, ?, 'applied', 'screening')`,
+  )
+    .bind(screening!.id, userId, screening!.id, userId)
+    .run();
+
+  const rejected = await env.DB.prepare(
+    `INSERT INTO applications (user_id, company_id, title, role_type, status, notes, applied_at)
+     VALUES (?, ?, 'Senior Frontend Engineer', 'front-end', 'rejected',
+             'Rejected after the take-home — not enough React depth, per their feedback.', date('now', '-20 days'))
+     RETURNING id`,
+  )
+    .bind(userId, hooli!.id)
+    .first<{ id: number }>();
+  await env.DB.prepare(
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
+     (?, ?, NULL, 'applied'), (?, ?, 'applied', 'screening'), (?, ?, 'screening', 'rejected')`,
+  )
+    .bind(rejected!.id, userId, rejected!.id, userId, rejected!.id, userId)
+    .run();
+
+  const withdrawn = await env.DB.prepare(
+    `INSERT INTO applications (user_id, company_id, title, role_type, status, notes, applied_at)
+     VALUES (?, ?, 'Backend Engineer', 'other', 'withdrawn',
+             'Withdrew — accepted another process further along.', date('now', '-15 days'))
+     RETURNING id`,
+  )
+    .bind(userId, vandelay!.id)
+    .first<{ id: number }>();
+  await env.DB.prepare(
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
+     (?, ?, NULL, 'applied'), (?, ?, 'applied', 'withdrawn')`,
+  )
+    .bind(withdrawn!.id, userId, withdrawn!.id, userId)
     .run();
 
   // --- Tags (#102) ---
