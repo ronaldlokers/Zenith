@@ -45,6 +45,14 @@
     "save": "Save view",
     "delete": "Delete view {{name}}"
   },
+  "sampleData": {
+    "title": "Sample data",
+    "emptyHint": "New here? Load an example pipeline to explore the app, then clear it when you're ready for real data.",
+    "load": "Load sample data",
+    "loadedHint": "Your account is filled with sample data. Clear it to start fresh with your own pipeline.",
+    "clear": "Remove sample data",
+    "clearConfirm": "Remove all sample data from your account? This can't be undone."
+  },
   "forms": {
     "appliedOn": "Applied on",
     "basics": "Basics",

@@ -45,6 +45,14 @@
     "save": "Weergave opslaan",
     "delete": "Weergave {{name}} verwijderen"
   },
+  "sampleData": {
+    "title": "Voorbeelddata",
+    "emptyHint": "Nieuw hier? Laad een voorbeeldpijplijn om de app te verkennen en wis die als je klaar bent voor je eigen data.",
+    "load": "Voorbeelddata laden",
+    "loadedHint": "Je account is gevuld met voorbeelddata. Wis die om met je eigen pijplijn te beginnen.",
+    "clear": "Voorbeelddata verwijderen",
+    "clearConfirm": "Alle voorbeelddata uit je account verwijderen? Dit kan niet ongedaan worden gemaakt."
+  },
   "forms": {
     "appliedOn": "Gesolliciteerd op",
     "basics": "Basis",

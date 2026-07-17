@@ -749,6 +749,77 @@ function AdminInvite() {
   );
 }
 
+// Per-user sample data (#281) — a new/invited user can fill an empty
+// account with the example dataset to explore, then wipe it in one click.
+// A full reload after either action is the simplest way to refresh every
+// tab's data at once.
+function SampleDataSettings({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<{
+    loaded: boolean;
+    hasData: boolean;
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api
+      .sampleDataStatus()
+      .then(setStatus)
+      .catch((e) => onError((e as Error).message));
+  }, [onError]);
+
+  if (!status) return null;
+  // Nothing to offer once the account has real (non-sample) data.
+  if (status.hasData && !status.loaded) return null;
+
+  const load = () => {
+    setBusy(true);
+    api
+      .loadSampleData()
+      .then(() => window.location.reload())
+      .catch((e) => {
+        onError((e as Error).message);
+        setBusy(false);
+      });
+  };
+  const clear = () => {
+    if (!window.confirm(t("sampleData.clearConfirm"))) return;
+    setBusy(true);
+    api
+      .clearSampleData()
+      .then(() => window.location.reload())
+      .catch((e) => {
+        onError((e as Error).message);
+        setBusy(false);
+      });
+  };
+
+  return (
+    <div className="sample-data">
+      <h3>{t("sampleData.title")}</h3>
+      {status.loaded ? (
+        <>
+          <p className="muted small">{t("sampleData.loadedHint")}</p>
+          <button disabled={busy} onClick={clear}>
+            {t("sampleData.clear")}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="muted small">{t("sampleData.emptyHint")}</p>
+          <button disabled={busy} onClick={load}>
+            {t("sampleData.load")}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function ResetDemoData() {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
@@ -1453,6 +1524,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
           {session && <PushSettings />}
           {session && <TwoFactorSettings />}
           {session && <SessionManagement />}
+          {session && <SampleDataSettings onError={setApiError} />}
           {session?.user.role === "admin" && <AdminInvite />}
         </div>
         <button onClick={onClose}>{t("common.close")}</button>
