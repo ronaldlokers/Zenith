@@ -864,6 +864,15 @@
   flex-shrink: 0;
 }
 
+/* Sample-data panel (#281) */
+.sample-data {
+  margin-top: var(--space-4);
+}
+
+.sample-data h3 {
+  margin: 0 0 var(--space-2);
+}
+
 /* Saved views (#277) — filter-snapshot chips above the list. */
 .saved-views {
   display: flex;

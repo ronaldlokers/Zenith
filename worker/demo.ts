@@ -27,22 +27,36 @@ const USER_TABLES = [
   "profile",
 ] as const;
 
+// Delete every user-scoped row for one user. Shared by the demo reset and
+// the per-user sample-data toggle (#281).
+export async function wipeUserData(env: Env, userId: string): Promise<void> {
+  for (const table of USER_TABLES) {
+    await env.DB.prepare(`DELETE FROM ${table} WHERE user_id = ?`)
+      .bind(userId)
+      .run();
+  }
+  await env.DB.prepare("DELETE FROM feed_item_status WHERE user_id = ?")
+    .bind(userId)
+    .run();
+}
+
 export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
   const user = await env.DB.prepare('SELECT id FROM "user" WHERE email = ?')
     .bind(DEMO_EMAIL)
     .first<{ id: string }>();
   if (!user) return { seeded: false };
-  const userId = user.id;
+  await wipeUserData(env, user.id);
+  await seedSampleData(env, user.id, DEMO_EMAIL);
+  return { seeded: true };
+}
 
-  for (const table of USER_TABLES) {
-    await env.DB.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(userId).run();
-  }
-  await env.DB.prepare(
-    "DELETE FROM feed_item_status WHERE user_id = ?",
-  )
-    .bind(userId)
-    .run();
-
+// Populate one (wiped) account with one example of every shipped feature.
+// The demo account and the per-user "load sample data" toggle both use it.
+export async function seedSampleData(
+  env: Env,
+  userId: string,
+  email: string,
+): Promise<void> {
   // --- Role types + feed config (#45, #34) ---
   await env.DB.prepare(
     `INSERT INTO role_types (user_id, slug, label, sort_order) VALUES
@@ -292,7 +306,7 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
      (?, 'Demo Candidate', ?, 'Amsterdam, NL', 'https://linkedin.com/in/demo', 'https://github.com/demo',
       'Platform engineer with 8 years building developer infrastructure.')`,
   )
-    .bind(userId, DEMO_EMAIL)
+    .bind(userId, email)
     .run();
   const skill = await env.DB.prepare(
     "INSERT INTO skills (user_id, name) VALUES (?, 'Kubernetes') RETURNING id",
@@ -322,6 +336,4 @@ export async function resetDemoData(env: Env): Promise<{ seeded: boolean }> {
   )
     .bind(userId, userId)
     .run();
-
-  return { seeded: true };
 }

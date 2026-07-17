@@ -4,7 +4,7 @@ import { registerRoleTypeRoutes } from "./role-types.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { getAuth } from "./auth.js";
-import { resetDemoData } from "./demo.js";
+import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
 import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { registerCalendarRoutes } from "./calendar.js";
 import { registerPushRoutes } from "./push.js";
@@ -1368,6 +1368,60 @@ app.post("/api/admin/reset-demo-data", async (c) => {
     return c.json({ error: "demo account doesn't exist yet — invite it first" }, 404);
   }
   return c.json(result);
+});
+
+// Per-user sample data (#281) — a new/invited user can populate their own
+// account with the example dataset to explore, then wipe it.
+async function appCount(env: Env, userId: string): Promise<number> {
+  const row = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM applications WHERE user_id = ?",
+  )
+    .bind(userId)
+    .first<{ n: number }>();
+  return row?.n ?? 0;
+}
+
+app.get("/api/account/sample-data", async (c) => {
+  const userId = c.get("userId");
+  const profile = await c.env.DB.prepare(
+    "SELECT sample_data_loaded FROM profile WHERE user_id = ?",
+  )
+    .bind(userId)
+    .first<{ sample_data_loaded: number }>();
+  return c.json({
+    loaded: !!profile?.sample_data_loaded,
+    hasData: (await appCount(c.env, userId)) > 0,
+  });
+});
+
+app.post("/api/account/sample-data", async (c) => {
+  const userId = c.get("userId");
+  // Only offer this on an empty account so we never clobber real data.
+  if ((await appCount(c.env, userId)) > 0) {
+    return c.json(
+      { error: "account already has data — clear it first" },
+      409,
+    );
+  }
+  const user = await c.env.DB.prepare('SELECT email FROM "user" WHERE id = ?')
+    .bind(userId)
+    .first<{ email: string }>();
+  // Wipe first so any stray defaults (role types, feed config) don't
+  // collide with the seed's own inserts, then seed and set the flag.
+  await wipeUserData(c.env, userId);
+  await seedSampleData(c.env, userId, user?.email ?? "you@example.com");
+  await c.env.DB.prepare(
+    "UPDATE profile SET sample_data_loaded = 1 WHERE user_id = ?",
+  )
+    .bind(userId)
+    .run();
+  return c.json({ loaded: true });
+});
+
+app.delete("/api/account/sample-data", async (c) => {
+  const userId = c.get("userId");
+  await wipeUserData(c.env, userId);
+  return c.body(null, 204);
 });
 
 app.notFound((c) => c.json({ error: "not found" }, 404));

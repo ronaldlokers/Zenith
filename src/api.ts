@@ -41,6 +41,14 @@ export const api = {
     }),
   deleteSavedView: (id: number) =>
     request<void>(`/api/saved-views/${id}`, { method: "DELETE" }),
+  sampleDataStatus: () =>
+    request<{ loaded: boolean; hasData: boolean }>("/api/account/sample-data"),
+  loadSampleData: () =>
+    request<{ loaded: boolean }>("/api/account/sample-data", {
+      method: "POST",
+    }),
+  clearSampleData: () =>
+    request<void>("/api/account/sample-data", { method: "DELETE" }),
   interactions: (resource: "applications" | "contacts", id: number) =>
     request<import("./types").Interaction[]>(
       `/api/${resource}/${id}/interactions`,
