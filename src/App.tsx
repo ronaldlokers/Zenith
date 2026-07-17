@@ -5251,7 +5251,18 @@ function ApplicationsTab({
           <li
             key={a.id}
             className={`card row2 stage-${a.status} heat-${heatLevel.get(a.id) ?? 0}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}${a.archived_at ? " archived" : ""}`}
+            role="button"
+            tabIndex={0}
             onClick={() => setDetailId(a.id)}
+            onKeyDown={(e) => {
+              // Only the row itself opens on Enter/Space; when focus is on the
+              // nested checkbox/status select, let them handle their own keys.
+              if (e.target !== e.currentTarget) return;
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setDetailId(a.id);
+              }
+            }}
           >
             <div className="l1">
               <input
