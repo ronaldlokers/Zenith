@@ -34,6 +34,7 @@ import {
   type JournalEntry,
   type AppNotification,
   type AtsBoard,
+  type Webhook,
 } from "./types";
 import "./App.css";
 
@@ -659,6 +660,133 @@ function ResetDemoData() {
   );
 }
 
+// Public API key + webhooks (#228) — the key is shown in full whenever
+// it exists (unlike a password) since it's meant to be copied into
+// another tool's config; a webhook's signing secret, by contrast, is
+// only ever shown once at creation (see addWebhook below), same as the
+// 2FA backup codes.
+function PublicApiSettings({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [keyBusy, setKeyBusy] = useState(false);
+  const [webhooks, setWebhooks] = useState<Webhook[] | null>(null);
+  const [newWebhookUrl, setNewWebhookUrl] = useState("");
+  const [newWebhookSecret, setNewWebhookSecret] = useState<string | null>(null);
+  const [webhookBusy, setWebhookBusy] = useState(false);
+
+  const loadWebhooks = useCallback(
+    () =>
+      api
+        .webhooks()
+        .then(setWebhooks)
+        .catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+
+  useEffect(() => {
+    api.profile().then((p) => setApiKey(p.api_key));
+    loadWebhooks();
+  }, [loadWebhooks]);
+
+  const generateKey = () => {
+    setKeyBusy(true);
+    api
+      .generateApiKey()
+      .then((r) => setApiKey(r.api_key))
+      .finally(() => setKeyBusy(false));
+  };
+
+  const revokeKey = () => {
+    setKeyBusy(true);
+    api
+      .revokeApiKey()
+      .then(() => setApiKey(null))
+      .finally(() => setKeyBusy(false));
+  };
+
+  const addWebhook = (e: FormEvent) => {
+    e.preventDefault();
+    const url = newWebhookUrl.trim();
+    if (!url) return;
+    setWebhookBusy(true);
+    api
+      .addWebhook(url)
+      .then((r) => {
+        setNewWebhookUrl("");
+        setNewWebhookSecret(r.secret);
+        return loadWebhooks();
+      })
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setWebhookBusy(false));
+  };
+
+  const removeWebhook = (id: number) => {
+    api
+      .removeWebhook(id)
+      .then(loadWebhooks)
+      .catch((e) => onError((e as Error).message));
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.apiKey")}</h3>
+      <p className="muted small">{t("account.apiKeyHint")}</p>
+      {apiKey ? (
+        <>
+          <input readOnly value={apiKey} onClick={(e) => (e.target as HTMLInputElement).select()} />
+          <div className="share-actions">
+            <button disabled={keyBusy} onClick={generateKey}>
+              {t("settings.regenerateLink")}
+            </button>
+            <button disabled={keyBusy} className="danger" onClick={revokeKey}>
+              {t("settings.disableLink")}
+            </button>
+          </div>
+        </>
+      ) : (
+        <button disabled={keyBusy} onClick={generateKey}>
+          {t("account.apiKeyGenerate")}
+        </button>
+      )}
+
+      <h3>{t("account.webhooks")}</h3>
+      <p className="muted small">{t("account.webhooksHint")}</p>
+      {newWebhookSecret && (
+        <p className="tfa-secret">
+          {t("account.webhookSecretHint")}
+          <br />
+          {newWebhookSecret}
+        </p>
+      )}
+      <ul className="settings-list">
+        {(webhooks ?? []).map((w) => (
+          <li key={w.id}>
+            <span>{w.url}</span>
+            <button className="danger" onClick={() => removeWebhook(w.id)}>
+              <RemoveIcon />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <form className="settings-add" onSubmit={addWebhook}>
+        <input
+          type="url"
+          placeholder="https://example.com/webhook"
+          value={newWebhookUrl}
+          onChange={(e) => setNewWebhookUrl(e.target.value)}
+        />
+        <button type="submit" className="primary" disabled={webhookBusy}>
+          {t("feedSettings.add")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 // Web Push (#214) — base64url VAPID public key -> the raw byte array
 // PushManager.subscribe() needs, per the standard applicationServerKey
 // conversion (browsers don't accept the base64url string directly).
@@ -1040,6 +1168,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
   const [shareBusy, setShareBusy] = useState(false);
   const [calendarToken, setCalendarToken] = useState<string | null>(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     api.profile().then((p) => {
@@ -1196,6 +1325,8 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
               <button onClick={() => signOut()}>{t("account.signOut")}</button>
             </div>
           )}
+          {apiError && <p className="login-error">{apiError}</p>}
+          {session && <PublicApiSettings onError={setApiError} />}
           {session && <PushSettings />}
           {session && <TwoFactorSettings />}
           {session && <SessionManagement />}

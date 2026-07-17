@@ -219,6 +219,14 @@ export interface Profile {
   summary: string | null;
   share_token: string | null;
   calendar_token: string | null;
+  api_key: string | null;
+}
+
+export interface Webhook {
+  id: number;
+  url: string;
+  enabled: boolean | number;
+  created_at: string;
 }
 
 export interface Skill {
