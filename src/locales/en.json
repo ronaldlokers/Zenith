@@ -360,7 +360,10 @@
     "keywordPlaceholder": "+ keyword",
     "removeKeyword": "Remove",
     "blocklist": "Blocked companies",
-    "blocklistPlaceholder": "+ company name…"
+    "blocklistPlaceholder": "+ company name…",
+    "atsBoards": "Company job boards",
+    "atsBoardsHint": "Watch a specific company's own Greenhouse or Ashby board directly — no keyword matching, every listing on that board shows up. Use the board's slug from its careers URL (e.g. boards.greenhouse.io/{slug} or jobs.ashbyhq.com/{slug}).",
+    "atsBoardSlugPlaceholder": "board slug (e.g. stripe)"
   },
   "login": {
     "subtitle": "Sign in to your pipeline",

@@ -33,6 +33,7 @@ import {
   type PrepItem,
   type JournalEntry,
   type AppNotification,
+  type AtsBoard,
 } from "./types";
 import "./App.css";
 
@@ -2954,6 +2955,11 @@ function FeedSettings({
     { id: number; company: string }[] | null
   >(null);
   const [newBlockedCompany, setNewBlockedCompany] = useState("");
+  const [atsBoards, setAtsBoards] = useState<AtsBoard[] | null>(null);
+  const [newBoardSource, setNewBoardSource] = useState<"greenhouse" | "ashby">(
+    "greenhouse",
+  );
+  const [newBoardSlug, setNewBoardSlug] = useState("");
 
   const loadConfig = useCallback(
     () =>
@@ -2973,10 +2979,20 @@ function FeedSettings({
     [onError],
   );
 
+  const loadAtsBoards = useCallback(
+    () =>
+      api
+        .atsBoards()
+        .then(setAtsBoards)
+        .catch((e) => onError((e as Error).message)),
+    [onError],
+  );
+
   useEffect(() => {
     loadConfig();
     loadBlocklist();
-  }, [loadConfig, loadBlocklist]);
+    loadAtsBoards();
+  }, [loadConfig, loadBlocklist, loadAtsBoards]);
 
   const addBlockedCompany = (e: FormEvent) => {
     e.preventDefault();
@@ -2995,6 +3011,26 @@ function FeedSettings({
     api
       .unblockFeedCompany(id)
       .then(loadBlocklist)
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const addAtsBoard = (e: FormEvent) => {
+    e.preventDefault();
+    const slug = newBoardSlug.trim();
+    if (!slug) return;
+    api
+      .addAtsBoard(newBoardSource, slug)
+      .then(() => {
+        setNewBoardSlug("");
+        return loadAtsBoards();
+      })
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const removeAtsBoard = (id: number) => {
+    api
+      .removeAtsBoard(id)
+      .then(loadAtsBoards)
       .catch((e) => onError((e as Error).message));
   };
 
@@ -3179,6 +3215,38 @@ function FeedSettings({
           />
         </form>
       </div>
+
+      <h3 className="detail-sub">{t("feedSettings.atsBoards")}</h3>
+      <p className="muted small">{t("feedSettings.atsBoardsHint")}</p>
+      <ul className="settings-list">
+        {(atsBoards ?? []).map((b) => (
+          <li key={b.id}>
+            <span>
+              {b.source === "greenhouse" ? "Greenhouse" : "Ashby"}: {b.slug}
+            </span>
+            <button className="danger" onClick={() => removeAtsBoard(b.id)}>
+              <RemoveIcon />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <form className="settings-add" onSubmit={addAtsBoard}>
+        <select
+          value={newBoardSource}
+          onChange={(e) => setNewBoardSource(e.target.value as "greenhouse" | "ashby")}
+        >
+          <option value="greenhouse">Greenhouse</option>
+          <option value="ashby">Ashby</option>
+        </select>
+        <input
+          placeholder={t("feedSettings.atsBoardSlugPlaceholder")}
+          value={newBoardSlug}
+          onChange={(e) => setNewBoardSlug(e.target.value)}
+        />
+        <button type="submit" className="primary">
+          {t("feedSettings.add")}
+        </button>
+      </form>
     </div>
   );
 }

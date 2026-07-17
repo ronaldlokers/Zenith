@@ -360,7 +360,10 @@
     "keywordPlaceholder": "+ zoekwoord",
     "removeKeyword": "Verwijderen",
     "blocklist": "Geblokkeerde bedrijven",
-    "blocklistPlaceholder": "+ bedrijfsnaam…"
+    "blocklistPlaceholder": "+ bedrijfsnaam…",
+    "atsBoards": "Vacatureborden van bedrijven",
+    "atsBoardsHint": "Volg het Greenhouse- of Ashby-vacaturebord van een specifiek bedrijf rechtstreeks — geen zoekwoordfilter, elke vacature op dat bord verschijnt. Gebruik de slug uit de carrière-URL van het bedrijf (bv. boards.greenhouse.io/{slug} of jobs.ashbyhq.com/{slug}).",
+    "atsBoardSlugPlaceholder": "bord-slug (bv. stripe)"
   },
   "login": {
     "subtitle": "Log in op je pipeline",

@@ -95,7 +95,7 @@ export interface FeedItem {
   id: number;
   // "arbeitnow" no longer gets ingested (#165, German-market focused) but
   // stays a valid value here for historical feed_items rows.
-  source: "adzuna" | "hn" | "arbeitnow";
+  source: "adzuna" | "hn" | "arbeitnow" | "greenhouse" | "ashby";
   external_id: string;
   title: string;
   company: string | null;
@@ -106,6 +106,13 @@ export interface FeedItem {
   posted_at: string | null;
   fetched_at: string;
   status: "new" | "added" | "dismissed";
+  board_slug: string | null;
+}
+
+export interface AtsBoard {
+  id: number;
+  source: "greenhouse" | "ashby";
+  slug: string;
 }
 
 export interface ImportResult {
