@@ -1372,13 +1372,35 @@ app.post("/api/admin/reset-demo-data", async (c) => {
 
 // Per-user sample data (#281) — a new/invited user can populate their own
 // account with the example dataset to explore, then wipe it.
-async function appCount(env: Env, userId: string): Promise<number> {
+// Whether the account holds ANY user content (#285) — gates sample-data
+// loading so a wipe-then-seed can never clobber real applications,
+// companies, contacts, a CV, documents, saved views, or credentials.
+// Deliberately ignores seeded defaults (role_types / feed config), which a
+// fresh account may already carry.
+async function hasAnyUserData(env: Env, userId: string): Promise<boolean> {
   const row = await env.DB.prepare(
-    "SELECT COUNT(*) AS n FROM applications WHERE user_id = ?",
+    `SELECT
+        (SELECT COUNT(*) FROM applications WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM companies WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM contacts WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM work_experience WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM education WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM skills WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM languages WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM saved_views WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM documents WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM tags WHERE user_id = ?)
+      + (SELECT COUNT(*) FROM profile WHERE user_id = ?
+           AND (name IS NOT NULL OR summary IS NOT NULL
+                OR api_key IS NOT NULL OR share_token IS NOT NULL
+                OR calendar_token IS NOT NULL)) AS n`,
   )
-    .bind(userId)
+    .bind(
+      userId, userId, userId, userId, userId, userId,
+      userId, userId, userId, userId, userId,
+    )
     .first<{ n: number }>();
-  return row?.n ?? 0;
+  return (row?.n ?? 0) > 0;
 }
 
 app.get("/api/account/sample-data", async (c) => {
@@ -1390,14 +1412,16 @@ app.get("/api/account/sample-data", async (c) => {
     .first<{ sample_data_loaded: number }>();
   return c.json({
     loaded: !!profile?.sample_data_loaded,
-    hasData: (await appCount(c.env, userId)) > 0,
+    hasData: await hasAnyUserData(c.env, userId),
   });
 });
 
 app.post("/api/account/sample-data", async (c) => {
   const userId = c.get("userId");
-  // Only offer this on an empty account so we never clobber real data.
-  if ((await appCount(c.env, userId)) > 0) {
+  // Only seed a genuinely empty account — checking ALL user content, not
+  // just applications — so the wipe-then-seed below can't destroy a CV,
+  // contacts, or an API key the user already has (#285).
+  if (await hasAnyUserData(c.env, userId)) {
     return c.json(
       { error: "account already has data — clear it first" },
       409,
@@ -1420,7 +1444,26 @@ app.post("/api/account/sample-data", async (c) => {
 
 app.delete("/api/account/sample-data", async (c) => {
   const userId = c.get("userId");
+  // Preserve credentials that live on the profile row so removing the
+  // sample account doesn't silently revoke an API key, share link, or
+  // calendar link the user created while exploring (#285).
+  const creds = await c.env.DB.prepare(
+    "SELECT api_key, share_token, calendar_token FROM profile WHERE user_id = ?",
+  )
+    .bind(userId)
+    .first<{
+      api_key: string | null;
+      share_token: string | null;
+      calendar_token: string | null;
+    }>();
   await wipeUserData(c.env, userId);
+  if (creds && (creds.api_key || creds.share_token || creds.calendar_token)) {
+    await c.env.DB.prepare(
+      "INSERT INTO profile (user_id, api_key, share_token, calendar_token) VALUES (?, ?, ?, ?)",
+    )
+      .bind(userId, creds.api_key, creds.share_token, creds.calendar_token)
+      .run();
+  }
   return c.body(null, 204);
 });
 

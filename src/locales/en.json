@@ -51,7 +51,7 @@
     "load": "Load sample data",
     "loadedHint": "Your account is filled with sample data. Clear it to start fresh with your own pipeline.",
     "clear": "Remove sample data",
-    "clearConfirm": "Remove all sample data from your account? This can't be undone."
+    "clearConfirm": "This permanently deletes ALL data in your account — including anything you've added since — and resets it to empty. Your login, API key, and share links are kept. This can't be undone."
   },
   "apiDocs": {
     "title": "API reference",
