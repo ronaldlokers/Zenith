@@ -137,7 +137,11 @@
     "settings": "Instellingen",
     "hideSettings": "Instellingen verbergen",
     "checkNow": "Nu controleren",
-    "checking": "Controleren…"
+    "checking": "Controleren…",
+    "viaSource": "via {{source}}",
+    "viewPosting": "Bekijk vacature ↗",
+    "addToJobs": "Toevoegen aan Jobs",
+    "dismiss": "Negeren"
   },
   "stats": {
     "momentumLabel": "Pipeline-momentum",
@@ -182,7 +186,17 @@
       "showAll_one": "Toon alles ({{count}})",
       "showAll_other": "Toon alles ({{count}})",
       "showLess": "Toon minder"
-    }
+    },
+    "weekOfTitle": "Week van {{label}}: {{count}}",
+    "reachedTitle": "{{count}} bereikten {{stage}}",
+    "ghostedPercent": "{{pct}}% geghost",
+    "noApplications": "Nog geen sollicitaties.",
+    "colRole": "Rol",
+    "colCompany": "Bedrijf",
+    "colStage": "Fase",
+    "colComp": "Beloning",
+    "colNotes": "Notities",
+    "exportAllJson": "Alles (JSON)"
   },
   "palette": {
     "title": "Ga naar…",
@@ -265,14 +279,20 @@
       "contact": "Contact",
       "companyResearch": "Bedrijfsonderzoek",
       "noNotes": "Nog niets gelogd."
-    }
+    },
+    "jobPostingLink": "Vacature ↗",
+    "viaSource": "via {{source}}",
+    "appliedDate": "Gesolliciteerd {{date}}",
+    "followUpFallback": "opvolgen"
   },
   "nextUp": {
     "title": "Binnenkort"
   },
   "company": {
     "notResearched": "niet onderzocht",
-    "contactMap": "Contacten"
+    "contactMap": "Contacten",
+    "agencyBadge": "bureau",
+    "researchedAgo": "onderzocht {{age}} geleden"
   },
   "stages": {
     "interested": "Interesse",
@@ -496,5 +516,40 @@
     "density": "Rijdichtheid",
     "densityComfortable": "Comfortabel",
     "densityCompact": "Compact"
+  },
+  "toast": {
+    "deleted": "\"{{name}}\" verwijderd",
+    "undo": "Ongedaan maken",
+    "roleTypeAdded": "Functietype toegevoegd",
+    "savedSettings": "{{source}}-instellingen opgeslagen",
+    "feedFound": "{{inserted}} nieuw van {{seen}} gecontroleerd",
+    "addedToJobs": "\"{{title}}\" toegevoegd aan Jobs",
+    "researched": "{{name}} onderzocht"
+  },
+  "confirm": {
+    "deleteDocument": "\"{{name}}\" verwijderen?",
+    "deleteRoleType": "Functietype \"{{label}}\" verwijderen? Feed-trefwoorden ervoor gaan mee."
+  },
+  "aria": {
+    "moveToStage": "{{title}} naar fase verplaatsen",
+    "interactionType": "Type interactie",
+    "interactionDate": "Datum interactie"
+  },
+  "calendar": {
+    "empty": "Nog niets op de agenda. Deadlines, vastgelegde contactmomenten en sollicitatiedata verschijnen hier.",
+    "todaySuffix": " · vandaag"
+  },
+  "contact": {
+    "linkedinLink": "LinkedIn ↗"
+  },
+  "timeline": {
+    "whatHappenedPlaceholder": "Wat is er gebeurd?",
+    "viaContact": "via contact",
+    "loggedOn": "{{type}} vastgelegd op {{title}}",
+    "attachedTo": "{{filename}} toegevoegd aan {{title}}"
+  },
+  "documents": {
+    "labelPlaceholder": "Label (CV v3, motivatiebrief, …)",
+    "uploading": "Uploaden…"
   }
 }

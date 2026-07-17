@@ -137,7 +137,11 @@
     "settings": "Settings",
     "hideSettings": "Hide settings",
     "checkNow": "Check now",
-    "checking": "Checking…"
+    "checking": "Checking…",
+    "viaSource": "via {{source}}",
+    "viewPosting": "View posting ↗",
+    "addToJobs": "Add to Jobs",
+    "dismiss": "Dismiss"
   },
   "stats": {
     "momentumLabel": "Pipeline momentum",
@@ -182,7 +186,17 @@
       "showAll_one": "Show all ({{count}})",
       "showAll_other": "Show all ({{count}})",
       "showLess": "Show less"
-    }
+    },
+    "weekOfTitle": "Week of {{label}}: {{count}}",
+    "reachedTitle": "{{count}} reached {{stage}}",
+    "ghostedPercent": "{{pct}}% ghosted",
+    "noApplications": "No applications yet.",
+    "colRole": "Role",
+    "colCompany": "Company",
+    "colStage": "Stage",
+    "colComp": "Comp",
+    "colNotes": "Notes",
+    "exportAllJson": "Everything (JSON)"
   },
   "palette": {
     "title": "Jump to…",
@@ -265,14 +279,20 @@
       "contact": "Contact",
       "companyResearch": "Company research",
       "noNotes": "Nothing logged yet."
-    }
+    },
+    "jobPostingLink": "Job posting ↗",
+    "viaSource": "via {{source}}",
+    "appliedDate": "Applied {{date}}",
+    "followUpFallback": "follow up"
   },
   "nextUp": {
     "title": "Next up"
   },
   "company": {
     "notResearched": "not researched",
-    "contactMap": "Contacts"
+    "contactMap": "Contacts",
+    "agencyBadge": "agency",
+    "researchedAgo": "researched {{age}} ago"
   },
   "stages": {
     "interested": "Interested",
@@ -496,5 +516,40 @@
     "density": "Row density",
     "densityComfortable": "Comfortable",
     "densityCompact": "Compact"
+  },
+  "toast": {
+    "deleted": "Deleted \"{{name}}\"",
+    "undo": "Undo",
+    "roleTypeAdded": "Role type added",
+    "savedSettings": "Saved {{source}} settings",
+    "feedFound": "Found {{inserted}} new of {{seen}} checked",
+    "addedToJobs": "Added \"{{title}}\" to Jobs",
+    "researched": "Researched {{name}}"
+  },
+  "confirm": {
+    "deleteDocument": "Delete \"{{name}}\"?",
+    "deleteRoleType": "Delete role type \"{{label}}\"? Feed keywords for it go too."
+  },
+  "aria": {
+    "moveToStage": "Move {{title}} to stage",
+    "interactionType": "Interaction type",
+    "interactionDate": "Interaction date"
+  },
+  "calendar": {
+    "empty": "Nothing on the agenda yet. Due dates, logged touchpoints, and applied dates all show up here.",
+    "todaySuffix": " · today"
+  },
+  "contact": {
+    "linkedinLink": "LinkedIn ↗"
+  },
+  "timeline": {
+    "whatHappenedPlaceholder": "What happened?",
+    "viaContact": "via contact",
+    "loggedOn": "{{type}} logged on {{title}}",
+    "attachedTo": "{{filename}} attached to {{title}}"
+  },
+  "documents": {
+    "labelPlaceholder": "Label (CV v3, cover letter, …)",
+    "uploading": "Uploading…"
   }
 }

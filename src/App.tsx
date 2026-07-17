@@ -1888,7 +1888,7 @@ export default function App() {
             }),
           );
       }, 6000);
-      notify(`Deleted "${name}"`, () => {
+      notify(t("toast.deleted", { name }), () => {
         window.clearTimeout(timer);
         setHidden((h) => {
           const next = new Set(h);
@@ -1897,7 +1897,7 @@ export default function App() {
         });
       });
     },
-    [notify, reload],
+    [notify, reload, t],
   );
 
   // Optimistic status change: update locally, revert on API failure
@@ -2204,7 +2204,7 @@ export default function App() {
                 setToast(null);
               }}
             >
-              Undo
+              {t("toast.undo")}
             </button>
           )}
         </div>
@@ -2285,7 +2285,7 @@ function BoardCard({
         className={`status stage-${a.status}`}
         value={a.status}
         onChange={(e) => onMove(e.target.value)}
-        aria-label={`Move ${a.title} to stage`}
+        aria-label={t("aria.moveToStage", { title: a.title })}
       >
         {STATUSES.map((s) => (
           <option key={s} value={s}>
@@ -2638,7 +2638,7 @@ function Timeline({
         <select
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value })}
-          aria-label="Interaction type"
+          aria-label={t("aria.interactionType")}
         >
           {INTERACTION_TYPES.map((it) => (
             <option key={it} value={it}>
@@ -2650,10 +2650,10 @@ function Timeline({
           type="date"
           value={form.happened_at}
           onChange={(e) => setForm({ ...form, happened_at: e.target.value })}
-          aria-label="Interaction date"
+          aria-label={t("aria.interactionDate")}
         />
         <input
-          placeholder="What happened?"
+          placeholder={t("timeline.whatHappenedPlaceholder")}
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
         />
@@ -2692,7 +2692,7 @@ function Timeline({
                 </span>
               )}
               {it.notes ?? ""}
-              {it.via_contact ? <span className="badge">via contact</span> : null}
+              {it.via_contact ? <span className="badge">{t("timeline.viaContact")}</span> : null}
             </span>
             <button
               className="tl-del danger"
@@ -2763,12 +2763,12 @@ function Documents({
     <div className="docs">
       <div className="docs-add">
         <input
-          placeholder="Label (CV v3, cover letter, …)"
+          placeholder={t("documents.labelPlaceholder")}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
         />
         <label className={`upload-btn${busy ? " busy" : ""}`}>
-          {busy ? "Uploading…" : t("detail.attachFile")}
+          {busy ? t("documents.uploading") : t("detail.attachFile")}
           <input
             type="file"
             hidden
@@ -2792,7 +2792,7 @@ function Documents({
               className="tl-del danger"
               aria-label={t("common.delete")}
               onClick={() => {
-                if (confirm(`Delete "${d.filename}"?`))
+                if (confirm(t("confirm.deleteDocument", { name: d.filename })))
                   api
                     .remove("documents", d.id)
                     .then(load)
@@ -3131,7 +3131,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
       <h2 className="stat-h">{t("stats.appsPerWeek")}</h2>
       <div className="histo">
         {weeks.map((w) => (
-          <div key={w.label} className="hrow" title={`Week of ${w.label}: ${w.count}`}>
+          <div key={w.label} className="hrow" title={t("stats.weekOfTitle", { label: w.label, count: w.count })}>
             <span className="lbl">{w.label}</span>
             <span className="htrack">
               <span
@@ -3150,7 +3150,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           <div
             key={f.stage}
             className={`hrow stage-${f.stage}`}
-            title={`${f.count} reached ${f.stage}`}
+            title={t("stats.reachedTitle", { count: f.count, stage: t(`stages.${f.stage}`) })}
           >
             <span className="lbl">{t(`stages.${f.stage}`)}</span>
             <span className="htrack">
@@ -3194,11 +3194,11 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
               <span>{src === UNKNOWN_SOURCE ? t("stats.unknownSource") : src}</span>
               <span className="muted small">{v.total} apps</span>
               <span className="stat-val">
-                {Math.round((v.ghosted / v.total) * 100)}% ghosted
+                {t("stats.ghostedPercent", { pct: Math.round((v.ghosted / v.total) * 100) })}
               </span>
             </li>
           ))}
-        {bySource.size === 0 && <li className="tl-empty">No applications yet.</li>}
+        {bySource.size === 0 && <li className="tl-empty">{t("stats.noApplications")}</li>}
       </ul>
 
       <h2 className="stat-h">{t("stats.compare")}</h2>
@@ -3215,12 +3215,12 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         <table className="compare-table">
           <thead>
             <tr>
-              <th>Role</th>
-              <th>Company</th>
-              <th>Stage</th>
-              <th>Comp</th>
+              <th>{t("stats.colRole")}</th>
+              <th>{t("stats.colCompany")}</th>
+              <th>{t("stats.colStage")}</th>
+              <th>{t("stats.colComp")}</th>
               <th>{t("offer.totalComp")}</th>
-              <th>Notes</th>
+              <th>{t("stats.colNotes")}</th>
             </tr>
           </thead>
           <tbody>
@@ -3256,7 +3256,7 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
       <h2 className="stat-h">{t("stats.exportData")}</h2>
       <p className="export-links">
         <a href="/api/export" download>
-          Everything (JSON)
+          {t("stats.exportAllJson")}
         </a>
         {["applications", "companies", "contacts", "interactions"].map(
           (t) => (
@@ -3385,7 +3385,7 @@ function FeedSettings({
       .createRoleType(newRoleLabel.trim())
       .then(() => {
         setNewRoleLabel("");
-        notify("Role type added");
+        notify(t("toast.roleTypeAdded"));
         return onRoleTypesChanged();
       })
       .catch((e) => onError((e as Error).message));
@@ -3400,12 +3400,12 @@ function FeedSettings({
   };
 
   const removeRole = (r: RoleTypeDef) => {
-    if (!confirm(`Delete role type "${r.label}"? Feed keywords for it go too.`))
+    if (!confirm(t("confirm.deleteRoleType", { label: r.label })))
       return;
     api
       .deleteRoleType(r.id)
       .then(() => {
-        notify(`Deleted "${r.label}"`);
+        notify(t("toast.deleted", { name: r.label }));
         return Promise.all([onRoleTypesChanged(), loadConfig()]);
       })
       .catch((e) => onError((e as Error).message));
@@ -3419,7 +3419,7 @@ function FeedSettings({
     api
       .updateFeedSource(source, { enabled, location })
       .then(() => {
-        notify(`Saved ${source} settings`);
+        notify(t("toast.savedSettings", { source }));
         return loadConfig();
       })
       .catch((e) => onError((e as Error).message));
@@ -3649,7 +3649,7 @@ function FeedTab({
     api
       .refreshFeed()
       .then((r) => {
-        notify(`Found ${r.inserted} new of ${r.seen} checked`);
+        notify(t("toast.feedFound", { inserted: r.inserted, seen: r.seen }));
         return load();
       })
       .catch((e) => onError((e as Error).message))
@@ -3671,7 +3671,7 @@ function FeedTab({
       .addFeedItem(item.id)
       .then(() => {
         setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
-        notify(`Added "${item.title}" to Jobs`);
+        notify(t("toast.addedToJobs", { title: item.title }));
       })
       .catch((e) => onError((e as Error).message))
       .finally(() =>
@@ -3799,6 +3799,7 @@ function FeedCard({
   onAdd: () => void;
   onDismiss: () => void;
 }) {
+  const { t } = useTranslation();
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
@@ -3835,20 +3836,20 @@ function FeedCard({
           <span className="muted small">
             {roleLabel}
             {item.salary_text ? ` · ${item.salary_text}` : ""}
-            {" · via "}
-            {item.source}
+            {" · "}
+            {t("feed.viaSource", { source: item.source })}
           </span>
           {safeHref(item.url) && (
             <a href={safeHref(item.url)} target="_blank" rel="noreferrer" className="small">
-              View posting ↗
+              {t("feed.viewPosting")}
             </a>
           )}
         </div>
         <div className="card-actions">
           <button className="primary" onClick={onAdd} disabled={adding}>
-            Add to Jobs
+            {t("feed.addToJobs")}
           </button>
-          <button onClick={onDismiss}>Dismiss</button>
+          <button onClick={onDismiss}>{t("feed.dismiss")}</button>
         </div>
       </div>
     </li>
@@ -3913,8 +3914,7 @@ function CalendarTab({
     <section className="agenda">
       {days.length === 0 && (
         <p className="empty">
-          Nothing on the agenda yet. Due dates, logged touchpoints, and
-          applied dates all show up here.
+          {t("calendar.empty")}
         </p>
       )}
       {days.map((day) => (
@@ -3923,7 +3923,7 @@ function CalendarTab({
             className={`agenda-date${day === todayStr ? " today" : day < todayStr ? " past" : ""}`}
           >
             {formatDate(day)}
-            {day === todayStr ? " · today" : ""}
+            {day === todayStr ? t("calendar.todaySuffix") : ""}
           </h3>
           <ul className="agenda-items">
             {(groups.get(day) ?? []).map((e) => (
@@ -3957,9 +3957,9 @@ function activityText(
   }
   if (e.kind === "interaction") {
     const type = e.type ? t(`interactionTypes.${e.type}`) : "";
-    return `${type} logged on ${e.title}${co}${e.notes ? ` — ${e.notes}` : ""}`;
+    return `${t("timeline.loggedOn", { type, title: e.title })}${co}${e.notes ? ` — ${e.notes}` : ""}`;
   }
-  return `${e.filename} attached to ${e.title}${co}`;
+  return `${t("timeline.attachedTo", { filename: e.filename, title: e.title })}${co}`;
 }
 
 function ActivityTab({
@@ -4433,7 +4433,7 @@ function ApplicationDetailModal({
               {a.contact_name ? ` · ${a.contact_name}` : ""}
             </span>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
             ×
           </button>
         </div>
@@ -4490,10 +4490,10 @@ function ApplicationDetailModal({
               ) : null}
               {safeHref(a.url) && (
                 <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
-                  Job posting ↗
+                  {t("detail.jobPostingLink")}
                 </a>
               )}
-              {a.source && <span className="muted small">via {a.source}</span>}
+              {a.source && <span className="muted small">{t("detail.viaSource", { source: a.source })}</span>}
               {a.posting_status === "maybe_stale" && (
                 <span className="muted small warn-text">
                   {t("posting.staleHint")}
@@ -4581,14 +4581,14 @@ function ApplicationDetailModal({
               )}
               {a.applied_at && (
                 <span className="muted small">
-                  Applied {formatDate(a.applied_at)}
+                  {t("detail.appliedDate", { date: formatDate(a.applied_at) })}
                 </span>
               )}
               {(a.next_action || a.next_action_at) && (
                 <span
                   className={`due-line${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
                 >
-                  → {a.next_action ?? "follow up"}
+                  → {a.next_action ?? t("detail.followUpFallback")}
                   {a.next_action_at ? ` · ${formatDate(a.next_action_at)}` : ""}
                 </span>
               )}
@@ -5314,7 +5314,7 @@ function ApplicationsTab({
                 value={a.status}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => onStatus(a.id, e.target.value as Status)}
-                aria-label={`Move ${a.title} to stage`}
+                aria-label={t("aria.moveToStage", { title: a.title })}
               >
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -5326,7 +5326,7 @@ function ApplicationsTab({
                 className={`due${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
               >
                 {isDue(a) || isOverdue(a)
-                  ? `→ ${a.next_action ?? "follow up"}`
+                  ? `→ ${a.next_action ?? t("detail.followUpFallback")}`
                   : `upd ${ageDays(a.updated_at)}`}
               </span>
               {a.deadline_at && (isDeadlineSoon(a) || isDeadlinePast(a)) && (
@@ -5927,7 +5927,7 @@ function CompaniesTab({
               )}
               <span className="company-tile-name">
                 {c.name}
-                {c.is_agency ? <span className="badge"> agency</span> : null}
+                {c.is_agency ? <span className="badge">{t("company.agencyBadge")}</span> : null}
               </span>
             </li>
           ))}
@@ -5958,7 +5958,7 @@ function CompaniesTab({
             <div className="l1">
               <strong>
                 {c.name}
-                {c.is_agency ? <span className="badge"> agency</span> : null}
+                {c.is_agency ? <span className="badge">{t("company.agencyBadge")}</span> : null}
                 {referrals > 0 ? (
                   <span className="badge">
                     {" "}
@@ -5972,7 +5972,7 @@ function CompaniesTab({
               <span className="co">{c.website ?? ""}</span>
               <span className="due">
                 {c.researched_at
-                  ? `researched ${ageDays(c.researched_at)} ago`
+                  ? t("company.researchedAgo", { age: ageDays(c.researched_at) })
                   : t("company.notResearched")}
               </span>
             </div>
@@ -6170,7 +6170,7 @@ function CompanyDetailModal({
     api
       .researchCompany(c.id)
       .then(() => {
-        notify(`Researched ${c.name}`);
+        notify(t("toast.researched", { name: c.name }));
         return onChanged();
       })
       .catch((e) => onError((e as Error).message))
@@ -6191,11 +6191,11 @@ function CompanyDetailModal({
           <div>
             <h2>
               {c.name}
-              {c.is_agency ? <span className="badge"> agency</span> : null}
+              {c.is_agency ? <span className="badge">{t("company.agencyBadge")}</span> : null}
             </h2>
             <span className="muted small">{c.location ?? ""}</span>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
             ×
           </button>
         </div>
@@ -6569,7 +6569,7 @@ function ContactDetailModal({
               {[c.role, c.company_name].filter(Boolean).join(" · ")}
             </span>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
             ×
           </button>
         </div>
@@ -6605,7 +6605,7 @@ function ContactDetailModal({
               )}
               {safeHref(c.linkedin) && (
                 <a href={safeHref(c.linkedin)} target="_blank" rel="noreferrer" className="small">
-                  LinkedIn ↗
+                  {t("contact.linkedinLink")}
                 </a>
               )}
               <div>
