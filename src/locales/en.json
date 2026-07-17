@@ -53,6 +53,20 @@
     "clear": "Remove sample data",
     "clearConfirm": "Remove all sample data from your account? This can't be undone."
   },
+  "apiDocs": {
+    "title": "API reference",
+    "intro": "Read-only access to your applications using your API key. Base URL:",
+    "authHeading": "Authentication",
+    "auth": "Send your key as a Bearer token on every request:",
+    "endpointsHeading": "Endpoints",
+    "listDesc": "List your applications, newest first.",
+    "getDesc": "Get a single application by id (404 if not yours).",
+    "fieldsNote": "Responses include: id, title, status, company_id, role_type, url, source, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, created_at, updated_at. Salary and compensation are never exposed.",
+    "exampleHeading": "Example",
+    "webhooksHeading": "Webhooks",
+    "webhookIntro": "When an application's status changes, JobSeekr POSTs this JSON to each of your webhook URLs:",
+    "signatureNote": "Every delivery carries an X-JobSeekr-Signature header — a hex HMAC-SHA256 of the raw request body keyed with your webhook secret. Verify it before trusting a payload:"
+  },
   "forms": {
     "appliedOn": "Applied on",
     "basics": "Basics",

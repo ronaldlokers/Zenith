@@ -974,7 +974,73 @@ function PublicApiSettings({
           {t("feedSettings.add")}
         </button>
       </form>
+
+      <ApiDocs />
     </div>
+  );
+}
+
+// API reference (#283) — documents the read-only v1 API and webhooks right
+// where the key and hooks are managed. The base URL is derived from the
+// current origin so it's correct on any deployment.
+function ApiDocs() {
+  const { t } = useTranslation();
+  const base = `${window.location.origin}/api/v1`;
+  return (
+    <details className="api-docs">
+      <summary>{t("apiDocs.title")}</summary>
+      <p className="muted small">{t("apiDocs.intro")}</p>
+      <pre>
+        <code>{base}</code>
+      </pre>
+
+      <h4>{t("apiDocs.authHeading")}</h4>
+      <p className="muted small">{t("apiDocs.auth")}</p>
+      <pre>
+        <code>Authorization: Bearer YOUR_API_KEY</code>
+      </pre>
+
+      <h4>{t("apiDocs.endpointsHeading")}</h4>
+      <ul className="api-endpoints">
+        <li>
+          <code>GET /applications</code>
+          <span className="muted small">{t("apiDocs.listDesc")}</span>
+        </li>
+        <li>
+          <code>GET /applications/:id</code>
+          <span className="muted small">{t("apiDocs.getDesc")}</span>
+        </li>
+      </ul>
+      <p className="muted small">{t("apiDocs.fieldsNote")}</p>
+
+      <h4>{t("apiDocs.exampleHeading")}</h4>
+      <pre>
+        <code>{`curl -H "Authorization: Bearer YOUR_API_KEY" \\\n  ${base}/applications`}</code>
+      </pre>
+
+      <h4>{t("apiDocs.webhooksHeading")}</h4>
+      <p className="muted small">{t("apiDocs.webhookIntro")}</p>
+      <pre>
+        <code>{`{
+  "event": "application.status_changed",
+  "data": {
+    "application_id": 42,
+    "from_status": "screening",
+    "to_status": "interview"
+  },
+  "sent_at": "2026-07-17T12:00:00.000Z"
+}`}</code>
+      </pre>
+      <p className="muted small">{t("apiDocs.signatureNote")}</p>
+      <pre>
+        <code>{`import crypto from "node:crypto";
+const expected = crypto
+  .createHmac("sha256", WEBHOOK_SECRET)
+  .update(rawRequestBody)
+  .digest("hex");
+// timing-safe compare expected === X-JobSeekr-Signature`}</code>
+      </pre>
+    </details>
   );
 }
 

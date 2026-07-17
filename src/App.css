@@ -864,6 +864,62 @@
   flex-shrink: 0;
 }
 
+/* API reference (#283) */
+.api-docs {
+  margin-top: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--bg);
+}
+
+.api-docs summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.api-docs h4 {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: 0.82rem;
+}
+
+.api-docs pre {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
+.api-docs pre code {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  white-space: pre;
+  color: var(--ink);
+}
+
+.api-endpoints {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-1) 0 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.api-endpoints li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.api-endpoints code {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink);
+}
+
 /* Sample-data panel (#281) */
 .sample-data {
   margin-top: var(--space-4);
