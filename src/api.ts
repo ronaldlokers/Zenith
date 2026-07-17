@@ -120,6 +120,18 @@ export const api = {
     request<void>(`/api/notifications/${id}/read`, { method: "POST" }),
   markAllNotificationsRead: () =>
     request<void>("/api/notifications/read-all", { method: "POST" }),
+  pushPublicKey: () =>
+    request<{ publicKey: string | null }>("/api/push/public-key"),
+  pushSubscribe: (subscription: PushSubscriptionJSON) =>
+    request<void>("/api/push/subscribe", {
+      method: "POST",
+      body: JSON.stringify(subscription),
+    }),
+  pushUnsubscribe: (endpoint: string) =>
+    request<void>("/api/push/unsubscribe", {
+      method: "POST",
+      body: JSON.stringify({ endpoint }),
+    }),
   importUrl: (url: string) =>
     request<import("./types").ImportResult>(
       `/api/import?url=${encodeURIComponent(url)}`,

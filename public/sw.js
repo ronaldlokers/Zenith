@@ -1,10 +1,11 @@
 /*
  * App-shell service worker.
- * - /api/* is never touched: job data must always be live (and stays
- *   behind Cloudflare Access).
+ * - /api/* is never touched: job data must always be live.
  * - Hashed build assets are cached forever, first hit populates.
  * - Navigations are network-first with the cached shell as offline
  *   fallback.
+ * - push/notificationclick (#214): shows the push payload as a system
+ *   notification and focuses/opens the app on click.
  */
 const SHELL_CACHE = "jobseekr-shell-v1";
 const ASSET_CACHE = "jobseekr-assets-v1";
@@ -70,4 +71,36 @@ self.addEventListener("fetch", (event) => {
       }),
     );
   }
+});
+
+self.addEventListener("push", (event) => {
+  let data = { title: "JobSeekr", body: "", url: "/" };
+  try {
+    data = { ...data, ...event.data.json() };
+  } catch {
+    // malformed/empty payload — fall back to the generic title above
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url: data.url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url ?? "/";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      const existing = clients.find((c) => "focus" in c);
+      if (existing) {
+        existing.navigate(url);
+        return existing.focus();
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
 });
