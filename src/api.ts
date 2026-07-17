@@ -86,7 +86,15 @@ export const api = {
     request<import("./types").Company>(`/api/companies/${id}/research`, {
       method: "POST",
     }),
-  feed: () => request<import("./types").FeedItem[]>("/api/feed"),
+  feed: (cursor?: import("./types").FeedCursor | null) => {
+    const q = cursor
+      ? `?cursorK=${encodeURIComponent(cursor.k)}&cursorId=${cursor.id}`
+      : "";
+    return request<{
+      items: import("./types").FeedItem[];
+      nextCursor: import("./types").FeedCursor | null;
+    }>(`/api/feed${q}`);
+  },
   refreshFeed: () =>
     request<{ inserted: number; seen: number }>("/api/feed/refresh", {
       method: "POST",

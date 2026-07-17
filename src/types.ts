@@ -109,6 +109,13 @@ export interface FeedItem {
   board_slug: string | null;
 }
 
+// Keyset cursor for paging the feed (#261): sort key (posted_at or "")
+// plus the row id as a tiebreaker.
+export interface FeedCursor {
+  k: string;
+  id: number;
+}
+
 export interface AtsBoard {
   id: number;
   source: "greenhouse" | "ashby";

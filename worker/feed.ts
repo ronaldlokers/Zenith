@@ -313,6 +313,20 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
 export function registerFeedRoutes(app: Hono<AppEnv>) {
   app.get("/api/feed", async (c) => {
     const userId = c.get("userId");
+    // Keyset pagination (#261) — the feed grows unbounded as sources are
+    // ingested, so read a page at a time. Sort key is COALESCE(posted_at,
+    // '') so NULL posted_at rows (they sort last) still page correctly;
+    // (sortKey, id) is a unique, stable cursor. The client sends the last
+    // row's cursor back to fetch the next page.
+    const url = new URL(c.req.url);
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(url.searchParams.get("limit")) || 25),
+    );
+    const cursorK = url.searchParams.get("cursorK");
+    const cursorId = url.searchParams.get("cursorId");
+    const hasCursor = cursorK !== null && cursorId !== null;
+
     // A feed_item is "new" for this user unless a feed_item_status row
     // says otherwise (dismissed/added) — that row only exists once the
     // user has acted on it. Blocked companies (#218) are filtered the
@@ -321,6 +335,15 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     // board_slug scopes them to only the user(s) who configured that
     // board, since (unlike Adzuna/HN) fetching one is a specific,
     // deliberate "watch this company" request.
+    const binds: unknown[] = [userId, userId, userId];
+    let cursorClause = "";
+    if (hasCursor) {
+      cursorClause = `AND (COALESCE(feed_items.posted_at, '') < ?
+             OR (COALESCE(feed_items.posted_at, '') = ? AND feed_items.id < ?))`;
+      binds.push(cursorK, cursorK, Number(cursorId));
+    }
+    binds.push(limit);
+
     const { results } = await c.env.DB.prepare(
       `SELECT feed_items.*
        FROM feed_items
@@ -342,11 +365,19 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
                AND feed_ats_boards.slug = feed_items.board_slug
            )
          )
-       ORDER BY feed_items.posted_at DESC, feed_items.id DESC`,
+         ${cursorClause}
+       ORDER BY COALESCE(feed_items.posted_at, '') DESC, feed_items.id DESC
+       LIMIT ?`,
     )
-      .bind(userId, userId, userId)
-      .all();
-    return c.json(results);
+      .bind(...binds)
+      .all<{ id: number; posted_at: string | null }>();
+
+    // A full page means there may be more; anything short is the last page.
+    const last = results.length === limit ? results[results.length - 1] : null;
+    const nextCursor = last
+      ? { k: last.posted_at ?? "", id: last.id }
+      : null;
+    return c.json({ items: results, nextCursor });
   });
 
   app.get("/api/feed/ats-boards", async (c) => {
