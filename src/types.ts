@@ -239,6 +239,16 @@ export interface JournalEntry {
   created_at: string;
 }
 
+export interface AppNotification {
+  id: number;
+  type: "due_followup" | "stale_posting" | "feed_match";
+  title: string;
+  body: string | null;
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
 export interface WorkExperience {
   id: number;
   company: string;

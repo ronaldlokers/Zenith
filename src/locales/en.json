@@ -16,7 +16,10 @@
     "openCount_other": "{{count}} open",
     "dueCount_one": "{{count}} due",
     "dueCount_other": "{{count}} due",
-    "settings": "Settings"
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "notificationsEmpty": "Nothing yet.",
+    "markAllRead": "Mark all read"
   },
   "common": {
     "loading": "Loading…",

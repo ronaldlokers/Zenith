@@ -5,6 +5,7 @@ import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData } from "./demo.js";
+import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
 
 export type AppEnv = {
   Bindings: Env;
@@ -1295,6 +1296,7 @@ app.delete("/api/documents/:id", async (c) => {
 registerFeedRoutes(app);
 registerRoleTypeRoutes(app);
 registerCvRoutes(app);
+registerNotificationRoutes(app);
 
 // Admin-only: wipe and reseed the demo account's data with one example of
 // every shipped feature (#38). The demo account itself is created like any
@@ -1386,8 +1388,15 @@ export default {
       ctx.waitUntil(runScheduledBackup(env));
       return;
     }
-    ctx.waitUntil(refreshFeed(env));
-    ctx.waitUntil(checkStalePostings(env));
+    ctx.waitUntil(
+      (async () => {
+        const [feedResult] = await Promise.all([
+          refreshFeed(env),
+          checkStalePostings(env),
+        ]);
+        await generateNotifications(env, feedResult.inserted);
+      })(),
+    );
   },
   async email(message, env, ctx) {
     const subject = message.headers.get("subject") ?? "(no subject)";
