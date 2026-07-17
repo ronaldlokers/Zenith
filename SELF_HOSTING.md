@@ -62,6 +62,17 @@ npx wrangler secret put ADZUNA_APP_KEY
 ```
 Get a free key at [developer.adzuna.com](https://developer.adzuna.com/). Without it, the Adzuna source is silently skipped — nothing breaks.
 
+Optional — only needed for browser push notifications. No account/signup, it's just a locally-generated keypair:
+
+```bash
+node scripts/generate-vapid-keys.mjs
+npx wrangler secret put VAPID_PUBLIC_KEY
+npx wrangler secret put VAPID_PRIVATE_KEY
+npx wrangler secret put VAPID_SUBJECT
+# VAPID_SUBJECT is a contact URI push services can reach you at if they need to, e.g. mailto:you@example.com
+```
+Without these, the push-notification toggle in Settings tells the user push isn't configured — nothing else breaks.
+
 ## 5. Apply migrations and deploy
 
 ```bash
