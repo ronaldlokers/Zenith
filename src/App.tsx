@@ -2111,6 +2111,11 @@ function Timeline({
   // a separate record, so the timeline stays a single source of truth.
   const [wentWell, setWentWell] = useState("");
   const [toImprove, setToImprove] = useState("");
+  // Multiple interviewers per round (#220) — free-text names/roles,
+  // same lightweight pattern as tags rather than linking Contact
+  // records, since panel interviewers often never become a tracked
+  // contact.
+  const [interviewers, setInterviewers] = useState("");
 
   const load = useCallback(
     () =>
@@ -2139,11 +2144,13 @@ function Timeline({
         type: form.type,
         happened_at: form.happened_at,
         notes: notes || null,
+        interviewers: form.type === "interview" ? interviewers.trim() || null : null,
       })
       .then(() => {
         setForm({ type: "email", happened_at: today(), notes: "" });
         setWentWell("");
         setToImprove("");
+        setInterviewers("");
         return load();
       })
       .catch((err) => onError((err as Error).message));
@@ -2177,6 +2184,11 @@ function Timeline({
         {form.type === "interview" && (
           <div className="tl-retro">
             <input
+              placeholder={t("interactionTypes.interviewersPlaceholder")}
+              value={interviewers}
+              onChange={(e) => setInterviewers(e.target.value)}
+            />
+            <input
               placeholder={t("interactionTypes.retroWentWellPlaceholder")}
               value={wentWell}
               onChange={(e) => setWentWell(e.target.value)}
@@ -2198,6 +2210,11 @@ function Timeline({
             <span className="tl-type">{t(`interactionTypes.${it.type}`)}</span>
             <span className="tl-date">{formatDate(it.happened_at)}</span>
             <span className="tl-notes">
+              {it.interviewers && (
+                <span className="tl-interviewers">
+                  {t("interactionTypes.interviewersLabel")}: {it.interviewers}
+                </span>
+              )}
               {it.notes ?? ""}
               {it.via_contact ? <span className="badge">via contact</span> : null}
             </span>

@@ -1978,6 +1978,13 @@ select.status {
   overflow-wrap: anywhere;
 }
 
+.tl-interviewers {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .tl-del {
   border: none;
   background: none;

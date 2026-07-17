@@ -249,7 +249,9 @@
     "retroWentWell": "Ging goed",
     "retroToImprove": "Te verbeteren",
     "retroWentWellPlaceholder": "Wat ging goed? (optioneel)",
-    "retroToImprovePlaceholder": "Wat zou je anders doen? (optioneel)"
+    "retroToImprovePlaceholder": "Wat zou je anders doen? (optioneel)",
+    "interviewersPlaceholder": "Wie interviewde je? (komma-gescheiden, optioneel)",
+    "interviewersLabel": "Interviewers"
   },
   "agenda": {
     "followUp": "Vervolgactie",

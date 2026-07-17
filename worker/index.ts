@@ -637,8 +637,8 @@ app.post("/api/applications/:id/interactions", async (c) => {
     .first();
   if (!application) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
-    `INSERT INTO interactions (application_id, user_id, type, happened_at, notes)
-     VALUES (?, ?, ?, coalesce(?, date('now')), ?) RETURNING *`,
+    `INSERT INTO interactions (application_id, user_id, type, happened_at, notes, interviewers)
+     VALUES (?, ?, ?, coalesce(?, date('now')), ?, ?) RETURNING *`,
   )
     .bind(
       c.req.param("id"),
@@ -646,6 +646,7 @@ app.post("/api/applications/:id/interactions", async (c) => {
       body.type ?? "other",
       body.happened_at ?? null,
       body.notes ?? null,
+      body.interviewers ?? null,
     )
     .first();
   return c.json(result, 201);
@@ -671,8 +672,8 @@ app.post("/api/contacts/:id/interactions", async (c) => {
     .first();
   if (!contact) return c.json({ error: "not found" }, 404);
   const result = await c.env.DB.prepare(
-    `INSERT INTO interactions (contact_id, user_id, type, happened_at, notes)
-     VALUES (?, ?, ?, coalesce(?, date('now')), ?) RETURNING *`,
+    `INSERT INTO interactions (contact_id, user_id, type, happened_at, notes, interviewers)
+     VALUES (?, ?, ?, coalesce(?, date('now')), ?, ?) RETURNING *`,
   )
     .bind(
       c.req.param("id"),
@@ -680,6 +681,7 @@ app.post("/api/contacts/:id/interactions", async (c) => {
       body.type ?? "other",
       body.happened_at ?? null,
       body.notes ?? null,
+      body.interviewers ?? null,
     )
     .first();
   return c.json(result, 201);
