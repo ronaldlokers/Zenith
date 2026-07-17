@@ -8,6 +8,7 @@ import { resetDemoData } from "./demo.js";
 import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { registerCalendarRoutes } from "./calendar.js";
 import { registerPushRoutes } from "./push.js";
+import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
 
 export type AppEnv = {
   Bindings: Env;
@@ -24,6 +25,13 @@ const app = new Hono<AppEnv>();
 app.post("/api/auth/sign-up/email", (c) => c.json({ error: "sign-up is invite-only" }, 403));
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => getAuth(c.env).handler(c.req.raw));
+
+// The public read-only API (#228) is Bearer-key authenticated, not
+// session-cookie authenticated — it has to be registered (and matched)
+// before the blanket /api/* session-check middleware below, the same
+// way /api/auth/* is, otherwise every external API call would 401
+// before ever reaching public-api.ts's own auth check.
+registerPublicApiRoutes(app);
 
 // Every other /api route requires a valid session. The public share link
 // (/shared/:token, #113) intentionally stays outside /api and outside this
@@ -573,6 +581,11 @@ app.put("/api/applications/:id", async (c) => {
     )
       .bind(c.req.param("id"), userId, existing.status, newStatus)
       .run();
+    await triggerWebhooks(c.env, userId, "application.status_changed", {
+      application_id: Number(c.req.param("id")),
+      from_status: existing.status,
+      to_status: newStatus,
+    });
   }
   return c.json(result);
 });
@@ -600,6 +613,11 @@ app.patch("/api/applications/:id/status", async (c) => {
     )
       .bind(c.req.param("id"), userId, existing.status, body.status)
       .run();
+    await triggerWebhooks(c.env, userId, "application.status_changed", {
+      application_id: Number(c.req.param("id")),
+      from_status: existing.status,
+      to_status: body.status,
+    });
   }
   return c.json(result);
 });
@@ -1301,6 +1319,7 @@ registerCvRoutes(app);
 registerNotificationRoutes(app);
 registerCalendarRoutes(app);
 registerPushRoutes(app);
+registerApiKeyRoutes(app);
 
 // Admin-only: wipe and reseed the demo account's data with one example of
 // every shipped feature (#38). The demo account itself is created like any

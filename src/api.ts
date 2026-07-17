@@ -216,4 +216,16 @@ export const api = {
     }),
   revokeCalendarToken: () =>
     request<void>("/api/profile/calendar-token", { method: "DELETE" }),
+  generateApiKey: () =>
+    request<{ api_key: string }>("/api/profile/api-key", { method: "POST" }),
+  revokeApiKey: () =>
+    request<void>("/api/profile/api-key", { method: "DELETE" }),
+  webhooks: () => request<import("./types").Webhook[]>("/api/webhooks"),
+  addWebhook: (url: string) =>
+    request<import("./types").Webhook & { secret: string }>("/api/webhooks", {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    }),
+  removeWebhook: (id: number) =>
+    request<void>(`/api/webhooks/${id}`, { method: "DELETE" }),
 };
