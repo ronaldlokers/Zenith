@@ -1370,6 +1370,26 @@ app.post("/api/admin/reset-demo-data", async (c) => {
   return c.json(result);
 });
 
+// Admin resets a user's 2FA (#285) — the Better Auth admin plugin can reset
+// passwords and remove users, but has no built-in to clear another user's
+// second factor, so a user who loses their authenticator would otherwise be
+// permanently locked out. This drops their TOTP secret + backup codes and
+// flips twoFactorEnabled off so they can log in with just their password.
+app.post("/api/admin/users/:id/reset-2fa", async (c) => {
+  const targetId = c.req.param("id");
+  const user = await c.env.DB.prepare('SELECT id FROM "user" WHERE id = ?')
+    .bind(targetId)
+    .first();
+  if (!user) return c.json({ error: "user not found" }, 404);
+  await c.env.DB.prepare('DELETE FROM "twoFactor" WHERE "userId" = ?')
+    .bind(targetId)
+    .run();
+  await c.env.DB.prepare('UPDATE "user" SET "twoFactorEnabled" = 0 WHERE id = ?')
+    .bind(targetId)
+    .run();
+  return c.body(null, 204);
+});
+
 // Per-user sample data (#281) — a new/invited user can populate their own
 // account with the example dataset to explore, then wipe it.
 // Whether the account holds ANY user content (#285) — gates sample-data

@@ -920,6 +920,28 @@
   color: var(--ink);
 }
 
+/* Admin user management (#285) */
+.admin-user {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.admin-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.admin-user-actions button {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+}
+
 /* Sample-data panel (#281) */
 .sample-data {
   margin-top: var(--space-4);

@@ -49,6 +49,8 @@ export const api = {
     }),
   clearSampleData: () =>
     request<void>("/api/account/sample-data", { method: "DELETE" }),
+  resetUser2fa: (id: string) =>
+    request<void>(`/api/admin/users/${id}/reset-2fa`, { method: "POST" }),
   interactions: (resource: "applications" | "contacts", id: number) =>
     request<import("./types").Interaction[]>(
       `/api/${resource}/${id}/interactions`,
