@@ -40,6 +40,7 @@ export interface Interaction {
   type: InteractionType;
   happened_at: string;
   notes: string | null;
+  interviewers: string | null;
   created_at: string;
   via_contact?: number;
 }

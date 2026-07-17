@@ -249,7 +249,9 @@
     "retroWentWell": "Went well",
     "retroToImprove": "To improve",
     "retroWentWellPlaceholder": "What went well? (optional)",
-    "retroToImprovePlaceholder": "What would you do differently? (optional)"
+    "retroToImprovePlaceholder": "What would you do differently? (optional)",
+    "interviewersPlaceholder": "Who interviewed you? (comma-separated, optional)",
+    "interviewersLabel": "Interviewers"
   },
   "agenda": {
     "followUp": "Follow up",
