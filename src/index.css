@@ -41,6 +41,25 @@
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
+  /* Structural scale (#279 design refresh) — theme-independent spacing and
+     corner radii so surfaces share one rhythm instead of ad-hoc values. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+
+  /* Elevation — two levels: raised surfaces (cards/panels) and overlays
+     (modals/dropdowns). Per-theme below since shadow needs the ground. */
+  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.04),
+    0 2px 8px -2px rgba(16, 24, 40, 0.08);
+  --shadow-2: 0 4px 12px -2px rgba(16, 24, 40, 0.1),
+    0 12px 32px -8px rgba(16, 24, 40, 0.16);
+
   color-scheme: light dark;
 }
 
@@ -67,6 +86,10 @@
     --heat-watch: #d9a13c;
     --heat-quiet: #e07b39;
     --heat-cold: #f87171;
+
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+    --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.5),
+      0 16px 40px -8px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -103,6 +126,10 @@
   --heat-watch: #eab308;
   --heat-quiet: #fb923c;
   --heat-cold: #f87171;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.6),
+    0 16px 40px -8px rgba(0, 0, 0, 0.7);
 
   color-scheme: dark;
 }
