@@ -211,6 +211,7 @@ export interface Profile {
   portfolio: string | null;
   summary: string | null;
   share_token: string | null;
+  calendar_token: string | null;
 }
 
 export interface Skill {

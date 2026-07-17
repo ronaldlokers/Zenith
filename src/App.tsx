@@ -951,9 +951,14 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
   );
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
+  const [calendarToken, setCalendarToken] = useState<string | null>(null);
+  const [calendarBusy, setCalendarBusy] = useState(false);
 
   useEffect(() => {
-    api.profile().then((p) => setShareToken(p.share_token));
+    api.profile().then((p) => {
+      setShareToken(p.share_token);
+      setCalendarToken(p.calendar_token);
+    });
   }, []);
 
   useEffect(() => {
@@ -982,6 +987,26 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
       .revokeShareToken()
       .then(() => setShareToken(null))
       .finally(() => setShareBusy(false));
+  };
+
+  const calendarUrl = calendarToken
+    ? `${window.location.origin}/calendar/${calendarToken}`
+    : null;
+
+  const generateCalendarLink = () => {
+    setCalendarBusy(true);
+    api
+      .generateCalendarToken()
+      .then((r) => setCalendarToken(r.calendar_token))
+      .finally(() => setCalendarBusy(false));
+  };
+
+  const disableCalendarLink = () => {
+    setCalendarBusy(true);
+    api
+      .revokeCalendarToken()
+      .then(() => setCalendarToken(null))
+      .finally(() => setCalendarBusy(false));
   };
 
   return (
@@ -1052,6 +1077,27 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             </>
           ) : (
             <button disabled={shareBusy} onClick={generateLink}>
+              {t("settings.generateLink")}
+            </button>
+          )}
+        </div>
+        <div className="settings-field share-field">
+          <span>{t("settings.calendarLink")}</span>
+          {calendarUrl ? (
+            <>
+              <input readOnly value={calendarUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
+              <p className="muted small">{t("settings.calendarLinkHint")}</p>
+              <div className="share-actions">
+                <button disabled={calendarBusy} onClick={generateCalendarLink}>
+                  {t("settings.regenerateLink")}
+                </button>
+                <button disabled={calendarBusy} className="danger" onClick={disableCalendarLink}>
+                  {t("settings.disableLink")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button disabled={calendarBusy} onClick={generateCalendarLink}>
               {t("settings.generateLink")}
             </button>
           )}
