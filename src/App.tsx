@@ -20,6 +20,7 @@ import {
   type AgendaEntry,
   type ActivityEvent,
   type FeedItem,
+  type FeedCursor,
   type RoleTypeDef,
   type Interaction,
   type Status,
@@ -3549,18 +3550,40 @@ function FeedTab({
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[] | null>(null);
+  const [cursor, setCursor] = useState<FeedCursor | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
   const load = useCallback(
-    () => api.feed().then(setItems).catch((e) => onError((e as Error).message)),
+    () =>
+      api
+        .feed()
+        .then((page) => {
+          setItems(page.items);
+          setCursor(page.nextCursor);
+        })
+        .catch((e) => onError((e as Error).message)),
     [onError],
   );
 
   useEffect(() => {
     load();
   }, [load]);
+
+  const loadMore = () => {
+    if (loadingMore || !cursor) return;
+    setLoadingMore(true);
+    api
+      .feed(cursor)
+      .then((page) => {
+        setItems((prev) => [...(prev ?? []), ...page.items]);
+        setCursor(page.nextCursor);
+      })
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setLoadingMore(false));
+  };
 
   const refresh = () => {
     setRefreshing(true);
@@ -3685,6 +3708,13 @@ function FeedTab({
           <li className="empty">{t("empty.feedNothingNew")}</li>
         )}
       </ul>
+      {cursor && (
+        <div className="load-more">
+          <button onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? t("common.loading") : t("common.loadMore")}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

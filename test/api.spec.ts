@@ -386,10 +386,39 @@ describe("feed", () => {
 
   it("lists only new items", async () => {
     const item = await seedFeedItem();
-    const list = (await (
+    const { items } = (await (
       await authedFetch(`${BASE}/api/feed`)
-    ).json()) as { id: number }[];
-    expect(list.some((i) => i.id === item.id)).toBe(true);
+    ).json()) as { items: { id: number }[] };
+    expect(items.some((i) => i.id === item.id)).toBe(true);
+  });
+
+  it("paginates with a keyset cursor", async () => {
+    // Future posted_at dates guarantee these sort first regardless of
+    // whatever else other tests have seeded into the shared pool.
+    const a = await seedFeedItem({
+      posted_at: "2099-01-02",
+      external_id: `pg-a-${crypto.randomUUID()}`,
+    });
+    const b = await seedFeedItem({
+      posted_at: "2099-01-01",
+      external_id: `pg-b-${crypto.randomUUID()}`,
+    });
+    const p1 = (await (
+      await authedFetch(`${BASE}/api/feed?limit=1`)
+    ).json()) as {
+      items: { id: number }[];
+      nextCursor: { k: string; id: number } | null;
+    };
+    expect(p1.items[0].id).toBe(a.id);
+    expect(p1.nextCursor).not.toBeNull();
+    const cur = p1.nextCursor!;
+    const p2 = (await (
+      await authedFetch(
+        `${BASE}/api/feed?limit=1&cursorK=${encodeURIComponent(cur.k)}&cursorId=${cur.id}`,
+      )
+    ).json()) as { items: { id: number }[] };
+    expect(p2.items.some((i) => i.id === b.id)).toBe(true);
+    expect(p2.items.some((i) => i.id === a.id)).toBe(false);
   });
 
   it("dismiss removes an item from the new list", async () => {
@@ -398,10 +427,10 @@ describe("feed", () => {
       method: "POST",
     });
     expect(res.status).toBe(204);
-    const list = (await (
+    const { items } = (await (
       await authedFetch(`${BASE}/api/feed`)
-    ).json()) as { id: number }[];
-    expect(list.some((i) => i.id === item.id)).toBe(false);
+    ).json()) as { items: { id: number }[] };
+    expect(items.some((i) => i.id === item.id)).toBe(false);
   });
 
   it("add creates an application and a new company, then removes from feed", async () => {
@@ -425,10 +454,10 @@ describe("feed", () => {
       .first<{ name: string }>();
     expect(company?.name).toBe("Brand New Co");
 
-    const list = (await (
+    const { items } = (await (
       await authedFetch(`${BASE}/api/feed`)
-    ).json()) as { id: number }[];
-    expect(list.some((i) => i.id === item.id)).toBe(false);
+    ).json()) as { items: { id: number }[] };
+    expect(items.some((i) => i.id === item.id)).toBe(false);
   });
 
   it("reuses an existing company by name instead of duplicating it", async () => {

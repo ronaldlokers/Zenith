@@ -1523,6 +1523,13 @@ select.status {
   padding: 0.2rem 0;
 }
 
+/* Paginated "load more" control (#261) */
+.load-more {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 0.25rem;
+}
+
 /* Terminal fetch-failure state (#261) */
 .load-error {
   display: flex;
