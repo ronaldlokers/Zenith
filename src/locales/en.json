@@ -39,6 +39,12 @@
     "fetch": "Fetch",
     "fetching": "Fetching…"
   },
+  "savedViews": {
+    "namePrompt": "Name this view",
+    "saved": "Saved view “{{name}}”",
+    "save": "Save view",
+    "delete": "Delete view {{name}}"
+  },
   "forms": {
     "appliedOn": "Applied on",
     "basics": "Basics",

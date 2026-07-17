@@ -39,6 +39,12 @@
     "fetch": "Ophalen",
     "fetching": "Ophalen…"
   },
+  "savedViews": {
+    "namePrompt": "Naam voor deze weergave",
+    "saved": "Weergave “{{name}}” opgeslagen",
+    "save": "Weergave opslaan",
+    "delete": "Weergave {{name}} verwijderen"
+  },
   "forms": {
     "appliedOn": "Gesolliciteerd op",
     "basics": "Basis",
