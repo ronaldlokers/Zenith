@@ -5168,6 +5168,11 @@ function ApplicationDetailModal({
           />
         ) : (
           <>
+          {/* Two-column job page (#314): facts/actions left, content
+              sections right — CSS collapses this to one column in the
+              modal/narrow contexts. */}
+          <div className="detail-cols">
+          <div className="detail-primary">
             <div className="detail-fields">
               <div>
                 <span className="field-label">{t("detail.status")}</span>
@@ -5397,7 +5402,8 @@ function ApplicationDetailModal({
                 {t("common.delete")}
               </button>
             </div>
-
+          </div>
+          <div className="detail-secondary">
             <h3 className="detail-sub">{t("prep.title")}</h3>
             <InterviewPrepSection applicationId={a.id} onError={onError} />
 
@@ -5417,6 +5423,8 @@ function ApplicationDetailModal({
 
             <h3 className="detail-sub">{t("detail.documents")}</h3>
             <Documents applicationId={a.id} onError={onError} />
+          </div>
+          </div>
           </>
         )}
       </div>

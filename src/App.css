@@ -3824,3 +3824,35 @@ summary.bcol-head::after {
     grid-template-columns: 1.4fr 1fr;
   }
 }
+
+/* Job page two-column (#314) — facts/status/actions left, content
+   sections right. Single column in the modal and on narrow viewports. */
+.detail-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 2.5rem;
+  align-items: start;
+}
+
+.detail-primary,
+.detail-secondary {
+  min-width: 0;
+}
+
+@media (min-width: 1100px) {
+  .app:has(.job-page) > main {
+    max-width: 1200px;
+  }
+
+  .job-page .detail-pane {
+    max-width: none;
+  }
+
+  .job-page .detail-cols {
+    grid-template-columns: 1fr 1.2fr;
+  }
+
+  .job-page .detail-secondary > .detail-sub:first-child {
+    margin-top: 0;
+  }
+}
