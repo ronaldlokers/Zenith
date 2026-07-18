@@ -519,13 +519,9 @@ function Logo({ size = 26 }: { size?: number }) {
 }
 
 const SHORTCUT_KEYS: [string, string][] = [
-  ["/", "focusSearch"],
-  ["n", "addJob"],
   ["j / k", "moveFocus"],
   ["a / d", "feedTriage"],
-  ["1–8", "setStatus"],
   ["Esc", "closeHelp"],
-  ["?", "toggleHelp"],
 ];
 
 function ShortcutHelp({ onClose }: { onClose: () => void }) {
@@ -2574,7 +2570,7 @@ export default function App() {
           className={tab === "applications" || tab === "board" ? "active" : ""}
           aria-current={tab === "applications" || tab === "board" ? "page" : undefined}
           data-tab="pipeline"
-          onClick={() => setTab("applications")}
+          onClick={() => setTab("board")}
         >
           {t("tabs.pipeline")}
         </button>
@@ -2666,43 +2662,19 @@ export default function App() {
             {tab === "overview" && (
               <OverviewTab
                 applications={visibleApps}
-                onGoToJobs={() => setTab("applications")}
+                onGoToJobs={() => setTab("board")}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}
                 onChanged={reload}
               />
             )}
-            {(tab === "applications" || tab === "board") && !routedJob && (
-              <div
-                className="subnav"
-                role="tablist"
-                aria-label={t("tabs.pipeline")}
-              >
-                <button
-                  role="tab"
-                  aria-selected={tab === "applications"}
-                  className={tab === "applications" ? "active" : ""}
-                  onClick={() => setTab("applications")}
-                >
-                  {t("tabs.jobs")}
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={tab === "board"}
-                  className={tab === "board" ? "active" : ""}
-                  onClick={() => setTab("board")}
-                >
-                  {t("tabs.board")}
-                </button>
-              </div>
-            )}
             {routedJob && (
               <section className="job-page">
                 <button
                   className="btn-secondary job-back"
-                  onClick={() => navigate(tab === "board" ? "/board" : "/jobs")}
+                  onClick={() => navigate("/board")}
                 >
-                  ← {t(tab === "board" ? "tabs.board" : "tabs.jobs")}
+                  ← {t("tabs.pipeline")}
                 </button>
                 <ApplicationDetailModal
                   application={routedJob}
@@ -2710,7 +2682,7 @@ export default function App() {
                   companies={visibleCompanies}
                   contacts={visibleContacts}
                   roleTypes={roleTypes}
-                  onClose={() => navigate(tab === "board" ? "/board" : "/jobs")}
+                  onClose={() => navigate("/board")}
                   onChanged={reload}
                   onError={setError}
                   notify={notify}
@@ -2720,8 +2692,8 @@ export default function App() {
                 />
               </section>
             )}
-            {tab === "applications" && !routedJob && (
-              <ApplicationsTab
+            {(tab === "applications" || tab === "board") && !routedJob && (
+              <PipelineTab
                 applications={visibleApps}
                 companies={visibleCompanies}
                 contacts={visibleContacts}
@@ -2732,27 +2704,10 @@ export default function App() {
                 onDelete={deleteWithUndo}
                 onStatus={setStatus}
                 initialQuery={jumpQuery}
-                initialDetailId={null}
-                onDetailIdChange={(id) =>
-                  navigate(id ? `/jobs/${id}` : "/jobs")
+                onOpenJob={(id: number | null) =>
+                  navigate(id ? `/jobs/${id}` : "/board")
                 }
-              />
-            )}
-            {tab === "board" && !routedJob && (
-              <BoardTab
-                applications={activeApps}
-                companies={visibleCompanies}
-                contacts={visibleContacts}
-                roleTypes={roleTypes}
-                onChanged={reload}
-                onError={setError}
-                notify={notify}
-                onDelete={deleteWithUndo}
-                onStatus={setStatus}
-                initialDetailId={null}
-                onDetailIdChange={(id) =>
-                  navigate(id ? `/board/${id}` : "/board")
-                }
+                onOpenQuickAdd={() => setShowQuickAdd(true)}
               />
             )}
             {tab === "feed" && (
@@ -2768,7 +2723,7 @@ export default function App() {
                 onError={setError}
                 onJump={(title) => {
                   setJumpQuery(title);
-                  setTab("applications");
+                  setTab("board");
                 }}
               />
             )}
@@ -2888,6 +2843,7 @@ interface CrudTabProps extends TabProps {
 // referral/stale badges, and the stage <select> aren't duplicated.
 function BoardCard({
   a,
+  attention,
   draggable,
   isDragging,
   onDragStart,
@@ -2896,6 +2852,7 @@ function BoardCard({
   onMove,
 }: {
   a: Application;
+  attention?: "overdue" | "stale" | "quiet" | null;
   draggable: boolean;
   isDragging: boolean;
   onDragStart?: (e: React.DragEvent) => void;
@@ -2914,16 +2871,13 @@ function BoardCard({
       <div className="bcard-body" onClick={onOpenDetail}>
         <strong>
           {a.title}
-          {a.referred_by_contact_id ? (
-            <span className="badge" title={t("referral.referredBy")}>
+          {attention ? (
+            <span
+              className={`badge attention attention-${attention}`}
+              title={t(`attention.${attention}Hint`)}
+            >
               {" "}
-              {t("referral.badge")}
-            </span>
-          ) : null}
-          {a.posting_status === "maybe_stale" ? (
-            <span className="badge warn" title={t("posting.staleHint")}>
-              {" "}
-              {t("posting.staleBadge")}
+              {t(`attention.${attention}`)}
             </span>
           ) : null}
         </strong>
@@ -2959,6 +2913,7 @@ function BoardCard({
 
 function BoardTab({
   applications,
+  attention,
   companies,
   contacts,
   roleTypes,
@@ -2975,6 +2930,7 @@ function BoardTab({
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
+  attention?: Map<number, "overdue" | "stale" | "quiet">;
   initialDetailId?: number | null;
   onDetailIdChange?: (id: number | null) => void;
 }) {
@@ -3087,6 +3043,7 @@ function BoardTab({
                     .filter((a) => a.status === stage)
                     .map((a) => (
                       <BoardCard
+                        attention={attention?.get(a.id) ?? null}
                         key={a.id}
                         a={a}
                         draggable={false}
@@ -3133,6 +3090,7 @@ function BoardTab({
           <>
             {cards.map((a) => (
               <BoardCard
+                attention={attention?.get(a.id) ?? null}
                 key={a.id}
                 a={a}
                 draggable={!isCoarsePointer}
@@ -5753,7 +5711,10 @@ function NextUpPanel({
   );
 }
 
-function ApplicationsTab({
+// One pipeline view (#314 follow-up): the Board, with the stage ring
+// (funnel) and the filters on top. The separate list view is gone — the
+// columns are the status filter and drag is the bulk status action.
+function PipelineTab({
   applications,
   companies,
   contacts,
@@ -5764,8 +5725,8 @@ function ApplicationsTab({
   onDelete,
   onStatus,
   initialQuery,
-  initialDetailId,
-  onDetailIdChange,
+  onOpenJob,
+  onOpenQuickAdd,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -5773,45 +5734,32 @@ function ApplicationsTab({
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
   initialQuery?: string;
-  initialDetailId?: number | null;
-  onDetailIdChange?: (id: number | null) => void;
-  // Mobile quick-add FAB (#135) — reachable from any tab. A counter that
-  // increments on each tap, so opening the form again after closing it
-  // still fires even though 0 -> the initial no-op value never does.
+  onOpenJob: (id: number | null) => void;
+  onOpenQuickAdd: () => void;
 }) {
   const { t } = useTranslation();
-  const [editing, setEditing] = useState<Application | "new" | null>(null);
-  const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState(initialQuery ?? "");
-  // Compact density (#209) — persisted like the Companies view toggle
-  // (#132), lets a long Jobs list trade the 2-line row for a tighter
-  // 1-line one without losing the detail-modal round trip for anything
-  // that doesn't fit.
-  const [density, setDensity] = useState<"comfortable" | "compact">(
-    () =>
-      (localStorage.getItem("jobseekr_jobs_density") as
-        | "comfortable"
-        | "compact"
-        | null) ?? "comfortable",
-  );
-  const setDensityAndPersist = (d: "comfortable" | "compact") => {
-    setDensity(d);
-    localStorage.setItem("jobseekr_jobs_density", d);
-  };
-  const [sort, setSort] = useState<"updated" | "applied" | "company">(
-    "updated",
-  );
-  const [focusedIndex, setFocusedIndex] = useState(-1);
   const [showHelp, setShowHelp] = useState(false);
   const [history, setHistory] = useState<StatusHistoryRow[]>([]);
-  const searchRef = useRef<HTMLInputElement>(null);
 
-  // Saved views (#277) — named snapshots of the filter/sort state.
+  useEffect(() => {
+    if (initialQuery) setQuery(initialQuery);
+  }, [initialQuery]);
+
+  useEffect(() => {
+    api
+      .stats()
+      .then((st) => setHistory(st.history))
+      .catch(() => {});
+  }, []);
+
+  // Saved views (#277) — the schema keeps statusFilter/sort for
+  // back-compat with views saved from the old list; the board ignores
+  // them (columns are the status filter).
   const [savedViews, setSavedViews] = useState<SavedView[]>([]);
   const [namingView, setNamingView] = useState(false);
   const [newViewName, setNewViewName] = useState("");
@@ -5829,22 +5777,20 @@ function ApplicationsTab({
 
   const currentFilters = (): JobFilters => ({
     query,
-    statusFilter,
+    statusFilter: "all",
     roleFilter,
     companyFilter,
     tagFilter,
     showArchived,
-    sort,
+    sort: "updated",
   });
   const applyView = (v: SavedView) => {
     const f = v.filters;
     setQuery(f.query ?? "");
-    setStatusFilter((f.statusFilter as Status | "all") ?? "all");
     setRoleFilter(f.roleFilter ?? "all");
     setCompanyFilter(f.companyFilter ?? "all");
     setTagFilter(f.tagFilter ?? "all");
     setShowArchived(!!f.showArchived);
-    setSort((f.sort as typeof sort) ?? "updated");
   };
   const saveCurrentView = () => {
     const name = newViewName.trim();
@@ -5866,37 +5812,6 @@ function ApplicationsTab({
       .catch((e) => onError((e as Error).message));
   };
   const curFilterKey = JSON.stringify(currentFilters());
-  // Split-pane detail on wide desktop (#131) — same >=1100px breakpoint
-  // the two-column .jobs-layout already switches on. Below it, the
-  // detail stays a modal overlay (mobile/narrow).
-  const [isWideDesktop, setIsWideDesktop] = useState(
-    () => window.matchMedia("(min-width: 1100px)").matches,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1100px)");
-    const onChange = () => setIsWideDesktop(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
-  useEffect(() => {
-    api
-      .stats()
-      .then((s) => setHistory(s.history))
-      .catch(() => {});
-  }, []);
-
-  const [detailId, setDetailIdState] = useState<number | null>(
-    initialDetailId ?? null,
-  );
-  useEffect(() => {
-    setDetailIdState(initialDetailId ?? null);
-  }, [initialDetailId]);
-  const setDetailId = (id: number | null) => {
-    setDetailIdState(id);
-    onDetailIdChange?.(id);
-  };
-  const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
   const allTags = [
     ...new Map(
@@ -5904,9 +5819,9 @@ function ApplicationsTab({
     ).values(),
   ].sort((a, b) => a.name.localeCompare(b.name));
 
-  // Flag applications quieter than this employer's own typical gap between
-  // status changes — a sharper signal than a flat days-since-update, since
-  // some companies just move slower than others.
+  // Worst-wins attention signal per card (#314) — overdue > stale >
+  // quiet, where "quiet" compares the silence against this employer's
+  // own typical gap between status changes (#142's heat logic).
   const byAppHistory = new Map<number, StatusHistoryRow[]>();
   for (const row of history) {
     const list = byAppHistory.get(row.application_id) ?? [];
@@ -5935,151 +5850,49 @@ function ApplicationsTab({
     gapsByCompany.set(a.company_id, list);
   }
   const nowMs = Date.now();
-  const quietFlags = new Set<number>();
-  // Response-time heat strip (#142) — a graded signal (not just the
-  // binary "quiet" badge from #108) of how overdue an application's next
-  // contact is relative to that specific employer's own typical gap,
-  // shown as a colored strip on the row independent of stage color.
   const FALLBACK_NORM_DAYS = 7;
-  const heatLevel = new Map<number, 0 | 1 | 2 | 3>();
+  const attention = new Map<number, "overdue" | "stale" | "quiet">();
   for (const a of applications) {
     if (isDead(a.status) || a.archived_at) continue;
-    const companyGaps = a.company_id != null ? (gapsByCompany.get(a.company_id) ?? []) : [];
+    const companyGaps =
+      a.company_id != null ? (gapsByCompany.get(a.company_id) ?? []) : [];
     const norm =
-      companyGaps.length >= 2 ? (median(companyGaps) ?? FALLBACK_NORM_DAYS) : FALLBACK_NORM_DAYS;
+      companyGaps.length >= 2
+        ? (median(companyGaps) ?? FALLBACK_NORM_DAYS)
+        : FALLBACK_NORM_DAYS;
     const last = lastActivity.get(a.id) ?? parseSqlDate(a.created_at);
     const daysSince = (nowMs - last) / 86400000;
-    const ratio = daysSince / norm;
-    const level = ratio >= 2.5 ? 3 : ratio >= 1.5 ? 2 : ratio >= 1 ? 1 : 0;
-    heatLevel.set(a.id, level);
-    if (companyGaps.length >= 2 && daysSince >= 5 && ratio > 1.5) quietFlags.add(a.id);
+    const quiet = daysSince / norm >= 1.5 && daysSince >= 5;
+    const val = isOverdue(a)
+      ? "overdue"
+      : a.posting_status === "maybe_stale"
+        ? "stale"
+        : quiet
+          ? "quiet"
+          : null;
+    if (val) attention.set(a.id, val as "overdue" | "stale" | "quiet");
   }
 
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
     (a) =>
       (showArchived || !a.archived_at) &&
-      (statusFilter === "all" || a.status === statusFilter) &&
       (roleFilter === "all" || a.role_type === roleFilter) &&
       (companyFilter === "all" || String(a.company_id) === companyFilter) &&
-      (tagFilter === "all" || a.tags.some((tg) => String(tg.id) === tagFilter)) &&
+      (tagFilter === "all" ||
+        a.tags.some((tg) => String(tg.id) === tagFilter)) &&
       (!q ||
         [a.title, a.company_name, a.contact_name, a.notes, a.source]
           .filter(Boolean)
           .some((f) => (f as string).toLowerCase().includes(q))),
   );
-  const sorted = [...filtered].sort((a, b) => {
-    if (sort === "applied")
-      return (b.applied_at ?? "").localeCompare(a.applied_at ?? "");
-    if (sort === "company")
-      return (a.company_name ?? "￿").localeCompare(
-        b.company_name ?? "￿",
-      );
-    return b.updated_at.localeCompare(a.updated_at);
-  });
-  // Due items pinned on top, most overdue first
-  const visible = [
-    ...sorted
-      .filter(isDue)
-      .sort((a, b) =>
-        (a.next_action_at ?? "").localeCompare(b.next_action_at ?? ""),
-      ),
-    ...sorted.filter((a) => !isDue(a)),
-  ];
-
-  const run = (fn: () => Promise<unknown>) =>
-    fn()
-      .then(() => {
-        setEditing(null);
-        notify(t("common.saved"));
-        return onChanged();
-      })
-      .catch((e) => onError((e as Error).message));
-
-  const toggleSelect = (id: number) =>
-    setSelected((s) => {
-      const next = new Set(s);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const bulkArchive = () => {
-    Promise.all([...selected].map((id) => api.archiveApplication(id)))
-      .then(() => {
-        setSelected(new Set());
-        notify(t("common.saved"));
-        return onChanged();
-      })
-      .catch((e) => onError((e as Error).message));
-  };
-
-  const bulkSetStatus = (status: Status) => {
-    selected.forEach((id) => onStatus(id, status));
-    setSelected(new Set());
-  };
-
-  // Desktop keyboard shortcuts: / search, n new job, Esc close,
-  // j/k move focus, 1-8 set status on the focused card, ? for help.
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
-
-      if (e.key === "?" && !isTyping) {
-        e.preventDefault();
-        setShowHelp((v) => !v);
-        return;
-      }
-      if (e.key === "Escape") {
-        if (showHelp) return setShowHelp(false);
-        if (editing) return setEditing(null);
-        (e.target as HTMLElement).blur?.();
-        return;
-      }
-      if (isTyping) return;
-
-      if (e.key === "/") {
-        e.preventDefault();
-        searchRef.current?.focus();
-      } else if (e.key === "n") {
-        e.preventDefault();
-        setEditing("new");
-      } else if (e.key === "j") {
-        e.preventDefault();
-        setFocusedIndex((i) => Math.min(i + 1, visible.length - 1));
-      } else if (e.key === "k") {
-        e.preventDefault();
-        setFocusedIndex((i) => Math.max(i - 1, 0));
-      } else if (/^[1-8]$/.test(e.key)) {
-        const target = visible[focusedIndex];
-        const status = STATUSES[Number(e.key) - 1];
-        if (target && status) {
-          e.preventDefault();
-          onStatus(target.id, status);
-        }
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [visible, editing, showHelp, focusedIndex, onStatus]);
-
-  useEffect(() => {
-    if (focusedIndex < 0) return;
-    document
-      .querySelector(".card.kb-focused")
-      ?.scrollIntoView({ block: "nearest" });
-  }, [focusedIndex]);
 
   return (
     <section>
-      {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
-      <div className="jobs-layout">
-      <div className="jobs-main">
-      <StageHistogram applications={applications} />
+      <StageHistogram applications={filtered} />
+
       <div className="toolbar">
         <input
-          ref={searchRef}
           type="search"
           className="search"
           aria-label={t("toolbar.searchPlaceholder")}
@@ -6087,44 +5900,19 @@ function ApplicationsTab({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button className="primary" onClick={() => setEditing("new")}>
+        <button className="primary" onClick={onOpenQuickAdd}>
           {t("toolbar.addJob")}
         </button>
         <button
           className="help-btn"
           onClick={() => setShowHelp(true)}
-          title={t("toolbar.shortcuts")}
-          aria-label={t("toolbar.shortcuts")}
+          aria-label={t("shortcuts.title")}
         >
           ?
         </button>
-        <div className="board-group-toggle" role="group" aria-label={t("jobs.density")}>
-          <button
-            className={density === "comfortable" ? "active" : ""}
-            onClick={() => setDensityAndPersist("comfortable")}
-          >
-            {t("jobs.densityComfortable")}
-          </button>
-          <button
-            className={density === "compact" ? "active" : ""}
-            onClick={() => setDensityAndPersist("compact")}
-          >
-            {t("jobs.densityCompact")}
-          </button>
-        </div>
       </div>
+
       <div className="filters">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
-        >
-          <option value="all">{t("filters.allStatuses")}</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {t(`stages.${s}`)}
-            </option>
-          ))}
-        </select>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
@@ -6160,14 +5948,6 @@ function ApplicationsTab({
             ))}
           </select>
         )}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as typeof sort)}
-        >
-          <option value="updated">{t("filters.sortUpdated")}</option>
-          <option value="applied">{t("filters.sortApplied")}</option>
-          <option value="company">{t("filters.sortCompany")}</option>
-        </select>
         <label className="show-archived">
           <input
             type="checkbox"
@@ -6218,7 +5998,11 @@ function ApplicationsTab({
               />
             </label>
             <div className="form-actions">
-              <button type="submit" className="primary" disabled={!newViewName.trim()}>
+              <button
+                type="submit"
+                className="primary"
+                disabled={!newViewName.trim()}
+              >
                 {t("common.save")}
               </button>
               <button type="button" onClick={() => setNamingView(false)}>
@@ -6229,190 +6013,25 @@ function ApplicationsTab({
         </Dialog>
       )}
 
-      {selected.size > 0 && (
-        <div className="bulk-bar">
-          <span>{t("bulk.selectedCount", { count: selected.size })}</span>
-          <select
-            value=""
-            onChange={(e) => {
-              if (e.target.value) bulkSetStatus(e.target.value as Status);
-            }}
-          >
-            <option value="">{t("bulk.setStatus")}</option>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {t(`stages.${s}`)}
-              </option>
-            ))}
-          </select>
-          <button onClick={bulkArchive}>{t("bulk.archive")}</button>
-          <button onClick={() => setSelected(new Set())}>
-            {t("bulk.clearSelection")}
-          </button>
-        </div>
-      )}
+      <BoardTab
+        applications={filtered}
+        attention={attention}
+        companies={companies}
+        contacts={contacts}
+        roleTypes={roleTypes}
+        onChanged={onChanged}
+        onError={onError}
+        notify={notify}
+        onDelete={onDelete}
+        onStatus={onStatus}
+        initialDetailId={null}
+        onDetailIdChange={onOpenJob}
+      />
 
-      {editing && (
-        <ApplicationForm
-          initial={editing === "new" ? null : editing}
-          companies={companies}
-          contacts={contacts}
-          roleTypes={roleTypes}
-          applications={applications}
-          onError={onError}
-          onCancel={() => setEditing(null)}
-          onSubmit={(data) =>
-            run(() =>
-              editing === "new"
-                ? api.create("applications", data)
-                : api.update("applications", editing.id, data),
-            )
-          }
-        />
-      )}
-
-      <ul className={`cards${density === "compact" ? " compact" : ""}`}>
-        {visible.map((a, i) => (
-          <li
-            key={a.id}
-            className={`card row2 stage-${a.status}${i === focusedIndex ? " kb-focused" : ""}${a.archived_at ? " archived" : ""}`}
-            role="button"
-            tabIndex={0}
-            onClick={() => setDetailId(a.id)}
-            onKeyDown={(e) => {
-              // Only the row itself opens on Enter/Space; when focus is on the
-              // nested checkbox/status select, let them handle their own keys.
-              if (e.target !== e.currentTarget) return;
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setDetailId(a.id);
-              }
-            }}
-          >
-            <div className="l1">
-              <input
-                type="checkbox"
-                className="card-select"
-                checked={selected.has(a.id)}
-                onClick={(e) => e.stopPropagation()}
-                onChange={() => toggleSelect(a.id)}
-                aria-label={t("bulk.selectRow")}
-              />
-              <strong>
-                {a.title}
-                {a.fit_score ? (
-                  <span className="fit-stars" title={`${a.fit_score}/5`}>
-                    {" "}
-                    {"★".repeat(a.fit_score)}
-                  </span>
-                ) : null}
-                {(() => {
-                  // One worst-wins attention badge (#314) — replaces the
-                  // separate overdue tint, heat strip + badge, stale and
-                  // quiet markers. Why is explained on the detail page.
-                  const level = heatLevel.get(a.id) ?? 0;
-                  const attention = isOverdue(a)
-                    ? "overdue"
-                    : a.posting_status === "maybe_stale"
-                      ? "stale"
-                      : level >= 2 || quietFlags.has(a.id)
-                        ? "quiet"
-                        : null;
-                  return attention ? (
-                    <span
-                      className={`badge attention attention-${attention}`}
-                      title={t(`attention.${attention}Hint`)}
-                    >
-                      {" "}
-                      {t(`attention.${attention}`)}
-                    </span>
-                  ) : null;
-                })()}
-              </strong>
-              <span className="co">
-                {a.company_name ?? "—"}
-                {a.contact_name ? ` · ${a.contact_name}` : ""}
-              </span>
-            </div>
-            <div className="l2">
-              <select
-                className={`status stage-${a.status}`}
-                value={a.status}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => onStatus(a.id, e.target.value as Status)}
-                aria-label={t("aria.moveToStage", { title: a.title })}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {t(`stages.${s}`)}
-                  </option>
-                ))}
-              </select>
-              <span
-                className={`due${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
-              >
-                {isDue(a) || isOverdue(a)
-                  ? `→ ${a.next_action ?? t("detail.followUpFallback")}`
-                  : `upd ${ageDays(a.updated_at)}`}
-              </span>
-              {a.deadline_at && (isDeadlineSoon(a) || isDeadlinePast(a)) && (
-                <span className={`due${isDeadlinePast(a) ? " late" : " today"}`}>
-                  {t("detail.deadline")}: {formatDate(a.deadline_at)}
-                </span>
-              )}
-            </div>
-          </li>
-        ))}
-        {visible.length === 0 && (
-          <li className="empty">
-            <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-              <line x1="20" y1="76" x2="70" y2="26" strokeWidth="5" opacity="0.28" strokeLinecap="round" />
-              <circle cx="20" cy="76" r="7" fill="currentColor" stroke="none" />
-              <circle cx="36.7" cy="59.3" r="7" fill="currentColor" stroke="none" />
-              <circle cx="53.3" cy="42.7" r="7" fill="currentColor" stroke="none" opacity="0.35" />
-              <circle cx="72" cy="24" r="11" strokeWidth="5.5" className="accent-stroke" />
-            </svg>
-            {t("empty.noJobs")}
-          </li>
-        )}
-      </ul>
-      </div>
-      {isWideDesktop && detailApp ? (
-        <ApplicationDetailModal
-          application={detailApp}
-          allApplications={applications}
-          companies={companies}
-          contacts={contacts}
-          roleTypes={roleTypes}
-          onClose={() => setDetailId(null)}
-          onChanged={onChanged}
-          onError={onError}
-          notify={notify}
-          onDelete={onDelete}
-          onStatus={onStatus}
-          asPane
-        />
-      ) : null}
-      </div>
-      {!isWideDesktop && detailApp && (
-        <ApplicationDetailModal
-          application={detailApp}
-          allApplications={applications}
-          companies={companies}
-          contacts={contacts}
-          roleTypes={roleTypes}
-          onClose={() => setDetailId(null)}
-          onChanged={onChanged}
-          onError={onError}
-          notify={notify}
-          onDelete={onDelete}
-          onStatus={onStatus}
-        />
-      )}
+      {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
     </section>
   );
 }
-
 function ApplicationForm({
   initial,
   companies,
