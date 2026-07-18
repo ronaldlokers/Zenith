@@ -4181,6 +4181,132 @@ button:not(:disabled):active,
   .dash-spark { height: 34px; }
 }
 
+/* Pipeline redesign (#346) — slim bar, urgency cards, ⋯ menu, header
+   funnel, snap-scroll mobile, Archived modal. */
+
+/* urgency palette (theme-aware, reused from attention tokens) */
+.u-overdue { --u-edge: var(--danger); }
+.u-today { --u-edge: var(--heat-quiet-text); }
+.u-stale { --u-edge: var(--heat-quiet); }
+.u-quiet { --u-edge: var(--faint); }
+.u-calm { --u-edge: var(--border); }
+
+/* slim bar */
+.board-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+.board-bar .search { flex: 1 1 12rem; min-width: 8rem; }
+.board-bar-btn {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.board-bar-btn.active { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+.board-sort { display: inline-flex; align-items: center; gap: 0.4rem; }
+.board-sort-label {
+  font-family: var(--mono); font-size: var(--text-chrome);
+  text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--faint);
+}
+.board-sort select { padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); }
+.board-filters-pop {
+  margin-top: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-3);
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+
+/* column header funnel proportion */
+.bcol-prop { height: 3px; border-radius: 2px; background: var(--track); overflow: hidden; margin: 0 0.9rem 0.55rem; }
+.bcol-prop > i { display: block; height: 100%; border-radius: 2px; }
+.bcol-prop .s-interested { background: var(--st-interested); }
+.bcol-prop .s-applied { background: var(--st-applied); }
+.bcol-prop .s-screening { background: var(--st-screening); }
+.bcol-prop .s-interview { background: var(--st-interview); }
+.bcol-prop .s-offer { background: var(--st-offer); }
+
+/* card: edge = urgency, position for the ⋯ menu */
+.bcard { position: relative; border-left-color: var(--u-edge, var(--border)); }
+.bcard .bcard-body { padding-right: 1.1rem; }
+.baction { font-size: var(--text-meta); color: var(--u-edge, var(--muted)); font-weight: 560; }
+.bbadge {
+  align-self: flex-start;
+  font-family: var(--mono); font-size: var(--text-chrome);
+  text-transform: uppercase; letter-spacing: var(--track-eyebrow);
+  padding: 0.05rem 0.4rem; border-radius: var(--radius-full);
+  color: var(--u-edge); background: color-mix(in srgb, var(--u-edge) 14%, transparent);
+}
+
+/* ⋯ menu */
+.card-menu { position: absolute; top: 0.3rem; right: 0.35rem; }
+.card-menu-btn {
+  border: none; background: none; color: var(--faint); cursor: pointer;
+  font-size: 1rem; line-height: 1; padding: 0.1rem 0.3rem; border-radius: var(--radius-sm);
+}
+.card-menu-btn:hover { color: var(--ink); background: var(--hover); }
+.card-menu-backdrop { position: fixed; inset: 0; z-index: 40; }
+.card-menu-pop {
+  position: absolute; top: 1.5rem; right: 0; z-index: 41;
+  min-width: 11rem; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2); padding: 0.25rem; display: flex; flex-direction: column;
+}
+.card-menu-pop > button {
+  text-align: left; border: none; background: none; color: var(--ink);
+  padding: 0.4rem 0.55rem; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: var(--text-body); display: flex; align-items: center; gap: 0.4rem;
+}
+.card-menu-pop > button:hover { background: var(--hover); }
+.card-menu-pop > button.danger { color: var(--danger); }
+.card-menu-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sc, var(--accent)); flex-shrink: 0; }
+.card-menu-fu { padding: 0.4rem 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.card-menu-fu input { padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); }
+.card-menu-fu-actions { display: flex; gap: 0.4rem; }
+.card-menu-fu-actions button { padding: 0.3rem 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+.card-menu-fu-actions button.primary { background: var(--accent); color: var(--accent-text); border: none; }
+
+/* archived modal */
+.archived-modal { max-width: 30rem; }
+.archived-head { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.7rem; }
+.archived-head h2 { margin: 0; font-size: 1.05rem; }
+.archived-list { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow-y: auto; }
+.archived-list li { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0; border-top: 1px solid var(--border); }
+.archived-list li:first-child { border-top: none; }
+.archived-open { flex: 1; min-width: 0; text-align: left; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; }
+.archived-title { font-weight: 560; font-size: var(--text-body); color: var(--ink); }
+.archived-co { font-size: var(--text-meta); }
+.archived-reason { font-family: var(--mono); font-size: var(--text-chrome); text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--muted); white-space: nowrap; }
+.archived-restore { border: none; background: none; color: var(--accent-ink); cursor: pointer; font-size: var(--text-meta); white-space: nowrap; }
+
+/* mobile: snap-scroll columns instead of stacking (#346) */
+@media (max-width: 899px) {
+  .board {
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: 86%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.6rem;
+    scroll-padding: 0 0.5rem;
+  }
+  .board > .bcol { scroll-snap-align: start; }
+}
+
 /* Cascade repairs (#314 round 3) — must stay after the control-normalization
    layer: its generic hover and min-heights win source-order ties against
    earlier rules regardless of media queries. Only the print stylesheet

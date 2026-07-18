@@ -37,7 +37,8 @@
     "fetch": "Ophalen",
     "fetching": "Ophalen…",
     "add": "Toevoegen",
-    "confirm": "Bevestigen"
+    "confirm": "Bevestigen",
+    "open": "Openen"
   },
   "savedViews": {
     "namePrompt": "Naam voor deze weergave",
@@ -557,7 +558,23 @@
     "byCompany": "Op bedrijf",
     "noCompany": "Geen bedrijf",
     "closedCount": "Gesloten · {{count}}",
-    "updatedAge": "gew. {{age}}"
+    "updatedAge": "gew. {{age}}",
+    "cardMenu": "Acties voor {{title}}",
+    "moveToStage": "Verplaats naar fase",
+    "sortBy": "Sorteer",
+    "sortUrgency": "Urgentie",
+    "sortFollowup": "Follow-up datum",
+    "sortFit": "Fit-score",
+    "sortUpdated": "Laatst bijgewerkt",
+    "archivedBtn": "Archief",
+    "archivedTitle": "Archief & gesloten",
+    "restore": "Herstellen",
+    "filterBtn": "Filter",
+    "reasonRejected": "afgewezen",
+    "reasonWithdrawn": "ingetrokken",
+    "reasonGhosted": "ghosted",
+    "reasonArchived": "opzij gezet",
+    "noArchived": "Nog niets gearchiveerd of gesloten."
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
@@ -584,7 +601,8 @@
     "open": "Openen",
     "statusChanged": "Verplaatst naar {{stage}}",
     "revived": "Terug in een actieve fase",
-    "setFollowUp": "Follow-up instellen"
+    "setFollowUp": "Follow-up instellen",
+    "archived": "Gearchiveerd"
   },
   "confirm": {
     "deleteDocument": "“{{name}}” verwijderen?",
@@ -648,5 +666,9 @@
     "caughtUp": "Alles bijgewerkt — geen follow-ups open",
     "addFollowUp": "+ follow-up toevoegen",
     "allNumbers": "Alle cijfers"
+  },
+  "urgency": {
+    "overdue": "te laat",
+    "today": "vandaag"
   }
 }

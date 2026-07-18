@@ -2292,77 +2292,6 @@ function SettingsPage({
 // pipeline funnel (cumulative-reached-per-stage, a different
 // denominator, needs the funnel's decreasing-max shape) are untouched —
 // this consolidates only the one genuinely overlapping chart.
-function StageHistogram({ applications }: { applications: Application[] }) {
-  const { t } = useTranslation();
-  const open = applications.filter((a) => !isDead(a.status));
-  const total = open.length;
-  const counts = PIPELINE.map(
-    (s) => open.filter((a) => a.status === s).length,
-  );
-
-  const size = 96;
-  const strokeWidth = 14;
-  const r = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * r;
-  let cumulative = 0;
-
-  return (
-    <div className="ring-chart">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={t("stats.pipelineFunnel")}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="var(--track)"
-          strokeWidth={strokeWidth}
-        />
-        {total > 0 &&
-          PIPELINE.map((s, i) => {
-            const count = counts[i];
-            if (count === 0) return null;
-            const fraction = count / total;
-            const dash = fraction * circumference;
-            const offset = -cumulative * circumference;
-            cumulative += fraction;
-            return (
-              <circle
-                key={s}
-                cx={size / 2}
-                cy={size / 2}
-                r={r}
-                fill="none"
-                stroke={`var(--st-${s})`}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${dash} ${circumference - dash}`}
-                strokeDashoffset={offset}
-                transform={`rotate(-90 ${size / 2} ${size / 2})`}
-              />
-            );
-          })}
-        <text
-          x={size / 2}
-          y={size / 2}
-          textAnchor="middle"
-          dominantBaseline="central"
-          className="ring-total"
-        >
-          {total}
-        </text>
-      </svg>
-      <ul className="ring-legend">
-        {PIPELINE.map((s, i) => (
-          <li key={s} className={`stage-${s}`}>
-            <span className="ring-dot" aria-hidden="true" />
-            <span className="lbl">{t(`stages.${s}`)}</span>
-            <span className="n">{counts[i]}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 interface Toast {
   id: number;
   message: string;
@@ -3000,35 +2929,223 @@ interface CrudTabProps extends TabProps {
 }
 
 // Shared card markup for both Board layouts (stage columns and the
-// company-swimlanes mode from #130) — extracted so drag-and-drop, the
-// referral/stale badges, and the stage <select> aren't duplicated.
+// Card urgency (#346) — a single worst-wins state driving the coloured
+// left edge and the one action line/badge a card may show.
+type Urgency = "overdue" | "today" | "stale" | "quiet" | null;
+const URGENCY_RANK: Record<Exclude<Urgency, null>, number> = {
+  overdue: 0,
+  today: 1,
+  stale: 2,
+  quiet: 3,
+};
+function urgencyRank(u: Urgency): number {
+  return u ? URGENCY_RANK[u] : 4;
+}
+
+type BoardSort = "urgency" | "followup" | "fit" | "updated";
+
+// Sort a column's cards by the chosen key (default urgency), so the top of
+// every column is the work that matters (#346).
+function sortCards(
+  cards: Application[],
+  sort: BoardSort,
+  urgencyOf: (a: Application) => Urgency,
+): Application[] {
+  const copy = [...cards];
+  if (sort === "fit") {
+    copy.sort((a, b) => (b.fit_score ?? 0) - (a.fit_score ?? 0));
+  } else if (sort === "updated") {
+    copy.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  } else if (sort === "followup") {
+    copy.sort((a, b) =>
+      (a.next_action_at ?? "9999").localeCompare(b.next_action_at ?? "9999"),
+    );
+  } else {
+    copy.sort((a, b) => {
+      const byU = urgencyRank(urgencyOf(a)) - urgencyRank(urgencyOf(b));
+      if (byU !== 0) return byU;
+      const av = a.next_action_at ?? "9999";
+      const bv = b.next_action_at ?? "9999";
+      if (av !== bv) return av.localeCompare(bv);
+      return b.updated_at.localeCompare(a.updated_at);
+    });
+  }
+  return copy;
+}
+
+// One board card (#346) — a coloured left edge for urgency (worst-wins),
+// title + company, at most one action line/badge, and a ⋯ menu that
+// replaces the old per-card status dropdown.
+function CardMenu({
+  a,
+  onMove,
+  onSetFollowUp,
+  onOpenDetail,
+  onArchive,
+}: {
+  a: Application;
+  onMove: (status: string) => void;
+  onSetFollowUp: (date: string | null, text: string | null) => void;
+  onOpenDetail: () => void;
+  onArchive: () => void;
+}) {
+  const { t } = useTranslation();
+  const [mode, setMode] = useState<null | "root" | "move" | "followup">(null);
+  const [fuDate, setFuDate] = useState(a.next_action_at?.slice(0, 10) ?? "");
+  const [fuText, setFuText] = useState(a.next_action ?? "");
+  const close = () => setMode(null);
+  return (
+    <div className="card-menu" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        className="card-menu-btn"
+        aria-label={t("board.cardMenu", { title: a.title })}
+        aria-haspopup="menu"
+        onClick={() => setMode((m) => (m ? null : "root"))}
+      >
+        ⋯
+      </button>
+      {mode && (
+        <>
+          <div className="card-menu-backdrop" onClick={close} />
+          <div className="card-menu-pop" role="menu">
+            {mode === "root" && (
+              <>
+                <button type="button" role="menuitem" onClick={() => setMode("move")}>
+                  {t("board.moveToStage")} ▸
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => setMode("followup")}
+                >
+                  {t("detail.setFollowUp")}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    close();
+                    onOpenDetail();
+                  }}
+                >
+                  {t("common.open")}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="danger"
+                  onClick={() => {
+                    close();
+                    onArchive();
+                  }}
+                >
+                  {t("detail.archive")}
+                </button>
+              </>
+            )}
+            {mode === "move" && (
+              <>
+                {STATUSES.filter((sName) => sName !== a.status).map((sName) => (
+                  <button
+                    key={sName}
+                    type="button"
+                    role="menuitem"
+                    className={`stage-${sName}`}
+                    onClick={() => {
+                      close();
+                      onMove(sName);
+                    }}
+                  >
+                    <span className="card-menu-dot" /> {t(`stages.${sName}`)}
+                  </button>
+                ))}
+              </>
+            )}
+            {mode === "followup" && (
+              <form
+                className="card-menu-fu"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  close();
+                  onSetFollowUp(fuDate || null, fuText.trim() || null);
+                }}
+              >
+                <input
+                  value={fuText}
+                  onChange={(e) => setFuText(e.target.value)}
+                  placeholder={t("detail.followUpFallback")}
+                  autoFocus
+                />
+                <input
+                  type="date"
+                  value={fuDate}
+                  onChange={(e) => setFuDate(e.target.value)}
+                />
+                <div className="card-menu-fu-actions">
+                  <button type="submit" className="primary">
+                    {t("common.save")}
+                  </button>
+                  {a.next_action_at && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        close();
+                        onSetFollowUp(null, null);
+                      }}
+                    >
+                      {t("nextUp.done")}
+                    </button>
+                  )}
+                </div>
+              </form>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function BoardCard({
   a,
-  attention,
+  urgency,
   draggable,
   isDragging,
   onDragStart,
   onDragEnd,
   onOpenDetail,
   onMove,
+  onSetFollowUp,
+  onArchive,
 }: {
   a: Application;
-  attention?: "overdue" | "stale" | "quiet" | null;
+  urgency: Urgency;
   draggable: boolean;
   isDragging: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: () => void;
   onOpenDetail: () => void;
   onMove: (status: string) => void;
+  onSetFollowUp: (date: string | null, text: string | null) => void;
+  onArchive: () => void;
 }) {
   const { t } = useTranslation();
+  const actionable = urgency === "overdue" || urgency === "today";
   return (
     <article
-      className={`bcard stage-${a.status}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}`}
+      className={`bcard u-${urgency ?? "calm"}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}`}
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
     >
+      <CardMenu
+        a={a}
+        onMove={onMove}
+        onSetFollowUp={onSetFollowUp}
+        onOpenDetail={onOpenDetail}
+        onArchive={onArchive}
+      />
       <div className="bcard-body" onClick={onOpenDetail}>
         <strong>
           {a.title}
@@ -3038,49 +3155,28 @@ function BoardCard({
               {"★".repeat(a.fit_score)}
             </span>
           ) : null}
-          {attention ? (
-            <span
-              className={`badge attention attention-${attention}`}
-              title={t(`attention.${attention}Hint`)}
-            >
-              {" "}
-              {t(`attention.${attention}`)}
-            </span>
-          ) : null}
         </strong>
         <span className="co">
           {a.company_name ?? "—"}
           {a.contact_name ? ` · ${a.contact_name}` : ""}
         </span>
-        <span className="bmeta">
-          {isDue(a) && a.next_action ? (
-            <span className={isOverdue(a) ? "late" : "today"}>
-              → {a.next_action}
-            </span>
-          ) : (
-            t("board.updatedAge", { age: ageDays(a.updated_at) })
-          )}
-        </span>
+        {actionable ? (
+          <span className="baction">
+            → {a.next_action ?? t("detail.followUpFallback")}
+            {" · "}
+            {t(`urgency.${urgency}`)}
+          </span>
+        ) : urgency === "stale" || urgency === "quiet" ? (
+          <span className={`bbadge u-${urgency}`}>{t(`attention.${urgency}`)}</span>
+        ) : null}
       </div>
-      <select
-        className={`status stage-${a.status}`}
-        value={a.status}
-        onChange={(e) => onMove(e.target.value)}
-        aria-label={t("aria.moveToStage", { title: a.title })}
-      >
-        {STATUSES.map((s) => (
-          <option key={s} value={s}>
-            {t(`stages.${s}`)}
-          </option>
-        ))}
-      </select>
     </article>
   );
 }
-
 function BoardTab({
   applications,
   attention,
+  sort,
   companies,
   contacts,
   roleTypes,
@@ -3097,39 +3193,44 @@ function BoardTab({
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
-  attention?: Map<number, "overdue" | "stale" | "quiet">;
+  attention?: Map<number, Urgency>;
+  sort: BoardSort;
   initialDetailId?: number | null;
   onDetailIdChange?: (id: number | null) => void;
 }) {
   const { t } = useTranslation();
   const move = (a: Application, status: string) =>
     onStatus(a.id, status as Status);
+  const urgencyOf = (a: Application): Urgency => attention?.get(a.id) ?? null;
+
+  const setFollowUp = (
+    id: number,
+    date: string | null,
+    text: string | null,
+  ) =>
+    api
+      .updateFollowUp(id, { next_action: text, next_action_at: date })
+      .then(() => onChanged())
+      .catch((e) => onError((e as Error).message));
+
+  const archive = (id: number) =>
+    api
+      .archiveApplication(id)
+      .then(() => onChanged())
+      .then(() =>
+        notify(t("toast.archived"), () =>
+          api
+            .unarchiveApplication(id)
+            .then(() => onChanged())
+            .catch((e) => onError((e as Error).message)),
+        ),
+      )
+      .catch((e) => onError((e as Error).message));
 
   const open = applications.filter((a) => !isDead(a.status));
 
-  // Collapsed by default, except stages with something due — keeps a
-  // long mobile scroll from burying the stage that actually needs
-  // attention under every earlier one. A manual toggle wins once used.
-  // Desktop's columns sit side by side and never needed this, so it
-  // renders plain always-visible sections there instead — no <details>,
-  // no toggle affordance at all (see #47).
-  const [manualOpen, setManualOpen] = useState<Partial<Record<Status, boolean>>>(
-    {},
-  );
-  const [isDesktop, setIsDesktop] = useState(
-    () => window.matchMedia("(min-width: 900px)").matches,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 900px)");
-    const onChange = () => setIsDesktop(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  // Drag-and-drop is explicitly gated off on touch input (#54) — native
-  // HTML5 DnD doesn't cleanly support touch, and some browsers partially
-  // honor draggable via long-press, producing a half-working gesture that
-  // interferes with scroll. The status <select> stays the only way to
-  // move a card on touch, as documented in #41.
+  // Drag-and-drop is gated off on touch (#54); on touch the ⋯ menu's
+  // "Move to stage" reclassifies a card instead.
   const [isCoarsePointer, setIsCoarsePointer] = useState(
     () => window.matchMedia("(pointer: coarse)").matches,
   );
@@ -3153,11 +3254,6 @@ function BoardTab({
   };
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
-  // Alternate grouping (#130) — rows are companies, columns stay the
-  // pipeline stages, useful once several applications pile up at the
-  // same company. Swimlane mode has no drag-and-drop (the stage
-  // <select> is the only way to move a card there) to keep this
-  // additive rather than doubling the DnD surface to maintain.
   const [groupBy, setGroupBy] = useState<"stage" | "company">("stage");
   const lanes = new Map<number | null, Application[]>();
   for (const a of open) {
@@ -3168,6 +3264,22 @@ function BoardTab({
     const nameA = companies.find((c) => c.id === a[0])?.name ?? "";
     const nameB = companies.find((c) => c.id === b[0])?.name ?? "";
     return nameA.localeCompare(nameB);
+  });
+
+  // Column counts + funnel proportion — headers carry the funnel now that
+  // the ring is gone (#346).
+  const stageCounts = PIPELINE.map(
+    (stage) => open.filter((a) => a.status === stage).length,
+  );
+  const funnelBase = Math.max(1, ...stageCounts);
+
+  const cardProps = (a: Application) => ({
+    urgency: urgencyOf(a),
+    onOpenDetail: () => setDetailId(a.id),
+    onMove: (status: string) => move(a, status),
+    onSetFollowUp: (date: string | null, text: string | null) =>
+      setFollowUp(a.id, date, text),
+    onArchive: () => archive(a.id),
   });
 
   return (
@@ -3188,9 +3300,6 @@ function BoardTab({
         </button>
       </div>
     </div>
-    {/* Stage-grouped columns carry their own name+dot headers; the legend
-        only earns its place in company-swimlane mode, whose cells are
-        unlabeled (#314). */}
     {groupBy === "company" && <StageLegend />}
     {groupBy === "company" ? (
       <div className="board-swimlanes">
@@ -3210,13 +3319,11 @@ function BoardTab({
                     .filter((a) => a.status === stage)
                     .map((a) => (
                       <BoardCard
-                        attention={attention?.get(a.id) ?? null}
                         key={a.id}
                         a={a}
                         draggable={false}
                         isDragging={false}
-                        onOpenDetail={() => setDetailId(a.id)}
-                        onMove={(status) => move(a, status)}
+                        {...cardProps(a)}
                       />
                     ))}
                 </div>
@@ -3233,19 +3340,20 @@ function BoardTab({
       </div>
     ) : (
     <div className="board">
-      {PIPELINE.map((stage) => {
-        const cards = open.filter((a) => a.status === stage);
-        const hasDue = cards.some(isDue);
-        const isOpen = manualOpen[stage] ?? hasDue;
+      {PIPELINE.map((stage, i) => {
+        const cards = sortCards(
+          open.filter((a) => a.status === stage),
+          sort,
+          urgencyOf,
+        );
         const className = `bcol stage-${stage}${dragOverStage === stage ? " drag-over" : ""}`;
         const handleDragOver = (e: React.DragEvent) => {
           if (draggingId === null) return;
           e.preventDefault();
           setDragOverStage(stage);
-          if (!isOpen) setManualOpen((m) => ({ ...m, [stage]: true }));
         };
         const handleDragLeave = () =>
-          setDragOverStage((s) => (s === stage ? null : s));
+          setDragOverStage((sName) => (sName === stage ? null : sName));
         const handleDrop = (e: React.DragEvent) => {
           e.preventDefault();
           const id = Number(e.dataTransfer.getData("text/plain"));
@@ -3253,81 +3361,52 @@ function BoardTab({
           setDraggingId(null);
           setDragOverStage(null);
         };
-        const cardList = (
-          <>
-            {cards.map((a) => (
-              <BoardCard
-                attention={attention?.get(a.id) ?? null}
-                key={a.id}
-                a={a}
-                draggable={!isCoarsePointer}
-                isDragging={draggingId === a.id}
-                onDragStart={(e) => {
-                  e.dataTransfer.setData("text/plain", String(a.id));
-                  e.dataTransfer.effectAllowed = "move";
-                  setDraggingId(a.id);
-                }}
-                onDragEnd={() => {
-                  setDraggingId(null);
-                  setDragOverStage(null);
-                }}
-                onOpenDetail={() => setDetailId(a.id)}
-                onMove={(status) => move(a, status)}
-              />
-            ))}
-            {cards.length === 0 && (
-              <div className="bempty">
-                {stage === "offer"
-                  ? t("empty.boardKeepPushing")
-                  : t("empty.boardEmpty")}
-              </div>
-            )}
-          </>
-        );
-
-        // Desktop's columns sit side by side and never needed the
-        // mobile collapse behavior, so it gets a plain always-visible
-        // section with zero toggle affordance — no <details>, no
-        // chevron, no click-to-collapse (#47).
-        if (isDesktop) {
-          return (
-            <div
-              key={stage}
-              className={className}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <div className="bcol-head">
-                {t(`stages.${stage}`)}
-                <span className="n">{cards.length}</span>
-              </div>
-              <div className="bcol-cards">{cardList}</div>
-            </div>
-          );
-        }
-
         return (
-          <details
+          <div
             key={stage}
             className={className}
-            open={isOpen}
-            onToggle={(e) =>
-              setManualOpen((m) => ({
-                ...m,
-                [stage]: (e.target as HTMLDetailsElement).open,
-              }))
-            }
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <summary className="bcol-head">
+            <div className="bcol-head">
               {t(`stages.${stage}`)}
-              <span className="n">{cards.length}</span>
-            </summary>
-            {cardList}
-          </details>
+              <span className="n">{stageCounts[i]}</span>
+            </div>
+            <div className="bcol-prop" aria-hidden="true">
+              <i
+                className={`s-${stage}`}
+                style={{ width: `${(stageCounts[i] / funnelBase) * 100}%` }}
+              />
+            </div>
+            <div className="bcol-cards">
+              {cards.map((a) => (
+                <BoardCard
+                  key={a.id}
+                  a={a}
+                  draggable={!isCoarsePointer}
+                  isDragging={draggingId === a.id}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/plain", String(a.id));
+                    e.dataTransfer.effectAllowed = "move";
+                    setDraggingId(a.id);
+                  }}
+                  onDragEnd={() => {
+                    setDraggingId(null);
+                    setDragOverStage(null);
+                  }}
+                  {...cardProps(a)}
+                />
+              ))}
+              {cards.length === 0 && (
+                <div className="bempty">
+                  {stage === "offer"
+                    ? t("empty.boardKeepPushing")
+                    : t("empty.boardEmpty")}
+                </div>
+              )}
+            </div>
+          </div>
         );
       })}
       </div>
@@ -3351,7 +3430,6 @@ function BoardTab({
     </>
   );
 }
-
 function Timeline({
   resource,
   targetId,
@@ -6370,12 +6448,14 @@ function PipelineTab({
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
-  const [showArchived, setShowArchived] = useState(false);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [showHelp, setShowHelp] = useState(false);
-  // Mobile: filters + saved views collapse behind one toggle (#314) so
-  // triage starts at the board, not below a stack of controls.
+  // Global sort applied to every column (#346), default urgency.
+  const [sort, setSort] = useState<BoardSort>("urgency");
+  // Filters behind a Filter button; the Archived modal replaces the old
+  // Closed drawer (#346).
   const [showFilters, setShowFilters] = useState(false);
+  const [showArchivedModal, setShowArchivedModal] = useState(false);
 
   // One-shot: consume the jump query then clear it upstream, so a single
   // Calendar jump doesn't re-inject the search on every later visit (#314).
@@ -6411,7 +6491,7 @@ function PipelineTab({
     roleFilter,
     companyFilter,
     tagFilter,
-    showArchived,
+    showArchived: false,
     sort: "updated",
   });
   const applyView = (v: SavedView) => {
@@ -6420,7 +6500,6 @@ function PipelineTab({
     setRoleFilter(f.roleFilter ?? "all");
     setCompanyFilter(f.companyFilter ?? "all");
     setTagFilter(f.tagFilter ?? "all");
-    setShowArchived(!!f.showArchived);
   };
   const saveCurrentView = () => {
     const name = newViewName.trim();
@@ -6502,7 +6581,8 @@ function PipelineTab({
   }
   const nowMs = Date.now();
   const FALLBACK_NORM_DAYS = 7;
-  const attention = new Map<number, "overdue" | "stale" | "quiet">();
+  const attention = new Map<number, Urgency>();
+  const todayStr = today();
   for (const a of applications) {
     if (isDead(a.status) || a.archived_at) continue;
     const companyGaps =
@@ -6518,14 +6598,17 @@ function PipelineTab({
     // relationships (guard restored; #330 dropped it).
     const quiet =
       companyGaps.length >= 2 && daysSince / norm >= 1.5 && daysSince >= 5;
-    const val = isOverdue(a)
+    // Worst-wins: overdue > due-today > posting-stale > gone-quiet (#346).
+    const val: Urgency = isOverdue(a)
       ? "overdue"
-      : a.posting_status === "maybe_stale"
-        ? "stale"
-        : quiet
-          ? "quiet"
-          : null;
-    if (val) attention.set(a.id, val as "overdue" | "stale" | "quiet");
+      : a.next_action_at === todayStr
+        ? "today"
+        : a.posting_status === "maybe_stale"
+          ? "stale"
+          : quiet
+            ? "quiet"
+            : null;
+    if (val) attention.set(a.id, val);
   }
   return { allTags, attention };
   }, [applications, history, lastInteractions]);
@@ -6533,7 +6616,7 @@ function PipelineTab({
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
     (a) =>
-      (showArchived || !a.archived_at) &&
+      !a.archived_at &&
       (roleFilter === "all" || a.role_type === roleFilter) &&
       (companyFilter === "all" || String(a.company_id) === companyFilter) &&
       (tagFilter === "all" ||
@@ -6565,10 +6648,18 @@ function PipelineTab({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const activeFilterCount =
+    (roleFilter !== "all" ? 1 : 0) +
+    (companyFilter !== "all" ? 1 : 0) +
+    (tagFilter !== "all" ? 1 : 0);
+  // Inactive jobs (closed statuses + manually archived) — the Archived
+  // modal's contents, off the board entirely (#346).
+  const inactive = applications
+    .filter((a) => isDead(a.status) || a.archived_at)
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+
   return (
     <section>
-      <StageHistogram applications={filtered} />
-
       {applications.length === 0 && (
         <p className="pipeline-empty-hint">
           {t("empty.pipelineNoJobs")}{" "}
@@ -6582,7 +6673,9 @@ function PipelineTab({
         </p>
       )}
 
-      <div className="toolbar">
+      {/* Slim bar (#346): search · filter · sort · archived · add. The
+          funnel ring is gone — counts live in the column headers now. */}
+      <div className="board-bar">
         <input
           ref={searchRef}
           type="search"
@@ -6592,6 +6685,32 @@ function PipelineTab({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <button
+          type="button"
+          className={`board-bar-btn${showFilters || activeFilterCount ? " active" : ""}`}
+          aria-expanded={showFilters}
+          onClick={() => setShowFilters((v) => !v)}
+        >
+          {t("board.filterBtn")}
+          {activeFilterCount ? ` · ${activeFilterCount}` : ""}
+        </button>
+        <label className="board-sort">
+          <span className="board-sort-label">{t("board.sortBy")}</span>
+          <select value={sort} onChange={(e) => setSort(e.target.value as BoardSort)}>
+            <option value="urgency">{t("board.sortUrgency")}</option>
+            <option value="followup">{t("board.sortFollowup")}</option>
+            <option value="fit">{t("board.sortFit")}</option>
+            <option value="updated">{t("board.sortUpdated")}</option>
+          </select>
+        </label>
+        <button
+          type="button"
+          className="board-bar-btn"
+          onClick={() => setShowArchivedModal(true)}
+        >
+          {t("board.archivedBtn")}
+          {inactive.length ? ` · ${inactive.length}` : ""}
+        </button>
         <button className="primary" onClick={onOpenQuickAdd}>
           {t("toolbar.addJob")}
         </button>
@@ -6604,83 +6723,69 @@ function PipelineTab({
         </button>
       </div>
 
-      <button
-        className="btn-secondary pipeline-filters-toggle"
-        aria-expanded={showFilters}
-        onClick={() => setShowFilters((v) => !v)}
-      >
-        {t("filters.toggle")}
-      </button>
-      <div className={`pipeline-filters${showFilters ? " open" : ""}`}>
-      <div className="filters">
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
-          <option value="all">{t("filters.allRoles")}</option>
-          {roleTypes.map((r) => (
-            <option key={r.slug} value={r.slug}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={companyFilter}
-          onChange={(e) => setCompanyFilter(e.target.value)}
-        >
-          <option value="all">{t("filters.allCompanies")}</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        {allTags.length > 0 && (
-          <select
-            value={tagFilter}
-            onChange={(e) => setTagFilter(e.target.value)}
-          >
-            <option value="all">{t("filters.allTags")}</option>
-            {allTags.map((tg) => (
-              <option key={tg.id} value={tg.id}>
-                {tg.name}
-              </option>
-            ))}
-          </select>
-        )}
-        <label className="show-archived">
-          <input
-            type="checkbox"
-            checked={showArchived}
-            onChange={(e) => setShowArchived(e.target.checked)}
-          />
-          {t("filters.showArchived")}
-        </label>
-      </div>
-
-      <div className="saved-views">
-        {savedViews.map((v) => (
-          <span
-            key={v.id}
-            className={`view-chip${JSON.stringify(boardFields(v.filters)) === curFilterKey ? " active" : ""}`}
-          >
-            <button className="view-apply" onClick={() => applyView(v)}>
-              {v.name}
-            </button>
-            <button
-              className="view-del"
-              aria-label={t("savedViews.delete", { name: v.name })}
-              onClick={() => deleteView(v.id)}
+      {showFilters && (
+        <div className="board-filters-pop">
+          <div className="filters">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
             >
-              ×
+              <option value="all">{t("filters.allRoles")}</option>
+              {roleTypes.map((r) => (
+                <option key={r.slug} value={r.slug}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={companyFilter}
+              onChange={(e) => setCompanyFilter(e.target.value)}
+            >
+              <option value="all">{t("filters.allCompanies")}</option>
+              {companies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {allTags.length > 0 && (
+              <select
+                value={tagFilter}
+                onChange={(e) => setTagFilter(e.target.value)}
+              >
+                <option value="all">{t("filters.allTags")}</option>
+                {allTags.map((tg) => (
+                  <option key={tg.id} value={tg.id}>
+                    {tg.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div className="saved-views">
+            {savedViews.map((v) => (
+              <span
+                key={v.id}
+                className={`view-chip${JSON.stringify(boardFields(v.filters)) === curFilterKey ? " active" : ""}`}
+              >
+                <button className="view-apply" onClick={() => applyView(v)}>
+                  {v.name}
+                </button>
+                <button
+                  className="view-del"
+                  aria-label={t("savedViews.delete", { name: v.name })}
+                  onClick={() => deleteView(v.id)}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <button className="view-save" onClick={() => setNamingView(true)}>
+              {t("savedViews.save")}
             </button>
-          </span>
-        ))}
-        <button className="view-save" onClick={() => setNamingView(true)}>
-          {t("savedViews.save")}
-        </button>
-      </div>
-      </div>
+          </div>
+        </div>
+      )}
 
       {namingView && (
         <Dialog label={t("savedViews.save")} onClose={() => setNamingView(false)}>
@@ -6717,6 +6822,7 @@ function PipelineTab({
       <BoardTab
         applications={filtered}
         attention={attention}
+        sort={sort}
         companies={companies}
         contacts={contacts}
         roleTypes={roleTypes}
@@ -6729,37 +6835,60 @@ function PipelineTab({
         onDetailIdChange={onOpenJob}
       />
 
-      {/* Closed drawer (#314) — terminal outcomes are archive material,
-          not work: a collapsed compact list below the board rather than a
-          sixth column that would outgrow every real one. Respects the
-          same filters, so "did I already apply at X?" works here. */}
-      {(() => {
-        const closed = filtered
-          .filter((a) => isDead(a.status))
-          .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-        if (!closed.length) return null;
-        return (
-          <details className="closed-drawer">
-            <summary>
-              {t("board.closedCount", { count: closed.length })}
-            </summary>
-            <ul>
-              {closed.map((a) => (
-                <li key={a.id} {...rowActivate(() => onOpenJob(a.id))}>
-                  <span className="closed-title">{a.title}</span>
-                  <span className="closed-co">{a.company_name ?? "—"}</span>
-                  <span className="closed-status">
-                    {t(`stages.${a.status}`)}
-                  </span>
-                  <span className="closed-date">
-                    {formatDate(a.updated_at.slice(0, 10))}
-                  </span>
-                </li>
-              ))}
+      {showArchivedModal && (
+        <Dialog
+          label={t("board.archivedTitle")}
+          onClose={() => setShowArchivedModal(false)}
+          className="archived-modal"
+        >
+          <div className="archived-head">
+            <h2>{t("board.archivedTitle")}</h2>
+            <span className="mono small muted">{inactive.length}</span>
+          </div>
+          {inactive.length === 0 ? (
+            <p className="muted small">{t("board.noArchived")}</p>
+          ) : (
+            <ul className="archived-list">
+              {inactive.map((a) => {
+                const reasonKey = isDead(a.status)
+                  ? a.status === "rejected"
+                    ? "reasonRejected"
+                    : a.status === "withdrawn"
+                      ? "reasonWithdrawn"
+                      : "reasonGhosted"
+                  : "reasonArchived";
+                const restore = () =>
+                  (a.archived_at
+                    ? api.unarchiveApplication(a.id).then(() => onChanged())
+                    : Promise.resolve(onStatus(a.id, "interested"))
+                  )
+                    .then(() => setShowArchivedModal(false))
+                    .catch((e) => onError((e as Error).message));
+                return (
+                  <li key={a.id}>
+                    <button
+                      className="archived-open"
+                      onClick={() => {
+                        setShowArchivedModal(false);
+                        onOpenJob(a.id);
+                      }}
+                    >
+                      <span className="archived-title">{a.title}</span>
+                      <span className="archived-co muted">
+                        {a.company_name ?? "—"}
+                      </span>
+                    </button>
+                    <span className="archived-reason">{t(`board.${reasonKey}`)}</span>
+                    <button className="archived-restore" onClick={restore}>
+                      {t("board.restore")} ›
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
-          </details>
-        );
-      })()}
+          )}
+        </Dialog>
+      )}
 
       {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
     </section>
