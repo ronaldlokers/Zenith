@@ -42,6 +42,14 @@
   --heat-quiet: #ea580c;
   --heat-cold: #b91c1c;
 
+  /* Design-review fixes (#314): accent readable on the inverted toast
+     (--ink background); a per-theme modal scrim; and a non-stage event
+     hue for interaction/touchpoint events so agenda/activity stop
+     borrowing stage colors. */
+  --accent-on-ink: #2dd4bf;
+  --scrim: rgba(0, 0, 0, 0.45);
+  --ev-touch: #6558c4;
+
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
@@ -92,6 +100,12 @@
     --heat-quiet: #e07b39;
     --heat-cold: #f87171;
 
+    /* Dark: the toast surface is light (--ink), so it needs the
+       light-surface accent; scrim darker to register on a dark ground. */
+    --accent-on-ink: #0f766e;
+    --scrim: rgba(0, 0, 0, 0.6);
+    --ev-touch: #8f86e0;
+
     --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
     --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.5),
       0 16px 40px -8px rgba(0, 0, 0, 0.6);
@@ -132,6 +146,10 @@
   --heat-watch: #eab308;
   --heat-quiet: #fb923c;
   --heat-cold: #f87171;
+
+  --accent-on-ink: #0f766e;
+  --scrim: rgba(0, 0, 0, 0.7);
+  --ev-touch: #8f86e0;
 
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
   --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.6),
