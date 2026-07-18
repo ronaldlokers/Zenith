@@ -682,6 +682,27 @@ app.delete("/api/applications/:id", async (c) => {
   return c.body(null, 204);
 });
 
+// Lightweight follow-up update (#285) — lets the Next Up panel complete
+// ("done" → clear) or snooze a follow-up inline, without opening the whole
+// edit form. Only touches next_action / next_action_at.
+app.patch("/api/applications/:id/follow-up", async (c) => {
+  const body = await c.req.json();
+  const result = await c.env.DB.prepare(
+    `UPDATE applications
+       SET next_action = ?, next_action_at = ?, updated_at = datetime('now')
+     WHERE id = ? AND user_id = ? RETURNING *`,
+  )
+    .bind(
+      body.next_action ?? null,
+      body.next_action_at ?? null,
+      c.req.param("id"),
+      c.get("userId"),
+    )
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
 // --- Interactions ---
 
 app.get("/api/applications/:id/interactions", async (c) => {

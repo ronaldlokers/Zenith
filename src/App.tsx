@@ -2534,6 +2534,7 @@ export default function App() {
                 onGoToJobs={() => setTab("applications")}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}
+                onChanged={reload}
               />
             )}
             {(tab === "applications" || tab === "board") && (
@@ -3034,7 +3035,11 @@ function BoardTab({
       </div>
     )}
       <div className="board-summary">
-        <NextUpPanel applications={applications} />
+        <NextUpPanel
+          applications={applications}
+          onChanged={onChanged}
+          onError={onError}
+        />
       </div>
       {detailApp && (
         <ApplicationDetailModal
@@ -5261,11 +5266,13 @@ function OverviewTab({
   onGoToJobs,
   onOpenJob,
   onError,
+  onChanged,
 }: {
   applications: Application[];
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
   onError: (message: string | null) => void;
+  onChanged: () => Promise<unknown> | void;
 }) {
   const { t } = useTranslation();
   // The full activity feed folds in here (#285) instead of its own tab —
@@ -5294,7 +5301,11 @@ function OverviewTab({
         )}
       </div>
 
-      <NextUpPanel applications={applications} />
+      <NextUpPanel
+        applications={applications}
+        onChanged={onChanged}
+        onError={onError}
+      />
 
       <h3 className="side-h">{t("overview.recentlyUpdated")}</h3>
       {recent.length === 0 ? (
@@ -5332,7 +5343,15 @@ function OverviewTab({
   );
 }
 
-function NextUpPanel({ applications }: { applications: Application[] }) {
+function NextUpPanel({
+  applications,
+  onChanged,
+  onError,
+}: {
+  applications: Application[];
+  onChanged: () => Promise<unknown> | void;
+  onError: (message: string | null) => void;
+}) {
   const { t } = useTranslation();
   const upcoming = applications
     .filter((a) => a.next_action_at && !isDead(a.status))
@@ -5344,6 +5363,28 @@ function NextUpPanel({ applications }: { applications: Application[] }) {
       return (b.fit_score ?? 0) - (a.fit_score ?? 0);
     })
     .slice(0, 6);
+
+  // Inline follow-up actions (#285) — complete or push a reminder without
+  // opening the edit form, so the app's core loop is actionable where it's
+  // shown rather than read-only.
+  const done = (a: Application) =>
+    Promise.resolve(
+      api.updateFollowUp(a.id, { next_action: null, next_action_at: null }),
+    )
+      .then(() => onChanged())
+      .catch((e) => onError((e as Error).message));
+  const snooze = (a: Application) => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return Promise.resolve(
+      api.updateFollowUp(a.id, {
+        next_action: a.next_action ?? null,
+        next_action_at: d.toISOString().slice(0, 10),
+      }),
+    )
+      .then(() => onChanged())
+      .catch((e) => onError((e as Error).message));
+  };
 
   return (
     <aside className="jobs-side">
@@ -5367,6 +5408,10 @@ function NextUpPanel({ applications }: { applications: Application[] }) {
               </span>
               <span className="side-co">{a.company_name ?? "—"}</span>
               <span className="side-stage">{t(`stages.${a.status}`)}</span>
+              <span className="nextup-actions">
+                <button onClick={() => done(a)}>{t("nextUp.done")}</button>
+                <button onClick={() => snooze(a)}>{t("nextUp.snooze")}</button>
+              </span>
             </li>
           ))}
         </ul>
@@ -6008,7 +6053,11 @@ function ApplicationsTab({
           asPane
         />
       ) : (
-        <NextUpPanel applications={applications.filter((a) => !a.archived_at)} />
+        <NextUpPanel
+          applications={applications.filter((a) => !a.archived_at)}
+          onChanged={onChanged}
+          onError={onError}
+        />
       )}
       </div>
       {!isWideDesktop && detailApp && (
