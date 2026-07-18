@@ -22,7 +22,8 @@
     "notifications": "Meldingen",
     "notificationsEmpty": "Nog niets.",
     "markAllRead": "Alles als gelezen markeren",
-    "search": "Zoeken"
+    "search": "Zoeken",
+    "notificationsUnread": "Meldingen, {{count}} ongelezen"
   },
   "common": {
     "loading": "Laden…",
