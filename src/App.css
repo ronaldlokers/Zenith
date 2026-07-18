@@ -491,26 +491,32 @@
     right: 0;
     z-index: 20;
     margin: 0;
-    padding: 0.5rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+    /* Tightened gap/padding so all seven primary destinations (incl. CV)
+       fit at 420px instead of clipping "Network" mid-word (#346). */
+    gap: 0.2rem;
+    padding: 0.5rem 0.5rem calc(0.6rem + env(safe-area-inset-bottom));
     background: var(--bg);
     border-top: 1px solid var(--border);
-    /* More tabs than fit at 390px (#48 tracks a real declutter pass);
-       scroll rather than let items overflow off-screen unreachable. */
+    /* Scroll remains the fallback for narrower phones and longer locales
+       (Settings, or nl labels, can still spill) — never leave a tab
+       unreachable. */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    /* Fade the trailing edge so a cut-off tab reads as "more, scroll
-       for it" instead of looking like the bar just ends there (#204). */
+    /* Fade the trailing edge so a spilled tab reads as "more, scroll for
+       it" rather than a hard cut (#204). */
     mask-image: linear-gradient(
       to right,
       transparent 0,
       black 0.75rem,
-      black calc(100% - 1.5rem),
+      black calc(100% - 2rem),
       transparent 100%
     );
   }
 
   .tabs button {
     flex: 0 0 auto;
+    padding: 0.5rem 0.35rem;
+    letter-spacing: 0.02em;
   }
 }
 
