@@ -2359,6 +2359,7 @@ interface Toast {
   id: number;
   message: string;
   undo?: () => void;
+  label?: string;
 }
 
 export default function App() {
@@ -2481,9 +2482,9 @@ export default function App() {
     };
   }, []);
 
-  const notify = useCallback((message: string, undo?: () => void) => {
+  const notify = useCallback((message: string, undo?: () => void, label?: string) => {
     const id = Date.now();
-    setToast({ id, message, undo });
+    setToast({ id, message, undo, label });
     window.setTimeout(
       () => setToast((t) => (t?.id === id ? null : t)),
       undo ? 6000 : 3000,
@@ -2783,6 +2784,8 @@ export default function App() {
                 notify={notify}
                 roleTypes={roleTypes}
                 onOpenSettings={() => navigate("/settings?s=feed")}
+                onChanged={reload}
+                onOpenJob={(id) => navigate(`/jobs/${id}`)}
               />
             )}
             {tab === "calendar" && (
@@ -2888,7 +2891,7 @@ export default function App() {
                 setToast(null);
               }}
             >
-              {t("toast.undo")}
+              {toast.label ?? t("toast.undo")}
             </button>
           )}
         </div>
@@ -4323,11 +4326,15 @@ function FeedTab({
   notify,
   roleTypes,
   onOpenSettings,
+  onChanged,
+  onOpenJob,
 }: {
   onError: (message: string | null) => void;
-  notify: (message: string, undo?: () => void) => void;
+  notify: (message: string, undo?: () => void, label?: string) => void;
   roleTypes: RoleTypeDef[];
   onOpenSettings: () => void;
+  onChanged: () => Promise<void>;
+  onOpenJob: (id: number) => void;
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[] | null>(null);
@@ -4408,9 +4415,14 @@ function FeedTab({
     setAddingIds((s) => new Set(s).add(item.id));
     api
       .addFeedItem(item.id)
-      .then(() => {
+      .then((created) => {
         setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
-        notify(t("toast.addedToJobs", { title: item.title }));
+        void onChanged();
+        notify(
+          t("toast.addedToJobs", { title: item.title }),
+          () => onOpenJob(created.id),
+          t("toast.open"),
+        );
       })
       .catch((e) => onError((e as Error).message))
       .finally(() =>
