@@ -44,7 +44,8 @@
     "namePrompt": "Name this view",
     "saved": "Saved view “{{name}}”",
     "save": "Save view",
-    "delete": "Delete view {{name}}"
+    "delete": "Delete view {{name}}",
+    "heading": "Saved views"
   },
   "sampleData": {
     "title": "Sample data",
@@ -117,7 +118,10 @@
     "allCompanies": "All companies",
     "allTags": "All tags",
     "showArchived": "Show archived",
-    "toggle": "Filters"
+    "toggle": "Filters",
+    "role": "Role",
+    "company": "Company",
+    "tag": "Tag"
   },
   "empty": {
     "noCompanies": "No companies yet. Add the ones you're targeting — applications and contacts link to them.",
@@ -574,7 +578,9 @@
     "reasonWithdrawn": "withdrawn",
     "reasonGhosted": "ghosted",
     "reasonArchived": "set aside",
-    "noArchived": "Nothing archived or closed yet."
+    "noArchived": "Nothing archived or closed yet.",
+    "archAll": "All",
+    "archActive": "Active only"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
