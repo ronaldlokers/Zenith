@@ -297,6 +297,20 @@ describe("applications", () => {
     expect(cleared.status).toBe("interested"); // status untouched
   });
 
+  it("stats payload includes last interaction per application", async () => {
+    const app = await seedApplication({});
+    await authedFetch(`${BASE}/api/applications/${app.id}/interactions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "email", happened_at: "2024-05-01" }),
+    });
+    const stats = (await (await authedFetch(`${BASE}/api/stats`)).json()) as {
+      interactions: { application_id: number; last_at: string }[];
+    };
+    const row = stats.interactions.find((r) => r.application_id === app.id);
+    expect(row?.last_at).toBe("2024-05-01");
+  });
+
   it("patches notes and fit_score in place without touching other fields", async () => {
     const app = await seedApplication({ notes: "old", next_action: "Nudge" });
     const patched = (await (

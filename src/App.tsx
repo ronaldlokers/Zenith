@@ -2526,18 +2526,45 @@ export default function App() {
   const setStatus = useCallback(
     (id: number, status: Status) => {
       const prev = applications;
+      const prevStatus = applications.find((a) => a.id === id)?.status;
       setApplications((apps) =>
         apps.map((a) => (a.id === id ? { ...a, status } : a)),
       );
       api
         .setStatus(id, status)
         .then(reload)
+        .then(() => {
+          if (prevStatus == null || prevStatus === status) return;
+          if (status === "offer") {
+            // The comp fields (and everything they unlock — compare,
+            // benchmark, negotiation draft) only matter now; surface the
+            // entry path instead of leaving it to a status-order dance.
+            notify(
+              t("offer.recordPrompt"),
+              () => navigate(`/jobs/${id}`),
+              t("toast.open"),
+            );
+          } else if (isDead(prevStatus) && !isDead(status)) {
+            notify(
+              t("toast.revived"),
+              () => navigate(`/jobs/${id}`),
+              t("toast.setFollowUp"),
+            );
+          } else {
+            notify(t("toast.statusChanged", { stage: t(`stages.${status}`) }), () =>
+              api
+                .setStatus(id, prevStatus)
+                .then(reload)
+                .catch((e) => setError((e as Error).message)),
+            );
+          }
+        })
         .catch((e) => {
           setApplications(prev);
           setError((e as Error).message);
         });
     },
-    [applications, reload],
+    [applications, reload, notify, navigate, t],
   );
 
   const visibleApps = applications.filter(
@@ -2732,6 +2759,7 @@ export default function App() {
                 onError={setError}
                 onChanged={reload}
                 stats={statsData}
+                notify={notify}
               />
             )}
             {routedJob && (
@@ -2772,6 +2800,7 @@ export default function App() {
                 initialQuery={jumpQuery}
                 onQueryConsumed={() => setJumpQuery("")}
                 history={statsData?.history ?? []}
+                lastInteractions={statsData?.interactions ?? []}
                 onOpenJob={(id: number | null) =>
                   navigate(id ? `/jobs/${id}` : "/board")
                 }
@@ -3266,10 +3295,12 @@ function Timeline({
   resource,
   targetId,
   onError,
+  onLogged,
 }: {
   resource: "applications" | "contacts";
   targetId: number;
   onError: (message: string | null) => void;
+  onLogged?: () => void;
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<Interaction[] | null>(null);
@@ -3323,6 +3354,7 @@ function Timeline({
         setWentWell("");
         setToImprove("");
         setInterviewers("");
+        onLogged?.();
         return load();
       })
       .catch((err) => onError((err as Error).message))
@@ -5615,7 +5647,12 @@ function ApplicationDetailModal({
             <JdKeywordMatch onError={onError} />
 
             <h3 className="detail-sub">{t("detail.timeline")}</h3>
-            <Timeline resource="applications" targetId={a.id} onError={onError} />
+            <Timeline
+              resource="applications"
+              targetId={a.id}
+              onError={onError}
+              onLogged={() => void onChanged()}
+            />
 
             <h3 className="detail-sub">{t("detail.documents")}</h3>
             <Documents applicationId={a.id} onError={onError} />
@@ -5754,6 +5791,7 @@ function OverviewTab({
   onError,
   onChanged,
   stats,
+  notify,
 }: {
   applications: Application[];
   onGoToJobs: () => void;
@@ -5761,6 +5799,7 @@ function OverviewTab({
   onError: (message: string | null) => void;
   onChanged: () => Promise<unknown> | void;
   stats: Stats | null;
+  notify: (message: string, undo?: () => void, label?: string) => void;
 }) {
   const { t } = useTranslation();
   // The full activity feed folds in here (#285) instead of its own tab —
@@ -5800,6 +5839,7 @@ function OverviewTab({
       <div className="overview-cols">
         <div className="overview-main">
           <NextUpPanel
+            notify={notify}
             applications={applications}
             onChanged={onChanged}
             onError={onError}
@@ -5862,10 +5902,12 @@ function NextUpPanel({
   applications,
   onChanged,
   onError,
+  notify,
 }: {
   applications: Application[];
   onChanged: () => Promise<unknown> | void;
   onError: (message: string | null) => void;
+  notify: (message: string, undo?: () => void, label?: string) => void;
 }) {
   const { t } = useTranslation();
   const upcoming = applications
@@ -5882,12 +5924,25 @@ function NextUpPanel({
   // Inline follow-up actions (#285) — complete or push a reminder without
   // opening the edit form, so the app's core loop is actionable where it's
   // shown rather than read-only.
-  const done = (a: Application) =>
-    Promise.resolve(
+  const done = (a: Application) => {
+    const prevFu = {
+      next_action: a.next_action ?? null,
+      next_action_at: a.next_action_at ?? null,
+    };
+    return Promise.resolve(
       api.updateFollowUp(a.id, { next_action: null, next_action_at: null }),
     )
       .then(() => onChanged())
+      .then(() =>
+        notify(t("nextUp.doneToast"), () =>
+          api
+            .updateFollowUp(a.id, prevFu)
+            .then(() => onChanged())
+            .catch((e) => onError((e as Error).message)),
+        ),
+      )
       .catch((e) => onError((e as Error).message));
+  };
   const snooze = (a: Application) => {
     const d = new Date();
     d.setDate(d.getDate() + 3);
@@ -5948,6 +6003,7 @@ function PipelineTab({
   notify,
   onDelete,
   onStatus,
+  lastInteractions,
   initialQuery,
   onQueryConsumed,
   history,
@@ -5962,6 +6018,7 @@ function PipelineTab({
   initialQuery?: string;
   onQueryConsumed?: () => void;
   history: StatusHistoryRow[];
+  lastInteractions: { application_id: number; last_at: string }[];
   onOpenJob: (id: number | null) => void;
   onOpenQuickAdd: () => void;
 }) {
@@ -6079,6 +6136,14 @@ function PipelineTab({
       gaps.push((times[i] - times[i - 1]) / 86400000);
     }
     gapsByApp.set(appId, gaps);
+  }
+  // A logged interaction (email, call, interview) is activity too — the
+  // quiet badge said "consider a nudge"; the nudge must clear it.
+  for (const r of lastInteractions) {
+    const ts = parseSqlDate(r.last_at);
+    if (ts > (lastActivity.get(r.application_id) ?? 0)) {
+      lastActivity.set(r.application_id, ts);
+    }
   }
   const gapsByCompany = new Map<number, number[]>();
   for (const a of applications) {

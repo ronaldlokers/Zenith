@@ -63,6 +63,7 @@ export interface StatusHistoryRow {
 export interface Stats {
   applications: StatsApplication[];
   history: StatusHistoryRow[];
+  interactions: { application_id: number; last_at: string }[];
 }
 
 export interface AgendaEntry {

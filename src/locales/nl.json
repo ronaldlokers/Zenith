@@ -316,7 +316,8 @@
   "nextUp": {
     "title": "Binnenkort",
     "done": "Klaar",
-    "snooze": "3d uitstellen"
+    "snooze": "3d uitstellen",
+    "doneToast": "Follow-up afgerond"
   },
   "company": {
     "notResearched": "niet onderzocht",
@@ -427,7 +428,8 @@
     "negotiationCompeting": "- Ik heb een tegenaanbod van {{company}} om tegen dit aanbod af te wegen.",
     "negotiationAnotherCompany": "een ander bedrijf",
     "negotiationBelowMarket": "- Dit aanbod ligt ~{{pct}}% onder de mediaan van mijn andere aanbiedingen voor deze rol — de moeite waard om aan te kaarten.",
-    "negotiationClose": "- Vraag: is er ruimte op basissalaris, tekenbonus of aandelen voordat ik een definitief antwoord geef?"
+    "negotiationClose": "- Vraag: is er ruimte op basissalaris, tekenbonus of aandelen voordat ik een definitief antwoord geef?",
+    "recordPrompt": "Aanbodfase — compensatie vastleggen?"
   },
   "feedSettings": {
     "roleTypes": "Rollen",
@@ -565,7 +567,10 @@
     "feedFound": "{{inserted}} nieuw van {{seen}} gecontroleerd",
     "addedToJobs": "\"{{title}}\" toegevoegd aan Jobs",
     "researched": "{{name}} onderzocht",
-    "open": "Openen"
+    "open": "Openen",
+    "statusChanged": "Verplaatst naar {{stage}}",
+    "revived": "Terug in een actieve fase",
+    "setFollowUp": "Follow-up instellen"
   },
   "confirm": {
     "deleteDocument": "\"{{name}}\" verwijderen?",
