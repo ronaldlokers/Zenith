@@ -285,28 +285,36 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   }
   const candidates = (await Promise.all(jobs)).flat();
 
-  let inserted = 0;
-  for (const c of candidates) {
-    const result = await env.DB.prepare(
-      `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at, board_slug)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (source, external_id) DO NOTHING`,
-    )
-      .bind(
-        c.source,
-        c.external_id,
-        c.title,
-        c.company,
-        c.location,
-        c.url,
-        c.salary_text,
-        c.role_type,
-        c.posted_at,
-        c.board_slug ?? null,
+  // One batched transaction instead of an awaited INSERT per candidate
+  // (#285) — a refresh can pull hundreds of listings, and the serial
+  // round-trips dominated the cron's runtime.
+  const stmt = env.DB.prepare(
+    `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at, board_slug)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (source, external_id) DO NOTHING`,
+  );
+  const results = candidates.length
+    ? await env.DB.batch(
+        candidates.map((c) =>
+          stmt.bind(
+            c.source,
+            c.external_id,
+            c.title,
+            c.company,
+            c.location,
+            c.url,
+            c.salary_text,
+            c.role_type,
+            c.posted_at,
+            c.board_slug ?? null,
+          ),
+        ),
       )
-      .run();
-    if (result.meta.changes > 0) inserted++;
-  }
+    : [];
+  const inserted = results.reduce(
+    (n, r) => n + (r.meta.changes > 0 ? 1 : 0),
+    0,
+  );
   return { inserted, seen: candidates.length };
 }
 
