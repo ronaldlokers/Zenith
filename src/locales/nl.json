@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "overview": "Overzicht",
+    "overview": "Dashboard",
     "jobs": "Vacatures",
     "feed": "Feed",
     "calendar": "Agenda",
@@ -627,5 +627,25 @@
   },
   "contacts": {
     "view": "Weergave mensen"
+  },
+  "dashboard": {
+    "kpiOpen": "Open sollicitaties",
+    "kpiResponse": "Respons · {{responded}}/{{applied}}",
+    "kpiOffers": "Open aanbiedingen",
+    "kpiToOffer": "Mediaan tot aanbod",
+    "momentumTitle": "Pijplijn-momentum",
+    "funnelConv": "Funnel & conversie",
+    "winLiveAllTime": "live · aller tijden",
+    "winOpen": "open",
+    "win2wk": "2 wk",
+    "stageToStage": "fase-naar-fase",
+    "offers": "Aanbiedingen",
+    "noOffers": "Nog geen open aanbiedingen.",
+    "thisFortnight": "Deze twee weken",
+    "response": "Respons",
+    "toOffer": "Tot aanbod",
+    "caughtUp": "Alles bijgewerkt — geen follow-ups open",
+    "addFollowUp": "+ follow-up toevoegen",
+    "allNumbers": "Alle cijfers"
   }
 }

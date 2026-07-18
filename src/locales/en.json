@@ -1,6 +1,6 @@
 {
   "tabs": {
-    "overview": "Overview",
+    "overview": "Dashboard",
     "jobs": "Jobs",
     "feed": "Feed",
     "calendar": "Calendar",
@@ -627,5 +627,25 @@
   },
   "contacts": {
     "view": "People view"
+  },
+  "dashboard": {
+    "kpiOpen": "Open applications",
+    "kpiResponse": "Response · {{responded}}/{{applied}}",
+    "kpiOffers": "Live offers",
+    "kpiToOffer": "Median to offer",
+    "momentumTitle": "Pipeline momentum",
+    "funnelConv": "Funnel & conversion",
+    "winLiveAllTime": "live · all-time",
+    "winOpen": "open",
+    "win2wk": "2 wk",
+    "stageToStage": "stage-to-stage",
+    "offers": "Offers",
+    "noOffers": "No live offers yet.",
+    "thisFortnight": "This fortnight",
+    "response": "Response",
+    "toOffer": "To offer",
+    "caughtUp": "All caught up — no follow-ups due",
+    "addFollowUp": "+ add a follow-up",
+    "allNumbers": "All the numbers"
   }
 }
