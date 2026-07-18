@@ -3981,6 +3981,15 @@ button:not(:disabled):active,
   }
 }
 
+/* Styled confirmation dialog (#314 round 3) — replaces window.confirm. */
+.confirm-dialog {
+  max-width: 22rem;
+}
+
+.confirm-dialog p {
+  margin: 0 0 1rem;
+}
+
 /* Cascade repairs (#314 round 3) — must stay after the control-normalization
    layer: its generic hover and min-heights win source-order ties against
    earlier rules regardless of media queries. Nothing appends below this. */

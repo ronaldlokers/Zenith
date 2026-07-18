@@ -36,7 +36,8 @@
     "log": "Log",
     "fetch": "Ophalen",
     "fetching": "Ophalen…",
-    "add": "Toevoegen"
+    "add": "Toevoegen",
+    "confirm": "Bevestigen"
   },
   "savedViews": {
     "namePrompt": "Naam voor deze weergave",
