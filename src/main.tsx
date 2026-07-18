@@ -7,10 +7,15 @@ import App from './App.tsx'
 import { AuthGate } from './AuthGate.tsx'
 
 // Applied here (before React renders) rather than in a useEffect, so a
-// persisted "control room" theme choice (#146) doesn't flash the
-// default theme first.
-if (localStorage.getItem('jobseekr_theme') === 'control-room') {
-  document.documentElement.dataset.theme = 'control-room'
+// persisted theme choice doesn't flash the default theme first (#146).
+// Legacy "control-room" choices fold into explicit Dark (#346).
+{
+  const saved = localStorage.getItem('jobseekr_theme')
+  const theme = saved === 'control-room' ? 'dark' : saved
+  if (saved === 'control-room') localStorage.setItem('jobseekr_theme', 'dark')
+  if (theme === 'light' || theme === 'dark') {
+    document.documentElement.dataset.theme = theme
+  }
 }
 
 createRoot(document.getElementById('root')!).render(

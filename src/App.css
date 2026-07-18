@@ -1110,14 +1110,11 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .filters select {
+  :root:not([data-theme="light"]) .filters select {
     color: var(--muted);
   }
 }
-
-/* Control-room is a data-theme override, so prefers-color-scheme dark rules
-   never reach it — repeat the dark-only patches for it explicitly (#285). */
-:root[data-theme="control-room"] .filters select {
+:root[data-theme="dark"] .filters select {
   color: var(--muted);
 }
 
@@ -2782,16 +2779,13 @@ select.status {
 
 @media (prefers-color-scheme: dark) {
   /* Stage-color dots lose edge definition against the dark surface (#119) */
-  .bcol-head::before,
-  .stat-dot {
+  :root:not([data-theme="light"]) .bcol-head::before,
+  :root:not([data-theme="light"]) .stat-dot {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
   }
 }
-
-/* Same edge ring for control-room (a data-theme, not caught by the media
-   query above) — its near-black surface needs it just as much (#285). */
-:root[data-theme="control-room"] .bcol-head::before,
-:root[data-theme="control-room"] .stat-dot {
+:root[data-theme="dark"] .bcol-head::before,
+:root[data-theme="dark"] .stat-dot {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 

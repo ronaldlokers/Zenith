@@ -93,7 +93,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #101318;
     --surface: #171b22;
     --ink: #e8ebef;
@@ -130,49 +130,46 @@
   }
 }
 
-/* Bespoke "control room" theme (#146) — an explicit user choice (see the
-   theme selector in Settings), so this always wins over prefers-color-
-   scheme regardless of OS light/dark, via the attribute selector's
-   higher specificity. Near-black + a cyan accent, tested across
-   header/Jobs/Board.
-   The existing app already scopes mono/uppercase treatment to short
-   chrome only (tab labels, stage pills, column headers) and keeps
-   --sans/regular-case for free text (job titles, company names, notes)
-   — the honest tradeoff this theme's own research flagged (a long real
-   job title going all-caps) never applies, since nothing free-text was
-   ever uppercase to begin with. Just token values change here. */
-:root[data-theme="control-room"] {
-  --bg: #050607;
-  --surface: #0d0f12;
-  --ink: #e2e8f0;
-  --muted: #7b8794;
-  --faint: #727d8a;
-  --danger-text: #04141a;
-  --border: #1f2937;
-  --track: #161b22;
-  --accent: #22d3ee;
-  --accent-text: #04141a;
-  --accent-soft: #0b3038;
-  --accent-ink: #7ce0f2;
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  /* Explicit Dark — same palette as the OS-dark auto theme, so the two
+     never diverge. Wins over prefers-color-scheme via the attribute. */
+  --bg: #101318;
+  --surface: #171b22;
+  --ink: #e8ebef;
+  --muted: #8b95a5;
+  --faint: #7c8592;
+  --danger-text: #0a100e;
+  --border: #232935;
+  --track: #262d3a;
+  --accent: #2dd4bf;
+  --accent-text: #0c1210;
+  --accent-soft: #12362f;
+  --accent-ink: #7fe6d4;
   --danger: #f87171;
 
-  --st-interested: #a8b9d6;
-  --st-applied: #eab308;
-  --st-screening: #f4552e;
-  --st-interview: #c084ec;
-  --st-offer: #34d399;
-  --st-dead: #64748b;
+  --st-interested: #5aa3e0;
+  --st-applied: #d4b13a;
+  --st-screening: #e0784f;
+  --st-interview: #e08fd0;
+  --st-offer: #4ccf9e;
+  --st-dead: #6d7684;
 
-  --heat-quiet: #fb923c;
-  --heat-quiet-text: #fb9f5e;
-
+    --heat-quiet: #e07b39;
+    --heat-quiet-text: #f0955a;
+  
+    /* Dark: the toast surface is light (--ink), so it needs the
+       light-surface accent; scrim darker to register on a dark ground. */
   --accent-on-ink: #0f766e;
-  --scrim: rgba(0, 0, 0, 0.7);
+  --scrim: rgba(0, 0, 0, 0.6);
   --ev-touch: #8f86e0;
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px -2px rgba(0, 0, 0, 0.5);
-  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.6),
-    0 16px 40px -8px rgba(0, 0, 0, 0.7);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.5),
+      0 16px 40px -8px rgba(0, 0, 0, 0.6);
 
   color-scheme: dark;
 }

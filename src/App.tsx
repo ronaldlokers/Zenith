@@ -1971,8 +1971,10 @@ function keyShortcutsEnabled(): boolean {
 // Applies the persisted theme choice — called on initial load (see App())
 // and whenever the Settings selector changes it.
 function applyTheme(value: string) {
-  if (value === "control-room") {
-    document.documentElement.dataset.theme = "control-room";
+  // "auto" follows the OS via prefers-color-scheme (no attribute); "light"
+  // and "dark" are explicit overrides that win regardless of the OS.
+  if (value === "light" || value === "dark") {
+    document.documentElement.dataset.theme = value;
   } else {
     delete document.documentElement.dataset.theme;
   }
@@ -2028,7 +2030,12 @@ function SettingsPage({
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
   );
   const [theme, setTheme] = useState(
-    () => localStorage.getItem(THEME_KEY) ?? "auto",
+    () => {
+      const saved = localStorage.getItem(THEME_KEY);
+      // control-room retired (#346) — its users were on a dark theme, so
+      // fold them into explicit Dark.
+      return saved === "control-room" ? "dark" : (saved ?? "auto");
+    },
   );
   const [keyShortcuts, setKeyShortcuts] = useState(keyShortcutsEnabled);
   const [shareToken, setShareToken] = useState<string | null>(null);
@@ -2158,7 +2165,8 @@ function SettingsPage({
             }}
           >
             <option value="auto">{t("settings.themeAuto")}</option>
-            <option value="control-room">{t("settings.themeControlRoom")}</option>
+            <option value="light">{t("settings.themeLight")}</option>
+            <option value="dark">{t("settings.themeDark")}</option>
           </select>
         </label>
         <label className="settings-field">

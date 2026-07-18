@@ -147,7 +147,6 @@
     "cvLanguage": "CV output language",
     "theme": "Theme",
     "themeAuto": "Automatic (light/dark)",
-    "themeControlRoom": "Control room",
     "shareLink": "Public share link",
     "generateLink": "Generate link",
     "regenerateLink": "Regenerate",
@@ -165,7 +164,9 @@
       "admin": "Admin",
       "feed": "Feed sources"
     },
-    "keyShortcuts": "Single-key shortcuts (n, /)"
+    "keyShortcuts": "Single-key shortcuts (n, /)",
+    "themeLight": "Light",
+    "themeDark": "Dark"
   },
   "feed": {
     "pulledFrom": "Pulled from your configured job boards (Greenhouse, Ashby), Adzuna, and HN Who's Hiring every 6 hours.",
