@@ -2513,13 +2513,6 @@ export default function App() {
           <h1>JobSeekr</h1>
         </div>
         <span className="header-actions">
-          <span className="open-count">
-            {t("header.openCount", {
-              count: activeApps.filter((a) => !isDead(a.status)).length,
-            })}
-            {activeApps.filter(isDue).length > 0 &&
-              ` · ${t("header.dueCount", { count: activeApps.filter(isDue).length })}`}
-          </span>
           <button
             className="settings-btn"
             onClick={() => setShowPalette(true)}
@@ -3184,13 +3177,6 @@ function BoardTab({
       })}
       </div>
     )}
-      <div className="board-summary">
-        <NextUpPanel
-          applications={applications}
-          onChanged={onChanged}
-          onError={onError}
-        />
-      </div>
       {detailApp && (
         <ApplicationDetailModal
           application={detailApp}
@@ -3587,6 +3573,46 @@ function totalCompBreakdown(a: Application): string {
   return parts.join(" + ");
 }
 
+// Weekly buckets + momentum streak — shared by Stats (apps/week histogram)
+// and Overview (streak + weekly goal). Buckets are [now-(8-i)*WEEK,
+// ...+WEEK): i=0 is 8 weeks ago, i=7 is the current week ((8-i), not
+// (7-i) — see #262).
+function computeWeeklyMomentum(
+  apps: { applied_at: string | null; created_at: string }[],
+  history: { changed_at: string }[],
+) {
+  const WEEK = 7 * 86400000;
+  const now = Date.now();
+  const weeks = Array.from({ length: 8 }, (_, i) => {
+    const start = now - (8 - i) * WEEK;
+    const count = apps.filter((a) => {
+      const t = parseSqlDate(a.applied_at ?? a.created_at);
+      return t >= start && t < start + WEEK;
+    }).length;
+    const label = new Date(start).toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+    });
+    return { label, count, start };
+  });
+  // Momentum streak (#145) — consecutive weeks (ending this week) with
+  // any job-search activity: a new application or a logged status change.
+  const activityWeeks = weeks.map((w) => {
+    const hasHistory = history.some((h) => {
+      const t = parseSqlDate(h.changed_at);
+      return t >= w.start && t < w.start + WEEK;
+    });
+    return w.count > 0 || hasHistory;
+  });
+  let streak = 0;
+  for (let i = activityWeeks.length - 1; i >= 0; i--) {
+    if (activityWeeks[i]) streak++;
+    else break;
+  }
+  const streakBroken = streak === 0 && activityWeeks.slice(0, -1).some(Boolean);
+  return { weeks, streak, streakBroken };
+}
+
 function StatsTab({ onError }: { onError: (m: string | null) => void }) {
   const { t } = useTranslation();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -3623,49 +3649,10 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
     .filter((a) => a.status === "interview" || a.status === "offer")
     .sort((a, b) => (annualizedComp(b) ?? -1) - (annualizedComp(a) ?? -1));
 
-  // Applications per week, last 8 weeks. Uses applied_at (when the lead
-  // actually moved) rather than created_at (when it was logged in the
-  // app, which can be days or weeks after the fact). Buckets are
-  // [now-(8-i)·WEEK, ...+WEEK): i=0 is 8 weeks ago, i=7 is the current
-  // week ending now. (8-i), not (7-i) — the latter pushed the last
-  // bucket into the future and dropped the oldest week.
-  const WEEK = 7 * 86400000;
+  // Applications per week + streak via the shared helper above.
   const now = Date.now();
-  const weeks = Array.from({ length: 8 }, (_, i) => {
-    const start = now - (8 - i) * WEEK;
-    const count = apps.filter((a) => {
-      const t = parseSqlDate(a.applied_at ?? a.created_at);
-      return t >= start && t < start + WEEK;
-    }).length;
-    // Same "16 Jul"-style format as formatDate() elsewhere (#125) — this
-    // used to be its own "28/5" convention, the only one in the app.
-    const label = new Date(start).toLocaleDateString(undefined, {
-      day: "numeric",
-      month: "short",
-    });
-    return { label, count };
-  });
+  const { weeks } = computeWeeklyMomentum(apps, history);
   const weekMax = Math.max(1, ...weeks.map((w) => w.count));
-
-  // Momentum streak (#145) — consecutive weeks (ending this week) with
-  // any job-search activity: a new application, or any logged status
-  // change. Broader than the applications-per-week count above, since a
-  // week with only interviews/follow-ups and no new application still
-  // counts as an active week.
-  const activityWeeks = weeks.map((w, i) => {
-    const start = now - (8 - i) * WEEK;
-    const hasHistory = history.some((h) => {
-      const t = parseSqlDate(h.changed_at);
-      return t >= start && t < start + WEEK;
-    });
-    return w.count > 0 || hasHistory;
-  });
-  let streak = 0;
-  for (let i = activityWeeks.length - 1; i >= 0; i--) {
-    if (activityWeeks[i]) streak++;
-    else break;
-  }
-  const streakBroken = streak === 0 && activityWeeks.slice(0, -1).some(Boolean);
 
   // Furthest pipeline stage each application ever reached
   const reachedByApp = new Map<number, number>();
@@ -3775,12 +3762,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         </span>
       </div>
 
-      <MomentumStreak streak={streak} broken={streakBroken} />
-
-      <WeeklyGoal thisWeekCount={weeks[weeks.length - 1].count} />
-
-      <WinsJournal onError={onError} />
-
+      <div className="stats-grid">
+      <div className="stat-block">
       <h2 className="stat-h">{t("stats.appsPerWeek")}</h2>
       <div className="histo">
         {weeks.map((w) => (
@@ -3797,6 +3780,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         ))}
       </div>
 
+      </div>
+      <div className="stat-block">
       <h2 className="stat-h">{t("stats.pipelineFunnel")}</h2>
       <div className="histo">
         {funnel.map((f) => (
@@ -3817,6 +3802,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         ))}
       </div>
 
+      </div>
+      <div className="stat-block">
       {response.applied > 0 && (
         <p className="stat-callout">
           {t("stats.responseRate", {
@@ -3852,6 +3839,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         </p>
       )}
 
+      </div>
+      <div className="stat-block">
       <h2 className="stat-h">{t("stats.avgTimeInStage")}</h2>
       <ul className="stat-list">
         {PIPELINE.filter((s) => stageDays.has(s)).map((s) => {
@@ -3873,6 +3862,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         {stageDays.size === 0 && <li className="tl-empty">{t("stats.noHistory")}</li>}
       </ul>
 
+      </div>
+      <div className="stat-block">
       <h2 className="stat-h">{t("stats.ghostRate")}</h2>
       <ul className="stat-list">
         {[...bySource.entries()]
@@ -3889,6 +3880,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
         {bySource.size === 0 && <li className="tl-empty">{t("stats.noApplications")}</li>}
       </ul>
 
+      </div>
+      <div className="stat-block stat-block-wide">
       <h2 className="stat-h">{t("stats.compare")}</h2>
       {comparing.some((a) => a.status === "offer") && (
         <button
@@ -3951,6 +3944,8 @@ function StatsTab({ onError }: { onError: (m: string | null) => void }) {
           ),
         )}
       </p>
+      </div>
+      </div>
     </section>
   );
 }
@@ -5453,6 +5448,20 @@ function OverviewTab({
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, 5);
 
+  // Motivation widgets live here, not in Stats (#314) — streak, weekly
+  // goal, and the wins journal are "how am I doing", which is Overview's
+  // job; Stats keeps the analytics.
+  const [statsData, setStatsData] = useState<Stats | null>(null);
+  useEffect(() => {
+    api
+      .stats()
+      .then(setStatsData)
+      .catch((e) => onError((e as Error).message));
+  }, [onError]);
+  const momentum = statsData
+    ? computeWeeklyMomentum(statsData.applications, statsData.history)
+    : null;
+
   return (
     <section className="overview">
       <div className="overview-headline">
@@ -5472,6 +5481,19 @@ function OverviewTab({
         onChanged={onChanged}
         onError={onError}
       />
+
+      {momentum && (
+        <>
+          <MomentumStreak
+            streak={momentum.streak}
+            broken={momentum.streakBroken}
+          />
+          <WeeklyGoal
+            thisWeekCount={momentum.weeks[momentum.weeks.length - 1].count}
+          />
+        </>
+      )}
+      <WinsJournal onError={onError} />
 
       <h3 className="side-h">{t("overview.recentlyUpdated")}</h3>
       {recent.length === 0 ? (
@@ -6250,13 +6272,7 @@ function ApplicationsTab({
           onStatus={onStatus}
           asPane
         />
-      ) : (
-        <NextUpPanel
-          applications={applications.filter((a) => !a.archived_at)}
-          onChanged={onChanged}
-          onError={onError}
-        />
-      )}
+      ) : null}
       </div>
       {!isWideDesktop && detailApp && (
         <ApplicationDetailModal
