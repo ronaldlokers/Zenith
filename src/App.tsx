@@ -2366,7 +2366,7 @@ function WinsJournal({
     load();
   }, [load]);
 
-  const add = (e: FormEvent) => {
+  const addWin = (e: FormEvent) => {
     e.preventDefault();
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -2392,7 +2392,7 @@ function WinsJournal({
   return (
     <div className="wins-journal">
       <h2 className="stat-h">{t("stats.journal.title")}</h2>
-      <form className="tl-add" onSubmit={add}>
+      <form className="tl-add" onSubmit={addWin}>
         <input
           placeholder={t("stats.journal.placeholder")}
           value={text}
@@ -3540,7 +3540,7 @@ function Timeline({
   }, [load]);
 
   const [logging, setLogging] = useState(false);
-  const add = (e: FormEvent) => {
+  const logInteraction = (e: FormEvent) => {
     e.preventDefault();
     if (logging) return;
     const retro = [
@@ -3572,7 +3572,7 @@ function Timeline({
 
   return (
     <div className="timeline">
-      <form className="tl-add" onSubmit={add}>
+      <form className="tl-add" onSubmit={logInteraction}>
         <select
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value })}
@@ -4660,7 +4660,7 @@ function FeedTab({
   };
 
   const [addingIds, setAddingIds] = useState<Set<number>>(new Set());
-  const add = (item: FeedItem) => {
+  const addToPipeline = (item: FeedItem) => {
     if (addingIds.has(item.id)) return;
     setAddingIds((s) => new Set(s).add(item.id));
     api
@@ -4714,7 +4714,7 @@ function FeedTab({
         const target = list[focusedIndex];
         if (target) {
           e.preventDefault();
-          add(target);
+          addToPipeline(target);
         }
       } else if (e.key === "d") {
         const target = list[focusedIndex];
@@ -4753,7 +4753,7 @@ function FeedTab({
             roleLabel={roleTypes.find((r) => r.slug === item.role_type)?.label ?? item.role_type}
             focused={i === focusedIndex}
             adding={addingIds.has(item.id)}
-            onAdd={() => add(item)}
+            onAdd={() => addToPipeline(item)}
             onDismiss={() => dismiss(item)}
           />
         ))}
@@ -8783,7 +8783,7 @@ function LanguagesSection({
   const [proficiency, setProficiency] =
     useState<Language["proficiency"]>("conversational");
 
-  const add = (e: FormEvent) => {
+  const addLanguage = (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
     api
@@ -8820,7 +8820,7 @@ function LanguagesSection({
         ))}
         {items.length === 0 && <li className="empty">{t("cv.noLanguages")}</li>}
       </ul>
-      <form className="settings-add" onSubmit={add}>
+      <form className="settings-add" onSubmit={addLanguage}>
         <input
           placeholder={t("cv.languageName")}
           value={name}
