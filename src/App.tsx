@@ -111,6 +111,12 @@ function useFocusTrap<T extends HTMLElement>(active = true) {
       Array.from(node.querySelectorAll<HTMLElement>(selector)).filter(
         (el) => el.offsetParent !== null,
       );
+    // Remember where focus came from — closing a dialog must return the
+    // keyboard user to their place, not drop them at <body> (#346).
+    const opener =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     focusable()[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
@@ -127,7 +133,10 @@ function useFocusTrap<T extends HTMLElement>(active = true) {
       }
     };
     node.addEventListener("keydown", onKey);
-    return () => node.removeEventListener("keydown", onKey);
+    return () => {
+      node.removeEventListener("keydown", onKey);
+      if (opener && document.contains(opener)) opener.focus();
+    };
   }, [active]);
   return ref;
 }
@@ -572,7 +581,14 @@ function ConfirmHost() {
   } | null>(null);
   useEffect(() => {
     requestConfirm = (message) =>
-      new Promise((resolve) => setReq({ message, resolve }));
+      new Promise((resolve) =>
+        setReq((prev) => {
+          // A second confirm may fire while one is pending (#346); the
+          // replaced caller must resolve (as "cancelled"), not hang forever.
+          prev?.resolve(false);
+          return { message, resolve };
+        }),
+      );
     return () => {
       requestConfirm = (message) => Promise.resolve(window.confirm(message));
     };
@@ -1377,7 +1393,25 @@ function PublicApiSettings({
       <ul className="settings-list">
         {(webhooks ?? []).map((w) => (
           <li key={w.id}>
-            <span>{w.url}</span>
+            <span>
+              {w.url}
+              {!w.enabled ? (
+                <span className="muted small warn-text">
+                  {" "}
+                  · {t("account.webhookDisabled")}
+                </span>
+              ) : w.last_status === "failed" ? (
+                <span className="muted small warn-text">
+                  {" "}
+                  · {t("account.webhookFailing", { count: w.failure_count })}
+                </span>
+              ) : w.last_status === "ok" ? (
+                <span className="muted small">
+                  {" "}
+                  · {t("account.webhookOk")}
+                </span>
+              ) : null}
+            </span>
             <button className="danger" onClick={() => removeWebhook(w.id)}>
               <RemoveIcon />
             </button>
@@ -4580,9 +4614,12 @@ function FeedTab({
 
   const dismiss = (item: FeedItem) => {
     setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
-    api
-      .dismissFeedItem(item.id)
-      .catch((e) => onError((e as Error).message));
+    api.dismissFeedItem(item.id).catch((e) => {
+      // Optimistic removal must roll back (#346) — otherwise the card
+      // vanishes client-side while still active server-side.
+      setItems((prev) => (prev ? [item, ...prev] : [item]));
+      onError((e as Error).message);
+    });
   };
 
   const [addingIds, setAddingIds] = useState<Set<number>>(new Set());

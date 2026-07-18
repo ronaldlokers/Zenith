@@ -1202,9 +1202,19 @@ app.get("/api/stats", async (c) => {
     // quiet" badge counts a nudge as activity (#314 round 3), not just
     // stage moves.
     c.env.DB.prepare(
-      `SELECT application_id, MAX(happened_at) AS last_at
-       FROM interactions WHERE user_id = ? AND application_id IS NOT NULL
-       GROUP BY application_id`,
+      // Mirrors the per-application timeline's semantics (#346): an
+      // interaction logged on the linked contact (application_id NULL)
+      // counts as activity for that application too — otherwise the
+      // "gone quiet" badge never clears when the nudge is logged on the
+      // recruiter instead of the application.
+      `SELECT a.id AS application_id, MAX(i.happened_at) AS last_at
+       FROM interactions i
+       JOIN applications a
+         ON a.user_id = i.user_id
+        AND (i.application_id = a.id
+         OR (i.application_id IS NULL AND i.contact_id = a.contact_id))
+       WHERE i.user_id = ?
+       GROUP BY a.id`,
     )
       .bind(userId)
       .all(),

@@ -253,6 +253,9 @@ export interface Webhook {
   url: string;
   enabled: boolean | number;
   created_at: string;
+  last_status: "ok" | "failed" | null;
+  last_attempt_at: string | null;
+  failure_count: number;
 }
 
 export interface Skill {
