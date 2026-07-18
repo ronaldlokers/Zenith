@@ -126,7 +126,8 @@
     "boardEmpty": "empty",
     "boardKeepPushing": "keep pushing",
     "noFollowUps": "No follow-ups scheduled.",
-    "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit “Check now”."
+    "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit “Check now”.",
+    "pipelineNoJobs": "Nothing tracked yet."
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -258,7 +259,8 @@
     "title": "Getting started",
     "profile": "Fill out your CV profile basics",
     "company": "Add your first company",
-    "firstJob": "Add your first job"
+    "firstJob": "Add your first job",
+    "sampleLink": "Prefer to explore first? Load sample data"
   },
   "prep": {
     "title": "Interview prep",
@@ -579,7 +581,8 @@
   },
   "confirm": {
     "deleteDocument": "Delete “{{name}}”?",
-    "deleteRoleType": "Delete role type “{{label}}”? Feed keywords for it go too."
+    "deleteRoleType": "Delete role type “{{label}}”? Feed keywords for it go too.",
+    "discardEdit": "Discard unsaved changes?"
   },
   "aria": {
     "moveToStage": "Move {{title}} to stage",
