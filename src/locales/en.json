@@ -158,7 +158,9 @@
     "regenerateLink": "Regenerate",
     "disableLink": "Disable",
     "calendarLink": "Calendar subscribe link",
-    "calendarLinkHint": "Add this URL as a subscribed calendar in Google/Outlook/Apple Calendar — follow-ups, deadlines, and interviews stay in sync automatically. Read-only, updates whenever your calendar app refreshes."
+    "calendarLinkHint": "Add this URL as a subscribed calendar in Google/Outlook/Apple Calendar — follow-ups, deadlines, and interviews stay in sync automatically. Read-only, updates whenever your calendar app refreshes.",
+    "regenerateLinkConfirm": "Regenerate this link? The current link stops working immediately for anyone you've shared it with.",
+    "disableLinkConfirm": "Disable this link? The current link stops working for anyone you've shared it with."
   },
   "feed": {
     "pulledFrom": "Pulled from Adzuna and HN Who's Hiring every 6 hours.",
@@ -536,7 +538,9 @@
     "twoFactorReset": "2FA reset for {{email}} — they can now sign in with just their password.",
     "removeUser": "Remove",
     "removeUserConfirm": "Remove {{email}}? Their account and all their data are permanently deleted.",
-    "removeUserError": "Couldn't remove the user."
+    "removeUserError": "Couldn't remove the user.",
+    "regenerateKeyConfirm": "Regenerate the API key? The current key stops working immediately and any tool using it must be updated.",
+    "revokeKeyConfirm": "Disable the API key? Any tool using it stops working."
   },
   "companies": {
     "view": "View",

@@ -1061,18 +1061,24 @@ function PublicApiSettings({
   }, [loadWebhooks]);
 
   const generateKey = () => {
+    // Regenerating (a key already exists) invalidates the current one, so
+    // warn — but the first-time generate has nothing to break (#285).
+    if (apiKey && !window.confirm(t("account.regenerateKeyConfirm"))) return;
     setKeyBusy(true);
     api
       .generateApiKey()
       .then((r) => setApiKey(r.api_key))
+      .catch((e) => onError((e as Error).message))
       .finally(() => setKeyBusy(false));
   };
 
   const revokeKey = () => {
+    if (!window.confirm(t("account.revokeKeyConfirm"))) return;
     setKeyBusy(true);
     api
       .revokeApiKey()
       .then(() => setApiKey(null))
+      .catch((e) => onError((e as Error).message))
       .finally(() => setKeyBusy(false));
   };
 
@@ -1625,18 +1631,24 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
     : null;
 
   const generateLink = () => {
+    // Regenerating breaks the link already shared with someone (#285).
+    if (shareToken && !window.confirm(t("settings.regenerateLinkConfirm")))
+      return;
     setShareBusy(true);
     api
       .generateShareToken()
       .then((r) => setShareToken(r.share_token))
+      .catch((e) => setApiError((e as Error).message))
       .finally(() => setShareBusy(false));
   };
 
   const disableLink = () => {
+    if (!window.confirm(t("settings.disableLinkConfirm"))) return;
     setShareBusy(true);
     api
       .revokeShareToken()
       .then(() => setShareToken(null))
+      .catch((e) => setApiError((e as Error).message))
       .finally(() => setShareBusy(false));
   };
 
@@ -1645,18 +1657,23 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
     : null;
 
   const generateCalendarLink = () => {
+    if (calendarToken && !window.confirm(t("settings.regenerateLinkConfirm")))
+      return;
     setCalendarBusy(true);
     api
       .generateCalendarToken()
       .then((r) => setCalendarToken(r.calendar_token))
+      .catch((e) => setApiError((e as Error).message))
       .finally(() => setCalendarBusy(false));
   };
 
   const disableCalendarLink = () => {
+    if (!window.confirm(t("settings.disableLinkConfirm"))) return;
     setCalendarBusy(true);
     api
       .revokeCalendarToken()
       .then(() => setCalendarToken(null))
+      .catch((e) => setApiError((e as Error).message))
       .finally(() => setCalendarBusy(false));
   };
 
