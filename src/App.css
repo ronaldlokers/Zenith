@@ -2972,8 +2972,7 @@ summary.bcol-head::after {
   /* Comfortable touch targets for filter/toolbar controls. */
   .filters select,
   .toolbar select,
-  .toolbar button,
-    .bulk-bar button {
+  .toolbar button {
     min-height: 40px;
   }
 }
@@ -3306,7 +3305,6 @@ summary.bcol-head::after {
   .quick-add-fab,
   .toast,
   .error-dismiss,
-  .card-select,
   .modal-close,
   button,
   .toolbar .search,
@@ -3441,7 +3439,6 @@ summary.bcol-head::after {
 
 /* Chips: one metric set so co-occurring chips baseline-align. */
 .badge,
-.pill,
 .outreach-pill,
 .tag-chip,
 .doc-label,
@@ -3806,7 +3803,7 @@ summary.bcol-head::after {
 .overview-cols {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0 2rem;
+  gap: 1.25rem 2rem;
   align-items: start;
 }
 
@@ -3830,7 +3827,7 @@ summary.bcol-head::after {
 .detail-cols {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0 2.5rem;
+  gap: 1.25rem 2.5rem;
   align-items: start;
 }
 
@@ -4036,7 +4033,8 @@ button:not(:disabled):active,
 
   .toolbar input,
   .toolbar select,
-  .toolbar button {
+  .toolbar button,
+  .filters select {
     min-height: 40px;
   }
 }
