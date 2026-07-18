@@ -554,6 +554,68 @@ function Logo({ size = 26 }: { size?: number }) {
   );
 }
 
+// One styled confirmation dialog for the whole app (#314 round 3) —
+// replaces the browser's window.confirm, which ignored the design system,
+// the themes, and the focus-trap conventions. requestConfirm resolves like
+// confirm() does, so call sites stay a one-line guard. The module-level
+// indirection exists so deeply nested settings sections don't all need a
+// prop threaded through; ConfirmHost (rendered once at the App root)
+// installs the real implementation.
+let requestConfirm: (message: string) => Promise<boolean> = (message) =>
+  Promise.resolve(window.confirm(message));
+
+function ConfirmHost() {
+  const { t } = useTranslation();
+  const [req, setReq] = useState<{
+    message: string;
+    resolve: (ok: boolean) => void;
+  } | null>(null);
+  useEffect(() => {
+    requestConfirm = (message) =>
+      new Promise((resolve) => setReq({ message, resolve }));
+    return () => {
+      requestConfirm = (message) => Promise.resolve(window.confirm(message));
+    };
+  }, []);
+  const answer = (ok: boolean) => {
+    setReq((cur) => {
+      cur?.resolve(ok);
+      return null;
+    });
+  };
+  // Capture-phase Escape: the dialog may sit on top of another modal whose
+  // own window-level Escape listener would otherwise close both at once.
+  useEffect(() => {
+    if (!req) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation();
+        answer(false);
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [req]);
+  if (!req) return null;
+  return (
+    <Dialog
+      label={req.message}
+      onClose={() => answer(false)}
+      className="confirm-dialog"
+    >
+      <p>{req.message}</p>
+      <div className="form-actions">
+        <button className="danger" onClick={() => answer(true)}>
+          {t("common.confirm")}
+        </button>
+        <button type="button" onClick={() => answer(false)}>
+          {t("common.cancel")}
+        </button>
+      </div>
+    </Dialog>
+  );
+}
+
 const SHORTCUT_KEYS: [string, string][] = [
   ["n", "addJob"],
   ["/", "focusSearch"],
@@ -812,7 +874,7 @@ function DeleteAccount({
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const del = async () => {
-    if (!window.confirm(t("account.deleteConfirm"))) return;
+    if (!(await requestConfirm(t("account.deleteConfirm")))) return;
     setBusy(true);
     try {
       await api.deleteAccount();
@@ -965,7 +1027,11 @@ function AdminUsers({
       .catch((e) => onError((e as Error).message));
 
   const remove = async (u: AdminUser) => {
-    if (!window.confirm(t("account.removeUserConfirm", { email: u.email })))
+    if (
+      !(await requestConfirm(
+        t("account.removeUserConfirm", { email: u.email }),
+      ))
+    )
       return;
     const { error } = await authClient.admin.removeUser({ userId: u.id });
     if (error) {
@@ -1127,8 +1193,8 @@ function SampleDataSettings({
         setBusy(false);
       });
   };
-  const clear = () => {
-    if (!window.confirm(t("sampleData.clearConfirm"))) return;
+  const clear = async () => {
+    if (!(await requestConfirm(t("sampleData.clearConfirm")))) return;
     setBusy(true);
     api
       .clearSampleData()
@@ -1224,10 +1290,11 @@ function PublicApiSettings({
     loadWebhooks();
   }, [loadWebhooks]);
 
-  const generateKey = () => {
+  const generateKey = async () => {
     // Regenerating (a key already exists) invalidates the current one, so
     // warn — but the first-time generate has nothing to break (#285).
-    if (apiKey && !window.confirm(t("account.regenerateKeyConfirm"))) return;
+    if (apiKey && !(await requestConfirm(t("account.regenerateKeyConfirm"))))
+      return;
     setKeyBusy(true);
     api
       .generateApiKey()
@@ -1236,8 +1303,8 @@ function PublicApiSettings({
       .finally(() => setKeyBusy(false));
   };
 
-  const revokeKey = () => {
-    if (!window.confirm(t("account.revokeKeyConfirm"))) return;
+  const revokeKey = async () => {
+    if (!(await requestConfirm(t("account.revokeKeyConfirm")))) return;
     setKeyBusy(true);
     api
       .revokeApiKey()
@@ -1866,9 +1933,12 @@ function SettingsPage({
     ? `${window.location.origin}/shared/${shareToken}`
     : null;
 
-  const generateLink = () => {
+  const generateLink = async () => {
     // Regenerating breaks the link already shared with someone (#285).
-    if (shareToken && !window.confirm(t("settings.regenerateLinkConfirm")))
+    if (
+      shareToken &&
+      !(await requestConfirm(t("settings.regenerateLinkConfirm")))
+    )
       return;
     setShareBusy(true);
     api
@@ -1878,8 +1948,8 @@ function SettingsPage({
       .finally(() => setShareBusy(false));
   };
 
-  const disableLink = () => {
-    if (!window.confirm(t("settings.disableLinkConfirm"))) return;
+  const disableLink = async () => {
+    if (!(await requestConfirm(t("settings.disableLinkConfirm")))) return;
     setShareBusy(true);
     api
       .revokeShareToken()
@@ -1892,8 +1962,11 @@ function SettingsPage({
     ? `${window.location.origin}/calendar/${calendarToken}`
     : null;
 
-  const generateCalendarLink = () => {
-    if (calendarToken && !window.confirm(t("settings.regenerateLinkConfirm")))
+  const generateCalendarLink = async () => {
+    if (
+      calendarToken &&
+      !(await requestConfirm(t("settings.regenerateLinkConfirm")))
+    )
       return;
     setCalendarBusy(true);
     api
@@ -1903,8 +1976,8 @@ function SettingsPage({
       .finally(() => setCalendarBusy(false));
   };
 
-  const disableCalendarLink = () => {
-    if (!window.confirm(t("settings.disableLinkConfirm"))) return;
+  const disableCalendarLink = async () => {
+    if (!(await requestConfirm(t("settings.disableLinkConfirm")))) return;
     setCalendarBusy(true);
     api
       .revokeCalendarToken()
@@ -2956,6 +3029,7 @@ export default function App() {
       <div className="sr-only" role="status" aria-live="polite">
         {toast?.message ?? ""}
       </div>
+      <ConfirmHost />
       {toast && (
         <div className="toast">
           <span>{toast.message}</span>
@@ -3566,8 +3640,12 @@ function Documents({
             <button
               className="tl-del danger"
               aria-label={t("common.delete")}
-              onClick={() => {
-                if (confirm(t("confirm.deleteDocument", { name: d.filename })))
+              onClick={async () => {
+                if (
+                  await requestConfirm(
+                    t("confirm.deleteDocument", { name: d.filename }),
+                  )
+                )
                   api
                     .remove("documents", d.id)
                     .then(load)
@@ -4202,8 +4280,10 @@ function FeedSettings({
       .catch((e) => onError((e as Error).message));
   };
 
-  const removeRole = (r: RoleTypeDef) => {
-    if (!confirm(t("confirm.deleteRoleType", { label: r.label })))
+  const removeRole = async (r: RoleTypeDef) => {
+    if (
+      !(await requestConfirm(t("confirm.deleteRoleType", { label: r.label })))
+    )
       return;
     api
       .deleteRoleType(r.id)

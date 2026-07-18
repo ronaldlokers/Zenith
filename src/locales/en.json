@@ -36,7 +36,8 @@
     "log": "Log",
     "fetch": "Fetch",
     "fetching": "Fetching…",
-    "add": "Add"
+    "add": "Add",
+    "confirm": "Confirm"
   },
   "savedViews": {
     "namePrompt": "Name this view",
