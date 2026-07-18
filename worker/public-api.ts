@@ -138,10 +138,18 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
   });
 
   api.get("/applications", async (c) => {
+    // Bounded like the in-app feed (#285) — a heavy account shouldn't hand
+    // an integration its whole table in one response. `limit`/`offset`.
+    const url = new URL(c.req.url);
+    const limit = Math.min(
+      200,
+      Math.max(1, Number(url.searchParams.get("limit")) || 50),
+    );
+    const offset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
     const { results } = await c.env.DB.prepare(
-      `SELECT ${applicationColumns} FROM applications WHERE user_id = ? ORDER BY updated_at DESC`,
+      `SELECT ${applicationColumns} FROM applications WHERE user_id = ? ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
     )
-      .bind(c.get("apiUserId"))
+      .bind(c.get("apiUserId"), limit, offset)
       .all();
     return c.json(results);
   });

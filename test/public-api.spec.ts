@@ -52,6 +52,18 @@ describe("public v1 API", () => {
     expect(found).not.toHaveProperty("salary_max");
   });
 
+  it("bounds the list with limit + offset", async () => {
+    const key = await apiKey();
+    await seedApp();
+    await seedApp();
+    const res = await SELF.fetch(`${BASE}/api/v1/applications?limit=1`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    expect(res.status).toBe(200);
+    const list = (await res.json()) as unknown[];
+    expect(list.length).toBe(1);
+  });
+
   it("gets one by id and 404s for an unknown id", async () => {
     const key = await apiKey();
     const app = await seedApp();
