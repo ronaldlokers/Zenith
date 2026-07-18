@@ -272,6 +272,22 @@ describe("applications", () => {
       }),
     ]);
   });
+
+  it("clears the pending follow-up when status changes", async () => {
+    const app = await seedApplication({
+      next_action: "Nudge recruiter",
+      next_action_at: "2020-01-01",
+    });
+    const updated = (await (
+      await authedFetch(`${BASE}/api/applications/${app.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "screening" }),
+      })
+    ).json()) as { next_action: string | null; next_action_at: string | null };
+    expect(updated.next_action).toBeNull();
+    expect(updated.next_action_at).toBeNull();
+  });
 });
 
 describe("interactions", () => {
