@@ -319,6 +319,71 @@ function SearchIcon() {
   );
 }
 
+// Bottom-nav glyphs (#346) — 24x24, currentColor, strokeWidth 2, matching
+// SettingsIcon. Shown only on the mobile bottom bar (icon over label); the
+// desktop sidebar keeps its text labels.
+function navSvg(children: React.ReactNode) {
+  return (
+    <svg
+      className="nav-icon"
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+const NavOverviewIcon = () =>
+  navSvg(<path d="M4 11l8-6 8 6M6 10v9h12v-9" />);
+const NavPipelineIcon = () =>
+  navSvg(
+    <>
+      <rect x="4" y="5" width="4" height="14" rx="1" />
+      <rect x="10" y="5" width="4" height="9" rx="1" />
+      <rect x="16" y="5" width="4" height="6" rx="1" />
+    </>,
+  );
+const NavFeedIcon = () =>
+  navSvg(
+    <>
+      <path d="M5 5a14 14 0 0114 14" />
+      <path d="M5 12a7 7 0 017 7" />
+      <circle cx="5.5" cy="18.5" r="0.6" fill="currentColor" stroke="none" />
+    </>,
+  );
+const NavCalendarIcon = () =>
+  navSvg(
+    <>
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M4 9h16M9 3v4M15 3v4" />
+    </>,
+  );
+const NavStatsIcon = () =>
+  navSvg(<path d="M5 20V10M12 20V4M19 20v-7" />);
+const NavNetworkIcon = () =>
+  navSvg(
+    <>
+      <circle cx="6" cy="7" r="2.2" />
+      <circle cx="18" cy="7" r="2.2" />
+      <circle cx="12" cy="17" r="2.2" />
+      <path d="M7.7 8.6l3 6.8M16.3 8.6l-3 6.8M8 7h8" />
+    </>,
+  );
+const NavCvIcon = () =>
+  navSvg(
+    <>
+      <rect x="6" y="3" width="12" height="18" rx="2" />
+      <path d="M9 8h6M9 12h6M9 16h4" />
+    </>,
+  );
+
 function SettingsIcon() {
   return (
     <svg
@@ -2851,7 +2916,8 @@ export default function App() {
           data-tab="overview"
           onClick={() => setTab("overview")}
         >
-          {t("tabs.overview")}
+          <NavOverviewIcon />
+          <span className="tab-label">{t("tabs.overview")}</span>
         </button>
         <button
           className={tab === "applications" || tab === "board" ? "active" : ""}
@@ -2859,7 +2925,8 @@ export default function App() {
           data-tab="pipeline"
           onClick={() => setTab("board")}
         >
-          {t("tabs.pipeline")}
+          <NavPipelineIcon />
+          <span className="tab-label">{t("tabs.pipeline")}</span>
         </button>
         <button
           className={tab === "feed" ? "active" : ""}
@@ -2867,7 +2934,8 @@ export default function App() {
           data-tab="feed"
           onClick={() => setTab("feed")}
         >
-          {t("tabs.feed")}
+          <NavFeedIcon />
+          <span className="tab-label">{t("tabs.feed")}</span>
         </button>
         <button
           className={tab === "calendar" ? "active" : ""}
@@ -2875,7 +2943,8 @@ export default function App() {
           data-tab="calendar"
           onClick={() => setTab("calendar")}
         >
-          {t("tabs.calendar")}
+          <NavCalendarIcon />
+          <span className="tab-label">{t("tabs.calendar")}</span>
         </button>
         <button
           className={tab === "stats" ? "active" : ""}
@@ -2883,7 +2952,8 @@ export default function App() {
           data-tab="stats"
           onClick={() => setTab("stats")}
         >
-          {t("tabs.stats")}
+          <NavStatsIcon />
+          <span className="tab-label">{t("tabs.stats")}</span>
         </button>
         <button
           className={tab === "companies" || tab === "contacts" ? "active" : ""}
@@ -2891,7 +2961,8 @@ export default function App() {
           data-tab="network"
           onClick={() => setTab("companies")}
         >
-          {t("tabs.network")}
+          <NavNetworkIcon />
+          <span className="tab-label">{t("tabs.network")}</span>
         </button>
         <button
           className={tab === "cv" ? "active" : ""}
@@ -2899,7 +2970,8 @@ export default function App() {
           data-tab="cv"
           onClick={() => setTab("cv")}
         >
-          {t("tabs.cv")}
+          <NavCvIcon />
+          <span className="tab-label">{t("tabs.cv")}</span>
         </button>
         <button
           className={`tab-settings${tab === "settings" ? " active" : ""}`}
@@ -2907,7 +2979,8 @@ export default function App() {
           aria-current={tab === "settings" ? "page" : undefined}
           onClick={() => setTab("settings")}
         >
-          {t("settings.title")}
+          <SettingsIcon />
+          <span className="tab-label">{t("settings.title")}</span>
         </button>
       </nav>
 
