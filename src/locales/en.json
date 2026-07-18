@@ -571,7 +571,8 @@
     "groupBy": "Group board by",
     "byStage": "By stage",
     "byCompany": "By company",
-    "noCompany": "No company"
+    "noCompany": "No company",
+    "closedCount": "Closed · {{count}}"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."

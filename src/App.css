@@ -3841,3 +3841,84 @@ summary.bcol-head::after {
     max-width: 1000px;
   }
 }
+
+/* Closed drawer under the board (#314) — collapsed archive of terminal
+   outcomes; compact list rows, not cards. */
+.closed-drawer {
+  margin-top: 1.2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+.closed-drawer summary {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.3rem 0;
+  list-style: none;
+}
+
+.closed-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.closed-drawer summary::after {
+  content: " ▸";
+  color: var(--faint);
+}
+
+.closed-drawer[open] summary::after {
+  content: " ▾";
+}
+
+.closed-drawer ul {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+}
+
+.closed-drawer li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  padding: 0.4rem 0.2rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  font-size: var(--text-body);
+  cursor: pointer;
+}
+
+.closed-drawer li:hover {
+  background: var(--surface);
+}
+
+.closed-title {
+  font-weight: 600;
+  min-width: 0;
+}
+
+.closed-co {
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closed-status {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-chrome);
+  color: var(--st-dead);
+}
+
+.closed-date {
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}

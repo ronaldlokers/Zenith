@@ -571,7 +571,8 @@
     "groupBy": "Bord groeperen op",
     "byStage": "Op status",
     "byCompany": "Op bedrijf",
-    "noCompany": "Geen bedrijf"
+    "noCompany": "Geen bedrijf",
+    "closedCount": "Gesloten · {{count}}"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
