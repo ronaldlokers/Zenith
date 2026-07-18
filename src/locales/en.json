@@ -547,7 +547,10 @@
     "removeUserConfirm": "Remove {{email}}? Their account and all their data are permanently deleted.",
     "removeUserError": "Couldn't remove the user.",
     "regenerateKeyConfirm": "Regenerate the API key? The current key stops working immediately and any tool using it must be updated.",
-    "revokeKeyConfirm": "Disable the API key? Any tool using it stops working."
+    "revokeKeyConfirm": "Disable the API key? Any tool using it stops working.",
+    "deleteAccount": "Delete account",
+    "deleteHint": "Permanently deletes your account and all your data — applications, companies, contacts, CV, everything. This can't be undone.",
+    "deleteConfirm": "Permanently delete your account and ALL your data? This cannot be undone."
   },
   "companies": {
     "view": "View",

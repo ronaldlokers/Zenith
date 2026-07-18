@@ -1523,6 +1523,17 @@ app.delete("/api/account/sample-data", async (c) => {
   return c.body(null, 204);
 });
 
+// Self-serve account deletion (#285) — GDPR/right-to-erasure. Deleting the
+// user row cascades to session/account/twoFactor and every user-scoped
+// table (all FK'd ON DELETE CASCADE, migration 0024); wipeUserData first is
+// belt-and-suspenders. The session is invalidated once the row is gone.
+app.delete("/api/account", async (c) => {
+  const userId = c.get("userId");
+  await wipeUserData(c.env, userId);
+  await c.env.DB.prepare('DELETE FROM "user" WHERE id = ?').bind(userId).run();
+  return c.body(null, 204);
+});
+
 app.notFound((c) => {
   // Genuine API misses stay JSON 404. Everything else that reached the
   // Worker is a client-side route (/jobs, /board, /stats, …) with no
