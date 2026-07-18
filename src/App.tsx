@@ -3065,7 +3065,10 @@ function BoardTab({
         </button>
       </div>
     </div>
-    <StageLegend />
+    {/* Stage-grouped columns carry their own name+dot headers; the legend
+        only earns its place in company-swimlane mode, whose cells are
+        unlabeled (#314). */}
+    {groupBy === "company" && <StageLegend />}
     {groupBy === "company" ? (
       <div className="board-swimlanes">
         {laneEntries.map(([companyId, apps]) => (
