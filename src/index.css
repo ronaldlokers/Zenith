@@ -53,6 +53,19 @@
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
+  /* Type scale (#314) — six roles replace the 26 ad-hoc sizes that had
+     accumulated. Chrome/meta are the mono bands; body/title carry copy.
+     Letter-spacing comes in exactly two flavors: chrome labels and
+     section eyebrows. Theme-independent. */
+  --text-display: 1.35rem;
+  --text-heading: 1.1rem;
+  --text-title: 0.95rem;
+  --text-body: 0.85rem;
+  --text-meta: 0.75rem;
+  --text-chrome: 0.64rem;
+  --track-chrome: 0.05em;
+  --track-eyebrow: 0.08em;
+
   /* Structural scale (#279 design refresh) — theme-independent spacing and
      corner radii so surfaces share one rhythm instead of ad-hoc values. */
   --space-1: 0.25rem;
@@ -167,6 +180,9 @@ body {
   font-family: var(--sans);
   background: var(--bg);
   color: var(--ink);
+  /* Base line-height (#314) — previously unset, so dense small text
+     wrapped at the UA default (~1.15). */
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
