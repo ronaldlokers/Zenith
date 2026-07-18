@@ -564,7 +564,10 @@
     "interviewingCount_other": "{{count}} at interview or offer stage",
     "recentActivity": "Recent activity",
     "noActivity": "Nothing yet — add your first job to get started.",
-    "viewAllJobs": "View all jobs"
+    "viewAllJobs": "View all jobs",
+    "recentlyUpdated": "Recently updated",
+    "showActivity": "Show all activity",
+    "hideActivity": "Hide activity"
   },
   "jobs": {
     "density": "Row density",
