@@ -109,3 +109,32 @@ describe("webhooks", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("ssrf + export guards (#346)", () => {
+  it("rejects a webhook pointing at a forbidden host", async () => {
+    const res = await authedFetch(`${BASE}/api/webhooks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "https://169.254.169.254/hook" }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects importing from a private address", async () => {
+    const res = await authedFetch(
+      `${BASE}/api/import?url=${encodeURIComponent("http://127.0.0.1:8787/x")}`,
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("neutralizes formula-leading cells in CSV export", async () => {
+    await authedFetch(`${BASE}/api/applications`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "=HYPERLINK(\"http://evil\")" }),
+    });
+    const csv = await (await authedFetch(`${BASE}/api/export/applications`)).text();
+    expect(csv).toContain("'=HYPERLINK");
+    expect(csv).not.toMatch(/^=|[,\n]=/);
+  });
+});

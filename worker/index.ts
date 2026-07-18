@@ -1,3 +1,4 @@
+import { guardedFetch, isForbiddenUrl } from "./url-guard.js";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { refreshFeed, registerFeedRoutes } from "./feed.js";
@@ -206,16 +207,18 @@ app.post("/api/companies/:id/research", async (c) => {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     return c.json({ error: "only http(s) urls are supported" }, 400);
   }
+  if (isForbiddenUrl(url)) {
+    return c.json({ error: "url points at a forbidden host" }, 400);
+  }
 
   let html: string;
   try {
-    const res = await fetch(url.toString(), {
+    const { res } = await guardedFetch(url.toString(), {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
         Accept: "text/html,application/xhtml+xml",
       },
-      redirect: "follow",
     });
     if (!res.ok) {
       return c.json({ error: `site returned ${res.status}` }, 502);
@@ -888,7 +891,12 @@ function toCsv(rows: Record<string, unknown>[]): string {
   const cols = Object.keys(rows[0]);
   const escape = (v: unknown) => {
     if (v === null || v === undefined) return "";
-    const s = String(v);
+    let s = String(v);
+    // Formula-injection guard (#346): titles/notes/company names can come
+    // from scraped postings or external feed boards, and a leading = + - @
+    // (or tab/CR) opens as a live formula in Excel/Sheets. The leading
+    // apostrophe is the spreadsheet-standard "treat as text" escape.
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [
@@ -983,16 +991,18 @@ app.get("/api/import", async (c) => {
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     return c.json({ error: "only http(s) urls are supported" }, 400);
   }
+  if (isForbiddenUrl(url)) {
+    return c.json({ error: "url points at a forbidden host" }, 400);
+  }
 
   let html: string;
   try {
-    const res = await fetch(url.toString(), {
+    const { res } = await guardedFetch(url.toString(), {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
         Accept: "text/html,application/xhtml+xml",
       },
-      redirect: "follow",
     });
     if (!res.ok) {
       return c.json(
