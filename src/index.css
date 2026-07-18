@@ -74,9 +74,12 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
+  /* Re-based on the app's dominant corner (#314): 8px was used 31× but
+     couldn't be expressed by the old 6/10/12 scale. */
   --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-md: 8px;
   --radius-lg: 12px;
+  --radius-full: 999px;
 
   /* Elevation — two levels: raised surfaces (cards/panels) and overlays
      (modals/dropdowns). Per-theme below since shadow needs the ground. */
