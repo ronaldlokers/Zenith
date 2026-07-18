@@ -200,33 +200,9 @@ function LoadFailed({ onRetry }: { onRetry?: () => void }) {
 // Stage-spectrum legend (#279) — teaches the pipeline colors, which are
 // otherwise only implicit. The dot color comes from each stage-* class via
 // --sc, the same token the board/stats dots use.
-function StageLegend() {
-  const { t } = useTranslation();
-  return (
-    <div className="stage-legend">
-      {PIPELINE.map((s) => (
-        <span key={s} className={`stage-legend-item stage-${s}`}>
-          <span className="stat-dot" aria-hidden="true" />
-          {t(`stages.${s}`)}
-        </span>
-      ))}
-    </div>
-  );
-}
-
 // Empty-state illustrations (#136) — extending Jobs' hand-drawn SVG
 // (the climbing-dots motif above) to the other tabs, in the same
 // line-art style: currentColor strokes, one accent-stroked highlight.
-function EmptyBoardIcon() {
-  return (
-    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-      <rect x="14" y="20" width="20" height="56" rx="4" strokeWidth="4" opacity="0.28" />
-      <rect x="38" y="34" width="20" height="42" rx="4" strokeWidth="4" opacity="0.5" />
-      <rect x="62" y="14" width="20" height="62" rx="4" strokeWidth="5" className="accent-stroke" />
-    </svg>
-  );
-}
-
 function EmptyCompaniesIcon() {
   return (
     <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
@@ -693,34 +669,6 @@ function ConfirmHost() {
           {t("common.cancel")}
         </button>
       </div>
-    </Dialog>
-  );
-}
-
-const SHORTCUT_KEYS: [string, string][] = [
-  ["n", "addJob"],
-  ["/", "focusSearch"],
-  ["⌘ / Ctrl K", "palette"],
-  ["j / k", "feedMove"],
-  ["a / d", "feedTriage"],
-  ["Esc", "closeHelp"],
-];
-
-function ShortcutHelp({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <Dialog label={t("shortcuts.title")} onClose={onClose} className="shortcut-help">
-        <h2>{t("shortcuts.title")}</h2>
-        <p className="muted small">{t("shortcuts.subtitle")}</p>
-        <ul>
-          {SHORTCUT_KEYS.map(([key, labelKey]) => (
-            <li key={key}>
-              <kbd>{key}</kbd>
-              <span>{t(`shortcuts.${labelKey}`)}</span>
-            </li>
-          ))}
-        </ul>
-        <button onClick={onClose}>{t("common.close")}</button>
     </Dialog>
   );
 }
@@ -3254,18 +3202,6 @@ function BoardTab({
   };
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
-  const [groupBy, setGroupBy] = useState<"stage" | "company">("stage");
-  const lanes = new Map<number | null, Application[]>();
-  for (const a of open) {
-    const key = a.company_id;
-    (lanes.get(key) ?? lanes.set(key, []).get(key)!).push(a);
-  }
-  const laneEntries = [...lanes.entries()].sort((a, b) => {
-    const nameA = companies.find((c) => c.id === a[0])?.name ?? "";
-    const nameB = companies.find((c) => c.id === b[0])?.name ?? "";
-    return nameA.localeCompare(nameB);
-  });
-
   // Column counts + funnel proportion — headers carry the funnel now that
   // the ring is gone (#346).
   const stageCounts = PIPELINE.map(
@@ -3284,61 +3220,6 @@ function BoardTab({
 
   return (
     <>
-    <div className="board-toolbar">
-      <div className="board-group-toggle" role="group" aria-label={t("board.groupBy")}>
-        <button
-          className={groupBy === "stage" ? "active" : ""}
-          onClick={() => setGroupBy("stage")}
-        >
-          {t("board.byStage")}
-        </button>
-        <button
-          className={groupBy === "company" ? "active" : ""}
-          onClick={() => setGroupBy("company")}
-        >
-          {t("board.byCompany")}
-        </button>
-      </div>
-    </div>
-    {groupBy === "company" && <StageLegend />}
-    {groupBy === "company" ? (
-      <div className="board-swimlanes">
-        {laneEntries.map(([companyId, apps]) => (
-          <div className="lane" key={companyId ?? "none"}>
-            <div className="lane-label">
-              <span>
-                {companies.find((c) => c.id === companyId)?.name ??
-                  t("board.noCompany")}
-              </span>
-              <span className="n">{apps.length}</span>
-            </div>
-            <div className="lane-stages">
-              {PIPELINE.map((stage) => (
-                <div className="lane-cell" key={stage}>
-                  {apps
-                    .filter((a) => a.status === stage)
-                    .map((a) => (
-                      <BoardCard
-                        key={a.id}
-                        a={a}
-                        draggable={false}
-                        isDragging={false}
-                        {...cardProps(a)}
-                      />
-                    ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-        {laneEntries.length === 0 && (
-          <p className="empty">
-            <EmptyBoardIcon />
-            {t("empty.boardEmpty")}
-          </p>
-        )}
-      </div>
-    ) : (
     <div className="board">
       {PIPELINE.map((stage, i) => {
         const cards = sortCards(
@@ -3410,7 +3291,6 @@ function BoardTab({
         );
       })}
       </div>
-    )}
       {detailApp && (
         <ApplicationDetailModal
           key={detailApp.id}
@@ -6449,7 +6329,6 @@ function PipelineTab({
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [query, setQuery] = useState(initialQuery ?? "");
-  const [showHelp, setShowHelp] = useState(false);
   // Global sort applied to every column (#346), default urgency.
   const [sort, setSort] = useState<BoardSort>("urgency");
   // Filters behind a Filter button; the Archived modal replaces the old
@@ -6714,13 +6593,6 @@ function PipelineTab({
         <button className="primary" onClick={onOpenQuickAdd}>
           {t("toolbar.addJob")}
         </button>
-        <button
-          className="help-btn"
-          onClick={() => setShowHelp(true)}
-          aria-label={t("shortcuts.title")}
-        >
-          ?
-        </button>
       </div>
 
       {showFilters && (
@@ -6890,7 +6762,6 @@ function PipelineTab({
         </Dialog>
       )}
 
-      {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
     </section>
   );
 }
