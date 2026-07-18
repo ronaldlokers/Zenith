@@ -3834,3 +3834,10 @@ summary.bcol-head::after {
 .badge.attention-quiet {
   color: var(--heat-quiet);
 }
+
+/* Network grid gets a deliberate width under the sidebar shell (#314). */
+@media (min-width: 1000px) {
+  .app:has(.company-grid) > main {
+    max-width: 1000px;
+  }
+}
