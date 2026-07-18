@@ -453,8 +453,14 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     return c.body(null, 204);
   });
 
-  // Manual trigger for testing/on-demand refresh (cron does this automatically)
+  // Manual trigger for testing/on-demand refresh (cron does this
+  // automatically). Admin-only (#346): it fans out to every external
+  // source for ALL users, so any invited account could otherwise burn the
+  // shared rate-limited quota.
   app.post("/api/feed/refresh", async (c) => {
+    if (c.get("userRole") !== "admin") {
+      return c.json({ error: "forbidden" }, 403);
+    }
     const result = await refreshFeed(c.env);
     return c.json(result);
   });

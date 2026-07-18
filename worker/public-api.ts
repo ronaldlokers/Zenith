@@ -1,3 +1,4 @@
+import { isForbiddenUrl } from "./url-guard.js";
 import { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 
@@ -45,6 +46,9 @@ export function registerApiKeyRoutes(app: Hono<AppEnv>) {
     }
     if (parsed.protocol !== "https:") {
       return c.json({ error: "url must be https" }, 400);
+    }
+    if (isForbiddenUrl(parsed)) {
+      return c.json({ error: "url points at a forbidden host" }, 400);
     }
     const secret = crypto.randomUUID().replace(/-/g, "");
     const result = await c.env.DB.prepare(
@@ -99,6 +103,9 @@ export async function triggerWebhooks(
     results.map(async (hook) => {
       try {
         const signature = await hmacHex(hook.secret, body);
+        // Re-check at delivery time too — the create-time check alone is
+        // not durable against rows written by other means (#346).
+        if (isForbiddenUrl(new URL(hook.url))) return;
         await fetch(hook.url, {
           method: "POST",
           headers: {

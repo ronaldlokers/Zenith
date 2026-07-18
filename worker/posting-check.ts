@@ -1,3 +1,4 @@
+import { guardedFetch } from "./url-guard.js";
 // Stale/expired posting detection (issue #65) — advisory only. Never
 // changes an application's status; only sets posting_status so the UI
 // can show a soft "posting may be gone" badge and let a human decide.
@@ -12,12 +13,16 @@ const FETCH_TIMEOUT_MS = 8000;
 // Each attempt gets its own controller + timeout (#285) — a HEAD and its
 // GET fallback previously shared one signal, so a HEAD timeout left the
 // controller already aborted and the GET fallback failed instantly.
-function fetchWithTimeout(url: string, method: string): Promise<Response> {
+function fetchWithTimeout(
+  url: string,
+  method: string,
+): Promise<{ res: Response; finalUrl: string }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  return fetch(url, {
+  // guardedFetch applies the SSRF policy (#346) — application URLs are
+  // user-supplied and this cron re-fetches them unattended.
+  return guardedFetch(url, {
     method,
-    redirect: "follow",
     signal: controller.signal,
   }).finally(() => clearTimeout(timeout));
 }
@@ -60,10 +65,12 @@ export async function checkStalePostings(env: Env): Promise<{ checked: number; f
   for (const app of results) {
     let postingStatus: string | null = null;
     try {
-      const res = await fetchWithTimeout(app.url, "HEAD").catch(() =>
-        fetchWithTimeout(app.url, "GET"),
+      const { res, finalUrl } = await fetchWithTimeout(app.url, "HEAD").catch(
+        () => fetchWithTimeout(app.url, "GET"),
       );
-      postingStatus = looksStale(res.status, app.url, res.url) ? "maybe_stale" : "ok";
+      postingStatus = looksStale(res.status, app.url, finalUrl)
+        ? "maybe_stale"
+        : "ok";
     } catch {
       // network error, timeout, blocked, etc. — inconclusive, not stale
       postingStatus = null;
