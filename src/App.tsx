@@ -2411,18 +2411,11 @@ export default function App() {
           {t("tabs.overview")}
         </button>
         <button
-          className={tab === "applications" ? "active" : ""}
-          data-tab="applications"
+          className={tab === "applications" || tab === "board" ? "active" : ""}
+          data-tab="pipeline"
           onClick={() => setTab("applications")}
         >
-          {t("tabs.jobs")}
-        </button>
-        <button
-          className={tab === "board" ? "active" : ""}
-          data-tab="board"
-          onClick={() => setTab("board")}
-        >
-          {t("tabs.board")}
+          {t("tabs.pipeline")}
         </button>
         <button
           className={tab === "feed" ? "active" : ""}
@@ -2501,6 +2494,30 @@ export default function App() {
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}
               />
+            )}
+            {(tab === "applications" || tab === "board") && (
+              <div
+                className="subnav"
+                role="tablist"
+                aria-label={t("tabs.pipeline")}
+              >
+                <button
+                  role="tab"
+                  aria-selected={tab === "applications"}
+                  className={tab === "applications" ? "active" : ""}
+                  onClick={() => setTab("applications")}
+                >
+                  {t("tabs.jobs")}
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={tab === "board"}
+                  className={tab === "board" ? "active" : ""}
+                  onClick={() => setTab("board")}
+                >
+                  {t("tabs.board")}
+                </button>
+              </div>
             )}
             {tab === "applications" && (
               <ApplicationsTab

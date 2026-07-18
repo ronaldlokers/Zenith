@@ -10,7 +10,8 @@
     "companies": "Companies",
     "people": "People",
     "cv": "CV",
-    "network": "Network"
+    "network": "Network",
+    "pipeline": "Pipeline"
   },
   "header": {
     "openCount_one": "{{count}} open",
