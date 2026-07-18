@@ -297,6 +297,30 @@ describe("applications", () => {
     expect(cleared.status).toBe("interested"); // status untouched
   });
 
+  it("patches notes and fit_score in place without touching other fields", async () => {
+    const app = await seedApplication({ notes: "old", next_action: "Nudge" });
+    const patched = (await (
+      await authedFetch(`${BASE}/api/applications/${app.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: "new note", fit_score: 4 }),
+      })
+    ).json()) as { notes: string; fit_score: number; next_action: string };
+    expect(patched.notes).toBe("new note");
+    expect(patched.fit_score).toBe(4);
+    expect(patched.next_action).toBe("Nudge"); // untouched
+  });
+
+  it("rejects an out-of-range fit_score patch", async () => {
+    const app = await seedApplication({});
+    const res = await authedFetch(`${BASE}/api/applications/${app.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fit_score: 9 }),
+    });
+    expect(res.status).toBe(400);
+  });
+
   it("clears the pending follow-up when status changes", async () => {
     const app = await seedApplication({
       next_action: "Nudge recruiter",

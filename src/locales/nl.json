@@ -308,7 +308,10 @@
     "jobPostingLink": "Vacature ↗",
     "viaSource": "via {{source}}",
     "appliedDate": "Gesolliciteerd {{date}}",
-    "followUpFallback": "opvolgen"
+    "followUpFallback": "opvolgen",
+    "setFollowUp": "Follow-up instellen",
+    "addNote": "Notitie toevoegen",
+    "fitSetAria": "Fit op {{n}} zetten"
   },
   "nextUp": {
     "title": "Binnenkort",

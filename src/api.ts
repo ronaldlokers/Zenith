@@ -38,6 +38,14 @@ export const api = {
       `/api/applications/${id}/follow-up`,
       { method: "PATCH", body: JSON.stringify(fields) },
     ),
+  patchApplication: (
+    id: number,
+    fields: { notes?: string | null; fit_score?: number | null },
+  ) =>
+    request<import("./types").Application>(`/api/applications/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(fields),
+    }),
   remove: (resource: string, id: number) =>
     request<void>(`/api/${resource}/${id}`, { method: "DELETE" }),
   savedViews: () =>

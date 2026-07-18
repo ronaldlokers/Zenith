@@ -5098,6 +5098,20 @@ function ApplicationDetailModal({
   const { t } = useTranslation();
   const dialogRef = useFocusTrap<HTMLDivElement>(!asPane);
   const [editing, setEditing] = useState(false);
+  const [inlineField, setInlineField] = useState<null | "followup" | "notes">(
+    null,
+  );
+  const [fuText, setFuText] = useState("");
+  const [fuDate, setFuDate] = useState("");
+  const [noteDraft, setNoteDraft] = useState("");
+  const inlinePatch = (req: Promise<unknown>) =>
+    req
+      .then(() => {
+        setInlineField(null);
+        notify(t("common.saved"));
+        return onChanged();
+      })
+      .catch((e) => onError((e as Error).message));
   const [newTag, setNewTag] = useState("");
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
   const a = application;
@@ -5250,12 +5264,29 @@ function ApplicationDetailModal({
                     a.role_type}
                 </span>
               </div>
-              {a.fit_score ? (
-                <div>
-                  <span className="field-label">{t("detail.fitScore")}</span>
-                  <span className="fit-stars">{"★".repeat(a.fit_score)}</span>
-                </div>
-              ) : null}
+              <div>
+                <span className="field-label">{t("detail.fitScore")}</span>
+                <span className="fit-edit">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`fit-star${(a.fit_score ?? 0) >= n ? " on" : ""}`}
+                      aria-label={t("detail.fitSetAria", { n })}
+                      aria-pressed={(a.fit_score ?? 0) >= n}
+                      onClick={() =>
+                        inlinePatch(
+                          api.patchApplication(a.id, {
+                            fit_score: a.fit_score === n ? null : n,
+                          }),
+                        )
+                      }
+                    >
+                      ★
+                    </button>
+                  ))}
+                </span>
+              </div>
               {safeHref(a.url) && (
                 <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
                   {t("detail.jobPostingLink")}
@@ -5352,15 +5383,125 @@ function ApplicationDetailModal({
                   {t("detail.appliedDate", { date: formatDate(a.applied_at) })}
                 </span>
               )}
-              {(a.next_action || a.next_action_at) && (
+              {inlineField === "followup" ? (
+                <form
+                  className="inline-edit"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    inlinePatch(
+                      api.updateFollowUp(a.id, {
+                        next_action: fuText.trim() || null,
+                        next_action_at: fuDate || null,
+                      }),
+                    );
+                  }}
+                >
+                  <input
+                    value={fuText}
+                    onChange={(e) => setFuText(e.target.value)}
+                    placeholder={t("detail.followUpFallback")}
+                    autoFocus
+                  />
+                  <input
+                    type="date"
+                    value={fuDate}
+                    onChange={(e) => setFuDate(e.target.value)}
+                  />
+                  <div className="inline-edit-actions">
+                    <button type="submit" className="primary">
+                      {t("common.save")}
+                    </button>
+                    <button type="button" onClick={() => setInlineField(null)}>
+                      {t("common.cancel")}
+                    </button>
+                  </div>
+                </form>
+              ) : a.next_action || a.next_action_at ? (
                 <span
                   className={`due-line${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
                 >
                   → {a.next_action ?? t("detail.followUpFallback")}
                   {a.next_action_at ? ` · ${formatDate(a.next_action_at)}` : ""}
+                  <button
+                    type="button"
+                    className="inline-edit-open"
+                    aria-label={t("common.edit")}
+                    onClick={() => {
+                      setFuText(a.next_action ?? "");
+                      setFuDate(a.next_action_at?.slice(0, 10) ?? "");
+                      setInlineField("followup");
+                    }}
+                  >
+                    ✎
+                  </button>
                 </span>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setFuText("");
+                    setFuDate("");
+                    setInlineField("followup");
+                  }}
+                >
+                  {t("detail.setFollowUp")}
+                </button>
               )}
-              {a.notes && <p className="notes">{a.notes}</p>}
+              {inlineField === "notes" ? (
+                <form
+                  className="inline-edit"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    inlinePatch(
+                      api.patchApplication(a.id, {
+                        notes: noteDraft.trim() || null,
+                      }),
+                    );
+                  }}
+                >
+                  <textarea
+                    rows={4}
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="inline-edit-actions">
+                    <button type="submit" className="primary">
+                      {t("common.save")}
+                    </button>
+                    <button type="button" onClick={() => setInlineField(null)}>
+                      {t("common.cancel")}
+                    </button>
+                  </div>
+                </form>
+              ) : a.notes ? (
+                <p className="notes">
+                  {a.notes}
+                  <button
+                    type="button"
+                    className="inline-edit-open"
+                    aria-label={t("common.edit")}
+                    onClick={() => {
+                      setNoteDraft(a.notes ?? "");
+                      setInlineField("notes");
+                    }}
+                  >
+                    ✎
+                  </button>
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setNoteDraft("");
+                    setInlineField("notes");
+                  }}
+                >
+                  {t("detail.addNote")}
+                </button>
+              )}
               {a.job_description && (
                 <details className="jd-snapshot">
                   <summary>
