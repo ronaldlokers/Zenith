@@ -2582,6 +2582,14 @@ export default function App() {
         >
           {t("tabs.cv")}
         </button>
+        <button
+          className={`tab-settings${tab === "settings" ? " active" : ""}`}
+          data-tab="settings"
+          aria-current={tab === "settings" ? "page" : undefined}
+          onClick={() => setTab("settings")}
+        >
+          {t("settings.title")}
+        </button>
       </nav>
 
       {error && (
