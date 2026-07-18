@@ -6353,6 +6353,9 @@ function PipelineTab({
   // Closed drawer (#346).
   const [showFilters, setShowFilters] = useState(false);
   const [showArchivedModal, setShowArchivedModal] = useState(false);
+  const [archivedFilter, setArchivedFilter] = useState<
+    "all" | "rejected" | "ghosted" | "withdrawn" | "archived"
+  >("all");
 
   // One-shot: consume the jump query then clear it upstream, so a single
   // Calendar jump doesn't re-inject the search on every later visit (#314).
@@ -6554,6 +6557,19 @@ function PipelineTab({
   const inactive = applications
     .filter((a) => isDead(a.status) || a.archived_at)
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+  const reasonOf = (a: Application) =>
+    isDead(a.status) ? (a.status as "rejected" | "withdrawn" | "ghosted") : "archived";
+  const archivedTabs = [
+    { key: "all" as const, n: inactive.length },
+    { key: "rejected" as const, n: inactive.filter((a) => reasonOf(a) === "rejected").length },
+    { key: "ghosted" as const, n: inactive.filter((a) => reasonOf(a) === "ghosted").length },
+    { key: "withdrawn" as const, n: inactive.filter((a) => reasonOf(a) === "withdrawn").length },
+    { key: "archived" as const, n: inactive.filter((a) => reasonOf(a) === "archived").length },
+  ].filter((tobj) => tobj.key === "all" || tobj.n > 0);
+  const shownArchived =
+    archivedFilter === "all"
+      ? inactive
+      : inactive.filter((a) => reasonOf(a) === archivedFilter);
 
   return (
     <section>
@@ -6573,6 +6589,9 @@ function PipelineTab({
       {/* Slim bar (#346): search · filter · sort · archived · add. The
           funnel ring is gone — counts live in the column headers now. */}
       <div className="board-bar">
+        <span className="board-search-icon" aria-hidden="true">
+          <SearchIcon />
+        </span>
         <input
           ref={searchRef}
           type="search"
@@ -6616,43 +6635,53 @@ function PipelineTab({
 
       {showFilters && (
         <div className="board-filters-pop">
-          <div className="filters">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="all">{t("filters.allRoles")}</option>
-              {roleTypes.map((r) => (
-                <option key={r.slug} value={r.slug}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={companyFilter}
-              onChange={(e) => setCompanyFilter(e.target.value)}
-            >
-              <option value="all">{t("filters.allCompanies")}</option>
-              {companies.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            {allTags.length > 0 && (
+          <div className="filters-fields">
+            <label className="filter-field">
+              <span>{t("filters.role")}</span>
               <select
-                value={tagFilter}
-                onChange={(e) => setTagFilter(e.target.value)}
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
               >
-                <option value="all">{t("filters.allTags")}</option>
-                {allTags.map((tg) => (
-                  <option key={tg.id} value={tg.id}>
-                    {tg.name}
+                <option value="all">{t("filters.allRoles")}</option>
+                {roleTypes.map((r) => (
+                  <option key={r.slug} value={r.slug}>
+                    {r.label}
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="filter-field">
+              <span>{t("filters.company")}</span>
+              <select
+                value={companyFilter}
+                onChange={(e) => setCompanyFilter(e.target.value)}
+              >
+                <option value="all">{t("filters.allCompanies")}</option>
+                {companies.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {allTags.length > 0 && (
+              <label className="filter-field">
+                <span>{t("filters.tag")}</span>
+                <select
+                  value={tagFilter}
+                  onChange={(e) => setTagFilter(e.target.value)}
+                >
+                  <option value="all">{t("filters.allTags")}</option>
+                  {allTags.map((tg) => (
+                    <option key={tg.id} value={tg.id}>
+                      {tg.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
           </div>
+          <div className="filters-views-label">{t("savedViews.heading")}</div>
           <div className="saved-views">
             {savedViews.map((v) => (
               <span
@@ -6739,15 +6768,34 @@ function PipelineTab({
           {inactive.length === 0 ? (
             <p className="muted small">{t("board.noArchived")}</p>
           ) : (
+            <>
+            <div className="archived-tabs">
+              {archivedTabs.map((tobj) => (
+                <button
+                  key={tobj.key}
+                  type="button"
+                  className={`chip${archivedFilter === tobj.key ? " active" : ""}`}
+                  onClick={() => setArchivedFilter(tobj.key)}
+                >
+                  {tobj.key === "all"
+                    ? t("board.archAll")
+                    : t(
+                        `board.reason${tobj.key[0].toUpperCase()}${tobj.key.slice(1)}`,
+                      )}{" "}
+                  <span className="chip-n">{tobj.n}</span>
+                </button>
+              ))}
+            </div>
             <ul className="archived-list">
-              {inactive.map((a) => {
-                const reasonKey = isDead(a.status)
-                  ? a.status === "rejected"
+              {shownArchived.map((a) => {
+                const reasonKey =
+                  reasonOf(a) === "rejected"
                     ? "reasonRejected"
-                    : a.status === "withdrawn"
+                    : reasonOf(a) === "withdrawn"
                       ? "reasonWithdrawn"
-                      : "reasonGhosted"
-                  : "reasonArchived";
+                      : reasonOf(a) === "ghosted"
+                        ? "reasonGhosted"
+                        : "reasonArchived";
                 const restore = () =>
                   (a.archived_at
                     ? api.unarchiveApplication(a.id).then(() => onChanged())
@@ -6777,6 +6825,7 @@ function PipelineTab({
                 );
               })}
             </ul>
+            </>
           )}
         </Dialog>
       )}

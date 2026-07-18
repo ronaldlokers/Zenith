@@ -44,7 +44,8 @@
     "namePrompt": "Naam voor deze weergave",
     "saved": "Weergave “{{name}}” opgeslagen",
     "save": "Weergave opslaan",
-    "delete": "Weergave {{name}} verwijderen"
+    "delete": "Weergave {{name}} verwijderen",
+    "heading": "Opgeslagen weergaven"
   },
   "sampleData": {
     "title": "Voorbeelddata",
@@ -117,7 +118,10 @@
     "allCompanies": "Alle bedrijven",
     "allTags": "Alle labels",
     "showArchived": "Toon gearchiveerd",
-    "toggle": "Filters"
+    "toggle": "Filters",
+    "role": "Functie",
+    "company": "Bedrijf",
+    "tag": "Tag"
   },
   "empty": {
     "noCompanies": "Nog geen bedrijven. Voeg de bedrijven toe waar je op mikt — vacatures en contacten linken hiernaar.",
@@ -574,7 +578,9 @@
     "reasonWithdrawn": "ingetrokken",
     "reasonGhosted": "ghosted",
     "reasonArchived": "opzij gezet",
-    "noArchived": "Nog niets gearchiveerd of gesloten."
+    "noArchived": "Nog niets gearchiveerd of gesloten.",
+    "archAll": "Alles",
+    "archActive": "Alleen actief"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
