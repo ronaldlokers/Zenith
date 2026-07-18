@@ -165,7 +165,15 @@
     "calendarLink": "Agenda-abonneerlink",
     "calendarLinkHint": "Voeg deze URL toe als geabonneerde agenda in Google/Outlook/Apple Calendar — vervolgacties, deadlines en gesprekken blijven automatisch synchroon. Alleen-lezen, wordt bijgewerkt telkens als je agenda-app ververst.",
     "regenerateLinkConfirm": "Deze link opnieuw genereren? De huidige link werkt direct niet meer voor iedereen met wie je hem hebt gedeeld.",
-    "disableLinkConfirm": "Deze link uitschakelen? De huidige link werkt niet meer voor iedereen met wie je hem hebt gedeeld."
+    "disableLinkConfirm": "Deze link uitschakelen? De huidige link werkt niet meer voor iedereen met wie je hem hebt gedeeld.",
+    "section": {
+      "general": "Algemeen",
+      "sharing": "Delen",
+      "security": "Beveiliging",
+      "integrations": "Integraties",
+      "data": "Data",
+      "admin": "Beheer"
+    }
   },
   "feed": {
     "pulledFrom": "Opgehaald van Adzuna en HN Who's Hiring, elke 6 uur.",

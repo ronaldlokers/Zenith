@@ -165,7 +165,15 @@
     "calendarLink": "Calendar subscribe link",
     "calendarLinkHint": "Add this URL as a subscribed calendar in Google/Outlook/Apple Calendar — follow-ups, deadlines, and interviews stay in sync automatically. Read-only, updates whenever your calendar app refreshes.",
     "regenerateLinkConfirm": "Regenerate this link? The current link stops working immediately for anyone you've shared it with.",
-    "disableLinkConfirm": "Disable this link? The current link stops working for anyone you've shared it with."
+    "disableLinkConfirm": "Disable this link? The current link stops working for anyone you've shared it with.",
+    "section": {
+      "general": "General",
+      "sharing": "Sharing",
+      "security": "Security",
+      "integrations": "Integrations",
+      "data": "Data",
+      "admin": "Admin"
+    }
   },
   "feed": {
     "pulledFrom": "Pulled from Adzuna and HN Who's Hiring every 6 hours.",

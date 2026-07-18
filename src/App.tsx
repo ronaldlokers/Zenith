@@ -327,7 +327,8 @@ type Tab =
   | "stats"
   | "companies"
   | "contacts"
-  | "cv";
+  | "cv"
+  | "settings";
 
 // URL routing (#73) — a small manual History-API layer via
 // react-router's useLocation/useNavigate rather than a full <Routes>
@@ -344,6 +345,7 @@ const TAB_PATHS: Record<Tab, string> = {
   companies: "/companies",
   contacts: "/people",
   cv: "/cv",
+  settings: "/settings",
 };
 
 const PATH_TABS: Record<string, Tab> = {
@@ -357,6 +359,7 @@ const PATH_TABS: Record<string, Tab> = {
   companies: "companies",
   people: "contacts",
   cv: "cv",
+  settings: "settings",
 };
 
 function parsePath(pathname: string): { tab: Tab; id: number | null } {
@@ -1729,10 +1732,20 @@ function applyTheme(value: string) {
   }
 }
 
-function SettingsModal({ onClose }: { onClose: () => void }) {
+// Settings is a routed page with a section nav (#314) — it had grown to
+// 14+ stacked sections (incl. an admin console) inside a 416px modal.
+type SettingsSection =
+  | "general"
+  | "sharing"
+  | "security"
+  | "integrations"
+  | "data"
+  | "admin";
+
+function SettingsPage() {
   const { t, i18n } = useTranslation();
-  const dialogRef = useFocusTrap<HTMLDivElement>();
   const { data: session } = useSession();
+  const [section, setSection] = useState<SettingsSection>("general");
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
   );
@@ -1751,14 +1764,6 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
       setCalendarToken(p.calendar_token);
     });
   }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const shareUrl = shareToken
     ? `${window.location.origin}/shared/${shareToken}`
@@ -1811,17 +1816,38 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
       .finally(() => setCalendarBusy(false));
   };
 
+  const sections: SettingsSection[] = [
+    "general",
+    "sharing",
+    ...(session ? (["security", "integrations", "data"] as const) : []),
+    ...(session?.user.role === "admin" ? (["admin"] as const) : []),
+  ];
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className="modal settings-modal"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("settings.title")}
-      >
-        <h2>{t("settings.title")}</h2>
+    <section className="settings-page">
+      <nav className="settings-nav" aria-label={t("settings.title")}>
+        {sections.map((s) => (
+          <button
+            key={s}
+            className={section === s ? "active" : ""}
+            aria-current={section === s ? "true" : undefined}
+            onClick={() => setSection(s)}
+          >
+            {t(`settings.section.${s}`)}
+          </button>
+        ))}
+      </nav>
+      <div className="settings-content settings-modal">
+        <h2>{t(`settings.section.${section}`)}</h2>
+        {session && (
+          <div className="account-signed-in">
+            <span>{t("account.signedInAs", { email: session.user.email })}</span>
+            <button onClick={() => signOut()}>{t("account.signOut")}</button>
+          </div>
+        )}
+        {apiError && <p className="login-error">{apiError}</p>}
+        {section === "general" && (
+          <>
         <label className="settings-field">
           <span>{t("settings.language")}</span>
           <select
@@ -1865,6 +1891,10 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             ))}
           </select>
         </label>
+          </>
+        )}
+        {section === "sharing" && (
+          <>
         <div className="settings-field share-field">
           <span>{t("settings.shareLink")}</span>
           {shareUrl ? (
@@ -1906,27 +1936,35 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
             </button>
           )}
         </div>
-        <div className="account-section">
-          {session && (
-            <div className="account-signed-in">
-              <span>{t("account.signedInAs", { email: session.user.email })}</span>
-              <button onClick={() => signOut()}>{t("account.signOut")}</button>
-            </div>
-          )}
-          {apiError && <p className="login-error">{apiError}</p>}
-          {session && <PublicApiSettings onError={setApiError} />}
-          {session && <PushSettings />}
-          {session && <TwoFactorSettings />}
-          {session && <SessionManagement />}
-          {session && <ChangePassword />}
-          {session && <SampleDataSettings onError={setApiError} />}
-          {session && <DeleteAccount onError={setApiError} />}
-          {session?.user.role === "admin" && <AdminUsers onError={setApiError} />}
-          {session?.user.role === "admin" && <AdminInvite />}
-        </div>
-        <button onClick={onClose}>{t("common.close")}</button>
+          </>
+        )}
+        {section === "security" && session && (
+          <div className="account-section">
+            <TwoFactorSettings />
+            <SessionManagement />
+            <ChangePassword />
+          </div>
+        )}
+        {section === "integrations" && session && (
+          <div className="account-section">
+            <PublicApiSettings onError={setApiError} />
+            <PushSettings />
+          </div>
+        )}
+        {section === "data" && session && (
+          <div className="account-section">
+            <SampleDataSettings onError={setApiError} />
+            <DeleteAccount onError={setApiError} />
+          </div>
+        )}
+        {section === "admin" && session?.user.role === "admin" && (
+          <div className="account-section">
+            <AdminUsers onError={setApiError} />
+            <AdminInvite />
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -2239,7 +2277,6 @@ export default function App() {
   const navigate = useNavigate();
   const { tab, id: detailIdFromUrl } = parsePath(location.pathname);
   const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
-  const [showSettings, setShowSettings] = useState(false);
   // Mobile quick-add FAB (#135) — reachable from any tab, not just from
   // inside the Jobs toolbar. A counter rather than a boolean so repeated
   // taps re-trigger the effect in ApplicationsTab even if the form was
@@ -2426,9 +2463,6 @@ export default function App() {
 
   return (
     <div className="app">
-      {showSettings && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
-      )}
       {showPalette && (
         <CommandPalette
           applications={activeApps}
@@ -2474,10 +2508,11 @@ export default function App() {
           </button>
           <NotificationBell />
           <button
-            className="settings-btn"
-            onClick={() => setShowSettings(true)}
+            className={`settings-btn${tab === "settings" ? " active" : ""}`}
+            onClick={() => setTab("settings")}
             title={t("header.settings")}
             aria-label={t("header.settings")}
+            aria-current={tab === "settings" ? "page" : undefined}
           >
             <SettingsIcon />
           </button>
@@ -2715,6 +2750,7 @@ export default function App() {
               />
             )}
             {tab === "cv" && <CVTab onError={setError} notify={notify} />}
+            {tab === "settings" && <SettingsPage />}
           </>
         )}
       </main>
