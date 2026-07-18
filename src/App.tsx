@@ -48,6 +48,56 @@ import {
   type Webhook,
 } from "./types";
 import "./App.css";
+import {
+  ArchiveIcon,
+  BellIcon,
+  EmptyActivityIcon,
+  EmptyCalendarIcon,
+  EmptyCvIcon,
+  EmptyCompaniesIcon,
+  EmptyFeedIcon,
+  EmptyPeopleIcon,
+  ErrorIcon,
+  FilterIcon,
+  Logo,
+  NavCalendarIcon,
+  NavCvIcon,
+  NavFeedIcon,
+  NavNetworkIcon,
+  NavOverviewIcon,
+  NavPipelineIcon,
+  RemoveIcon,
+  SearchIcon,
+  SettingsIcon,
+} from "./icons";
+import {
+  OUTREACH_STATUSES,
+  PIPELINE,
+  ageDays,
+  annualizedComp,
+  buildNegotiationDraft,
+  computePipelineMomentum,
+  computeWeeklyMomentum,
+  downloadOfferComparisonPdf,
+  formatComp,
+  formatDate,
+  isDead,
+  isDeadlinePast,
+  isDeadlineSoon,
+  isDue,
+  isFollowUpDue,
+  isFollowUpOverdue,
+  isOverdue,
+  median,
+  medianTimeToOffer,
+  parseSqlDate,
+  safeHref,
+  sortCards,
+  today,
+  totalComp,
+  totalCompBreakdown,
+} from "./format";
+import type { BoardSort, Urgency } from "./format";
 
 // Shared remove-icon glyph (#118) — a plain "×" character renders at
 // inconsistent visual weight across browsers/fonts; an inline SVG at a
@@ -197,268 +247,6 @@ function LoadFailed({ onRetry }: { onRetry?: () => void }) {
   );
 }
 
-// Stage-spectrum legend (#279) — teaches the pipeline colors, which are
-// otherwise only implicit. The dot color comes from each stage-* class via
-// --sc, the same token the board/stats dots use.
-// Empty-state illustrations (#136) — extending Jobs' hand-drawn SVG
-// (the climbing-dots motif above) to the other tabs, in the same
-// line-art style: currentColor strokes, one accent-stroked highlight.
-function EmptyCompaniesIcon() {
-  return (
-    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-      <rect x="18" y="24" width="60" height="52" rx="4" strokeWidth="4" opacity="0.3" />
-      <line x1="32" y1="38" x2="40" y2="38" strokeWidth="4" strokeLinecap="round" />
-      <line x1="56" y1="38" x2="64" y2="38" strokeWidth="4" strokeLinecap="round" />
-      <line x1="32" y1="54" x2="40" y2="54" strokeWidth="4" strokeLinecap="round" />
-      <line x1="56" y1="54" x2="64" y2="54" strokeWidth="4" strokeLinecap="round" className="accent-stroke" />
-      <line x1="42" y1="76" x2="54" y2="76" strokeWidth="5" opacity="0.5" />
-    </svg>
-  );
-}
-
-function EmptyPeopleIcon() {
-  return (
-    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-      <circle cx="36" cy="34" r="14" strokeWidth="4" opacity="0.35" />
-      <path d="M14 78c2-16 14-24 22-24s20 8 22 24" strokeWidth="4" opacity="0.35" strokeLinecap="round" />
-      <circle cx="66" cy="30" r="12" strokeWidth="5" className="accent-stroke" />
-      <path d="M48 78c2-14 12-21 18-21s16 7 18 21" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function EmptyCvIcon() {
-  return (
-    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-      <rect x="24" y="12" width="48" height="72" rx="4" strokeWidth="4" opacity="0.3" />
-      <line x1="34" y1="28" x2="62" y2="28" strokeWidth="4" strokeLinecap="round" opacity="0.5" />
-      <line x1="34" y1="40" x2="62" y2="40" strokeWidth="4" strokeLinecap="round" opacity="0.35" />
-      <line x1="34" y1="52" x2="52" y2="52" strokeWidth="4" strokeLinecap="round" opacity="0.35" />
-      <line x1="34" y1="66" x2="62" y2="66" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
-      <line x1="34" y1="76" x2="50" y2="76" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function EmptyFeedIcon() {
-  // Radar sweep — the feed scans outside sources for new roles.
-  return (
-    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M20 78 A46 46 0 0 1 66 32" strokeWidth="4" opacity="0.28" strokeLinecap="round" />
-      <path d="M20 78 A32 32 0 0 1 52 46" strokeWidth="4" opacity="0.5" strokeLinecap="round" />
-      <path d="M20 78 A18 18 0 0 1 38 60" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
-      <circle cx="66" cy="32" r="6" strokeWidth="5" className="accent-stroke" />
-      <circle cx="20" cy="78" r="4" fill="currentColor" stroke="none" opacity="0.5" />
-    </svg>
-  );
-}
-
-function EmptyCalendarIcon() {
-  return (
-    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-      <rect x="16" y="22" width="64" height="56" rx="5" strokeWidth="4" opacity="0.3" />
-      <line x1="16" y1="38" x2="80" y2="38" strokeWidth="4" opacity="0.3" />
-      <line x1="34" y1="13" x2="34" y2="26" strokeWidth="4" opacity="0.5" strokeLinecap="round" />
-      <line x1="62" y1="13" x2="62" y2="26" strokeWidth="4" opacity="0.5" strokeLinecap="round" />
-      <circle cx="59" cy="58" r="9" strokeWidth="5" className="accent-stroke" />
-    </svg>
-  );
-}
-
-function EmptyActivityIcon() {
-  // Pulse line — events land here once things start moving.
-  return (
-    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
-      <path d="M10 56 h16 l7-16" strokeWidth="4" opacity="0.35" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M33 40 44 72 54 44" strokeWidth="5" className="accent-stroke" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M54 44 l5 12 h27" strokeWidth="4" opacity="0.35" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-// Matches the stroke-based hand-drawn style of the Empty*Icon set (#203) —
-// the settings button previously used a bare "⚙" glyph, a third icon
-// convention alongside these SVGs and the app's mostly-textual chrome.
-function SearchIcon() {
-  return (
-    <svg
-      className="settings-icon"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="2" />
-      <path d="M20 20l-5-5" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// Bottom-nav glyphs (#346) — 24x24, currentColor, strokeWidth 2, matching
-// SettingsIcon. Shown only on the mobile bottom bar (icon over label); the
-// desktop sidebar keeps its text labels.
-function navSvg(children: React.ReactNode) {
-  return (
-    <svg
-      className="nav-icon"
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {children}
-    </svg>
-  );
-}
-const NavOverviewIcon = () =>
-  navSvg(<path d="M4 11l8-6 8 6M6 10v9h12v-9" />);
-const NavPipelineIcon = () =>
-  navSvg(
-    <>
-      <rect x="4" y="5" width="4" height="14" rx="1" />
-      <rect x="10" y="5" width="4" height="9" rx="1" />
-      <rect x="16" y="5" width="4" height="6" rx="1" />
-    </>,
-  );
-const NavFeedIcon = () =>
-  navSvg(
-    <>
-      <path d="M5 5a14 14 0 0114 14" />
-      <path d="M5 12a7 7 0 017 7" />
-      <circle cx="5.5" cy="18.5" r="0.6" fill="currentColor" stroke="none" />
-    </>,
-  );
-const NavCalendarIcon = () =>
-  navSvg(
-    <>
-      <rect x="4" y="5" width="16" height="15" rx="2" />
-      <path d="M4 9h16M9 3v4M15 3v4" />
-    </>,
-  );
-const NavNetworkIcon = () =>
-  navSvg(
-    <>
-      <circle cx="6" cy="7" r="2.2" />
-      <circle cx="18" cy="7" r="2.2" />
-      <circle cx="12" cy="17" r="2.2" />
-      <path d="M7.7 8.6l3 6.8M16.3 8.6l-3 6.8M8 7h8" />
-    </>,
-  );
-const NavCvIcon = () =>
-  navSvg(
-    <>
-      <rect x="6" y="3" width="12" height="18" rx="2" />
-      <path d="M9 8h6M9 12h6M9 16h4" />
-    </>,
-  );
-
-function SettingsIcon() {
-  return (
-    <svg
-      className="settings-icon"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="3.2" strokeWidth="2" />
-      <path
-        d="M12 3.5v2.4M12 18.1v2.4M20.5 12h-2.4M5.9 12H3.5M17.66 6.34l-1.7 1.7M8.04 15.96l-1.7 1.7M17.66 17.66l-1.7-1.7M8.04 8.04l-1.7-1.7"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-// Filter (funnel) + Archive (lidded box) glyphs for the board bar chips
-// (#346) — same 24x24 currentColor / strokeWidth 2 style as the nav set.
-function FilterIcon() {
-  return (
-    <svg className="chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 5h16l-6 7v6l-4 2v-8z" />
-    </svg>
-  );
-}
-function ArchiveIcon() {
-  return (
-    <svg className="chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="4" rx="1" />
-      <path d="M5 8v11h14V8M10 12h4" />
-    </svg>
-  );
-}
-
-// Matches the stroke-based hand-drawn style of the Empty*Icon set —
-// the error banner previously had no icon at all (#206).
-function ErrorIcon() {
-  return (
-    <svg
-      className="error-icon"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="9" strokeWidth="2" />
-      <line x1="12" y1="7.5" x2="12" y2="13" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="12" cy="16.5" r="1.1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg
-      className="bell-icon"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        d="M6 9a6 6 0 0 1 12 0c0 4.5 1.5 6 1.5 6h-15S6 13.5 6 9Z"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M10 19a2 2 0 0 0 4 0" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function RemoveIcon() {
-  return (
-    <svg
-      className="remove-icon"
-      width="10"
-      height="10"
-      viewBox="0 0 10 10"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M1 1L9 9M9 1L1 9"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 type Tab =
   | "overview"
   | "applications"
@@ -508,118 +296,6 @@ function parsePath(pathname: string): { tab: Tab; id: number | null } {
   const tab = (match && PATH_TABS[match[1]]) || "overview";
   const id = match && match[2] ? Number(match[2]) : null;
   return { tab, id };
-}
-
-const PIPELINE: Status[] = [
-  "interested",
-  "applied",
-  "screening",
-  "interview",
-  "offer",
-];
-
-const OUTREACH_STATUSES: OutreachStatus[] = [
-  "not_contacted",
-  "awaiting_reply",
-  "replied",
-  "no_response",
-];
-
-function isDead(status: Status): boolean {
-  return status === "rejected" || status === "withdrawn" || status === "ghosted";
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function isDue(a: Application): boolean {
-  return !!a.next_action_at && !isDead(a.status) && a.next_action_at <= today();
-}
-
-function isOverdue(a: Application): boolean {
-  return !!a.next_action_at && !isDead(a.status) && a.next_action_at < today();
-}
-
-function isFollowUpDue(c: Contact): boolean {
-  return !!c.follow_up_at && c.follow_up_at <= today();
-}
-
-function isFollowUpOverdue(c: Contact): boolean {
-  return !!c.follow_up_at && c.follow_up_at < today();
-}
-
-const DEADLINE_SOON_DAYS = 3;
-
-function deadlineDaysLeft(a: Application): number | null {
-  if (!a.deadline_at) return null;
-  return Math.round(
-    (new Date(a.deadline_at).getTime() - new Date(today()).getTime()) /
-      86400000,
-  );
-}
-
-function isDeadlineSoon(a: Application): boolean {
-  const days = deadlineDaysLeft(a);
-  return days !== null && !isDead(a.status) && days <= DEADLINE_SOON_DAYS;
-}
-
-function isDeadlinePast(a: Application): boolean {
-  const days = deadlineDaysLeft(a);
-  return days !== null && !isDead(a.status) && days < 0;
-}
-
-function formatDate(d: string): string {
-  return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
-}
-
-// Only http(s) links are ever rendered as href — a stored javascript:
-// or data: URI (from a feed source, a scraped import, or hand-typed)
-// must not be clickable.
-function safeHref(url: string | null | undefined): string | undefined {
-  if (!url) return undefined;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:"
-      ? url
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function ageDays(updatedAt: string): string {
-  const then = new Date(updatedAt.replace(" ", "T") + "Z").getTime();
-  const days = Math.max(0, Math.floor((Date.now() - then) / 86400000));
-  return `${days}d`;
-}
-
-function Logo({ size = 26 }: { size?: number }) {
-  return (
-    <svg
-      width={(size * 140) / 56}
-      height={size}
-      viewBox="0 0 140 56"
-      fill="none"
-      aria-hidden="true"
-    >
-      <line x1="14" y1="28" x2="98" y2="28" stroke="currentColor" strokeWidth="4" opacity="0.3" />
-      <circle cx="14" cy="28" r="5.5" fill="currentColor" />
-      <circle cx="38" cy="28" r="5.5" fill="currentColor" />
-      <circle cx="62" cy="28" r="5.5" fill="currentColor" opacity="0.45" />
-      <g stroke="var(--accent)" strokeWidth="3.6">
-        <circle cx="106" cy="28" r="12" />
-        <line x1="106" y1="10" x2="106" y2="16" />
-        <line x1="106" y1="40" x2="106" y2="46" />
-        <line x1="88" y1="28" x2="94" y2="28" />
-        <line x1="118" y1="28" x2="124" y2="28" />
-      </g>
-      <circle cx="106" cy="28" r="4" fill="var(--accent)" />
-    </svg>
-  );
 }
 
 // One styled confirmation dialog for the whole app (#314 round 3) —
@@ -2894,51 +2570,8 @@ interface CrudTabProps extends TabProps {
   onDelete: (resource: string, id: number, name: string) => void;
 }
 
-// Shared card markup for both Board layouts (stage columns and the
 // Card urgency (#346) — a single worst-wins state driving the coloured
 // left edge and the one action line/badge a card may show.
-type Urgency = "overdue" | "today" | "stale" | "quiet" | null;
-const URGENCY_RANK: Record<Exclude<Urgency, null>, number> = {
-  overdue: 0,
-  today: 1,
-  stale: 2,
-  quiet: 3,
-};
-function urgencyRank(u: Urgency): number {
-  return u ? URGENCY_RANK[u] : 4;
-}
-
-type BoardSort = "urgency" | "followup" | "fit" | "updated";
-
-// Sort a column's cards by the chosen key (default urgency), so the top of
-// every column is the work that matters (#346).
-function sortCards(
-  cards: Application[],
-  sort: BoardSort,
-  urgencyOf: (a: Application) => Urgency,
-): Application[] {
-  const copy = [...cards];
-  if (sort === "fit") {
-    copy.sort((a, b) => (b.fit_score ?? 0) - (a.fit_score ?? 0));
-  } else if (sort === "updated") {
-    copy.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-  } else if (sort === "followup") {
-    copy.sort((a, b) =>
-      (a.next_action_at ?? "9999").localeCompare(b.next_action_at ?? "9999"),
-    );
-  } else {
-    copy.sort((a, b) => {
-      const byU = urgencyRank(urgencyOf(a)) - urgencyRank(urgencyOf(b));
-      if (byU !== 0) return byU;
-      const av = a.next_action_at ?? "9999";
-      const bv = b.next_action_at ?? "9999";
-      if (av !== bv) return av.localeCompare(bv);
-      return b.updated_at.localeCompare(a.updated_at);
-    });
-  }
-  return copy;
-}
-
 // One board card (#346) — a coloured left edge for urgency (worst-wins),
 // title + company, at most one action line/badge, and a ⋯ menu that
 // replaces the old per-card status dropdown.
@@ -3577,230 +3210,6 @@ function Documents({
       </ul>
     </div>
   );
-}
-
-function parseSqlDate(d: string): number {
-  return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
-}
-
-function median(nums: number[]): number | null {
-  if (!nums.length) return null;
-  const sorted = [...nums].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-// Annualized midpoint, for sorting/comparing offers on a common basis
-function annualizedComp(a: Application): number | null {
-  if (a.salary_min == null && a.salary_max == null) return null;
-  const mid =
-    a.salary_max != null && a.salary_min != null
-      ? (a.salary_min + a.salary_max) / 2
-      : (a.salary_max ?? a.salary_min)!;
-  return a.salary_period === "month" ? mid * 12 : mid;
-}
-
-function formatComp(a: Application): string {
-  const cur = a.salary_currency ?? "";
-  const per = a.salary_period === "month" ? "/mo" : "/yr";
-  if (a.salary_min != null && a.salary_max != null) {
-    return `${cur} ${a.salary_min.toLocaleString()}–${a.salary_max.toLocaleString()}${per}`;
-  }
-  const one = a.salary_max ?? a.salary_min;
-  return one != null ? `${cur} ${one.toLocaleString()}${per}` : "—";
-}
-
-// Rough total-comp estimate for offer-stage applications: base +
-// signing bonus + bonus target (% of base) + a flat annualized equity
-// estimate. Deliberately approximate (issue #63) — equity/bonus
-// numbers are estimates, not contractual, so this is never shown as
-// a bare precise figure, only prefixed with "~" and paired with a
-// hover breakdown.
-function totalComp(a: Application): number | null {
-  const base = annualizedComp(a);
-  if (base == null) return null;
-  const bonus = a.bonus_target_pct != null ? (base * a.bonus_target_pct) / 100 : 0;
-  return base + (a.signing_bonus ?? 0) + bonus + (a.equity_value ?? 0);
-}
-
-// Dynamic import — jsPDF (~400kB) is only needed once someone actually
-// downloads the comparison, not on every Stats page load (#222).
-async function downloadOfferComparisonPdf(
-  offers: Application[],
-  t: (key: string, opts?: Record<string, unknown>) => string,
-) {
-  const { generateOfferComparisonPdf } = await import("./pdf");
-  const rows = offers.map((a) => ({
-    title: a.title,
-    companyName: a.company_name ?? "—",
-    currency: a.salary_currency ?? "",
-    totalComp: totalComp(a),
-    breakdown: totalCompBreakdown(a),
-    benefitsNotes: a.benefits_notes,
-  }));
-  const doc = generateOfferComparisonPdf(rows, {
-    heading: t("stats.offerComparisonHeading"),
-    totalComp: t("offer.totalComp"),
-    breakdown: t("stats.offerComparisonBreakdown"),
-    benefits: t("offer.benefitsNotes"),
-    noOffers: t("stats.offerComparisonEmpty"),
-  });
-  doc.save("offer-comparison.pdf");
-}
-
-// Negotiation talking-points draft (#223) — a starting point, not a
-// script: pulls together the same total-comp/benchmark numbers already
-// shown on the offer, plus any competing offer, into editable prose
-// rather than a form of fields that would need its own storage.
-function buildNegotiationDraft(
-  a: Application,
-  allApplications: Application[],
-  t: (key: string, opts?: Record<string, unknown>) => string,
-): string {
-  const lines: string[] = [t("offer.negotiationIntro", { title: a.title, company: a.company_name ?? "" })];
-
-  const total = totalComp(a);
-  if (total != null) {
-    lines.push(
-      t("offer.negotiationComp", {
-        amount: `${a.salary_currency ?? ""} ${Math.round(total).toLocaleString()}`,
-      }),
-    );
-  }
-
-  const otherOffers = allApplications
-    .filter((o) => o.id !== a.id && o.status === "offer" && totalComp(o) != null)
-    .sort((x, y) => (totalComp(y) ?? 0) - (totalComp(x) ?? 0));
-  const bestOther = otherOffers[0];
-  if (bestOther && total != null && (totalComp(bestOther) ?? 0) > total) {
-    lines.push(
-      t("offer.negotiationCompeting", {
-        company: bestOther.company_name ?? t("offer.negotiationAnotherCompany"),
-      }),
-    );
-  }
-
-  const sameRole = allApplications.filter(
-    (o) => o.id !== a.id && o.status === "offer" && o.role_type === a.role_type && totalComp(o) != null,
-  );
-  const pool = sameRole.length ? sameRole : otherOffers;
-  if (total != null && pool.length) {
-    const med = median(pool.map((o) => totalComp(o)!));
-    if (med != null && med > 0 && total < med) {
-      lines.push(
-        t("offer.negotiationBelowMarket", {
-          pct: Math.round(((med - total) / med) * 100),
-        }),
-      );
-    }
-  }
-
-  lines.push(t("offer.negotiationClose"));
-  return lines.join("\n\n");
-}
-
-function totalCompBreakdown(a: Application): string {
-  const base = annualizedComp(a);
-  if (base == null) return "";
-  const parts = [`base ~${Math.round(base).toLocaleString()}`];
-  if (a.signing_bonus) parts.push(`signing ${a.signing_bonus.toLocaleString()}`);
-  if (a.bonus_target_pct) {
-    const bonus = Math.round((base * a.bonus_target_pct) / 100);
-    parts.push(`bonus target ${a.bonus_target_pct}% (~${bonus.toLocaleString()})`);
-  }
-  if (a.equity_value) parts.push(`equity ~${a.equity_value.toLocaleString()}/yr`);
-  return parts.join(" + ");
-}
-
-// Weekly buckets + momentum streak — shared by Stats (apps/week histogram)
-// and Overview (streak + weekly goal). Buckets are [now-(8-i)*WEEK,
-// ...+WEEK): i=0 is 8 weeks ago, i=7 is the current week ((8-i), not
-// (7-i) — see #262).
-// Forward stage advances in the last 2 weeks vs the two before — the
-// "speeding up / slowing down" verdict shared by the dashboard band and
-// the detailed Stats view (#346).
-function computePipelineMomentum(history: { from_status: string | null; to_status: string; changed_at: string }[]) {
-  const now = Date.now();
-  const P = 14 * 86400000;
-  const fwd = (r: { from_status: string | null; to_status: string }) => {
-    const to = PIPELINE.indexOf(r.to_status as Status);
-    const from = r.from_status ? PIPELINE.indexOf(r.from_status as Status) : -1;
-    return to >= 0 && to > from;
-  };
-  const recent = history.filter(
-    (h) => fwd(h) && parseSqlDate(h.changed_at) >= now - P,
-  ).length;
-  const prior = history.filter(
-    (h) =>
-      fwd(h) &&
-      parseSqlDate(h.changed_at) >= now - 2 * P &&
-      parseSqlDate(h.changed_at) < now - P,
-  ).length;
-  let verdict: "up" | "down" | "flat" | "none";
-  if (recent === 0 && prior === 0) verdict = "none";
-  else if (prior === 0) verdict = "up";
-  else {
-    const change = (recent - prior) / prior;
-    verdict = change > 0.15 ? "up" : change < -0.15 ? "down" : "flat";
-  }
-  return { verdict, recent, prior };
-}
-
-// Median days from the "applied" transition to "offer", per application
-// that reached offer (#346, lifted from the Stats computation).
-function medianTimeToOffer(history: { application_id: number; to_status: string; changed_at: string }[]): number | null {
-  const byApp = new Map<number, typeof history>();
-  for (const row of history) {
-    const list = byApp.get(row.application_id) ?? [];
-    list.push(row);
-    byApp.set(row.application_id, list);
-  }
-  const durations: number[] = [];
-  for (const rows of byApp.values()) {
-    const a = rows.find((r) => r.to_status === "applied");
-    const o = rows.find((r) => r.to_status === "offer");
-    if (a && o) {
-      const d = (parseSqlDate(o.changed_at) - parseSqlDate(a.changed_at)) / 86400000;
-      if (d >= 0) durations.push(d);
-    }
-  }
-  return median(durations);
-}
-
-function computeWeeklyMomentum(
-  apps: { applied_at: string | null; created_at: string }[],
-  history: { changed_at: string }[],
-) {
-  const WEEK = 7 * 86400000;
-  const now = Date.now();
-  const weeks = Array.from({ length: 8 }, (_, i) => {
-    const start = now - (8 - i) * WEEK;
-    const count = apps.filter((a) => {
-      const t = parseSqlDate(a.applied_at ?? a.created_at);
-      return t >= start && t < start + WEEK;
-    }).length;
-    const label = new Date(start).toLocaleDateString(undefined, {
-      day: "numeric",
-      month: "short",
-    });
-    return { label, count, start };
-  });
-  // Momentum streak (#145) — consecutive weeks (ending this week) with
-  // any job-search activity: a new application or a logged status change.
-  const activityWeeks = weeks.map((w) => {
-    const hasHistory = history.some((h) => {
-      const t = parseSqlDate(h.changed_at);
-      return t >= w.start && t < w.start + WEEK;
-    });
-    return w.count > 0 || hasHistory;
-  });
-  let streak = 0;
-  for (let i = activityWeeks.length - 1; i >= 0; i--) {
-    if (activityWeeks[i]) streak++;
-    else break;
-  }
-  const streakBroken = streak === 0 && activityWeeks.slice(0, -1).some(Boolean);
-  return { weeks, streak, streakBroken };
 }
 
 function StatsTab({
