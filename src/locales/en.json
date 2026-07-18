@@ -22,7 +22,8 @@
     "notifications": "Notifications",
     "notificationsEmpty": "Nothing yet.",
     "markAllRead": "Mark all read",
-    "search": "Search"
+    "search": "Search",
+    "notificationsUnread": "Notifications, {{count}} unread"
   },
   "common": {
     "loading": "Loading…",

@@ -676,6 +676,7 @@ function CommandPalette({
           ref={inputRef}
           type="search"
           role="combobox"
+          aria-label={t("palette.title")}
           aria-expanded={items.length > 0}
           aria-controls="palette-listbox"
           aria-activedescendant={
@@ -1595,10 +1596,19 @@ function NotificationBell() {
         className="settings-btn"
         onClick={() => setOpen((v) => !v)}
         title={t("header.notifications")}
-        aria-label={t("header.notifications")}
+        aria-label={
+          unreadCount > 0
+            ? t("header.notificationsUnread", { count: unreadCount })
+            : t("header.notifications")
+        }
+        aria-expanded={open}
       >
         <BellIcon />
-        {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
+        {unreadCount > 0 && (
+          <span className="notification-dot" aria-hidden="true">
+            {unreadCount}
+          </span>
+        )}
       </button>
       {open && (
         <>
@@ -2405,6 +2415,7 @@ export default function App() {
       <nav className="tabs" ref={tabsRef}>
         <button
           className={tab === "overview" ? "active" : ""}
+          aria-current={tab === "overview" ? "page" : undefined}
           data-tab="overview"
           onClick={() => setTab("overview")}
         >
@@ -2412,6 +2423,7 @@ export default function App() {
         </button>
         <button
           className={tab === "applications" || tab === "board" ? "active" : ""}
+          aria-current={tab === "applications" || tab === "board" ? "page" : undefined}
           data-tab="pipeline"
           onClick={() => setTab("applications")}
         >
@@ -2419,6 +2431,7 @@ export default function App() {
         </button>
         <button
           className={tab === "feed" ? "active" : ""}
+          aria-current={tab === "feed" ? "page" : undefined}
           data-tab="feed"
           onClick={() => setTab("feed")}
         >
@@ -2426,6 +2439,7 @@ export default function App() {
         </button>
         <button
           className={tab === "calendar" ? "active" : ""}
+          aria-current={tab === "calendar" ? "page" : undefined}
           data-tab="calendar"
           onClick={() => setTab("calendar")}
         >
@@ -2433,6 +2447,7 @@ export default function App() {
         </button>
         <button
           className={tab === "stats" ? "active" : ""}
+          aria-current={tab === "stats" ? "page" : undefined}
           data-tab="stats"
           onClick={() => setTab("stats")}
         >
@@ -2440,6 +2455,7 @@ export default function App() {
         </button>
         <button
           className={tab === "companies" || tab === "contacts" ? "active" : ""}
+          aria-current={tab === "companies" || tab === "contacts" ? "page" : undefined}
           data-tab="network"
           onClick={() => setTab("companies")}
         >
@@ -2447,6 +2463,7 @@ export default function App() {
         </button>
         <button
           className={tab === "cv" ? "active" : ""}
+          aria-current={tab === "cv" ? "page" : undefined}
           data-tab="cv"
           onClick={() => setTab("cv")}
         >
@@ -5664,6 +5681,7 @@ function ApplicationsTab({
           ref={searchRef}
           type="search"
           className="search"
+          aria-label={t("toolbar.searchPlaceholder")}
           placeholder={t("toolbar.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -6462,6 +6480,7 @@ function CompaniesTab({
         <input
           type="search"
           className="search"
+          aria-label={t("toolbar.searchCompanies")}
           placeholder={t("toolbar.searchCompanies")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -6901,6 +6920,7 @@ function ContactsTab({
         <input
           type="search"
           className="search"
+          aria-label={t("toolbar.searchPeople")}
           placeholder={t("toolbar.searchPeople")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
