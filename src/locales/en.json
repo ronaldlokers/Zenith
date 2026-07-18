@@ -2,10 +2,8 @@
   "tabs": {
     "overview": "Overview",
     "jobs": "Jobs",
-    "board": "Board",
     "feed": "Feed",
     "calendar": "Calendar",
-    "activity": "Activity",
     "stats": "Stats",
     "companies": "Companies",
     "people": "People",
@@ -14,10 +12,6 @@
     "pipeline": "Pipeline"
   },
   "header": {
-    "openCount_one": "{{count}} open",
-    "openCount_other": "{{count}} open",
-    "dueCount_one": "{{count}} due",
-    "dueCount_other": "{{count}} due",
     "settings": "Settings",
     "notifications": "Notifications",
     "notificationsEmpty": "Nothing yet.",
@@ -110,25 +104,18 @@
   "toolbar": {
     "searchPlaceholder": "Search title, company, notes… (/)",
     "addJob": "+ Add job",
-    "shortcuts": "Keyboard shortcuts",
     "searchCompanies": "Search companies…",
     "addCompany": "+ Add company",
     "searchPeople": "Search people…",
     "addContact": "+ Add contact"
   },
   "filters": {
-    "allStatuses": "All statuses",
     "allRoles": "All roles",
     "allCompanies": "All companies",
     "allTags": "All tags",
-    "showArchived": "Show archived",
-    "sortUpdated": "Last updated",
-    "sortApplied": "Applied date",
-    "sortCompany": "Company"
+    "showArchived": "Show archived"
   },
   "empty": {
-    "noJobs": "No jobs yet. Add your first lead and start the climb.",
-    "noJobsMatch": "No jobs match your search.",
     "noCompanies": "No companies yet. Add the ones you're targeting — applications and contacts link to them.",
     "noCompaniesMatch": "No companies match your search.",
     "noPeople": "No people yet. Add recruiters and hiring managers so you can log every touchpoint.",
@@ -179,7 +166,6 @@
   "feed": {
     "pulledFrom": "Pulled from Adzuna and HN Who's Hiring every 6 hours.",
     "settings": "Settings",
-    "hideSettings": "Hide settings",
     "checkNow": "Check now",
     "checking": "Checking…",
     "viaSource": "via {{source}}",
@@ -289,14 +275,6 @@
     "body": "I'm writing to apply for the {{title}} role at {{company}}. {{summary}}\n\nI'd welcome the chance to discuss how my background fits this role.",
     "signoff": "Best regards,\n{{name}}"
   },
-  "bulk": {
-    "selectedCount_one": "{{count}} selected",
-    "selectedCount_other": "{{count}} selected",
-    "setStatus": "Set status…",
-    "archive": "Archive",
-    "clearSelection": "Clear",
-    "selectRow": "Select row"
-  },
   "detail": {
     "timeline": "Timeline",
     "documents": "Documents",
@@ -309,14 +287,11 @@
     "notes": "Notes",
     "deadline": "Deadline",
     "fitScore": "Fit score",
-    "quiet": "Quieter than usual",
-    "quietDetail": "This employer has gone longer than their own typical response gap without an update",
     "addTag": "+ tag",
     "jobDescription": "Job description",
     "jobDescriptionCaptured": "captured {{date}}",
     "jobDescriptionPlaceholder": "Paste the job description here — kept even if the posting is edited or taken down.",
     "possibleDuplicate": "You already have an open application at this company: \"{{title}}\". Saving will add a separate one.",
-    "archived": "Archived",
     "archive": "Archive",
     "unarchive": "Unarchive",
     "keywordMatch": "Keyword match",
@@ -423,20 +398,10 @@
     }
   },
   "posting": {
-    "staleBadge": "gone?",
     "staleHint": "This posting may no longer be live — worth a quick check."
-  },
-  "heat": {
-    "watchBadge": "slow",
-    "watchHint": "Slower than this employer's usual response time — worth watching.",
-    "quietBadge": "quiet",
-    "quietHint": "Well past this employer's usual response time.",
-    "coldBadge": "cold",
-    "coldHint": "Far past this employer's usual response time — likely gone quiet."
   },
   "referral": {
     "referredBy": "Referred by",
-    "badge": "referral",
     "badgeCount_one": "{{count}} referral",
     "badgeCount_other": "{{count}} referrals"
   },
@@ -582,17 +547,11 @@
     "openCount_other": "open applications",
     "interviewingCount_one": "{{count}} at interview or offer stage",
     "interviewingCount_other": "{{count}} at interview or offer stage",
-    "recentActivity": "Recent activity",
     "noActivity": "Nothing yet — add your first job to get started.",
     "viewAllJobs": "View all jobs",
     "recentlyUpdated": "Recently updated",
     "showActivity": "Show all activity",
     "hideActivity": "Hide activity"
-  },
-  "jobs": {
-    "density": "Row density",
-    "densityComfortable": "Comfortable",
-    "densityCompact": "Compact"
   },
   "toast": {
     "deleted": "Deleted \"{{name}}\"",

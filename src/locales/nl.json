@@ -2,10 +2,8 @@
   "tabs": {
     "overview": "Overzicht",
     "jobs": "Vacatures",
-    "board": "Bord",
     "feed": "Feed",
     "calendar": "Agenda",
-    "activity": "Activiteit",
     "stats": "Statistieken",
     "companies": "Bedrijven",
     "people": "Contacten",
@@ -14,10 +12,6 @@
     "pipeline": "Pijplijn"
   },
   "header": {
-    "openCount_one": "{{count}} open",
-    "openCount_other": "{{count}} open",
-    "dueCount_one": "{{count}} actie nodig",
-    "dueCount_other": "{{count}} acties nodig",
     "settings": "Instellingen",
     "notifications": "Meldingen",
     "notificationsEmpty": "Nog niets.",
@@ -110,25 +104,18 @@
   "toolbar": {
     "searchPlaceholder": "Zoek titel, bedrijf, notities… (/)",
     "addJob": "+ Vacature toevoegen",
-    "shortcuts": "Sneltoetsen",
     "searchCompanies": "Zoek bedrijven…",
     "addCompany": "+ Bedrijf toevoegen",
     "searchPeople": "Zoek contacten…",
     "addContact": "+ Contact toevoegen"
   },
   "filters": {
-    "allStatuses": "Alle statussen",
     "allRoles": "Alle rollen",
     "allCompanies": "Alle bedrijven",
     "allTags": "Alle labels",
-    "showArchived": "Toon gearchiveerd",
-    "sortUpdated": "Laatst bijgewerkt",
-    "sortApplied": "Sollicitatiedatum",
-    "sortCompany": "Bedrijf"
+    "showArchived": "Toon gearchiveerd"
   },
   "empty": {
-    "noJobs": "Nog geen vacatures. Voeg je eerste lead toe en begin de klim.",
-    "noJobsMatch": "Geen vacatures komen overeen met je zoekopdracht.",
     "noCompanies": "Nog geen bedrijven. Voeg de bedrijven toe waar je op mikt — vacatures en contacten linken hiernaar.",
     "noCompaniesMatch": "Geen bedrijven komen overeen met je zoekopdracht.",
     "noPeople": "Nog geen contacten. Voeg recruiters en hiring managers toe om elk contactmoment te loggen.",
@@ -179,7 +166,6 @@
   "feed": {
     "pulledFrom": "Opgehaald van Adzuna en HN Who's Hiring, elke 6 uur.",
     "settings": "Instellingen",
-    "hideSettings": "Instellingen verbergen",
     "checkNow": "Nu controleren",
     "checking": "Controleren…",
     "viaSource": "via {{source}}",
@@ -289,14 +275,6 @@
     "body": "Hierbij solliciteer ik graag voor de functie {{title}} bij {{company}}. {{summary}}\n\nIk licht mijn achtergrond graag toe in een gesprek.",
     "signoff": "Met vriendelijke groet,\n{{name}}"
   },
-  "bulk": {
-    "selectedCount_one": "{{count}} geselecteerd",
-    "selectedCount_other": "{{count}} geselecteerd",
-    "setStatus": "Status instellen…",
-    "archive": "Archiveren",
-    "clearSelection": "Wissen",
-    "selectRow": "Rij selecteren"
-  },
   "detail": {
     "timeline": "Tijdlijn",
     "documents": "Documenten",
@@ -309,14 +287,11 @@
     "notes": "Notities",
     "deadline": "Deadline",
     "fitScore": "Fit-score",
-    "quiet": "Stiller dan normaal",
-    "quietDetail": "Dit bedrijf laat langer niets horen dan hun eigen gebruikelijke reactietijd",
     "addTag": "+ label",
     "jobDescription": "Vacaturetekst",
     "jobDescriptionCaptured": "vastgelegd op {{date}}",
     "jobDescriptionPlaceholder": "Plak hier de vacaturetekst — blijft bewaard, ook als de vacature wordt aangepast of verwijderd.",
     "possibleDuplicate": "Je hebt al een open sollicitatie bij dit bedrijf: \"{{title}}\". Opslaan voegt een aparte toe.",
-    "archived": "Gearchiveerd",
     "archive": "Archiveren",
     "unarchive": "Herstellen",
     "keywordMatch": "Trefwoorden-check",
@@ -423,20 +398,10 @@
     }
   },
   "posting": {
-    "staleBadge": "verlopen?",
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
-  },
-  "heat": {
-    "watchBadge": "traag",
-    "watchHint": "Trager dan de gebruikelijke reactietijd van deze werkgever — in de gaten houden.",
-    "quietBadge": "stil",
-    "quietHint": "Ruim voorbij de gebruikelijke reactietijd van deze werkgever.",
-    "coldBadge": "koud",
-    "coldHint": "Ver voorbij de gebruikelijke reactietijd van deze werkgever — waarschijnlijk stilgevallen."
   },
   "referral": {
     "referredBy": "Doorverwezen door",
-    "badge": "referral",
     "badgeCount_one": "{{count}} referral",
     "badgeCount_other": "{{count}} referrals"
   },
@@ -582,17 +547,11 @@
     "openCount_other": "open sollicitaties",
     "interviewingCount_one": "{{count}} in gesprek of aanbod",
     "interviewingCount_other": "{{count}} in gesprek of aanbod",
-    "recentActivity": "Recente activiteit",
     "noActivity": "Nog niets — voeg je eerste vacature toe om te beginnen.",
     "viewAllJobs": "Bekijk alle vacatures",
     "recentlyUpdated": "Recent bijgewerkt",
     "showActivity": "Alle activiteit tonen",
     "hideActivity": "Activiteit verbergen"
-  },
-  "jobs": {
-    "density": "Rijdichtheid",
-    "densityComfortable": "Comfortabel",
-    "densityCompact": "Compact"
   },
   "toast": {
     "deleted": "\"{{name}}\" verwijderd",
