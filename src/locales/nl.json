@@ -19,7 +19,8 @@
     "settings": "Instellingen",
     "notifications": "Meldingen",
     "notificationsEmpty": "Nog niets.",
-    "markAllRead": "Alles als gelezen markeren"
+    "markAllRead": "Alles als gelezen markeren",
+    "search": "Zoeken"
   },
   "common": {
     "loading": "Laden…",
