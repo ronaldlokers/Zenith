@@ -3811,3 +3811,31 @@ summary.bcol-head::after {
     margin-top: auto;
   }
 }
+
+/* Stats as a dashboard grid (#314) — 13 stacked sections become grouped
+   blocks in two columns on desktop; the offer-compare table + exports
+   span both. Motivation widgets moved to Overview. */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 2.5rem;
+  align-items: start;
+}
+
+.stat-block {
+  min-width: 0;
+}
+
+@media (min-width: 1000px) {
+  .app:has(.stats) > main {
+    max-width: 1100px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-block-wide {
+    grid-column: 1 / -1;
+  }
+}
