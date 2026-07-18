@@ -772,9 +772,14 @@ function AdminUsers({
   }, [load]);
 
   const resetPassword = async (u: AdminUser) => {
-    // A readable one-off temporary password the admin relays; the user
-    // changes it themselves via ChangePassword after logging in.
-    const temp = `Reset-${crypto.randomUUID().slice(0, 8)}`;
+    // A one-off temporary password the admin relays; the user changes it
+    // themselves via ChangePassword after logging in. 128 bits of entropy
+    // (#285 security review) — a truncated UUID was far too guessable.
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    const temp =
+      "Reset-" +
+      Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
     const { error } = await authClient.admin.setUserPassword({
       userId: u.id,
       newPassword: temp,
