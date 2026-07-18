@@ -109,6 +109,17 @@ describe("admin: reset 2FA", () => {
   });
 });
 
+describe("request validation", () => {
+  it("returns 400 (not 500) for a malformed JSON body", async () => {
+    const res = await authedFetch(`${BASE}/api/companies`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{ not valid json",
+    });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("companies", () => {
   it("creates, lists, updates, deletes", async () => {
     const created = await post("/api/companies", {

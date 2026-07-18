@@ -1499,6 +1499,12 @@ app.delete("/api/account/sample-data", async (c) => {
 app.notFound((c) => c.json({ error: "not found" }, 404));
 
 app.onError((err, c) => {
+  // A malformed/empty JSON request body makes c.req.json() throw a
+  // SyntaxError; surface it as 400, not a generic 500 (#285). Every write
+  // route funnels through this single handler.
+  if (err instanceof SyntaxError) {
+    return c.json({ error: "invalid JSON body" }, 400);
+  }
   if (err.message.includes("CHECK constraint failed")) {
     return c.json({ error: "invalid value" }, 400);
   }
