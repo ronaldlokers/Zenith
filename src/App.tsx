@@ -4201,6 +4201,18 @@ function FeedTab({
   const [refreshing, setRefreshing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const cardsRef = useRef<HTMLUListElement>(null);
+  const kbNav = useRef(false);
+  // Move real DOM focus to the j/k-selected card (#285) so the selection is
+  // perceivable to screen-reader and keyboard users, not just a CSS class.
+  // Only on actual keyboard nav — not the initial mount or a list refresh,
+  // which would otherwise steal focus to the first card.
+  useEffect(() => {
+    if (!kbNav.current) return;
+    kbNav.current = false;
+    const cards = cardsRef.current?.querySelectorAll<HTMLElement>(".feed-card");
+    cards?.[focusedIndex]?.focus();
+  }, [focusedIndex]);
 
   const load = useCallback(
     () =>
@@ -4290,9 +4302,11 @@ function FeedTab({
       const list = items ?? [];
       if (e.key === "j") {
         e.preventDefault();
+        kbNav.current = true;
         setFocusedIndex((i) => Math.min(i + 1, list.length - 1));
       } else if (e.key === "k") {
         e.preventDefault();
+        kbNav.current = true;
         setFocusedIndex((i) => Math.max(i - 1, 0));
       } else if (e.key === "a") {
         const target = list[focusedIndex];
@@ -4338,7 +4352,7 @@ function FeedTab({
         />
       )}
 
-      <ul className="cards">
+      <ul className="cards" ref={cardsRef}>
         {(items ?? []).map((item, i) => (
           <FeedCard
             key={item.id}
@@ -4409,6 +4423,8 @@ function FeedCard({
   return (
     <li
       className={`card feed-card${focused ? " kb-focused" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
+      tabIndex={focused ? 0 : -1}
+      aria-current={focused ? "true" : undefined}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
