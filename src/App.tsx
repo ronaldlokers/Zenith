@@ -1753,13 +1753,22 @@ function applyTheme(value: string) {
 // 14+ stacked sections (incl. an admin console) inside a 416px modal.
 type SettingsSection =
   | "general"
+  | "feed"
   | "sharing"
   | "security"
   | "integrations"
   | "data"
   | "admin";
 
-function SettingsPage() {
+function SettingsPage({
+  roleTypes,
+  onRoleTypesChanged,
+  notify,
+}: {
+  roleTypes: RoleTypeDef[];
+  onRoleTypesChanged: () => Promise<void>;
+  notify: (message: string, undo?: () => void) => void;
+}) {
   const { t, i18n } = useTranslation();
   const { data: session } = useSession();
   const [section, setSection] = useState<SettingsSection>("general");
@@ -1835,6 +1844,7 @@ function SettingsPage() {
 
   const sections: SettingsSection[] = [
     "general",
+    "feed",
     "sharing",
     ...(session ? (["security", "integrations", "data"] as const) : []),
     ...(session?.user.role === "admin" ? (["admin"] as const) : []),
@@ -1909,6 +1919,14 @@ function SettingsPage() {
           </select>
         </label>
           </>
+        )}
+        {section === "feed" && (
+          <FeedSettings
+            roleTypes={roleTypes}
+            onRoleTypesChanged={onRoleTypesChanged}
+            onError={setApiError}
+            notify={notify}
+          />
         )}
         {section === "sharing" && (
           <>
@@ -2736,7 +2754,7 @@ export default function App() {
                 onError={setError}
                 notify={notify}
                 roleTypes={roleTypes}
-                onRoleTypesChanged={reload}
+                onOpenSettings={() => setTab("settings")}
               />
             )}
             {tab === "calendar" && (
@@ -2805,7 +2823,13 @@ export default function App() {
               />
             )}
             {tab === "cv" && <CVTab onError={setError} notify={notify} />}
-            {tab === "settings" && <SettingsPage />}
+            {tab === "settings" && (
+              <SettingsPage
+                roleTypes={roleTypes}
+                onRoleTypesChanged={reload}
+                notify={notify}
+              />
+            )}
           </>
         )}
       </main>
@@ -4280,19 +4304,19 @@ function FeedTab({
   onError,
   notify,
   roleTypes,
-  onRoleTypesChanged,
+  onOpenSettings,
 }: {
   onError: (message: string | null) => void;
   notify: (message: string, undo?: () => void) => void;
   roleTypes: RoleTypeDef[];
-  onRoleTypesChanged: () => Promise<void>;
+  onOpenSettings: () => void;
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[] | null>(null);
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const cardsRef = useRef<HTMLUListElement>(null);
   const kbNav = useRef(false);
@@ -4308,14 +4332,19 @@ function FeedTab({
   }, [focusedIndex]);
 
   const load = useCallback(
-    () =>
-      api
+    () => {
+      setFailed(false);
+      return api
         .feed()
         .then((page) => {
           setItems(page.items);
           setCursor(page.nextCursor);
         })
-        .catch((e) => onError((e as Error).message)),
+        .catch((e) => {
+          setFailed(true);
+          onError((e as Error).message);
+        });
+    },
     [onError],
   );
 
@@ -4425,25 +4454,16 @@ function FeedTab({
         <p className="muted small" style={{ margin: 0 }}>
           {t("feed.pulledFrom")}
         </p>
-        <button
-          className="btn-secondary"
-          onClick={() => setShowSettings((v) => !v)}
-        >
-          {showSettings ? t("feed.hideSettings") : t("feed.settings")}
+        <button className="btn-secondary" onClick={onOpenSettings}>
+          {t("feed.settings")}
         </button>
         <button className="primary" disabled={refreshing} onClick={refresh}>
           {refreshing ? t("feed.checking") : t("feed.checkNow")}
         </button>
       </div>
 
-      {showSettings && (
-        <FeedSettings
-          roleTypes={roleTypes}
-          onRoleTypesChanged={onRoleTypesChanged}
-          onError={onError}
-          notify={notify}
-        />
-      )}
+      {failed && !items && <LoadFailed onRetry={load} />}
+      {!failed && !items && <LoadingSkeleton />}
 
       <ul className="cards" ref={cardsRef}>
         {(items ?? []).map((item, i) => (
@@ -4667,14 +4687,24 @@ function ActivityTab({
 }) {
   const { t } = useTranslation();
   const [events, setEvents] = useState<ActivityEvent[] | null>(null);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setFailed(false);
     api
       .activity()
       .then(setEvents)
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => {
+        setFailed(true);
+        onError((e as Error).message);
+      });
   }, [onError]);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (failed && !events) return <LoadFailed onRetry={load} />;
   if (!events) return <LoadingSkeleton />;
 
   return (

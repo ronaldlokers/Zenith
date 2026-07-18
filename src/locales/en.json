@@ -172,7 +172,8 @@
       "security": "Security",
       "integrations": "Integrations",
       "data": "Data",
-      "admin": "Admin"
+      "admin": "Admin",
+      "feed": "Feed sources"
     }
   },
   "feed": {

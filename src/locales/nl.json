@@ -172,7 +172,8 @@
       "security": "Beveiliging",
       "integrations": "Integraties",
       "data": "Data",
-      "admin": "Beheer"
+      "admin": "Beheer",
+      "feed": "Feed-bronnen"
     }
   },
   "feed": {
