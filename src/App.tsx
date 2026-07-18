@@ -6028,6 +6028,38 @@ function PipelineTab({
         onDetailIdChange={onOpenJob}
       />
 
+      {/* Closed drawer (#314) — terminal outcomes are archive material,
+          not work: a collapsed compact list below the board rather than a
+          sixth column that would outgrow every real one. Respects the
+          same filters, so "did I already apply at X?" works here. */}
+      {(() => {
+        const closed = filtered
+          .filter((a) => isDead(a.status))
+          .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+        if (!closed.length) return null;
+        return (
+          <details className="closed-drawer">
+            <summary>
+              {t("board.closedCount", { count: closed.length })}
+            </summary>
+            <ul>
+              {closed.map((a) => (
+                <li key={a.id} {...rowActivate(() => onOpenJob(a.id))}>
+                  <span className="closed-title">{a.title}</span>
+                  <span className="closed-co">{a.company_name ?? "—"}</span>
+                  <span className="closed-status">
+                    {t(`stages.${a.status}`)}
+                  </span>
+                  <span className="closed-date">
+                    {formatDate(a.updated_at.slice(0, 10))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </details>
+        );
+      })()}
+
       {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
     </section>
   );
