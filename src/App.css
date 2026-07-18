@@ -870,6 +870,32 @@
   flex-shrink: 0;
 }
 
+/* Sub-navigation toggle within a merged tab (Network = Companies/People, #285) */
+.subnav {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin: 0.25rem 0 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem;
+  background: var(--surface);
+}
+
+.subnav button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.subnav button.active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 /* Visually hidden but exposed to assistive tech (live regions etc., #285) */
 .sr-only {
   position: absolute;
