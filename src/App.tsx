@@ -6573,8 +6573,7 @@ function PipelineTab({
           {t("board.filterBtn")}
           {activeFilterCount ? ` · ${activeFilterCount}` : ""}
         </button>
-        <label className="board-sort">
-          <span className="board-sort-label">{t("board.sortBy")}</span>
+        <label className="board-sort" title={t("board.sortBy")}>
           <select value={sort} onChange={(e) => setSort(e.target.value as BoardSort)}>
             <option value="urgency">{t("board.sortUrgency")}</option>
             <option value="followup">{t("board.sortFollowup")}</option>
