@@ -663,11 +663,15 @@ describe("feed", () => {
 
 describe("agenda", () => {
   it("combines due dates, interactions, and applied dates", async () => {
-    // due/applied have no date window; interactions are limited to the
-    // last 14 days (to bound the payload), so use "today" for that one.
+    // due has no date window; interactions and applied are bounded to the
+    // last 14 days (#346, to keep the forward-looking agenda from filling
+    // with old apply-dates), so use recent dates for those.
     const todayStr = new Date().toISOString().slice(0, 10);
+    const recentApplied = new Date(Date.now() - 3 * 86400000)
+      .toISOString()
+      .slice(0, 10);
     const app = await seedApplication({
-      applied_at: "2026-01-01",
+      applied_at: recentApplied,
       next_action_at: "2026-01-15",
       next_action: "Nudge recruiter",
     });
@@ -687,11 +691,20 @@ describe("agenda", () => {
       true,
     );
     expect(
-      entries.some((e) => e.kind === "applied" && e.date === "2026-01-01"),
+      entries.some((e) => e.kind === "applied" && e.date === recentApplied),
     ).toBe(true);
     expect(
       entries.some((e) => e.kind === "interaction" && e.date === todayStr),
     ).toBe(true);
+  });
+
+  it("excludes apply-dates older than the 14-day agenda window", async () => {
+    await seedApplication({ applied_at: "2020-01-01" });
+    const res = await authedFetch(`${BASE}/api/agenda`);
+    const entries = (await res.json()) as { kind: string; date: string }[];
+    expect(
+      entries.some((e) => e.kind === "applied" && e.date === "2020-01-01"),
+    ).toBe(false);
   });
 
   it("excludes due dates for dead-status applications", async () => {

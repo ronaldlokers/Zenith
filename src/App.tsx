@@ -2,6 +2,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -6312,6 +6313,10 @@ function PipelineTab({
   });
   const curFilterKey = JSON.stringify(boardFields(currentFilters()));
 
+  // Aggregation depends only on the data, not on query/filter state — a
+  // useMemo keeps the full applications×history pass off every keystroke
+  // of the search box (#346).
+  const { allTags, attention } = useMemo(() => {
   const allTags = [
     ...new Map(
       applications.flatMap((a) => a.tags).map((tg) => [tg.id, tg]),
@@ -6383,6 +6388,8 @@ function PipelineTab({
           : null;
     if (val) attention.set(a.id, val as "overdue" | "stale" | "quiet");
   }
+  return { allTags, attention };
+  }, [applications, history, lastInteractions]);
 
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(

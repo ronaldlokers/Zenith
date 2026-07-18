@@ -1117,7 +1117,10 @@ app.get("/api/agenda", async (c) => {
        FROM applications
        LEFT JOIN companies ON companies.id = applications.company_id
        WHERE applications.user_id = ?
-         AND applications.applied_at IS NOT NULL`,
+         AND applications.applied_at IS NOT NULL
+         -- Forward-looking agenda: bound the apply-date leg like the
+         -- interactions leg (#346), else old applies dominate forever.
+         AND applications.applied_at >= date('now', '-14 days')`,
     )
       .bind(userId)
       .all(),

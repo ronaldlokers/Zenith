@@ -61,26 +61,34 @@ export async function checkStalePostings(env: Env): Promise<{ checked: number; f
     .bind(BATCH_SIZE)
     .all<{ id: number; url: string }>();
 
-  let flagged = 0;
-  for (const app of results) {
-    let postingStatus: string | null = null;
-    try {
-      const { res, finalUrl } = await fetchWithTimeout(app.url, "HEAD").catch(
-        () => fetchWithTimeout(app.url, "GET"),
-      );
-      postingStatus = looksStale(res.status, app.url, finalUrl)
-        ? "maybe_stale"
-        : "ok";
-    } catch {
-      // network error, timeout, blocked, etc. — inconclusive, not stale
-      postingStatus = null;
-    }
-    if (postingStatus === "maybe_stale") flagged++;
-    await env.DB.prepare(
-      `UPDATE applications SET posting_status = ?, posting_checked_at = datetime('now') WHERE id = ?`,
-    )
-      .bind(postingStatus, app.id)
-      .run();
-  }
+  // Check every candidate concurrently (#346) — each is an independent
+  // network probe; a sequential loop of up-to-15 × 8s timeouts could run
+  // for minutes.
+  const checks = await Promise.all(
+    results.map(async (app) => {
+      let postingStatus: string | null = null;
+      try {
+        const { res, finalUrl } = await fetchWithTimeout(app.url, "HEAD").catch(
+          () => fetchWithTimeout(app.url, "GET"),
+        );
+        postingStatus = looksStale(res.status, app.url, finalUrl)
+          ? "maybe_stale"
+          : "ok";
+      } catch {
+        // network error, timeout, blocked, etc. — inconclusive, not stale
+        postingStatus = null;
+      }
+      return { id: app.id, postingStatus };
+    }),
+  );
+  const flagged = checks.filter((c) => c.postingStatus === "maybe_stale").length;
+  // One batched write instead of one round-trip per candidate.
+  await env.DB.batch(
+    checks.map((c) =>
+      env.DB.prepare(
+        `UPDATE applications SET posting_status = ?, posting_checked_at = datetime('now') WHERE id = ?`,
+      ).bind(c.postingStatus, c.id),
+    ),
+  );
   return { checked: results.length, flagged };
 }
