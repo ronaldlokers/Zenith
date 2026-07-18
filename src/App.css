@@ -4234,6 +4234,7 @@ button:not(:disabled):active,
   height: var(--ctl-h);
   display: inline-flex;
   align-items: center;
+  gap: 0.3rem;
   font-family: var(--mono);
   font-size: var(--text-chrome);
   text-transform: uppercase;
@@ -4247,6 +4248,9 @@ button:not(:disabled):active,
   white-space: nowrap;
 }
 .board-bar-btn:hover { color: var(--ink); }
+.board-bar-btn .chip-icon { color: var(--faint); flex-shrink: 0; }
+.board-bar-btn:hover .chip-icon,
+.board-bar-btn.active .chip-icon { color: currentColor; }
 .board-bar-btn.active { color: var(--accent-ink); background: var(--accent-soft); }
 /* Sort as a compact chip — "↕ VALUE ▾" matching the other bar chips. */
 .board-sort {
