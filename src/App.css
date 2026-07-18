@@ -3714,3 +3714,100 @@ summary.bcol-head::after {
     max-width: 900px;
   }
 }
+
+/* ============================================================
+   Sidebar shell (#314) — on desktop the tab bar becomes a slim
+   left rail: it scales past seven destinations, gives Settings
+   a home, and frees the full viewport width for content. Mobile
+   keeps the fixed bottom bar; 601–899px keeps horizontal tabs.
+   ============================================================ */
+.tabs .tab-settings {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .app {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    grid-template-areas:
+      "side header"
+      "side main";
+    column-gap: 2rem;
+    max-width: 1400px;
+    padding: 0 1.5rem 3rem;
+  }
+
+  /* The per-view caps that used to size .app now cap the content
+     column instead — the shell stays one width. */
+  .app:has(.board),
+  .app:has(.board-swimlanes),
+  .app:has(.jobs-layout),
+  .app:has(.cv-layout),
+  .app:has(.job-page),
+  .app:has(.settings-page) {
+    max-width: 1400px;
+  }
+
+  .app > .header {
+    grid-area: header;
+  }
+
+  .app > main {
+    grid-area: main;
+    min-width: 0;
+    max-width: 760px;
+  }
+
+  .app:has(.board) > main,
+  .app:has(.board-swimlanes) > main,
+  .app:has(.settings-page) > main {
+    max-width: none;
+  }
+
+  .app:has(.jobs-layout) > main,
+  .app:has(.cv-layout) > main {
+    max-width: 1100px;
+  }
+
+  .app:has(.job-page) > main {
+    max-width: 900px;
+  }
+
+  .app > .tabs {
+    grid-area: side;
+    flex-direction: column;
+    gap: 0.2rem;
+    align-self: start;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 1.1rem 0.9rem 1rem 0;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .app > .tabs button {
+    flex: 0 0 auto;
+    text-align: left;
+    border: none;
+    background: transparent;
+    padding: 0.5rem 0.65rem;
+    border-radius: var(--radius-md);
+  }
+
+  .app > .tabs button:hover {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .app > .tabs button.active {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
+
+  .app > .tabs .tab-settings {
+    display: block;
+    margin-top: auto;
+  }
+}
