@@ -2603,7 +2603,7 @@ export default function App() {
       )}
       <header className={`header${scrolled ? " scrolled" : ""}`}>
         <div className="brand">
-          <Logo />
+          <Logo size={20} />
           <h1>JobSeekr</h1>
         </div>
         <span className="header-actions">
