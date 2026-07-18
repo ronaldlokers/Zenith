@@ -316,7 +316,8 @@
   "nextUp": {
     "title": "Next up",
     "done": "Done",
-    "snooze": "Snooze 3d"
+    "snooze": "Snooze 3d",
+    "doneToast": "Follow-up completed"
   },
   "company": {
     "notResearched": "not researched",
@@ -427,7 +428,8 @@
     "negotiationCompeting": "- I have a competing offer from {{company}} to weigh against this.",
     "negotiationAnotherCompany": "another company",
     "negotiationBelowMarket": "- This offer tracks ~{{pct}}% below the median of my other offers for this role — worth raising.",
-    "negotiationClose": "- Ask: is there flexibility on base, signing bonus, or equity before I give a final answer?"
+    "negotiationClose": "- Ask: is there flexibility on base, signing bonus, or equity before I give a final answer?",
+    "recordPrompt": "Offer stage — record the compensation?"
   },
   "feedSettings": {
     "roleTypes": "Role types",
@@ -565,7 +567,10 @@
     "feedFound": "Found {{inserted}} new of {{seen}} checked",
     "addedToJobs": "Added \"{{title}}\" to Jobs",
     "researched": "Researched {{name}}",
-    "open": "Open"
+    "open": "Open",
+    "statusChanged": "Moved to {{stage}}",
+    "revived": "Back in an active stage",
+    "setFollowUp": "Set follow-up"
   },
   "confirm": {
     "deleteDocument": "Delete \"{{name}}\"?",

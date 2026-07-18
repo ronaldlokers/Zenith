@@ -1176,7 +1176,7 @@ app.get("/api/activity", async (c) => {
 
 app.get("/api/stats", async (c) => {
   const userId = c.get("userId");
-  const [apps, history] = await Promise.all([
+  const [apps, history, interactions] = await Promise.all([
     c.env.DB.prepare(
       "SELECT id, status, source, applied_at, created_at FROM applications WHERE user_id = ?",
     )
@@ -1188,8 +1188,22 @@ app.get("/api/stats", async (c) => {
     )
       .bind(userId)
       .all(),
+    // Last logged interaction per application — the Pipeline's "gone
+    // quiet" badge counts a nudge as activity (#314 round 3), not just
+    // stage moves.
+    c.env.DB.prepare(
+      `SELECT application_id, MAX(happened_at) AS last_at
+       FROM interactions WHERE user_id = ? AND application_id IS NOT NULL
+       GROUP BY application_id`,
+    )
+      .bind(userId)
+      .all(),
   ]);
-  return c.json({ applications: apps.results, history: history.results });
+  return c.json({
+    applications: apps.results,
+    history: history.results,
+    interactions: interactions.results,
+  });
 });
 
 // --- Public share link (#113) ---
