@@ -2310,6 +2310,7 @@ export default function App() {
   const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [statsData, setStatsData] = useState<Stats | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [roleTypes, setRoleTypes] = useState<RoleTypeDef[]>([]);
@@ -2372,16 +2373,20 @@ export default function App() {
 
   const reload = useCallback(async () => {
     try {
-      const [apps, comps, conts, roles] = await Promise.all([
+      const [apps, comps, conts, roles, st] = await Promise.all([
         api.list<Application>("applications"),
         api.list<Company>("companies"),
         api.list<Contact>("contacts"),
         api.roleTypes(),
+        // One stats fetch for the whole app (#314) — Overview's momentum,
+        // the Pipeline's attention heat, and the Stats tab all read it.
+        api.stats(),
       ]);
       setApplications(apps);
       setCompanies(comps);
       setContacts(conts);
       setRoleTypes(roles);
+      setStatsData(st);
       setError(null);
     } catch (e) {
       setError((e as Error).message);
@@ -2666,6 +2671,7 @@ export default function App() {
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}
                 onChanged={reload}
+                stats={statsData}
               />
             )}
             {routedJob && (
@@ -2704,6 +2710,8 @@ export default function App() {
                 onDelete={deleteWithUndo}
                 onStatus={setStatus}
                 initialQuery={jumpQuery}
+                onQueryConsumed={() => setJumpQuery("")}
+                history={statsData?.history ?? []}
                 onOpenJob={(id: number | null) =>
                   navigate(id ? `/jobs/${id}` : "/board")
                 }
@@ -2727,7 +2735,9 @@ export default function App() {
                 }}
               />
             )}
-            {tab === "stats" && <StatsTab onError={setError} />}
+            {tab === "stats" && (
+              <StatsTab stats={statsData} fullApps={applications} />
+            )}
             {(tab === "companies" || tab === "contacts") && (
               <div
                 className="subnav"
@@ -2863,7 +2873,7 @@ function BoardCard({
   const { t } = useTranslation();
   return (
     <article
-      className={`bcard stage-${a.status}${isDragging ? " dragging" : ""}`}
+      className={`bcard stage-${a.status}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}`}
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
@@ -2871,6 +2881,12 @@ function BoardCard({
       <div className="bcard-body" onClick={onOpenDetail}>
         <strong>
           {a.title}
+          {a.fit_score ? (
+            <span className="fit-stars" title={`${a.fit_score}/5`}>
+              {" "}
+              {"★".repeat(a.fit_score)}
+            </span>
+          ) : null}
           {attention ? (
             <span
               className={`badge attention attention-${attention}`}
@@ -3601,36 +3617,15 @@ function computeWeeklyMomentum(
   return { weeks, streak, streakBroken };
 }
 
-function StatsTab({ onError }: { onError: (m: string | null) => void }) {
+function StatsTab({
+  stats,
+  fullApps,
+}: {
+  stats: Stats | null;
+  fullApps: Application[];
+}) {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [fullApps, setFullApps] = useState<Application[] | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  const load = useCallback(() => {
-    setFailed(false);
-    api
-      .stats()
-      .then(setStats)
-      .catch((e) => {
-        setFailed(true);
-        onError((e as Error).message);
-      });
-    api
-      .list<Application>("applications")
-      .then(setFullApps)
-      .catch((e) => {
-        setFailed(true);
-        onError((e as Error).message);
-      });
-  }, [onError]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (failed && !stats) return <LoadFailed onRetry={load} />;
-  if (!stats) return <p className="muted small">{t("common.loading")}</p>;
+  if (!stats) return <LoadingSkeleton />;
   const { applications: apps, history } = stats;
 
   const comparing = (fullApps ?? [])
@@ -5531,12 +5526,14 @@ function OverviewTab({
   onOpenJob,
   onError,
   onChanged,
+  stats,
 }: {
   applications: Application[];
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
   onError: (message: string | null) => void;
   onChanged: () => Promise<unknown> | void;
+  stats: Stats | null;
 }) {
   const { t } = useTranslation();
   // The full activity feed folds in here (#285) instead of its own tab —
@@ -5551,18 +5548,10 @@ function OverviewTab({
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, 5);
 
-  // Motivation widgets live here, not in Stats (#314) — streak, weekly
-  // goal, and the wins journal are "how am I doing", which is Overview's
-  // job; Stats keeps the analytics.
-  const [statsData, setStatsData] = useState<Stats | null>(null);
-  useEffect(() => {
-    api
-      .stats()
-      .then(setStatsData)
-      .catch((e) => onError((e as Error).message));
-  }, [onError]);
-  const momentum = statsData
-    ? computeWeeklyMomentum(statsData.applications, statsData.history)
+  // Motivation widgets live here, not in Stats (#314); the stats payload
+  // arrives via the single App-level fetch.
+  const momentum = stats
+    ? computeWeeklyMomentum(stats.applications, stats.history)
     : null;
 
   return (
@@ -5725,6 +5714,8 @@ function PipelineTab({
   onDelete,
   onStatus,
   initialQuery,
+  onQueryConsumed,
+  history,
   onOpenJob,
   onOpenQuickAdd,
 }: CrudTabProps & {
@@ -5734,6 +5725,8 @@ function PipelineTab({
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
   initialQuery?: string;
+  onQueryConsumed?: () => void;
+  history: StatusHistoryRow[];
   onOpenJob: (id: number | null) => void;
   onOpenQuickAdd: () => void;
 }) {
@@ -5744,18 +5737,16 @@ function PipelineTab({
   const [showArchived, setShowArchived] = useState(false);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [showHelp, setShowHelp] = useState(false);
-  const [history, setHistory] = useState<StatusHistoryRow[]>([]);
 
+  // One-shot: consume the jump query then clear it upstream, so a single
+  // Calendar jump doesn't re-inject the search on every later visit (#314).
   useEffect(() => {
-    if (initialQuery) setQuery(initialQuery);
+    if (initialQuery) {
+      setQuery(initialQuery);
+      onQueryConsumed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);
-
-  useEffect(() => {
-    api
-      .stats()
-      .then((st) => setHistory(st.history))
-      .catch(() => {});
-  }, []);
 
   // Saved views (#277) — the schema keeps statusFilter/sort for
   // back-compat with views saved from the old list; the board ignores
@@ -5811,7 +5802,16 @@ function PipelineTab({
       .then(() => setSavedViews((vs) => vs.filter((v) => v.id !== id)))
       .catch((e) => onError((e as Error).message));
   };
-  const curFilterKey = JSON.stringify(currentFilters());
+  // Compare only the fields the board still uses, so legacy views saved
+  // from the old list (with status/sort) can still read as active (#314).
+  const boardFields = (f: JobFilters) => ({
+    query: f.query ?? "",
+    roleFilter: f.roleFilter ?? "all",
+    companyFilter: f.companyFilter ?? "all",
+    tagFilter: f.tagFilter ?? "all",
+    showArchived: !!f.showArchived,
+  });
+  const curFilterKey = JSON.stringify(boardFields(currentFilters()));
 
   const allTags = [
     ...new Map(
@@ -5962,7 +5962,7 @@ function PipelineTab({
         {savedViews.map((v) => (
           <span
             key={v.id}
-            className={`view-chip${JSON.stringify(v.filters) === curFilterKey ? " active" : ""}`}
+            className={`view-chip${JSON.stringify(boardFields(v.filters)) === curFilterKey ? " active" : ""}`}
           >
             <button className="view-apply" onClick={() => applyView(v)}>
               {v.name}
