@@ -12,7 +12,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { authClient, signOut, useSession } from "./auth-client";
 import {
+  FUNNEL_STAGES,
   funnelConversions,
+  funnelReachCounts,
   responseRate,
   medianTimeInStageDays,
 } from "./stats";
@@ -41,7 +43,6 @@ import {
   type StatusHistoryRow,
   type OutreachStatus,
   type PrepItem,
-  type JournalEntry,
   type AppNotification,
   type AtsBoard,
   type Webhook,
@@ -365,8 +366,6 @@ const NavCalendarIcon = () =>
       <path d="M4 9h16M9 3v4M15 3v4" />
     </>,
   );
-const NavStatsIcon = () =>
-  navSvg(<path d="M5 20V10M12 20V4M19 20v-7" />);
 const NavNetworkIcon = () =>
   navSvg(
     <>
@@ -501,9 +500,9 @@ const PATH_TABS: Record<string, Tab> = {
   board: "board",
   feed: "feed",
   calendar: "calendar",
-  // /activity folded into Overview (#285); old links land on Overview.
+  // /activity and /stats fold into the Dashboard (#346); old links land there.
   activity: "overview",
-  stats: "stats",
+  stats: "overview",
   companies: "companies",
   people: "contacts",
   cv: "cv",
@@ -2285,224 +2284,6 @@ function SettingsPage({
 // pipeline funnel (cumulative-reached-per-stage, a different
 // denominator, needs the funnel's decreasing-max shape) are untouched —
 // this consolidates only the one genuinely overlapping chart.
-// Momentum streak tracker (#145) — three states: active streak, a
-// dismissible one-time milestone banner every 4 weeks, and a broken
-// streak. The broken state is deliberately non-punitive: a job search
-// has genuine weeks off, and guilt-tripping a quiet week works against
-// a tool meant to reduce search-related stress.
-const STREAK_MILESTONE_INTERVAL = 4;
-
-function MomentumStreak({
-  streak,
-  broken,
-}: {
-  streak: number;
-  broken: boolean;
-}) {
-  const { t } = useTranslation();
-  const isMilestone = streak > 0 && streak % STREAK_MILESTONE_INTERVAL === 0;
-  const [dismissedMilestone, setDismissedMilestone] = useState(() =>
-    Number(localStorage.getItem("jobseekr_streak_milestone_dismissed") ?? 0),
-  );
-  const dismissMilestone = () => {
-    localStorage.setItem("jobseekr_streak_milestone_dismissed", String(streak));
-    setDismissedMilestone(streak);
-  };
-
-  if (broken) {
-    return (
-      <div className="streak streak-broken">
-        <span className="streak-label">{t("stats.streak.brokenTitle")}</span>
-        <p className="muted small">{t("stats.streak.brokenBody")}</p>
-      </div>
-    );
-  }
-
-  if (streak === 0) return null;
-
-  if (isMilestone && streak > dismissedMilestone) {
-    return (
-      <div className="streak streak-milestone">
-        <span className="streak-label">
-          {t("stats.streak.milestoneTitle", { count: streak })}
-        </span>
-        <button className="modal-close" onClick={dismissMilestone} aria-label={t("common.close")}>
-          ×
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="streak streak-active">
-      <span className="streak-label">{t("stats.streak.activeTitle", { count: streak })}</span>
-    </div>
-  );
-}
-
-// Weekly application goal (#224) — a personal target next to the
-// momentum streak. Persisted client-side like the density/theme
-// toggles elsewhere in this app, since it's a display preference, not
-// data that needs to sync across devices or show up in exports.
-const WEEKLY_GOAL_KEY = "jobseekr_weekly_goal";
-
-function WeeklyGoal({ thisWeekCount }: { thisWeekCount: number }) {
-  const { t } = useTranslation();
-  const [goal, setGoal] = useState(() =>
-    Number(localStorage.getItem(WEEKLY_GOAL_KEY) ?? 5),
-  );
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(String(goal));
-
-  const save = () => {
-    const n = Math.max(1, Math.round(Number(draft)) || goal);
-    setGoal(n);
-    localStorage.setItem(WEEKLY_GOAL_KEY, String(n));
-    setEditing(false);
-  };
-
-  const pct = Math.min(100, Math.round((thisWeekCount / goal) * 100));
-  const met = thisWeekCount >= goal;
-
-  return (
-    <div className={`weekly-goal${met ? " met" : ""}`}>
-      <span className="weekly-goal-label">
-        {t("stats.weeklyGoal.progress", { count: thisWeekCount, goal })}
-      </span>
-      <span className="htrack">
-        <span
-          className="hfill accent-fill"
-          style={{ width: `${pct}%`, display: "block" }}
-        />
-      </span>
-      {editing ? (
-        <span className="weekly-goal-edit">
-          <input
-            type="number"
-            min={1}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && save()}
-            autoFocus
-          />
-          <button className="primary" onClick={save}>
-            {t("common.save")}
-          </button>
-        </span>
-      ) : (
-        <button
-          type="button"
-          className="btn-secondary weekly-goal-btn"
-          onClick={() => {
-            setDraft(String(goal));
-            setEditing(true);
-          }}
-        >
-          {t("stats.weeklyGoal.edit")}
-        </button>
-      )}
-    </div>
-  );
-}
-
-// Milestone/wins journal (#225) — a personal log of small wins (good
-// feedback, a strong interview, a callback) that don't necessarily map
-// to a pipeline status change worth recording on an application.
-function WinsJournal({
-  onError,
-}: {
-  onError: (message: string | null) => void;
-}) {
-  const { t } = useTranslation();
-  const [entries, setEntries] = useState<JournalEntry[] | null>(null);
-  const [text, setText] = useState("");
-  const [expanded, setExpanded] = useState(false);
-
-  const load = useCallback(
-    () =>
-      api
-        .list<JournalEntry>("journal-entries")
-        .then(setEntries)
-        .catch((e) => onError((e as Error).message)),
-    [onError],
-  );
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const addWin = (e: FormEvent) => {
-    e.preventDefault();
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    api
-      .create("journal-entries", { text: trimmed })
-      .then(() => {
-        setText("");
-        return load();
-      })
-      .catch((err) => onError((err as Error).message));
-  };
-
-  const remove = (id: number) =>
-    api
-      .remove("journal-entries", id)
-      .then(load)
-      .catch((e) => onError((e as Error).message));
-
-  if (!entries) return null;
-
-  const visible = expanded ? entries : entries.slice(0, 3);
-
-  return (
-    <div className="wins-journal">
-      <h2 className="stat-h">{t("stats.journal.title")}</h2>
-      <form className="tl-add" onSubmit={addWin}>
-        <input
-          placeholder={t("stats.journal.placeholder")}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button type="submit" className="primary">
-          {t("stats.journal.add")}
-        </button>
-      </form>
-      {entries.length === 0 ? (
-        <p className="muted small">{t("stats.journal.empty")}</p>
-      ) : (
-        <>
-          <ul className="tl-items">
-            {visible.map((entry) => (
-              <li key={entry.id}>
-                <span className="tl-date">{formatDate(entry.created_at)}</span>
-                <span className="tl-notes">{entry.text}</span>
-                <button
-                  className="tl-del danger"
-                  aria-label={t("common.delete")}
-                  onClick={() => remove(entry.id)}
-                >
-                  <RemoveIcon />
-                </button>
-              </li>
-            ))}
-          </ul>
-          {entries.length > 3 && (
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => setExpanded((v) => !v)}
-            >
-              {expanded
-                ? t("stats.journal.showLess")
-                : t("stats.journal.showAll", { count: entries.length })}
-            </button>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
 function StageHistogram({ applications }: { applications: Application[] }) {
   const { t } = useTranslation();
   const open = applications.filter((a) => !isDead(a.status));
@@ -2947,15 +2728,6 @@ export default function App() {
           <span className="tab-label">{t("tabs.calendar")}</span>
         </button>
         <button
-          className={tab === "stats" ? "active" : ""}
-          aria-current={tab === "stats" ? "page" : undefined}
-          data-tab="stats"
-          onClick={() => setTab("stats")}
-        >
-          <NavStatsIcon />
-          <span className="tab-label">{t("tabs.stats")}</span>
-        </button>
-        <button
           className={tab === "companies" || tab === "contacts" ? "active" : ""}
           aria-current={tab === "companies" || tab === "contacts" ? "page" : undefined}
           data-tab="network"
@@ -3026,14 +2798,16 @@ export default function App() {
                 />
               )}
             {tab === "overview" && (
-              <OverviewTab
+              <DashboardTab
                 applications={visibleApps}
+                fullApps={applications}
                 onGoToJobs={() => setTab("board")}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}
                 onChanged={reload}
                 stats={statsData}
                 notify={notify}
+                onOpenQuickAdd={() => setShowQuickAdd(true)}
               />
             )}
             {routedJob && (
@@ -3101,9 +2875,6 @@ export default function App() {
                   setTab("board");
                 }}
               />
-            )}
-            {tab === "stats" && (
-              <StatsTab stats={statsData} fullApps={applications} />
             )}
             {(tab === "companies" || tab === "contacts") && (
               <div
@@ -3961,6 +3732,57 @@ function totalCompBreakdown(a: Application): string {
 // and Overview (streak + weekly goal). Buckets are [now-(8-i)*WEEK,
 // ...+WEEK): i=0 is 8 weeks ago, i=7 is the current week ((8-i), not
 // (7-i) — see #262).
+// Forward stage advances in the last 2 weeks vs the two before — the
+// "speeding up / slowing down" verdict shared by the dashboard band and
+// the detailed Stats view (#346).
+function computePipelineMomentum(history: { from_status: string | null; to_status: string; changed_at: string }[]) {
+  const now = Date.now();
+  const P = 14 * 86400000;
+  const fwd = (r: { from_status: string | null; to_status: string }) => {
+    const to = PIPELINE.indexOf(r.to_status as Status);
+    const from = r.from_status ? PIPELINE.indexOf(r.from_status as Status) : -1;
+    return to >= 0 && to > from;
+  };
+  const recent = history.filter(
+    (h) => fwd(h) && parseSqlDate(h.changed_at) >= now - P,
+  ).length;
+  const prior = history.filter(
+    (h) =>
+      fwd(h) &&
+      parseSqlDate(h.changed_at) >= now - 2 * P &&
+      parseSqlDate(h.changed_at) < now - P,
+  ).length;
+  let verdict: "up" | "down" | "flat" | "none";
+  if (recent === 0 && prior === 0) verdict = "none";
+  else if (prior === 0) verdict = "up";
+  else {
+    const change = (recent - prior) / prior;
+    verdict = change > 0.15 ? "up" : change < -0.15 ? "down" : "flat";
+  }
+  return { verdict, recent, prior };
+}
+
+// Median days from the "applied" transition to "offer", per application
+// that reached offer (#346, lifted from the Stats computation).
+function medianTimeToOffer(history: { application_id: number; to_status: string; changed_at: string }[]): number | null {
+  const byApp = new Map<number, typeof history>();
+  for (const row of history) {
+    const list = byApp.get(row.application_id) ?? [];
+    list.push(row);
+    byApp.set(row.application_id, list);
+  }
+  const durations: number[] = [];
+  for (const rows of byApp.values()) {
+    const a = rows.find((r) => r.to_status === "applied");
+    const o = rows.find((r) => r.to_status === "offer");
+    if (a && o) {
+      const d = (parseSqlDate(o.changed_at) - parseSqlDate(a.changed_at)) / 86400000;
+      if (d >= 0) durations.push(d);
+    }
+  }
+  return median(durations);
+}
+
 function computeWeeklyMomentum(
   apps: { applied_at: string | null; created_at: string }[],
   history: { changed_at: string }[],
@@ -6134,107 +5956,264 @@ function QuickAddDialog({
 // opens on Jobs." One glanceable screen: a headline pipeline number, the
 // existing next-actions panel, and a recent-activity list built from the
 // same applications data already loaded app-wide (no extra fetch).
-function OverviewTab({
+function DashboardTab({
   applications,
+  fullApps,
   onGoToJobs,
   onOpenJob,
   onError,
   onChanged,
   stats,
   notify,
+  onOpenQuickAdd,
 }: {
   applications: Application[];
+  fullApps: Application[];
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
   onError: (message: string | null) => void;
   onChanged: () => Promise<unknown> | void;
   stats: Stats | null;
   notify: (message: string, undo?: () => void, label?: string) => void;
+  onOpenQuickAdd: () => void;
 }) {
   const { t } = useTranslation();
-  // The full activity feed folds in here (#285) instead of its own tab —
-  // lazy-loaded on expand so the landing page stays fast.
   const [showActivity, setShowActivity] = useState(false);
+  if (!stats) return <LoadingSkeleton />;
+  const history = stats.history;
   const open = applications.filter((a) => !isDead(a.status));
-  const interviewing = open.filter(
-    (a) => a.status === "interview" || a.status === "offer",
-  ).length;
+  const upcoming = applications.filter(
+    (a) => a.next_action_at && !isDead(a.status),
+  );
+  const hasActions = upcoming.length > 0;
 
+  const counts = funnelReachCounts(history);
+  const funnelMax = Math.max(1, counts[0] ?? 0);
+  const conv = funnelConversions(history);
+  const resp = responseRate(history);
+  const mom = computeWeeklyMomentum(stats.applications, history);
+  const weekMax = Math.max(1, ...mom.weeks.map((w) => w.count));
+  const pipe = computePipelineMomentum(history);
+  const t2o = medianTimeToOffer(history);
+  const liveOffers = applications.filter((a) => a.status === "offer");
+  const comps = liveOffers
+    .map((o) => totalComp(o))
+    .filter((x): x is number => x != null);
+  const topComp = comps.length ? Math.max(...comps) : null;
   const recent = [...applications]
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, 5);
 
-  // Motivation widgets live here, not in Stats (#314); the stats payload
-  // arrives via the single App-level fetch.
-  const momentum = stats
-    ? computeWeeklyMomentum(stats.applications, stats.history)
-    : null;
+  const fmtComp = (n: number) =>
+    `~${liveOffers[0]?.salary_currency ?? "€"} ${Math.round(n).toLocaleString()}`;
+
+  const kpis = (
+    <div className="dash-kpis">
+      <button type="button" className="dash-kpi click" onClick={onGoToJobs}>
+        <span className="dash-kpi-n">{open.length}</span>
+        <span className="dash-kpi-k">{t("dashboard.kpiOpen")}</span>
+      </button>
+      <button type="button" className="dash-kpi click" onClick={onGoToJobs}>
+        <span className="dash-kpi-n">{Math.round(resp.rate * 100)}%</span>
+        <span className="dash-kpi-k">
+          {t("dashboard.kpiResponse", {
+            responded: resp.responded,
+            applied: resp.applied,
+          })}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="dash-kpi click"
+        onClick={() => liveOffers[0] && onOpenJob(liveOffers[0].id)}
+      >
+        <span className="dash-kpi-n">{liveOffers.length}</span>
+        <span className="dash-kpi-k">
+          {t("dashboard.kpiOffers")}
+          {topComp != null ? ` · ${fmtComp(topComp)}` : ""}
+        </span>
+      </button>
+      <div className="dash-kpi">
+        <span className="dash-kpi-n">{t2o != null ? `~${Math.round(t2o)}d` : "—"}</span>
+        <span className="dash-kpi-k">{t("dashboard.kpiToOffer")}</span>
+      </div>
+    </div>
+  );
+
+  const band = (
+    <div className="dash-band">
+      <div>
+        <span className="dash-eyebrow">{t("dashboard.momentumTitle")}</span>
+        <div className="dash-band-verdict">{t(`stats.momentum.${pipe.verdict}`)}</div>
+        <div className="muted small">
+          {t("stats.momentumDetail", { recent: pipe.recent, prior: pipe.prior })}
+        </div>
+      </div>
+      <div className="dash-spark" aria-hidden="true">
+        {mom.weeks.map((w, i) => (
+          <i
+            key={i}
+            style={{ height: `${Math.max(4, (w.count / weekMax) * 100)}%` }}
+            className={w.count === 0 ? "dim" : ""}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
+  const funnelCard = (
+    <button
+      type="button"
+      className="dash-card click"
+      onClick={onGoToJobs}
+      key="funnel"
+    >
+      <div className="dash-ch">
+        {t("dashboard.funnelConv")}
+        <span className="dash-win">{t("dashboard.winLiveAllTime")}</span>
+      </div>
+      <div className="dash-funnel">
+        {FUNNEL_STAGES.map((st, i) => (
+          <div className={`dash-fn stage-${st}`} key={st}>
+            <span className="dash-fl">{t(`stages.${st}`)}</span>
+            <span className="dash-fbar">
+              <i style={{ width: `${(counts[i] / funnelMax) * 100}%` }} />
+            </span>
+            <span className="dash-fn-n">{counts[i]}</span>
+          </div>
+        ))}
+      </div>
+      <div className="muted small mono dash-conv-line">
+        {conv.map((c) => `${Math.round(c.rate * 100)}%`).join(" · ")}{" "}
+        {t("dashboard.stageToStage")}
+      </div>
+    </button>
+  );
+
+  const offersCard = (
+    <div className="dash-card" key="offers">
+      <div className="dash-ch">
+        {t("dashboard.offers")}
+        <span className="dash-win">{t("dashboard.winOpen")}</span>
+      </div>
+      {liveOffers.length === 0 ? (
+        <p className="muted small" style={{ margin: 0 }}>
+          {t("dashboard.noOffers")}
+        </p>
+      ) : (
+        <ul className="dash-offers">
+          {liveOffers.slice(0, 3).map((o) => {
+            const tc = totalComp(o);
+            return (
+              <li key={o.id}>
+                <button
+                  type="button"
+                  className="dash-orow click"
+                  onClick={() => onOpenJob(o.id)}
+                >
+                  <span className="dash-ot">{o.title}</span>
+                  <span className="dash-ov">{tc != null ? fmtComp(tc) : "—"}</span>
+                  <span className="dash-oc muted">
+                    {o.company_name ?? "—"}
+                    {o.salary_range ? ` · ${o.salary_range}` : ""}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+
+  const fortnightCard = (
+    <div className="dash-card" key="fortnight">
+      <div className="dash-ch">
+        {t("dashboard.thisFortnight")}
+        <span className="dash-win">{t("dashboard.win2wk")}</span>
+      </div>
+      <div className="dash-stat">
+        <span>{t("dashboard.response")}</span>
+        <span className="sv">{Math.round(resp.rate * 100)}%</span>
+      </div>
+      <div className="dash-stat">
+        <span>{t("dashboard.toOffer")}</span>
+        <span className="sv">{t2o != null ? `~${Math.round(t2o)}d` : "—"}</span>
+      </div>
+      <div className="dash-stat">
+        <span>{t("dashboard.momentumTitle")}</span>
+        <span className="sv">{t(`stats.momentum.${pipe.verdict}`)}</span>
+      </div>
+    </div>
+  );
+
+  const analytics = [funnelCard, offersCard, fortnightCard];
+
+  const activityCard = (
+    <div className="dash-card" key="activity">
+      <div className="dash-ch">{t("overview.recentlyUpdated")}</div>
+      {recent.length === 0 ? (
+        <p className="muted small" style={{ margin: 0 }}>
+          {t("overview.noActivity")}
+        </p>
+      ) : (
+        <ul className="side-list dash-recent">
+          {recent.map((a) => (
+            <li
+              key={a.id}
+              className={`stage-${a.status} clickable`}
+              {...rowActivate(() => onOpenJob(a.id))}
+            >
+              <span className="side-date">{ageDays(a.updated_at)}</span>
+              <span className="side-title">{a.title}</span>
+              <span className="side-co">{a.company_name ?? "—"}</span>
+              <span className="side-stage">{t(`stages.${a.status}`)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 
   return (
-    <section className="overview">
-      <div className="overview-headline">
-        <span className="overview-number">{open.length}</span>
-        <span className="overview-label">
-          {t("overview.openCount", { count: open.length })}
-        </span>
-        {interviewing > 0 && (
-          <span className="overview-sub">
-            {t("overview.interviewingCount", { count: interviewing })}
-          </span>
-        )}
-      </div>
-
-      {/* Work left, motivation right (#314) — the landing page had become
-          an eight-item single file after the widgets moved here. */}
-      <div className="overview-cols">
-        <div className="overview-main">
-          <NextUpPanel
-            notify={notify}
-            applications={applications}
-            onChanged={onChanged}
-            onError={onError}
-          />
-
-          <h3 className="side-h">{t("overview.recentlyUpdated")}</h3>
-          {recent.length === 0 ? (
-            <p className="muted small">{t("overview.noActivity")}</p>
-          ) : (
-            <ul className="side-list overview-recent">
-              {recent.map((a) => (
-                <li
-                  key={a.id}
-                  className={`stage-${a.status} clickable`}
-                  {...rowActivate(() => onOpenJob(a.id))}
-                >
-                  <span className="side-date">{ageDays(a.updated_at)}</span>
-                  <span className="side-title">{a.title}</span>
-                  <span className="side-co">{a.company_name ?? "—"}</span>
-                  <span className="side-stage">{t(`stages.${a.status}`)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <button className="primary overview-cta" onClick={onGoToJobs}>
-            {t("overview.viewAllJobs")}
-          </button>
+    <section className="dash">
+      {kpis}
+      {band}
+      {hasActions ? (
+        <div className="dash-cols">
+          <div className="dash-col">
+            <div className="dash-card dash-card-lead">
+              <NextUpPanel
+                notify={notify}
+                applications={applications}
+                onChanged={onChanged}
+                onError={onError}
+              />
+            </div>
+            {activityCard}
+          </div>
+          <div className="dash-col">{analytics}</div>
         </div>
-
-        <aside className="overview-side">
-          {momentum && (
-            <>
-              <MomentumStreak
-                streak={momentum.streak}
-                broken={momentum.streakBroken}
-              />
-              <WeeklyGoal
-                thisWeekCount={momentum.weeks[momentum.weeks.length - 1].count}
-              />
-            </>
-          )}
-          <WinsJournal onError={onError} />
-        </aside>
-      </div>
+      ) : (
+        <>
+          <div className="dash-caughtup">
+            <span className="dash-caughtup-tick">✓</span>
+            <span className="dash-caughtup-t">{t("dashboard.caughtUp")}</span>
+            <span className="sp" />
+            <button
+              type="button"
+              className="linklike"
+              onClick={onOpenQuickAdd}
+            >
+              {t("dashboard.addFollowUp")}
+            </button>
+          </div>
+          <div className="dash-cols">
+            <div className="dash-col">{analytics}</div>
+            <div className="dash-col">{activityCard}</div>
+          </div>
+        </>
+      )}
 
       <button
         className="btn-secondary overview-activity-toggle"
@@ -6244,6 +6223,11 @@ function OverviewTab({
         {showActivity ? t("overview.hideActivity") : t("overview.showActivity")}
       </button>
       {showActivity && <ActivityTab onError={onError} onOpenJob={onOpenJob} />}
+
+      <details className="dash-details">
+        <summary>{t("dashboard.allNumbers")}</summary>
+        <StatsTab stats={stats} fullApps={fullApps} />
+      </details>
     </section>
   );
 }

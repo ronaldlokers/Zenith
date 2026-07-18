@@ -4024,6 +4024,169 @@ button:not(:disabled):active,
   margin: 0 0 1.2rem;
 }
 
+/* Merged Dashboard (#346) — Overview + Stats in one adaptive, modular grid.
+   Cards click through; motivation widgets dropped. */
+.dash { display: flex; flex-direction: column; gap: 0.8rem; }
+
+.dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.7rem;
+}
+.dash-kpi {
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: 0.8rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font: inherit;
+  color: inherit;
+}
+.dash-kpi.click { cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.dash-kpi.click:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.dash-kpi-n {
+  font-family: var(--mono);
+  font-size: 1.7rem;
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.dash-kpi-k { font-size: 0.74rem; color: var(--muted); }
+
+.dash-band {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: 0.9rem 1.1rem;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+.dash-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.dash-band-verdict { font-size: 1.2rem; font-weight: 650; letter-spacing: -0.015em; margin: 0.15rem 0; }
+.dash-spark { display: flex; align-items: flex-end; gap: 3px; height: 44px; }
+.dash-spark > i { flex: 1; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.85; min-height: 4px; }
+.dash-spark > i.dim { background: var(--border); opacity: 1; }
+
+.dash-cols { display: grid; grid-template-columns: 1fr; gap: 0.8rem; align-items: start; }
+@media (min-width: 900px) { .dash-cols { grid-template-columns: 1.05fr 0.95fr; } }
+.dash-col { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
+
+.dash-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: 0.85rem 0.95rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  display: block;
+  width: 100%;
+}
+.dash-card.dash-card-lead { border-left: 3px solid var(--accent); }
+.dash-card.click { cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.dash-card.click:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.dash-ch {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--faint);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+.dash-win {
+  margin-left: auto;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.54rem;
+  letter-spacing: 0.04em;
+}
+
+.dash-funnel { display: flex; flex-direction: column; gap: 0.3rem; }
+.dash-fn { display: grid; grid-template-columns: 5.4rem 1fr 1.6rem; align-items: center; gap: 0.5rem; }
+.dash-fl { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.dash-fbar { height: 8px; border-radius: 5px; background: var(--track); overflow: hidden; }
+.dash-fbar > i { display: block; height: 100%; border-radius: 5px; background: var(--sc, var(--accent)); }
+.dash-fn-n { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+.dash-conv-line { margin-top: 0.5rem; }
+
+.dash-offers { list-style: none; margin: 0; padding: 0; }
+.dash-orow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.1rem 0.6rem;
+  padding: 0.42rem 0;
+  border-top: 1px solid var(--border);
+  width: 100%;
+  text-align: left;
+  background: none;
+  border-left: none; border-right: none; border-bottom: none;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.dash-offers li:first-child .dash-orow { border-top: none; }
+.dash-orow:hover { background: var(--hover); }
+.dash-ot { font-weight: 560; font-size: 0.82rem; }
+.dash-ov { font-family: var(--mono); font-weight: 620; text-align: right; }
+.dash-oc { font-size: 0.7rem; grid-column: 1 / -1; }
+
+.dash-stat { display: flex; justify-content: space-between; font-size: 0.78rem; padding: 0.32rem 0; border-top: 1px solid var(--border); }
+.dash-stat:first-of-type { border-top: none; }
+.dash-stat .sv { font-family: var(--mono); font-weight: 600; }
+
+.dash-caughtup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--st-offer);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.95rem;
+  box-shadow: var(--shadow-1);
+}
+.dash-caughtup-tick { color: var(--st-offer); font-weight: 700; }
+.dash-caughtup-t { font-size: 0.85rem; font-weight: 540; }
+.dash-caughtup .sp { flex: 1; }
+
+.dash-details { margin-top: 0.4rem; }
+.dash-details > summary {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border);
+  list-style-position: inside;
+}
+.dash-details[open] > summary { color: var(--ink); }
+
+@media (max-width: 600px) {
+  .dash-kpis { grid-template-columns: 1fr 1fr; }
+  .dash-band { grid-template-columns: 1fr; }
+  .dash-spark { height: 34px; }
+}
+
 /* Cascade repairs (#314 round 3) — must stay after the control-normalization
    layer: its generic hover and min-heights win source-order ties against
    earlier rules regardless of media queries. Only the print stylesheet
