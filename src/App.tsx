@@ -555,7 +555,10 @@ function Logo({ size = 26 }: { size?: number }) {
 }
 
 const SHORTCUT_KEYS: [string, string][] = [
-  ["j / k", "moveFocus"],
+  ["n", "addJob"],
+  ["/", "focusSearch"],
+  ["⌘ / Ctrl K", "palette"],
+  ["j / k", "feedMove"],
   ["a / d", "feedTriage"],
   ["Esc", "closeHelp"],
 ];
@@ -645,6 +648,7 @@ function CommandPalette({
   onJumpToApplication,
   onJumpToCompany,
   onJumpToContact,
+  actions,
 }: {
   applications: Application[];
   companies: Company[];
@@ -653,6 +657,7 @@ function CommandPalette({
   onJumpToApplication: (id: number) => void;
   onJumpToCompany: (id: number) => void;
   onJumpToContact: (id: number) => void;
+  actions: { id: string; label: string; run: () => void }[];
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -666,6 +671,16 @@ function CommandPalette({
   const q = query.trim().toLowerCase();
   // One flat, ordered result list drives arrow-key navigation and the
   // listbox semantics (#285); visual grouping is derived from `group`.
+  // Action rows show on open (empty query) so the palette is a launcher,
+  // not only a search — and stay findable by name while searching.
+  const actionItems = actions
+    .filter((a) => !q || a.label.toLowerCase().includes(q))
+    .map((a) => ({
+      domId: `palette-act-${a.id}`,
+      group: t("palette.actions"),
+      label: <>{a.label}</>,
+      onSelect: a.run,
+    }));
   const items = q
     ? [
         ...applications
@@ -709,8 +724,9 @@ function CommandPalette({
             ),
             onSelect: () => onJumpToContact(c.id),
           })),
+        ...actionItems,
       ]
-    : [];
+    : actionItems;
   const activeIndex = items.length ? Math.min(active, items.length - 1) : 0;
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -2425,6 +2441,18 @@ export default function App() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setShowPalette((v) => !v);
+      } else if (e.key === "n" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const el = document.activeElement as HTMLElement | null;
+        if (
+          el &&
+          (el.tagName === "INPUT" ||
+            el.tagName === "TEXTAREA" ||
+            el.tagName === "SELECT" ||
+            el.isContentEditable)
+        )
+          return;
+        e.preventDefault();
+        setShowQuickAdd(true);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -2621,6 +2649,24 @@ export default function App() {
             navigate(`/people/${id}`);
             setShowPalette(false);
           }}
+          actions={[
+            {
+              id: "add-job",
+              label: t("palette.addJob"),
+              run: () => {
+                setShowPalette(false);
+                setShowQuickAdd(true);
+              },
+            },
+            {
+              id: "settings",
+              label: t("palette.goSettings"),
+              run: () => {
+                setShowPalette(false);
+                navigate("/settings");
+              },
+            },
+          ]}
         />
       )}
       <header className={`header${scrolled ? " scrolled" : ""}`}>
@@ -2998,7 +3044,7 @@ function BoardCard({
               → {a.next_action}
             </span>
           ) : (
-            `upd ${ageDays(a.updated_at)}`
+            t("board.updatedAge", { age: ageDays(a.updated_at) })
           )}
         </span>
       </div>
@@ -4942,7 +4988,7 @@ function InterviewPrepSection({
           }}
         />
         <button disabled={adding} onClick={() => addItem(newText)}>
-          {t("common.save")}
+          {t("common.add")}
         </button>
       </div>
     </div>
@@ -6190,12 +6236,33 @@ function PipelineTab({
           .some((f) => (f as string).toLowerCase().includes(q))),
   );
 
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable)
+      )
+        return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <section>
       <StageHistogram applications={filtered} />
 
       <div className="toolbar">
         <input
+          ref={searchRef}
           type="search"
           className="search"
           aria-label={t("toolbar.searchPlaceholder")}

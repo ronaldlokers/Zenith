@@ -35,7 +35,8 @@
     "researching": "Researching…",
     "log": "Log",
     "fetch": "Fetch",
-    "fetching": "Fetching…"
+    "fetching": "Fetching…",
+    "add": "Add"
   },
   "savedViews": {
     "namePrompt": "Name this view",
@@ -124,18 +125,17 @@
     "boardEmpty": "empty",
     "boardKeepPushing": "keep pushing",
     "noFollowUps": "No follow-ups scheduled.",
-    "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit \"Check now\"."
+    "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit “Check now”."
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
-    "subtitle": "Desktop, Jobs tab only.",
-    "focusSearch": "Focus search",
-    "addJob": "Add a new job",
-    "moveFocus": "Move focus down / up the list",
-    "setStatus": "Set the focused card's status (interested…ghosted)",
+    "subtitle": "Desktop.",
+    "focusSearch": "Focus the pipeline search",
+    "addJob": "Add a job (quick add)",
     "closeHelp": "Close a form or this help",
-    "toggleHelp": "Toggle this help",
-    "feedTriage": "Feed: add / dismiss"
+    "feedTriage": "Feed: add / dismiss",
+    "palette": "Open the command palette",
+    "feedMove": "Feed: move focus down / up"
   },
   "settings": {
     "title": "Settings",
@@ -237,7 +237,10 @@
   "palette": {
     "title": "Jump to…",
     "placeholder": "Search jobs, companies, people… ({{shortcut}})",
-    "noResults": "No matches."
+    "noResults": "No matches.",
+    "actions": "Actions",
+    "addJob": "Add a job",
+    "goSettings": "Go to settings"
   },
   "outreach": {
     "status": "Outreach status",
@@ -292,7 +295,7 @@
     "jobDescription": "Job description",
     "jobDescriptionCaptured": "captured {{date}}",
     "jobDescriptionPlaceholder": "Paste the job description here — kept even if the posting is edited or taken down.",
-    "possibleDuplicate": "You already have an open application at this company: \"{{title}}\". Saving will add a separate one.",
+    "possibleDuplicate": "You already have an open application at this company: “{{title}}”. Saving will add a separate one.",
     "archive": "Archive",
     "unarchive": "Unarchive",
     "keywordMatch": "Keyword match",
@@ -482,7 +485,7 @@
     "resetDemoSuccess": "Demo data reset.",
     "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?",
     "apiKey": "Personal API key",
-    "apiKeyHint": "Read-only access to your applications at GET /api/v1/applications — send it as \"Authorization: Bearer <key>\".",
+    "apiKeyHint": "Read-only access to your applications at GET /api/v1/applications — send it as “Authorization: Bearer <key>”.",
     "apiKeyGenerate": "Generate key",
     "webhooks": "Webhooks",
     "webhooksHint": "Get a signed POST whenever an application's status changes.",
@@ -508,7 +511,7 @@
     "sessions": "Active sessions",
     "unknownDevice": "Unknown device",
     "thisDevice": "this device",
-    "revoke": "Sign out",
+    "revoke": "Revoke",
     "revokeOthers": "Sign out other devices",
     "changePassword": "Change password",
     "currentPassword": "Current password",
@@ -543,7 +546,8 @@
     "byStage": "By stage",
     "byCompany": "By company",
     "noCompany": "No company",
-    "closedCount": "Closed · {{count}}"
+    "closedCount": "Closed · {{count}}",
+    "updatedAge": "upd {{age}}"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
@@ -554,18 +558,18 @@
     "interviewingCount_one": "{{count}} at interview or offer stage",
     "interviewingCount_other": "{{count}} at interview or offer stage",
     "noActivity": "Nothing yet — add your first job to get started.",
-    "viewAllJobs": "View all jobs",
+    "viewAllJobs": "View the pipeline",
     "recentlyUpdated": "Recently updated",
     "showActivity": "Show all activity",
     "hideActivity": "Hide activity"
   },
   "toast": {
-    "deleted": "Deleted \"{{name}}\"",
+    "deleted": "Deleted “{{name}}”",
     "undo": "Undo",
     "roleTypeAdded": "Role type added",
     "savedSettings": "Saved {{source}} settings",
     "feedFound": "Found {{inserted}} new of {{seen}} checked",
-    "addedToJobs": "Added \"{{title}}\" to Jobs",
+    "addedToJobs": "Added “{{title}}” to the pipeline",
     "researched": "Researched {{name}}",
     "open": "Open",
     "statusChanged": "Moved to {{stage}}",
@@ -573,8 +577,8 @@
     "setFollowUp": "Set follow-up"
   },
   "confirm": {
-    "deleteDocument": "Delete \"{{name}}\"?",
-    "deleteRoleType": "Delete role type \"{{label}}\"? Feed keywords for it go too."
+    "deleteDocument": "Delete “{{name}}”?",
+    "deleteRoleType": "Delete role type “{{label}}”? Feed keywords for it go too."
   },
   "aria": {
     "moveToStage": "Move {{title}} to stage",
@@ -601,7 +605,7 @@
   "attention": {
     "overdue": "overdue",
     "overdueHint": "The follow-up date has passed — act on it or reschedule.",
-    "stale": "stale?",
+    "stale": "stale",
     "staleHint": "The posting may be gone — the URL no longer answers like a live listing.",
     "quiet": "gone quiet",
     "quietHint": "No activity from their side for a while — consider a nudge."
