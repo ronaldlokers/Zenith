@@ -564,7 +564,10 @@
     "interviewingCount_other": "{{count}} in gesprek of aanbod",
     "recentActivity": "Recente activiteit",
     "noActivity": "Nog niets — voeg je eerste vacature toe om te beginnen.",
-    "viewAllJobs": "Bekijk alle vacatures"
+    "viewAllJobs": "Bekijk alle vacatures",
+    "recentlyUpdated": "Recent bijgewerkt",
+    "showActivity": "Alle activiteit tonen",
+    "hideActivity": "Activiteit verbergen"
   },
   "jobs": {
     "density": "Rijdichtheid",

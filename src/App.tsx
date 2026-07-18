@@ -324,7 +324,6 @@ type Tab =
   | "board"
   | "feed"
   | "calendar"
-  | "activity"
   | "stats"
   | "companies"
   | "contacts"
@@ -341,7 +340,6 @@ const TAB_PATHS: Record<Tab, string> = {
   board: "/board",
   feed: "/feed",
   calendar: "/calendar",
-  activity: "/activity",
   stats: "/stats",
   companies: "/companies",
   contacts: "/people",
@@ -353,7 +351,8 @@ const PATH_TABS: Record<string, Tab> = {
   board: "board",
   feed: "feed",
   calendar: "calendar",
-  activity: "activity",
+  // /activity folded into Overview (#285); old links land on Overview.
+  activity: "overview",
   stats: "stats",
   companies: "companies",
   people: "contacts",
@@ -2440,13 +2439,6 @@ export default function App() {
           {t("tabs.calendar")}
         </button>
         <button
-          className={tab === "activity" ? "active" : ""}
-          data-tab="activity"
-          onClick={() => setTab("activity")}
-        >
-          {t("tabs.activity")}
-        </button>
-        <button
           className={tab === "stats" ? "active" : ""}
           data-tab="stats"
           onClick={() => setTab("stats")}
@@ -2514,6 +2506,7 @@ export default function App() {
                 applications={visibleApps}
                 onGoToJobs={() => setTab("applications")}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
+                onError={setError}
               />
             )}
             {tab === "applications" && (
@@ -2567,12 +2560,6 @@ export default function App() {
                   setJumpQuery(title);
                   setTab("applications");
                 }}
-              />
-            )}
-            {tab === "activity" && (
-              <ActivityTab
-                onError={setError}
-                onOpenJob={(id) => navigate(`/jobs/${id}`)}
               />
             )}
             {tab === "stats" && <StatsTab onError={setError} />}
@@ -4455,9 +4442,9 @@ function ActivityTab({
         <p className="empty">{t("activityFeed.empty")}</p>
       )}
       <ul className="activity-list">
-        {events.map((e, i) => (
+        {events.map((e) => (
           <li
-            key={i}
+            key={`${e.kind}-${e.application_id}-${e.ts}`}
             className={`activity-item kind-${e.kind}`}
             {...rowActivate(() => onOpenJob(e.application_id))}
           >
@@ -5198,12 +5185,17 @@ function OverviewTab({
   applications,
   onGoToJobs,
   onOpenJob,
+  onError,
 }: {
   applications: Application[];
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
+  onError: (message: string | null) => void;
 }) {
   const { t } = useTranslation();
+  // The full activity feed folds in here (#285) instead of its own tab —
+  // lazy-loaded on expand so the landing page stays fast.
+  const [showActivity, setShowActivity] = useState(false);
   const open = applications.filter((a) => !isDead(a.status));
   const interviewing = open.filter(
     (a) => a.status === "interview" || a.status === "offer",
@@ -5229,7 +5221,7 @@ function OverviewTab({
 
       <NextUpPanel applications={applications} />
 
-      <h3 className="side-h">{t("overview.recentActivity")}</h3>
+      <h3 className="side-h">{t("overview.recentlyUpdated")}</h3>
       {recent.length === 0 ? (
         <p className="muted small">{t("overview.noActivity")}</p>
       ) : (
@@ -5252,6 +5244,15 @@ function OverviewTab({
       <button className="primary overview-cta" onClick={onGoToJobs}>
         {t("overview.viewAllJobs")}
       </button>
+
+      <button
+        className="btn-secondary overview-activity-toggle"
+        onClick={() => setShowActivity((v) => !v)}
+        aria-expanded={showActivity}
+      >
+        {showActivity ? t("overview.hideActivity") : t("overview.showActivity")}
+      </button>
+      {showActivity && <ActivityTab onError={onError} onOpenJob={onOpenJob} />}
     </section>
   );
 }
