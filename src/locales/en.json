@@ -164,7 +164,8 @@
       "data": "Data",
       "admin": "Admin",
       "feed": "Feed sources"
-    }
+    },
+    "keyShortcuts": "Single-key shortcuts (n, /)"
   },
   "feed": {
     "pulledFrom": "Pulled from Adzuna and HN Who's Hiring every 6 hours.",
@@ -317,7 +318,9 @@
     "followUpFallback": "follow up",
     "setFollowUp": "Set follow-up",
     "addNote": "Add note",
-    "fitSetAria": "Set fit to {{n}}"
+    "fitSetAria": "Set fit to {{n}}",
+    "editFollowUp": "Edit follow-up",
+    "editNotes": "Edit notes"
   },
   "nextUp": {
     "title": "Next up",
