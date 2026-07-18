@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { checkStalePostings } from "./posting-check.js";
@@ -16,6 +17,79 @@ export type AppEnv = {
 };
 
 const app = new Hono<AppEnv>();
+
+// Shared application write shape (#285) — the INSERT column list, the
+// UPDATE SET clause, and the bound values all derive from this one ordered
+// list, so POST and PUT can't drift out of sync. Column names are constants
+// (not user input), safe to interpolate.
+const APP_COLUMNS = [
+  "company_id", "contact_id", "title", "role_type", "url", "source",
+  "salary_range", "status", "notes", "applied_at", "next_action",
+  "next_action_at", "deadline_at", "fit_score", "cover_letter",
+  "salary_currency", "salary_min", "salary_max", "salary_period",
+  "signing_bonus", "bonus_target_pct", "equity_value", "benefits_notes",
+  "referred_by_contact_id", "job_description", "job_description_captured_at",
+] as const;
+
+// The bound values in APP_COLUMNS order. Keep this in lockstep with the list.
+function applicationValues(
+  body: Record<string, unknown>,
+  jobDescription: unknown,
+  jobDescriptionCapturedAt: unknown,
+): unknown[] {
+  return [
+    body.company_id ?? null,
+    body.contact_id ?? null,
+    body.title,
+    body.role_type ?? "other",
+    body.url ?? null,
+    body.source ?? null,
+    body.salary_range ?? null,
+    body.status ?? "interested",
+    body.notes ?? null,
+    body.applied_at ?? null,
+    body.next_action ?? null,
+    body.next_action_at ?? null,
+    body.deadline_at ?? null,
+    body.fit_score ?? null,
+    body.cover_letter ?? null,
+    body.salary_currency ?? null,
+    body.salary_min ?? null,
+    body.salary_max ?? null,
+    body.salary_period ?? null,
+    body.signing_bonus ?? null,
+    body.bonus_target_pct ?? null,
+    body.equity_value ?? null,
+    body.benefits_notes ?? null,
+    body.referred_by_contact_id ?? null,
+    jobDescription ?? null,
+    jobDescriptionCapturedAt ?? null,
+  ];
+}
+
+// Records a pipeline status change once: the status_history row plus the
+// (non-blocking) webhook. Shared by PUT and PATCH so the two can't diverge.
+function recordStatusChange(
+  c: Context<AppEnv>,
+  id: string,
+  from: string | null,
+  to: string,
+): Promise<void> {
+  const userId = c.get("userId");
+  c.executionCtx.waitUntil(
+    triggerWebhooks(c.env, userId, "application.status_changed", {
+      application_id: Number(id),
+      from_status: from,
+      to_status: to,
+    }),
+  );
+  return c.env.DB.prepare(
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
+  )
+    .bind(id, userId, from, to)
+    .run()
+    .then(() => undefined);
+}
 
 // Account creation is invite-only/admin-created (#38): the public
 // self-signup route is blocked here before it reaches Better-Auth's
@@ -484,38 +558,18 @@ app.post("/api/applications", async (c) => {
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const userId = c.get("userId");
   const jobDescription = body.job_description ?? null;
+  const cols = ["user_id", ...APP_COLUMNS];
   const result = await c.env.DB.prepare(
-    `INSERT INTO applications (user_id, company_id, contact_id, title, role_type, url, source, salary_range, status, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, cover_letter, salary_currency, salary_min, salary_max, salary_period, signing_bonus, bonus_target_pct, equity_value, benefits_notes, referred_by_contact_id, job_description, job_description_captured_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO applications (${cols.join(", ")})
+     VALUES (${cols.map(() => "?").join(", ")}) RETURNING *`,
   )
     .bind(
       userId,
-      body.company_id ?? null,
-      body.contact_id ?? null,
-      body.title,
-      body.role_type ?? "other",
-      body.url ?? null,
-      body.source ?? null,
-      body.salary_range ?? null,
-      body.status ?? "interested",
-      body.notes ?? null,
-      body.applied_at ?? null,
-      body.next_action ?? null,
-      body.next_action_at ?? null,
-      body.deadline_at ?? null,
-      body.fit_score ?? null,
-      body.cover_letter ?? null,
-      body.salary_currency ?? null,
-      body.salary_min ?? null,
-      body.salary_max ?? null,
-      body.salary_period ?? null,
-      body.signing_bonus ?? null,
-      body.bonus_target_pct ?? null,
-      body.equity_value ?? null,
-      body.benefits_notes ?? null,
-      body.referred_by_contact_id ?? null,
-      jobDescription,
-      jobDescription ? new Date().toISOString() : null,
+      ...applicationValues(
+        body,
+        jobDescription,
+        jobDescription ? new Date().toISOString() : null,
+      ),
     )
     .first();
   await c.env.DB.prepare(
@@ -571,42 +625,12 @@ app.put("/api/applications/:id", async (c) => {
     (jobDescription ? new Date().toISOString() : null);
   const result = await c.env.DB.prepare(
     `UPDATE applications
-     SET company_id = ?, contact_id = ?, title = ?, role_type = ?, url = ?, source = ?,
-         salary_range = ?, status = ?, notes = ?, applied_at = ?, next_action = ?, next_action_at = ?,
-         deadline_at = ?, fit_score = ?, cover_letter = ?,
-         salary_currency = ?, salary_min = ?, salary_max = ?, salary_period = ?,
-         signing_bonus = ?, bonus_target_pct = ?, equity_value = ?, benefits_notes = ?,
-         referred_by_contact_id = ?, job_description = ?, job_description_captured_at = ?,
+     SET ${APP_COLUMNS.map((col) => `${col} = ?`).join(", ")},
          updated_at = datetime('now')
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(
-      body.company_id ?? null,
-      body.contact_id ?? null,
-      body.title,
-      body.role_type ?? "other",
-      body.url ?? null,
-      body.source ?? null,
-      body.salary_range ?? null,
-      body.status ?? "interested",
-      body.notes ?? null,
-      body.applied_at ?? null,
-      body.next_action ?? null,
-      body.next_action_at ?? null,
-      body.deadline_at ?? null,
-      body.fit_score ?? null,
-      body.cover_letter ?? null,
-      body.salary_currency ?? null,
-      body.salary_min ?? null,
-      body.salary_max ?? null,
-      body.salary_period ?? null,
-      body.signing_bonus ?? null,
-      body.bonus_target_pct ?? null,
-      body.equity_value ?? null,
-      body.benefits_notes ?? null,
-      body.referred_by_contact_id ?? null,
-      jobDescription,
-      jobDescriptionCapturedAt,
+      ...applicationValues(body, jobDescription, jobDescriptionCapturedAt),
       c.req.param("id"),
       userId,
     )
@@ -614,18 +638,7 @@ app.put("/api/applications/:id", async (c) => {
   if (!result) return c.json({ error: "not found" }, 404);
   const newStatus = (result as { status: string }).status;
   if (newStatus !== existing.status) {
-    await c.env.DB.prepare(
-      `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
-    )
-      .bind(c.req.param("id"), userId, existing.status, newStatus)
-      .run();
-    c.executionCtx.waitUntil(
-      triggerWebhooks(c.env, userId, "application.status_changed", {
-        application_id: Number(c.req.param("id")),
-        from_status: existing.status,
-        to_status: newStatus,
-      }),
-    );
+    await recordStatusChange(c, c.req.param("id"), existing.status, newStatus);
   }
   return c.json(result);
 });
@@ -657,18 +670,7 @@ app.patch("/api/applications/:id/status", async (c) => {
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
   if (statusChanged) {
-    await c.env.DB.prepare(
-      `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
-    )
-      .bind(c.req.param("id"), userId, existing.status, body.status)
-      .run();
-    c.executionCtx.waitUntil(
-      triggerWebhooks(c.env, userId, "application.status_changed", {
-        application_id: Number(c.req.param("id")),
-        from_status: existing.status,
-        to_status: body.status,
-      }),
-    );
+    await recordStatusChange(c, c.req.param("id"), existing.status, body.status);
   }
   return c.json(result);
 });
