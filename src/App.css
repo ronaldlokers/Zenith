@@ -3628,3 +3628,65 @@ summary.bcol-head::after {
 .wins-journal {
   margin: 0 0 1.2rem;
 }
+
+/* Settings as a routed page with a section nav (#314) — replaces the
+   14-section modal. */
+.settings-page {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 0.75rem;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  position: sticky;
+  top: 4.5rem;
+}
+
+.settings-nav button {
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-body);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.settings-nav button:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.settings-nav button.active {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.settings-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 1.2rem 1.4rem;
+  max-width: 34rem;
+}
+
+@media (max-width: 700px) {
+  .settings-page {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+}
