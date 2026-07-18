@@ -19,7 +19,8 @@
     "settings": "Settings",
     "notifications": "Notifications",
     "notificationsEmpty": "Nothing yet.",
-    "markAllRead": "Mark all read"
+    "markAllRead": "Mark all read",
+    "search": "Search"
   },
   "common": {
     "loading": "Loading…",

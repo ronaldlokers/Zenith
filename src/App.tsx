@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useRef,
@@ -218,6 +219,23 @@ function EmptyCvIcon() {
 // Matches the stroke-based hand-drawn style of the Empty*Icon set (#203) —
 // the settings button previously used a bare "⚙" glyph, a third icon
 // convention alongside these SVGs and the app's mostly-textual chrome.
+function SearchIcon() {
+  return (
+    <svg
+      className="settings-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <circle cx="10.5" cy="10.5" r="6.5" strokeWidth="2" />
+      <path d="M20 20l-5-5" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function SettingsIcon() {
   return (
     <svg
@@ -572,97 +590,134 @@ function CommandPalette({
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
+  const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useFocusTrap<HTMLDivElement>();
 
   useEffect(() => {
     inputRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   const q = query.trim().toLowerCase();
-  const matchedApps = q
-    ? applications.filter((a) => a.title.toLowerCase().includes(q)).slice(0, 6)
+  // One flat, ordered result list drives arrow-key navigation and the
+  // listbox semantics (#285); visual grouping is derived from `group`.
+  const items = q
+    ? [
+        ...applications
+          .filter((a) => a.title.toLowerCase().includes(q))
+          .slice(0, 6)
+          .map((a) => ({
+            domId: `palette-app-${a.id}`,
+            group: t("tabs.jobs"),
+            label: (
+              <>
+                {a.title}
+                {a.company_name ? (
+                  <span className="muted small"> — {a.company_name}</span>
+                ) : null}
+              </>
+            ),
+            onSelect: () => onJumpToApplication(a.id),
+          })),
+        ...companies
+          .filter((c) => c.name.toLowerCase().includes(q))
+          .slice(0, 6)
+          .map((c) => ({
+            domId: `palette-co-${c.id}`,
+            group: t("tabs.companies"),
+            label: <>{c.name}</>,
+            onSelect: () => onJumpToCompany(c.name),
+          })),
+        ...contacts
+          .filter((c) => c.name.toLowerCase().includes(q))
+          .slice(0, 6)
+          .map((c) => ({
+            domId: `palette-ct-${c.id}`,
+            group: t("tabs.people"),
+            label: (
+              <>
+                {c.name}
+                {c.company_name ? (
+                  <span className="muted small"> — {c.company_name}</span>
+                ) : null}
+              </>
+            ),
+            onSelect: () => onJumpToContact(c.name),
+          })),
+      ]
     : [];
-  const matchedCompanies = q
-    ? companies.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6)
-    : [];
-  const matchedContacts = q
-    ? contacts.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 6)
-    : [];
-  const empty =
-    q && !matchedApps.length && !matchedCompanies.length && !matchedContacts.length;
+  const activeIndex = items.length ? Math.min(active, items.length - 1) : 0;
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      onClose();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive(Math.min(activeIndex + 1, items.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(Math.max(activeIndex - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      items[activeIndex]?.onSelect();
+    }
+  };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
+        ref={dialogRef}
         className="modal command-palette"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
+        aria-modal="true"
         aria-label={t("palette.title")}
       >
         <input
           ref={inputRef}
           type="search"
+          role="combobox"
+          aria-expanded={items.length > 0}
+          aria-controls="palette-listbox"
+          aria-activedescendant={
+            items.length ? items[activeIndex].domId : undefined
+          }
           className="palette-input"
           placeholder={t("palette.placeholder")}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setActive(0);
+          }}
+          onKeyDown={onKeyDown}
         />
         {q && (
-          <div className="palette-results">
-            {matchedApps.length > 0 && (
-              <div className="palette-group">
-                <span className="palette-group-label">{t("tabs.jobs")}</span>
-                {matchedApps.map((a) => (
+          <div className="palette-results" id="palette-listbox" role="listbox">
+            {items.map((item, i) => {
+              const showHeader = i === 0 || items[i - 1].group !== item.group;
+              return (
+                <Fragment key={item.domId}>
+                  {showHeader && (
+                    <span className="palette-group-label" role="presentation">
+                      {item.group}
+                    </span>
+                  )}
                   <button
-                    key={a.id}
-                    className="palette-item"
-                    onClick={() => onJumpToApplication(a.id)}
+                    id={item.domId}
+                    role="option"
+                    aria-selected={i === activeIndex}
+                    className={`palette-item${i === activeIndex ? " active" : ""}`}
+                    onClick={item.onSelect}
+                    onMouseEnter={() => setActive(i)}
                   >
-                    {a.title}
-                    {a.company_name ? (
-                      <span className="muted small"> — {a.company_name}</span>
-                    ) : null}
+                    {item.label}
                   </button>
-                ))}
-              </div>
+                </Fragment>
+              );
+            })}
+            {!items.length && (
+              <p className="muted small">{t("palette.noResults")}</p>
             )}
-            {matchedCompanies.length > 0 && (
-              <div className="palette-group">
-                <span className="palette-group-label">{t("tabs.companies")}</span>
-                {matchedCompanies.map((c) => (
-                  <button
-                    key={c.id}
-                    className="palette-item"
-                    onClick={() => onJumpToCompany(c.name)}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            )}
-            {matchedContacts.length > 0 && (
-              <div className="palette-group">
-                <span className="palette-group-label">{t("tabs.people")}</span>
-                {matchedContacts.map((c) => (
-                  <button
-                    key={c.id}
-                    className="palette-item"
-                    onClick={() => onJumpToContact(c.name)}
-                  >
-                    {c.name}
-                    {c.company_name ? (
-                      <span className="muted small"> — {c.company_name}</span>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-            )}
-            {empty && <p className="muted small">{t("palette.noResults")}</p>}
           </div>
         )}
       </div>
@@ -2329,6 +2384,14 @@ export default function App() {
             {activeApps.filter(isDue).length > 0 &&
               ` · ${t("header.dueCount", { count: activeApps.filter(isDue).length })}`}
           </span>
+          <button
+            className="settings-btn"
+            onClick={() => setShowPalette(true)}
+            title={t("header.search")}
+            aria-label={t("header.search")}
+          >
+            <SearchIcon />
+          </button>
           <NotificationBell />
           <button
             className="settings-btn"
