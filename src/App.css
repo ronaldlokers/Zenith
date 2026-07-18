@@ -3801,3 +3801,26 @@ summary.bcol-head::after {
     display: block;
   }
 }
+
+/* Overview: work left, motivation right rail (#314). */
+.overview-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 2rem;
+  align-items: start;
+}
+
+.overview-main,
+.overview-side {
+  min-width: 0;
+}
+
+@media (min-width: 1000px) {
+  .app:has(.overview) > main {
+    max-width: 1000px;
+  }
+
+  .overview-cols {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
