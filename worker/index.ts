@@ -1502,7 +1502,20 @@ app.delete("/api/account/sample-data", async (c) => {
   return c.body(null, 204);
 });
 
-app.notFound((c) => c.json({ error: "not found" }, 404));
+app.notFound((c) => {
+  // Genuine API misses stay JSON 404. Everything else that reached the
+  // Worker is a client-side route (/jobs, /board, /stats, …) with no
+  // matching asset — hand it to the SPA shell so react-router can render
+  // it, instead of leaking the API's JSON 404 (#285). The assets binding
+  // resolves the miss to index.html via not_found_handling.
+  if (c.req.path.startsWith("/api/")) {
+    return c.json({ error: "not found" }, 404);
+  }
+  if ((c.req.method === "GET" || c.req.method === "HEAD") && c.env.ASSETS) {
+    return c.env.ASSETS.fetch(c.req.raw);
+  }
+  return c.json({ error: "not found" }, 404);
+});
 
 app.onError((err, c) => {
   // A malformed/empty JSON request body makes c.req.json() throw a
