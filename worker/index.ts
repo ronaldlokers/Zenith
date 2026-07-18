@@ -638,14 +638,23 @@ app.patch("/api/applications/:id/status", async (c) => {
     .bind(c.req.param("id"), userId)
     .first<{ status: string }>();
   if (!existing) return c.json({ error: "not found" }, 404);
+  // A stage change completes whatever follow-up was pending for the old
+  // stage, so clear it — otherwise the old next_action_at lingers and the
+  // job reads as overdue forever until hand-edited (#285). The full edit
+  // form (PUT) submits next_action explicitly, so it isn't touched here.
+  const statusChanged = body.status !== existing.status;
   const result = await c.env.DB.prepare(
-    `UPDATE applications SET status = ?, updated_at = datetime('now')
-     WHERE id = ? AND user_id = ? RETURNING *`,
+    statusChanged
+      ? `UPDATE applications
+           SET status = ?, next_action = NULL, next_action_at = NULL, updated_at = datetime('now')
+         WHERE id = ? AND user_id = ? RETURNING *`
+      : `UPDATE applications SET status = ?, updated_at = datetime('now')
+         WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(body.status, c.req.param("id"), userId)
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
-  if (body.status !== existing.status) {
+  if (statusChanged) {
     await c.env.DB.prepare(
       `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
     )
