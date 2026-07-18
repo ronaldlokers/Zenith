@@ -2552,8 +2552,14 @@ export default function App() {
         +
       </button>
 
+      {/* Persistent live region (#285) — always in the DOM so screen
+          readers announce each new toast message; the visible toast below
+          mounts/unmounts and can't be relied on to announce on its own. */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {toast?.message ?? ""}
+      </div>
       {toast && (
-        <div className="toast" role="status">
+        <div className="toast">
           <span>{toast.message}</span>
           {toast.undo && (
             <button
