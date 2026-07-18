@@ -1666,7 +1666,7 @@ select.status {
   background: linear-gradient(
     100deg,
     var(--surface) 40%,
-    var(--bg) 50%,
+    color-mix(in srgb, var(--ink) 8%, var(--surface)) 50%,
     var(--surface) 60%
   );
   background-size: 200% 100%;
@@ -3500,7 +3500,7 @@ summary.bcol-head::after {
 }
 
 .settings-nav button:hover {
-  background: var(--surface);
+  background: var(--hover);
   color: var(--ink);
 }
 
@@ -3636,7 +3636,7 @@ summary.bcol-head::after {
   }
 
   .app > .tabs button:hover {
-    background: var(--surface);
+    background: var(--hover);
     color: var(--ink);
   }
 
@@ -3691,7 +3691,7 @@ summary.bcol-head::after {
 
 .badge.attention-stale,
 .badge.attention-quiet {
-  color: var(--heat-quiet);
+  color: var(--heat-quiet-text);
 }
 
 /* Network grid gets a deliberate width under the sidebar shell (#314). */
@@ -3750,7 +3750,7 @@ summary.bcol-head::after {
 }
 
 .closed-drawer li:hover {
-  background: var(--surface);
+  background: var(--hover);
 }
 
 .closed-title {
@@ -3854,6 +3854,82 @@ summary.bcol-head::after {
 
   .job-page .detail-secondary > .detail-sub:first-child {
     margin-top: 0;
+  }
+}
+
+/* Feedback pass (#314 round 3) — pointer, pressed, and motion states for
+   the pre-#314 row families; nothing here changes layout. */
+.card.row2:hover,
+.bcard:hover,
+.company-tile:hover,
+.agenda-item:hover,
+.activity-item:hover,
+.notification-list li:hover {
+  background: var(--hover);
+}
+
+button:not(:disabled):active,
+.card.row2:active,
+.bcard:active {
+  filter: brightness(0.97);
+}
+
+/* Empty-state line art: --muted at the icons' internal opacities drops
+   to ~1.6:1 on the dark themes. */
+.empty svg {
+  color: var(--empty-stroke);
+}
+
+.bcol.drag-over {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  transition: background-color 0.15s ease;
+}
+
+.toast {
+  animation: toast-in 0.18s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.modal-backdrop {
+  animation: backdrop-in 0.15s ease-out;
+}
+
+.modal-backdrop > .modal {
+  animation: modal-in 0.18s ease-out;
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .modal-backdrop,
+  .modal-backdrop > .modal {
+    animation: none;
+  }
+
+  .bcol.drag-over {
+    transition: none;
   }
 }
 
