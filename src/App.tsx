@@ -5537,6 +5537,8 @@ function ApplicationsTab({
 
   // Saved views (#277) — named snapshots of the filter/sort state.
   const [savedViews, setSavedViews] = useState<SavedView[]>([]);
+  const [namingView, setNamingView] = useState(false);
+  const [newViewName, setNewViewName] = useState("");
   const loadViews = useCallback(
     () =>
       api
@@ -5569,13 +5571,15 @@ function ApplicationsTab({
     setSort((f.sort as typeof sort) ?? "updated");
   };
   const saveCurrentView = () => {
-    const name = window.prompt(t("savedViews.namePrompt"))?.trim();
+    const name = newViewName.trim();
     if (!name) return;
     api
       .createSavedView(name, currentFilters())
       .then((v) => {
         setSavedViews((vs) => [...vs, v]);
         notify(t("savedViews.saved", { name }));
+        setNamingView(false);
+        setNewViewName("");
       })
       .catch((e) => onError((e as Error).message));
   };
@@ -5916,10 +5920,43 @@ function ApplicationsTab({
             </button>
           </span>
         ))}
-        <button className="view-save" onClick={saveCurrentView}>
+        <button className="view-save" onClick={() => setNamingView(true)}>
           {t("savedViews.save")}
         </button>
       </div>
+
+      {namingView && (
+        <div className="modal-backdrop" onClick={() => setNamingView(false)}>
+          <form
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("savedViews.save")}
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveCurrentView();
+            }}
+          >
+            <label className="settings-field">
+              <span>{t("savedViews.namePrompt")}</span>
+              <input
+                autoFocus
+                value={newViewName}
+                onChange={(e) => setNewViewName(e.target.value)}
+              />
+            </label>
+            <div className="form-actions">
+              <button type="submit" className="primary" disabled={!newViewName.trim()}>
+                {t("common.save")}
+              </button>
+              <button type="button" onClick={() => setNamingView(false)}>
+                {t("common.cancel")}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {selected.size > 0 && (
         <div className="bulk-bar">
