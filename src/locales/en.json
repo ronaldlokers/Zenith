@@ -308,7 +308,10 @@
     "jobPostingLink": "Job posting ↗",
     "viaSource": "via {{source}}",
     "appliedDate": "Applied {{date}}",
-    "followUpFallback": "follow up"
+    "followUpFallback": "follow up",
+    "setFollowUp": "Set follow-up",
+    "addNote": "Add note",
+    "fitSetAria": "Set fit to {{n}}"
   },
   "nextUp": {
     "title": "Next up",

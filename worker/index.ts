@@ -703,6 +703,37 @@ app.patch("/api/applications/:id/follow-up", async (c) => {
   return c.json(result);
 });
 
+// Inline field edits (#314 round 3) — the job page edits notes and fit
+// score in place; only these two columns are patchable here. Everything
+// else still goes through the full PUT.
+app.patch("/api/applications/:id", async (c) => {
+  const body = await c.req.json();
+  const sets: string[] = [];
+  const vals: unknown[] = [];
+  if ("notes" in body) {
+    sets.push("notes = ?");
+    vals.push(body.notes ?? null);
+  }
+  if ("fit_score" in body) {
+    const fit = body.fit_score;
+    if (fit != null && !(Number.isInteger(fit) && fit >= 1 && fit <= 5)) {
+      return c.json({ error: "fit_score must be 1-5 or null" }, 400);
+    }
+    sets.push("fit_score = ?");
+    vals.push(fit ?? null);
+  }
+  if (!sets.length) return c.json({ error: "nothing to update" }, 400);
+  const result = await c.env.DB.prepare(
+    `UPDATE applications
+       SET ${sets.join(", ")}, updated_at = datetime('now')
+     WHERE id = ? AND user_id = ? RETURNING *`,
+  )
+    .bind(...vals, c.req.param("id"), c.get("userId"))
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
 // --- Interactions ---
 
 app.get("/api/applications/:id/interactions", async (c) => {

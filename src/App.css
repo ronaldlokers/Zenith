@@ -3857,6 +3857,54 @@ summary.bcol-head::after {
   }
 }
 
+/* Inline editors on the job page (#314 round 3) — follow-up, notes, and
+   fit edit in place; the full form is for bulk edits only. */
+.inline-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: 22rem;
+}
+
+.inline-edit-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.inline-edit-open {
+  border: none;
+  background: none;
+  padding: 0 0.2rem;
+  margin-left: 0.3rem;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--text-meta);
+}
+
+.inline-edit-open:hover {
+  color: var(--ink);
+  background: none;
+}
+
+.fit-edit {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.fit-star {
+  border: none;
+  background: none;
+  padding: 0 0.05rem;
+  color: var(--border);
+  cursor: pointer;
+  font-size: var(--text-body);
+  line-height: 1;
+}
+
+.fit-star.on {
+  color: var(--st-offer);
+}
+
 /* Feedback pass (#314 round 3) — pointer, pressed, and motion states for
    the pre-#314 row families; nothing here changes layout. */
 .card.row2:hover,
