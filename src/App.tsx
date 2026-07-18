@@ -532,14 +532,18 @@ function getCvLanguage(fallback: string): string {
 function OnboardingChecklist({
   profileDone,
   companyDone,
+  jobDone,
   onGoToProfile,
   onGoToCompanies,
+  onAddJob,
   onDismiss,
 }: {
   profileDone: boolean;
   companyDone: boolean;
+  jobDone: boolean;
   onGoToProfile: () => void;
   onGoToCompanies: () => void;
+  onAddJob: () => void;
   onDismiss: () => void;
 }) {
   const { t } = useTranslation();
@@ -562,8 +566,8 @@ function OnboardingChecklist({
         <li className={companyDone ? "done" : ""}>
           <button onClick={onGoToCompanies}>{t("onboarding.company")}</button>
         </li>
-        <li>
-          <span>{t("onboarding.firstJob")}</span>
+        <li className={jobDone ? "done" : ""}>
+          <button onClick={onAddJob}>{t("onboarding.firstJob")}</button>
         </li>
       </ul>
     </div>
@@ -2499,8 +2503,13 @@ export default function App() {
                     !!(onboardingProfile?.name && onboardingProfile?.email)
                   }
                   companyDone={companies.length > 0}
+                  jobDone={applications.length > 0}
                   onGoToProfile={() => setTab("cv")}
                   onGoToCompanies={() => setTab("companies")}
+                  onAddJob={() => {
+                    setTab("applications");
+                    setQuickAddSignal((n) => n + 1);
+                  }}
                   onDismiss={dismissOnboarding}
                 />
               )}
