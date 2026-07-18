@@ -253,6 +253,42 @@ function EmptyCvIcon() {
   );
 }
 
+function EmptyFeedIcon() {
+  // Radar sweep — the feed scans outside sources for new roles.
+  return (
+    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M20 78 A46 46 0 0 1 66 32" strokeWidth="4" opacity="0.28" strokeLinecap="round" />
+      <path d="M20 78 A32 32 0 0 1 52 46" strokeWidth="4" opacity="0.5" strokeLinecap="round" />
+      <path d="M20 78 A18 18 0 0 1 38 60" strokeWidth="5" className="accent-stroke" strokeLinecap="round" />
+      <circle cx="66" cy="32" r="6" strokeWidth="5" className="accent-stroke" />
+      <circle cx="20" cy="78" r="4" fill="currentColor" stroke="none" opacity="0.5" />
+    </svg>
+  );
+}
+
+function EmptyCalendarIcon() {
+  return (
+    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+      <rect x="16" y="22" width="64" height="56" rx="5" strokeWidth="4" opacity="0.3" />
+      <line x1="16" y1="38" x2="80" y2="38" strokeWidth="4" opacity="0.3" />
+      <line x1="34" y1="13" x2="34" y2="26" strokeWidth="4" opacity="0.5" strokeLinecap="round" />
+      <line x1="62" y1="13" x2="62" y2="26" strokeWidth="4" opacity="0.5" strokeLinecap="round" />
+      <circle cx="59" cy="58" r="9" strokeWidth="5" className="accent-stroke" />
+    </svg>
+  );
+}
+
+function EmptyActivityIcon() {
+  // Pulse line — events land here once things start moving.
+  return (
+    <svg width="72" height="72" viewBox="0 0 96 96" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M10 56 h16 l7-16" strokeWidth="4" opacity="0.35" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M33 40 44 72 54 44" strokeWidth="5" className="accent-stroke" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M54 44 l5 12 h27" strokeWidth="4" opacity="0.35" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 // Matches the stroke-based hand-drawn style of the Empty*Icon set (#203) —
 // the settings button previously used a bare "⚙" glyph, a third icon
 // convention alongside these SVGs and the app's mostly-textual chrome.
@@ -4460,7 +4496,10 @@ function FeedTab({
           />
         ))}
         {items?.length === 0 && (
-          <li className="empty">{t("empty.feedNothingNew")}</li>
+          <li className="empty">
+            <EmptyFeedIcon />
+            {t("empty.feedNothingNew")}
+          </li>
         )}
       </ul>
       {cursor && (
@@ -4612,6 +4651,7 @@ function CalendarTab({
     <section className="agenda">
       {days.length === 0 && (
         <p className="empty">
+          <EmptyCalendarIcon />
           {t("calendar.empty")}
         </p>
       )}
@@ -4692,7 +4732,10 @@ function ActivityTab({
   return (
     <section className="activity">
       {events.length === 0 && (
-        <p className="empty">{t("activityFeed.empty")}</p>
+        <p className="empty">
+          <EmptyActivityIcon />
+          {t("activityFeed.empty")}
+        </p>
       )}
       <ul className="activity-list">
         {events.map((e) => (
@@ -7000,6 +7043,13 @@ function ContactsTab({
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
+  const [view, setView] = useState<"list" | "grid">(
+    () => (localStorage.getItem("jobseekr_contacts_view") as "list" | "grid" | null) ?? "list",
+  );
+  const setViewAndPersist = (v: "list" | "grid") => {
+    setView(v);
+    localStorage.setItem("jobseekr_contacts_view", v);
+  };
   const [query, setQuery] = useState(initialQuery ?? "");
   const [detailId, setDetailIdState] = useState<number | null>(
     initialDetailId ?? null,
@@ -7045,6 +7095,20 @@ function ContactsTab({
         <button className="primary" onClick={() => setEditing("new")}>
           {t("toolbar.addContact")}
         </button>
+        <div className="board-group-toggle" role="group" aria-label={t("contacts.view")}>
+          <button
+            className={view === "list" ? "active" : ""}
+            onClick={() => setViewAndPersist("list")}
+          >
+            {t("companies.viewList")}
+          </button>
+          <button
+            className={view === "grid" ? "active" : ""}
+            onClick={() => setViewAndPersist("grid")}
+          >
+            {t("companies.viewGrid")}
+          </button>
+        </div>
       </div>
 
       {editing && (
@@ -7062,6 +7126,40 @@ function ContactsTab({
         />
       )}
 
+      {view === "grid" ? (
+        <ul className="company-grid">
+          {visible.map((c) => (
+            <li
+              key={c.id}
+              className="company-tile"
+              {...rowActivate(() => setDetailId(c.id))}
+            >
+              <div className="company-logo company-logo-placeholder" aria-hidden="true">
+                {c.name.slice(0, 1).toUpperCase()}
+              </div>
+              <span className="company-tile-name">{c.name}</span>
+              {(c.role || c.company_name) && (
+                <span className="muted small">
+                  {[c.role, c.company_name].filter(Boolean).join(" · ")}
+                </span>
+              )}
+              {c.outreach_status !== "not_contacted" && (
+                <span className={`outreach-pill ${c.outreach_status}`}>
+                  {t(`outreach.statuses.${c.outreach_status}`)}
+                </span>
+              )}
+            </li>
+          ))}
+          {visible.length === 0 && (
+            <li className="empty">
+              <EmptyPeopleIcon />
+              {contacts.length === 0
+                ? t("empty.noPeople")
+                : t("empty.noPeopleMatch")}
+            </li>
+          )}
+        </ul>
+      ) : (
       <ul className="cards">
         {visible.map((c) => (
           <li
@@ -7101,6 +7199,7 @@ function ContactsTab({
           </li>
         )}
       </ul>
+      )}
       {detailContact && (
         <ContactDetailModal
           contact={detailContact}

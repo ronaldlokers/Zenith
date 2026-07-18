@@ -601,5 +601,8 @@
     "title": "Vacature toevoegen",
     "addOpen": "Toevoegen & openen",
     "add": "Toevoegen"
+  },
+  "contacts": {
+    "view": "Weergave mensen"
   }
 }
