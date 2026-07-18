@@ -9,12 +9,25 @@
 const BATCH_SIZE = 15;
 const FETCH_TIMEOUT_MS = 8000;
 
+// Each attempt gets its own controller + timeout (#285) — a HEAD and its
+// GET fallback previously shared one signal, so a HEAD timeout left the
+// controller already aborted and the GET fallback failed instantly.
+function fetchWithTimeout(url: string, method: string): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  return fetch(url, {
+    method,
+    redirect: "follow",
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
+}
+
 export function looksStale(
   httpStatus: number,
   requestedUrl: string,
   finalUrl: string,
 ): boolean {
-  if (httpStatus === 404 || httpStatus === 410 || httpStatus >= 400) {
+  if (httpStatus >= 400) {
     return true;
   }
   if (finalUrl !== requestedUrl) {
@@ -47,20 +60,9 @@ export async function checkStalePostings(env: Env): Promise<{ checked: number; f
   for (const app of results) {
     let postingStatus: string | null = null;
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-      const res = await fetch(app.url, {
-        method: "HEAD",
-        redirect: "follow",
-        signal: controller.signal,
-      }).catch(() =>
-        fetch(app.url, {
-          method: "GET",
-          redirect: "follow",
-          signal: controller.signal,
-        }),
+      const res = await fetchWithTimeout(app.url, "HEAD").catch(() =>
+        fetchWithTimeout(app.url, "GET"),
       );
-      clearTimeout(timeout);
       postingStatus = looksStale(res.status, app.url, res.url) ? "maybe_stale" : "ok";
     } catch {
       // network error, timeout, blocked, etc. — inconclusive, not stale
