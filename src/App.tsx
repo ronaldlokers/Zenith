@@ -734,6 +734,38 @@ function CommandPalette({
   );
 }
 
+// Self-serve account deletion (#285) — GDPR right-to-erasure. Strong
+// confirm, then wipe + sign out.
+function DeleteAccount({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const del = async () => {
+    if (!window.confirm(t("account.deleteConfirm"))) return;
+    setBusy(true);
+    try {
+      await api.deleteAccount();
+      await signOut();
+      window.location.reload();
+    } catch (e) {
+      onError((e as Error).message);
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.deleteAccount")}</h3>
+      <p className="muted small">{t("account.deleteHint")}</p>
+      <button className="danger" disabled={busy} onClick={del}>
+        {t("account.deleteAccount")}
+      </button>
+    </div>
+  );
+}
+
 // Self-serve change-password (#285) — closes the "invited users are stuck
 // on the admin's temporary password, with no way to change it" gap.
 function ChangePassword() {
@@ -1869,6 +1901,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
           {session && <SessionManagement />}
           {session && <ChangePassword />}
           {session && <SampleDataSettings onError={setApiError} />}
+          {session && <DeleteAccount onError={setApiError} />}
           {session?.user.role === "admin" && <AdminUsers onError={setApiError} />}
           {session?.user.role === "admin" && <AdminInvite />}
         </div>
