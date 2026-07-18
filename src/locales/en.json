@@ -37,7 +37,8 @@
     "fetch": "Fetch",
     "fetching": "Fetching…",
     "add": "Add",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "open": "Open"
   },
   "savedViews": {
     "namePrompt": "Name this view",
@@ -557,7 +558,23 @@
     "byCompany": "By company",
     "noCompany": "No company",
     "closedCount": "Closed · {{count}}",
-    "updatedAge": "upd {{age}}"
+    "updatedAge": "upd {{age}}",
+    "cardMenu": "Actions for {{title}}",
+    "moveToStage": "Move to stage",
+    "sortBy": "Sort",
+    "sortUrgency": "Urgency",
+    "sortFollowup": "Follow-up date",
+    "sortFit": "Fit score",
+    "sortUpdated": "Last updated",
+    "archivedBtn": "Archived",
+    "archivedTitle": "Archived & closed",
+    "restore": "Restore",
+    "filterBtn": "Filter",
+    "reasonRejected": "rejected",
+    "reasonWithdrawn": "withdrawn",
+    "reasonGhosted": "ghosted",
+    "reasonArchived": "set aside",
+    "noArchived": "Nothing archived or closed yet."
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
@@ -584,7 +601,8 @@
     "open": "Open",
     "statusChanged": "Moved to {{stage}}",
     "revived": "Back in an active stage",
-    "setFollowUp": "Set follow-up"
+    "setFollowUp": "Set follow-up",
+    "archived": "Archived"
   },
   "confirm": {
     "deleteDocument": "Delete “{{name}}”?",
@@ -648,5 +666,9 @@
     "caughtUp": "All caught up — no follow-ups due",
     "addFollowUp": "+ add a follow-up",
     "allNumbers": "All the numbers"
+  },
+  "urgency": {
+    "overdue": "overdue",
+    "today": "due today"
   }
 }
