@@ -414,7 +414,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.22rem;
-  flex: 1;
   min-width: 0;
 }
 
@@ -438,7 +437,8 @@
 }
 
 .ring-legend .lbl {
-  flex: 1;
+  /* Count sits right beside its label (#346) — flex:1 stranded the number
+     at the container's far edge, reading as two unrelated columns. */
   text-transform: none;
   color: var(--sc, var(--ink));
 }

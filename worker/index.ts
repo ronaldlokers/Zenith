@@ -129,6 +129,40 @@ app.use("/api/admin/*", async (c, next) => {
   await next();
 });
 
+// Company/contact column lists share applications' single-source-of-truth
+// pattern (#346) so INSERT and UPDATE can't drift when a field is added.
+const COMPANY_COLUMNS = [
+  "name", "website", "location", "is_agency", "notes",
+] as const;
+function companyValues(body: Record<string, unknown>): unknown[] {
+  return [
+    body.name,
+    body.website ?? null,
+    body.location ?? null,
+    body.is_agency ? 1 : 0,
+    body.notes ?? null,
+  ];
+}
+
+const CONTACT_COLUMNS = [
+  "company_id", "name", "role", "email", "phone", "linkedin", "notes",
+  "last_contacted_at", "follow_up_at", "outreach_status",
+] as const;
+function contactValues(body: Record<string, unknown>): unknown[] {
+  return [
+    body.company_id ?? null,
+    body.name,
+    body.role ?? null,
+    body.email ?? null,
+    body.phone ?? null,
+    body.linkedin ?? null,
+    body.notes ?? null,
+    body.last_contacted_at ?? null,
+    body.follow_up_at ?? null,
+    body.outreach_status ?? "not_contacted",
+  ];
+}
+
 // --- Companies ---
 
 app.get("/api/companies", async (c) => {
@@ -144,17 +178,10 @@ app.post("/api/companies", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO companies (user_id, name, website, location, is_agency, notes)
-     VALUES (?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO companies (user_id, ${COMPANY_COLUMNS.join(", ")})
+     VALUES (?, ${COMPANY_COLUMNS.map(() => "?").join(", ")}) RETURNING *`,
   )
-    .bind(
-      c.get("userId"),
-      body.name,
-      body.website ?? null,
-      body.location ?? null,
-      body.is_agency ? 1 : 0,
-      body.notes ?? null,
-    )
+    .bind(c.get("userId"), ...companyValues(body))
     .first();
   return c.json(result, 201);
 });
@@ -163,18 +190,10 @@ app.put("/api/companies/:id", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `UPDATE companies SET name = ?, website = ?, location = ?, is_agency = ?, notes = ?
+    `UPDATE companies SET ${COMPANY_COLUMNS.map((col) => `${col} = ?`).join(", ")}
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
-    .bind(
-      body.name,
-      body.website ?? null,
-      body.location ?? null,
-      body.is_agency ? 1 : 0,
-      body.notes ?? null,
-      c.req.param("id"),
-      c.get("userId"),
-    )
+    .bind(...companyValues(body), c.req.param("id"), c.get("userId"))
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
   return c.json(result);
@@ -265,22 +284,10 @@ app.post("/api/contacts", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO contacts (user_id, company_id, name, role, email, phone, linkedin, notes, last_contacted_at, follow_up_at, outreach_status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`,
+    `INSERT INTO contacts (user_id, ${CONTACT_COLUMNS.join(", ")})
+     VALUES (?, ${CONTACT_COLUMNS.map(() => "?").join(", ")}) RETURNING *`,
   )
-    .bind(
-      c.get("userId"),
-      body.company_id ?? null,
-      body.name,
-      body.role ?? null,
-      body.email ?? null,
-      body.phone ?? null,
-      body.linkedin ?? null,
-      body.notes ?? null,
-      body.last_contacted_at ?? null,
-      body.follow_up_at ?? null,
-      body.outreach_status ?? "not_contacted",
-    )
+    .bind(c.get("userId"), ...contactValues(body))
     .first();
   return c.json(result, 201);
 });
@@ -289,24 +296,10 @@ app.put("/api/contacts/:id", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `UPDATE contacts SET company_id = ?, name = ?, role = ?, email = ?, phone = ?, linkedin = ?, notes = ?,
-       last_contacted_at = ?, follow_up_at = ?, outreach_status = ?
+    `UPDATE contacts SET ${CONTACT_COLUMNS.map((col) => `${col} = ?`).join(", ")}
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
-    .bind(
-      body.company_id ?? null,
-      body.name,
-      body.role ?? null,
-      body.email ?? null,
-      body.phone ?? null,
-      body.linkedin ?? null,
-      body.notes ?? null,
-      body.last_contacted_at ?? null,
-      body.follow_up_at ?? null,
-      body.outreach_status ?? "not_contacted",
-      c.req.param("id"),
-      c.get("userId"),
-    )
+    .bind(...contactValues(body), c.req.param("id"), c.get("userId"))
     .first();
   if (!result) return c.json({ error: "not found" }, 404);
   return c.json(result);
