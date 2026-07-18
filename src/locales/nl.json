@@ -164,7 +164,8 @@
       "data": "Data",
       "admin": "Beheer",
       "feed": "Feed-bronnen"
-    }
+    },
+    "keyShortcuts": "Enkele-toets sneltoetsen (n, /)"
   },
   "feed": {
     "pulledFrom": "Opgehaald van Adzuna en HN Who's Hiring, elke 6 uur.",
@@ -317,7 +318,9 @@
     "followUpFallback": "opvolgen",
     "setFollowUp": "Follow-up instellen",
     "addNote": "Notitie toevoegen",
-    "fitSetAria": "Fit op {{n}} zetten"
+    "fitSetAria": "Fit op {{n}} zetten",
+    "editFollowUp": "Follow-up bewerken",
+    "editNotes": "Notitie bewerken"
   },
   "nextUp": {
     "title": "Binnenkort",

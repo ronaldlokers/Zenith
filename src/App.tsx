@@ -1895,6 +1895,14 @@ function NotificationBell() {
 }
 
 const THEME_KEY = "jobseekr_theme";
+const KEY_SHORTCUTS_KEY = "jobseekr_key_shortcuts";
+// Single-character shortcuts (n, /) must be switchable off for speech-input
+// and single-switch users (WCAG 2.1.4). Modified chords like ⌘K are exempt
+// and stay on regardless. Read live at keypress so the setting takes effect
+// without a reload.
+function keyShortcutsEnabled(): boolean {
+  return localStorage.getItem(KEY_SHORTCUTS_KEY) !== "off";
+}
 
 // Applies the persisted theme choice — called on initial load (see App())
 // and whenever the Settings selector changes it.
@@ -1958,6 +1966,7 @@ function SettingsPage({
   const [theme, setTheme] = useState(
     () => localStorage.getItem(THEME_KEY) ?? "auto",
   );
+  const [keyShortcuts, setKeyShortcuts] = useState(keyShortcutsEnabled);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
   const [calendarToken, setCalendarToken] = useState<string | null>(null);
@@ -2103,6 +2112,20 @@ function SettingsPage({
               </option>
             ))}
           </select>
+        </label>
+        <label className="settings-field settings-check">
+          <input
+            type="checkbox"
+            checked={keyShortcuts}
+            onChange={(e) => {
+              setKeyShortcuts(e.target.checked);
+              localStorage.setItem(
+                KEY_SHORTCUTS_KEY,
+                e.target.checked ? "on" : "off",
+              );
+            }}
+          />
+          <span>{t("settings.keyShortcuts")}</span>
         </label>
           </>
         )}
@@ -2507,7 +2530,7 @@ export default function App() {
   const [roleTypes, setRoleTypes] = useState<RoleTypeDef[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<Toast | null>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [jumpQuery, setJumpQuery] = useState("");
   const [showPalette, setShowPalette] = useState(false);
@@ -2556,7 +2579,13 @@ export default function App() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setShowPalette((v) => !v);
-      } else if (e.key === "n" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      } else if (
+        e.key === "n" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        keyShortcutsEnabled()
+      ) {
         const el = document.activeElement as HTMLElement | null;
         if (
           el &&
@@ -2626,10 +2655,13 @@ export default function App() {
   }, []);
 
   const notify = useCallback((message: string, undo?: () => void, label?: string) => {
-    const id = Date.now();
-    setToast({ id, message, undo, label });
+    // Queue rather than a single slot (#346): a second notify used to erase
+    // a live undo window before its 6s elapsed. Cap the stack so a burst
+    // can't tower; oldest drops first.
+    const id = Date.now() + Math.random();
+    setToasts((cur) => [...cur, { id, message, undo, label }].slice(-3));
     window.setTimeout(
-      () => setToast((t) => (t?.id === id ? null : t)),
+      () => setToasts((cur) => cur.filter((t) => t.id !== id)),
       undo ? 6000 : 3000,
     );
   }, []);
@@ -3079,22 +3111,26 @@ export default function App() {
           readers announce each new toast message; the visible toast below
           mounts/unmounts and can't be relied on to announce on its own. */}
       <div className="sr-only" role="status" aria-live="polite">
-        {toast?.message ?? ""}
+        {toasts.length ? toasts[toasts.length - 1].message : ""}
       </div>
       <ConfirmHost />
-      {toast && (
-        <div className="toast">
-          <span>{toast.message}</span>
-          {toast.undo && (
-            <button
-              onClick={() => {
-                toast.undo?.();
-                setToast(null);
-              }}
-            >
-              {toast.label ?? t("toast.undo")}
-            </button>
-          )}
+      {toasts.length > 0 && (
+        <div className="toast-stack">
+          {toasts.map((toast) => (
+            <div className="toast" key={toast.id}>
+              <span>{toast.message}</span>
+              {toast.undo && (
+                <button
+                  onClick={() => {
+                    toast.undo?.();
+                    setToasts((cur) => cur.filter((t) => t.id !== toast.id));
+                  }}
+                >
+                  {toast.label ?? t("toast.undo")}
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -5325,14 +5361,19 @@ function ApplicationDetailModal({
   const [fuText, setFuText] = useState("");
   const [fuDate, setFuDate] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
-  const inlinePatch = (req: Promise<unknown>) =>
-    req
+  const [patchBusy, setPatchBusy] = useState(false);
+  const inlinePatch = (req: Promise<unknown>) => {
+    if (patchBusy) return;
+    setPatchBusy(true);
+    return req
       .then(() => {
         setInlineField(null);
         notify(t("common.saved"));
         return onChanged();
       })
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setPatchBusy(false));
+  };
   const [newTag, setNewTag] = useState("");
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
   const a = application;
@@ -5497,26 +5538,59 @@ function ApplicationDetailModal({
                 </span>
               </div>
               <div>
-                <span className="field-label">{t("detail.fitScore")}</span>
-                <span className="fit-edit">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={`fit-star${(a.fit_score ?? 0) >= n ? " on" : ""}`}
-                      aria-label={t("detail.fitSetAria", { n })}
-                      aria-pressed={(a.fit_score ?? 0) >= n}
-                      onClick={() =>
-                        inlinePatch(
-                          api.patchApplication(a.id, {
-                            fit_score: a.fit_score === n ? null : n,
-                          }),
-                        )
-                      }
-                    >
-                      ★
-                    </button>
-                  ))}
+                <span className="field-label" id={`fit-label-${a.id}`}>
+                  {t("detail.fitScore")}
+                </span>
+                <span
+                  className="fit-edit"
+                  role="radiogroup"
+                  aria-labelledby={`fit-label-${a.id}`}
+                  onKeyDown={(e) => {
+                    // Arrow/Home/End move the rating like a real radiogroup
+                    // (#346) — the stars were five separate toggles before.
+                    const cur = a.fit_score ?? 0;
+                    let next: number | null = null;
+                    if (e.key === "ArrowRight" || e.key === "ArrowUp")
+                      next = Math.min(5, (cur || 0) + 1);
+                    else if (e.key === "ArrowLeft" || e.key === "ArrowDown")
+                      next = Math.max(1, (cur || 1) - 1);
+                    else if (e.key === "Home") next = 1;
+                    else if (e.key === "End") next = 5;
+                    else return;
+                    e.preventDefault();
+                    if (next !== cur && !patchBusy)
+                      inlinePatch(
+                        api.patchApplication(a.id, { fit_score: next }),
+                      );
+                  }}
+                >
+                  {[1, 2, 3, 4, 5].map((n) => {
+                    const checked = (a.fit_score ?? 0) === n;
+                    // Roving tabindex: only the checked star (or the first,
+                    // when unset) is tabbable; arrows move within the group.
+                    const tabbable = checked || (!a.fit_score && n === 1);
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={checked}
+                        tabIndex={tabbable ? 0 : -1}
+                        disabled={patchBusy}
+                        className={`fit-star${(a.fit_score ?? 0) >= n ? " on" : ""}`}
+                        aria-label={t("detail.fitSetAria", { n })}
+                        onClick={() =>
+                          inlinePatch(
+                            api.patchApplication(a.id, {
+                              fit_score: a.fit_score === n ? null : n,
+                            }),
+                          )
+                        }
+                      >
+                        ★
+                      </button>
+                    );
+                  })}
                 </span>
               </div>
               {safeHref(a.url) && (
@@ -5640,7 +5714,7 @@ function ApplicationDetailModal({
                     onChange={(e) => setFuDate(e.target.value)}
                   />
                   <div className="inline-edit-actions">
-                    <button type="submit" className="primary">
+                    <button type="submit" className="primary" disabled={patchBusy}>
                       {t("common.save")}
                     </button>
                     <button type="button" onClick={() => setInlineField(null)}>
@@ -5657,7 +5731,7 @@ function ApplicationDetailModal({
                   <button
                     type="button"
                     className="inline-edit-open"
-                    aria-label={t("common.edit")}
+                    aria-label={t("detail.editFollowUp")}
                     onClick={() => {
                       setFuText(a.next_action ?? "");
                       setFuDate(a.next_action_at?.slice(0, 10) ?? "");
@@ -5699,7 +5773,7 @@ function ApplicationDetailModal({
                     autoFocus
                   />
                   <div className="inline-edit-actions">
-                    <button type="submit" className="primary">
+                    <button type="submit" className="primary" disabled={patchBusy}>
                       {t("common.save")}
                     </button>
                     <button type="button" onClick={() => setInlineField(null)}>
@@ -5713,7 +5787,7 @@ function ApplicationDetailModal({
                   <button
                     type="button"
                     className="inline-edit-open"
-                    aria-label={t("common.edit")}
+                    aria-label={t("detail.editNotes")}
                     onClick={() => {
                       setNoteDraft(a.notes ?? "");
                       setInlineField("notes");
@@ -6409,6 +6483,7 @@ function PipelineTab({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (!keyShortcutsEnabled()) return;
       const el = document.activeElement as HTMLElement | null;
       if (
         el &&
