@@ -2905,6 +2905,7 @@ export default function App() {
                   ← {t("tabs.pipeline")}
                 </button>
                 <ApplicationDetailModal
+                  key={routedJob.id}
                   application={routedJob}
                   allApplications={visibleApps}
                   companies={visibleCompanies}
@@ -3410,6 +3411,7 @@ function BoardTab({
     )}
       {detailApp && (
         <ApplicationDetailModal
+          key={detailApp.id}
           application={detailApp}
           allApplications={applications}
           companies={companies}
@@ -5300,7 +5302,10 @@ function ApplicationDetailModal({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (editing) {
+      if (inlineField) {
+        // Close just the small inline editor — not the whole panel.
+        setInlineField(null);
+      } else if (editing) {
         // The full form holds ~20 fields; Escape used to discard them
         // silently (modal) or do nothing (page).
         void requestConfirm(t("confirm.discardEdit")).then((ok) => {
@@ -5312,7 +5317,7 @@ function ApplicationDetailModal({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, asPane, editing, t]);
+  }, [onClose, asPane, editing, inlineField, t]);
 
   const addTag = () => {
     const name = newTag.trim();
@@ -6327,7 +6332,11 @@ function PipelineTab({
         : FALLBACK_NORM_DAYS;
     const last = lastActivity.get(a.id) ?? parseSqlDate(a.created_at);
     const daysSince = (nowMs - last) / 86400000;
-    const quiet = daysSince / norm >= 1.5 && daysSince >= 5;
+    // Only flag "quiet" when the company has enough recorded history to
+    // personalize the norm — the generic fallback over-fires on new
+    // relationships (guard restored; #330 dropped it).
+    const quiet =
+      companyGaps.length >= 2 && daysSince / norm >= 1.5 && daysSince >= 5;
     const val = isOverdue(a)
       ? "overdue"
       : a.posting_status === "maybe_stale"
