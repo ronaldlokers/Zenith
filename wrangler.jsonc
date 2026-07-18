@@ -8,6 +8,10 @@
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-07-15",
 	"assets": {
+		// Binding so the Worker can hand client-side routes (e.g. /jobs,
+		// /board) to the SPA shell instead of falling through to the API's
+		// JSON 404 — see app.notFound in worker/index.ts (#285).
+		"binding": "ASSETS",
 		"not_found_handling": "single-page-application"
 	},
 	"observability": {
