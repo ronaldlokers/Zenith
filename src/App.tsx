@@ -5591,48 +5591,56 @@ function OverviewTab({
         )}
       </div>
 
-      <NextUpPanel
-        applications={applications}
-        onChanged={onChanged}
-        onError={onError}
-      />
-
-      {momentum && (
-        <>
-          <MomentumStreak
-            streak={momentum.streak}
-            broken={momentum.streakBroken}
+      {/* Work left, motivation right (#314) — the landing page had become
+          an eight-item single file after the widgets moved here. */}
+      <div className="overview-cols">
+        <div className="overview-main">
+          <NextUpPanel
+            applications={applications}
+            onChanged={onChanged}
+            onError={onError}
           />
-          <WeeklyGoal
-            thisWeekCount={momentum.weeks[momentum.weeks.length - 1].count}
-          />
-        </>
-      )}
-      <WinsJournal onError={onError} />
 
-      <h3 className="side-h">{t("overview.recentlyUpdated")}</h3>
-      {recent.length === 0 ? (
-        <p className="muted small">{t("overview.noActivity")}</p>
-      ) : (
-        <ul className="side-list overview-recent">
-          {recent.map((a) => (
-            <li
-              key={a.id}
-              className={`stage-${a.status} clickable`}
-              {...rowActivate(() => onOpenJob(a.id))}
-            >
-              <span className="side-date">{ageDays(a.updated_at)}</span>
-              <span className="side-title">{a.title}</span>
-              <span className="side-co">{a.company_name ?? "—"}</span>
-              <span className="side-stage">{t(`stages.${a.status}`)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+          <h3 className="side-h">{t("overview.recentlyUpdated")}</h3>
+          {recent.length === 0 ? (
+            <p className="muted small">{t("overview.noActivity")}</p>
+          ) : (
+            <ul className="side-list overview-recent">
+              {recent.map((a) => (
+                <li
+                  key={a.id}
+                  className={`stage-${a.status} clickable`}
+                  {...rowActivate(() => onOpenJob(a.id))}
+                >
+                  <span className="side-date">{ageDays(a.updated_at)}</span>
+                  <span className="side-title">{a.title}</span>
+                  <span className="side-co">{a.company_name ?? "—"}</span>
+                  <span className="side-stage">{t(`stages.${a.status}`)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
 
-      <button className="primary overview-cta" onClick={onGoToJobs}>
-        {t("overview.viewAllJobs")}
-      </button>
+          <button className="primary overview-cta" onClick={onGoToJobs}>
+            {t("overview.viewAllJobs")}
+          </button>
+        </div>
+
+        <aside className="overview-side">
+          {momentum && (
+            <>
+              <MomentumStreak
+                streak={momentum.streak}
+                broken={momentum.streakBroken}
+              />
+              <WeeklyGoal
+                thisWeekCount={momentum.weeks[momentum.weeks.length - 1].count}
+              />
+            </>
+          )}
+          <WinsJournal onError={onError} />
+        </aside>
+      </div>
 
       <button
         className="btn-secondary overview-activity-toggle"
