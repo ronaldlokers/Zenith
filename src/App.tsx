@@ -1483,6 +1483,25 @@ function TwoFactorSettings() {
               <li key={c}>{c}</li>
             ))}
           </ul>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              // Backup codes are shown once (#285) — let the user save them.
+              const blob = new Blob(
+                [setup.backupCodes.join("\n") + "\n"],
+                { type: "text/plain" },
+              );
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "jobseekr-backup-codes.txt";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            {t("account.twoFactorDownloadCodes")}
+          </button>
           <form onSubmit={verify} className="tfa-verify">
             <input
               placeholder={t("account.twoFactorCodePlaceholder")}

@@ -550,7 +550,8 @@
     "revokeKeyConfirm": "Disable the API key? Any tool using it stops working.",
     "deleteAccount": "Delete account",
     "deleteHint": "Permanently deletes your account and all your data — applications, companies, contacts, CV, everything. This can't be undone.",
-    "deleteConfirm": "Permanently delete your account and ALL your data? This cannot be undone."
+    "deleteConfirm": "Permanently delete your account and ALL your data? This cannot be undone.",
+    "twoFactorDownloadCodes": "Download backup codes"
   },
   "companies": {
     "view": "View",
