@@ -279,11 +279,18 @@ export async function seedSampleData(
       .bind(userId, companyId, app.title, app.role, app.status, app.notes ?? null)
       .first<{ id: number }>();
     const path = historyFor(app.status);
+    const transitions = path.length - 1;
     for (let i = 1; i < path.length; i++) {
+      // Spread transition dates ~5 days apart, most recent last, so the
+      // Stats v2 metrics (median time-in-stage, time-to-offer) show real
+      // durations on the demo/sample account instead of 0d (#285) — without
+      // explicit changed_at they'd all default to now.
+      const daysBack = 2 + 5 * (transitions - i);
       await env.DB.prepare(
-        `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, ?, ?)`,
+        `INSERT INTO status_history (application_id, user_id, from_status, to_status, changed_at)
+         VALUES (?, ?, ?, ?, date('now', ?))`,
       )
-        .bind(row!.id, userId, path[i - 1], path[i])
+        .bind(row!.id, userId, path[i - 1], path[i], `-${daysBack} days`)
         .run();
     }
   }
