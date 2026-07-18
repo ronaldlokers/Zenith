@@ -106,6 +106,9 @@ export async function triggerWebhooks(
             "X-JobSeekr-Signature": signature,
           },
           body,
+          // A slow/hanging receiver must not tie up the delivery (#285); the
+          // callers run this via ctx.waitUntil, but bound each attempt too.
+          signal: AbortSignal.timeout(5000),
         });
       } catch {
         // best effort
