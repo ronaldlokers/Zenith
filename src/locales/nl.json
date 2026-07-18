@@ -146,7 +146,8 @@
     "moveFocus": "Focus omhoog / omlaag in de lijst",
     "setStatus": "Status van de gefocuste kaart instellen (interested…ghosted)",
     "closeHelp": "Sluit een formulier of deze hulp",
-    "toggleHelp": "Deze hulp aan/uit"
+    "toggleHelp": "Deze hulp aan/uit",
+    "feedTriage": "Feed: toevoegen / negeren"
   },
   "settings": {
     "title": "Instellingen",
@@ -239,7 +240,7 @@
   },
   "palette": {
     "title": "Ga naar…",
-    "placeholder": "Zoek vacatures, bedrijven, contacten… (⌘K)",
+    "placeholder": "Zoek vacatures, bedrijven, mensen… ({{shortcut}})",
     "noResults": "Geen resultaten."
   },
   "outreach": {

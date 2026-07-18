@@ -482,6 +482,7 @@ const SHORTCUT_KEYS: [string, string][] = [
   ["/", "focusSearch"],
   ["n", "addJob"],
   ["j / k", "moveFocus"],
+  ["a / d", "feedTriage"],
   ["1–8", "setStatus"],
   ["Esc", "closeHelp"],
   ["?", "toggleHelp"],
@@ -687,7 +688,11 @@ function CommandPalette({
             items.length ? items[activeIndex].domId : undefined
           }
           className="palette-input"
-          placeholder={t("palette.placeholder")}
+          placeholder={t("palette.placeholder", {
+            shortcut: /Mac|iPhone|iPad/.test(navigator.platform)
+              ? "⌘K"
+              : "Ctrl+K",
+          })}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -1569,6 +1574,7 @@ function NotificationBell() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<AppNotification[] | null>(null);
   const [open, setOpen] = useState(false);
+  const panelRef = useFocusTrap<HTMLDivElement>(open);
 
   const load = useCallback(() => {
     api.notifications().then(setNotifications).catch(() => {});
@@ -1617,7 +1623,16 @@ function NotificationBell() {
       {open && (
         <>
           <div className="notification-backdrop" onClick={() => setOpen(false)} />
-          <div className="notification-panel" role="dialog" aria-label={t("header.notifications")}>
+          <div
+            ref={panelRef}
+            className="notification-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("header.notifications")}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setOpen(false);
+            }}
+          >
             <div className="notification-panel-head">
               <span>{t("header.notifications")}</span>
               {unreadCount > 0 && (

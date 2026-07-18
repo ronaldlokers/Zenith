@@ -146,7 +146,8 @@
     "moveFocus": "Move focus down / up the list",
     "setStatus": "Set the focused card's status (interested…ghosted)",
     "closeHelp": "Close a form or this help",
-    "toggleHelp": "Toggle this help"
+    "toggleHelp": "Toggle this help",
+    "feedTriage": "Feed: add / dismiss"
   },
   "settings": {
     "title": "Settings",
@@ -239,7 +240,7 @@
   },
   "palette": {
     "title": "Jump to…",
-    "placeholder": "Search jobs, companies, people… (⌘K)",
+    "placeholder": "Search jobs, companies, people… ({{shortcut}})",
     "noResults": "No matches."
   },
   "outreach": {
