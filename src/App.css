@@ -1,3 +1,16 @@
+/* Band order (#314 round 3 re-band, computed-style-probe verified):
+   1. base + components + views (with their local media patches)
+   2. #314 view sections (settings page, job page, sidebar shell, stats
+      grid, closed drawer, pipeline filters, overview/detail columns)
+   3. round-3 component bands (inline editors, feedback, first-run,
+      confirm dialog)
+   4. control-normalization layer — one recipe per control family; must
+      stay after everything it normalizes
+   5. cascade repairs — mobile touch-target and hover overrides that must
+      beat the layer on source order
+   6. print
+   New component/view CSS goes in bands 1–3, never after the layer. */
+
 .app {
   max-width: 720px;
   margin: 0 auto;
@@ -13,7 +26,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   border-bottom: 1px solid transparent;
   transition: border-color 0.15s ease;
 }
@@ -155,7 +168,7 @@
   gap: 0.3rem;
   font-size: var(--text-body);
   color: var(--muted);
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .settings-field select,
@@ -173,7 +186,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .login-card {
@@ -218,21 +231,21 @@
 .login-hint {
   color: var(--faint);
   font-size: var(--text-meta);
-  margin: 1rem 0 0;
+  margin: var(--space-4) 0 0;
   text-align: center;
 }
 
 .account-section {
   border-top: 1px solid var(--border);
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
 }
 
 .account-signed-in {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   font-size: var(--text-body);
   color: var(--muted);
   margin-bottom: 0.8rem;
@@ -264,7 +277,7 @@
   gap: 0.3rem 0.6rem;
   list-style: none;
   margin: 0.4rem 0;
-  padding: 0.5rem;
+  padding: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg);
@@ -275,7 +288,7 @@
 .tfa-verify {
   display: flex;
   gap: 0.4rem;
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
 }
 
 .session-list {
@@ -325,7 +338,7 @@
 }
 
 .settings-modal > button {
-  padding: 0.5rem 1rem;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg);
@@ -383,7 +396,7 @@
 .ring-chart {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   padding: 0.25rem 0 0.6rem;
 }
 
@@ -504,7 +517,7 @@
 .error {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   background: color-mix(in srgb, var(--danger) 12%, var(--surface));
   border: 1px solid var(--danger);
   border-radius: var(--radius-md);
@@ -538,8 +551,8 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0.5rem 0 0.75rem;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-3);
 }
 
 .help-btn {
@@ -572,7 +585,7 @@
   align-items: center;
   justify-content: center;
   z-index: 40;
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .modal {
@@ -616,13 +629,13 @@
 .palette-results {
   max-height: 60vh;
   overflow-y: auto;
-  padding: 0.5rem;
+  padding: var(--space-2);
 }
 
 .palette-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 .palette-group-label {
@@ -670,13 +683,13 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .shortcut-help li {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   font-size: var(--text-body);
 }
 
@@ -692,7 +705,7 @@
 
 .shortcut-help button {
   margin-top: 0.4rem;
-  padding: 0.5rem 1rem;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg);
@@ -728,8 +741,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
 .detail-head h2 {
@@ -753,7 +766,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0.4rem;
-  padding-bottom: 0.75rem;
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--border);
 }
 
@@ -771,8 +784,8 @@
 
 .detail-actions {
   display: flex;
-  gap: 0.5rem;
-  margin: 0.75rem 0;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
 }
 
 .detail-actions button {
@@ -789,14 +802,14 @@
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--muted);
-  margin: 1rem 0 0.5rem;
+  margin: var(--space-4) 0 var(--space-2);
 }
 
 /* Contact relationship map (#133) */
 .contact-map-link {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-size: var(--text-body);
   padding: 0.35rem 0;
 }
@@ -837,7 +850,7 @@
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
 }
 
 .show-archived {
@@ -1009,7 +1022,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
 }
 
 .view-chip {
@@ -1041,7 +1054,7 @@
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  padding: 0 0.5rem;
+  padding: 0 var(--space-2);
   font-size: var(--text-title);
   line-height: 1;
 }
@@ -1192,11 +1205,11 @@ button.danger {
 /* Logo-first company grid (#132) */
 .company-grid {
   list-style: none;
-  margin: 0.75rem 0 0;
+  margin: var(--space-3) 0 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 /* Elevation rule (#314): clickable cards float (--shadow-1), structural
@@ -1206,9 +1219,9 @@ button.danger {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   text-align: center;
-  padding: 1rem 0.5rem;
+  padding: var(--space-4) var(--space-2);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1366,7 +1379,7 @@ button.danger {
 .card.row2 .l1 {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .card.row2 .l1 strong {
@@ -1469,7 +1482,7 @@ button.danger {
 
 .negotiation-draft textarea {
   width: 100%;
-  padding: 0.5rem;
+  padding: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
@@ -1640,7 +1653,7 @@ select.status {
 .load-more {
   display: flex;
   justify-content: center;
-  padding: 1rem 0 0.25rem;
+  padding: var(--space-4) 0 var(--space-1);
 }
 
 /* Terminal fetch-failure state (#261) */
@@ -1690,12 +1703,12 @@ select.status {
 
 /* Stats */
 .stats {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 .onboarding {
   padding: 0.9rem 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
@@ -1724,7 +1737,7 @@ select.status {
 
 .onboarding ul {
   list-style: none;
-  margin: 0.5rem 0 0;
+  margin: var(--space-2) 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -1870,7 +1883,7 @@ select.status {
 
 /* Agenda / calendar */
 .agenda {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -1882,7 +1895,7 @@ select.status {
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--muted);
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-2);
 }
 
 .agenda-date.today {
@@ -2095,7 +2108,7 @@ select.status {
 .compare-table tr.stage-interview td:first-child,
 .compare-table tr.stage-offer td:first-child {
   border-left: 3px solid var(--sc);
-  padding-left: 0.5rem;
+  padding-left: var(--space-2);
 }
 
 .compare-comp {
@@ -2117,7 +2130,7 @@ select.status {
 
 .export-links {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   flex-wrap: wrap;
   margin: 0;
 }
@@ -2256,7 +2269,7 @@ select.status {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 0.85rem 1rem 1rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
 .settings-list {
@@ -2271,7 +2284,7 @@ select.status {
 .settings-list li {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .settings-list input[type="text"],
@@ -2297,7 +2310,7 @@ select.status {
 .settings-add {
   display: flex;
   gap: 0.4rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .settings-add input {
@@ -2368,7 +2381,7 @@ select.status {
 }
 
 .keyword-chips input {
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   background: var(--bg);
@@ -2389,14 +2402,14 @@ select.status {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-size: var(--text-body);
 }
 
 .prep-checklist li label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .prep-checklist li.done label {
@@ -2444,12 +2457,12 @@ select.status {
 .cover-letter {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .cover-letter-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .cover-letter textarea {
@@ -2478,7 +2491,7 @@ select.status {
 }
 
 .jd-match-result {
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   font-size: var(--text-body);
 }
 
@@ -2579,7 +2592,7 @@ select.status {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.9rem;
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 @media (min-width: 900px) {
@@ -2617,7 +2630,7 @@ select.status {
 .board-toolbar {
   display: flex;
   justify-content: flex-end;
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 .board-group-toggle {
@@ -2645,7 +2658,7 @@ select.status {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 .lane {
@@ -2664,7 +2677,7 @@ select.status {
   text-transform: uppercase;
   letter-spacing: var(--track-chrome);
   color: var(--muted);
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--border);
 }
 
@@ -2688,7 +2701,7 @@ select.status {
 .lane-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2rem;
 }
 
@@ -2703,7 +2716,7 @@ select.status {
 @media (min-width: 900px) {
   .board-summary {
     display: block;
-    margin-top: 1.5rem;
+    margin-top: var(--space-5);
     max-width: 22rem;
   }
 
@@ -2718,7 +2731,7 @@ select.status {
 .bcol-head {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-family: var(--mono);
   font-size: var(--text-chrome);
   text-transform: uppercase;
@@ -2836,13 +2849,13 @@ summary.bcol-head::after {
 
 .bcard select.status {
   align-self: flex-start;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
 }
 
 .bempty {
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   font-size: var(--text-meta);
   color: var(--faint);
   margin-bottom: 0.55rem;
@@ -2855,7 +2868,7 @@ summary.bcol-head::after {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-1);
   padding: 0.9rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.7rem;
@@ -2900,13 +2913,13 @@ summary.bcol-head::after {
 .form label.checkbox {
   flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .form input,
 .form select,
 .form textarea {
-  padding: 0.5rem;
+  padding: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg);
@@ -2940,7 +2953,7 @@ summary.bcol-head::after {
 
 .form-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .form-actions button {
@@ -3045,7 +3058,7 @@ summary.bcol-head::after {
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--muted);
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-2);
 }
 
 .side-list {
@@ -3114,7 +3127,7 @@ summary.bcol-head::after {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 1.5rem 0 0.5rem;
+  padding: var(--space-5) 0 var(--space-2);
 }
 
 .overview-number {
@@ -3131,7 +3144,7 @@ summary.bcol-head::after {
 }
 
 .overview-sub {
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   font-size: var(--text-meta);
   color: var(--accent);
   font-family: var(--mono);
@@ -3183,7 +3196,7 @@ summary.bcol-head::after {
 
 .cv-template-options {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .cv-template-option {
@@ -3191,7 +3204,7 @@ summary.bcol-head::after {
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.5rem;
+  padding: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg);
@@ -3212,7 +3225,7 @@ summary.bcol-head::after {
   gap: 0.2rem;
   width: 2.6rem;
   height: 2rem;
-  padding: 0.25rem;
+  padding: var(--space-1);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -3295,186 +3308,14 @@ summary.bcol-head::after {
   cursor: default;
 }
 
-/* Print stylesheet (#208) — the app previously only had print rules
-   inside the two dedicated jsPDF exports (CV, cheat sheet). This
-   covers Ctrl/Cmd+P from any other view: the main tab content, or a
-   detail modal if one happens to be open. */
-@media print {
-  .header,
-  .tabs,
-  .quick-add-fab,
-  .toast,
-  .error-dismiss,
-  .modal-close,
-  button,
-  .toolbar .search,
-  input[type="search"] {
-    display: none !important;
-  }
-
-  body {
-    background: #fff;
-    color: #000;
-  }
-
-  .content {
-    padding: 0;
-    margin: 0;
-  }
-
-  /* Let a detail modal print as a normal full-width page instead of a
-     small centered overlay box. */
-  .modal-backdrop {
-    position: static;
-    background: none;
-    padding: 0;
-    display: block;
-  }
-
-  .modal {
-    max-width: none;
-    width: auto;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-  }
-}
-
-/* ============================================================
-   Control normalization layer (#314) — one recipe per control
-   family, enforced late in the cascade so the dozen historical
-   per-context variants above collapse without markup changes.
-   ============================================================ */
-
-/* Secondary buttons — default size. One metric set, one fill,
-   every one with a hover state. */
-.btn-secondary,
-.card-actions button,
-.detail-actions button,
-.settings-modal > button,
-.shortcut-help button,
-.form-actions button,
-.share-actions button {
-  padding: 0.4rem 0.8rem;
-  font-size: var(--text-body);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--ink);
-  min-height: 34px;
-  cursor: pointer;
-}
-
-.btn-secondary:hover,
-.card-actions button:hover,
-.detail-actions button:hover,
-.settings-modal > button:hover,
-.shortcut-help button:hover,
-.form-actions button:hover,
-.share-actions button:hover {
-  background: var(--bg);
-}
-
-/* Secondary buttons — compact, for dense inline rows. */
-/* Primary buttons that weren't button.primary: same metrics + the same
-   hover darken as the canonical one. */
-.login-card button[type="submit"],
-.upload-btn {
-  padding: 0.55rem 0.9rem;
-  border-radius: var(--radius-md);
-  font-weight: 650;
-  font-size: var(--text-body);
-}
-
-.login-card button[type="submit"]:hover,
-.upload-btn:hover {
-  background: color-mix(in srgb, var(--accent) 85%, black);
-}
-
-/* Danger stays danger; .form-actions/.card-actions danger buttons keep
-   their red identity over the neutral normalization above. */
-.card-actions button.danger,
-.form-actions button.danger,
-.detail-actions button.danger {
-  color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
-}
-
-/* Quiet destructive icons: one treatment — muted at rest, danger on
-   hover/focus (previously three different resting colors). */
-.tl-del,
-.view-del,
-.prep-checklist li button {
-  color: var(--muted);
-}
-
-.tl-del:hover,
-.tl-del:focus-visible,
-.view-del:hover,
-.view-del:focus-visible,
-.prep-checklist li button:hover,
-.prep-checklist li button:focus-visible {
-  color: var(--danger);
-}
-
-/* Inputs: one metric recipe (fill stays context-dependent — --bg inside
-   surface panels, --surface on the page ground). */
-.form input,
-.form select,
-.form textarea,
-.settings-field input,
-.settings-field select,
-.settings-add input,
-.prep-add input,
-.tl-add input,
-.tl-add select,
-.tl-retro input,
-.docs-add input,
-.weekly-goal-edit input,
-.toolbar .search {
-  font-size: var(--text-body);
-  padding: 0.4rem 0.6rem;
-  border-radius: var(--radius-md);
-}
-
-/* Chips: one metric set so co-occurring chips baseline-align. */
-.badge,
-.outreach-pill,
-.tag-chip,
-.doc-label,
-/* Toolbar rows: one control height on every viewport (previously five
-   different heights in a single flex row; a mobile-only patch existed). */
-.toolbar input,
-.toolbar select,
-.toolbar button {
-  min-height: 36px;
-}
-
-/* Segmented controls: one shape — the subnav pill. */
-.board-group-toggle {
-  border-radius: var(--radius-full);
-  padding: 0.2rem;
-}
-
-.board-group-toggle button {
-  border-radius: var(--radius-full);
-  padding: 0.3rem 0.9rem;
-  font-size: var(--text-body);
-}
-
-/* WinsJournal finally gets its own rhythm instead of riding on .tl-add. */
-.wins-journal {
-  margin: 0 0 1.2rem;
-}
-
 /* Settings as a routed page with a section nav (#314) — replaces the
    14-section modal. */
 .settings-page {
   display: grid;
   grid-template-columns: 170px 1fr;
-  gap: 1.5rem;
+  gap: var(--space-5);
   align-items: start;
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 .settings-nav {
@@ -3533,11 +3374,11 @@ summary.bcol-head::after {
    ApplicationDetailModal but as normal page flow: no stickiness, no
    internal scroll cage, room to breathe. */
 .job-page {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 .job-page .job-back {
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
 .job-page .detail-pane {
@@ -3570,7 +3411,7 @@ summary.bcol-head::after {
     grid-template-areas:
       "side header"
       "side main";
-    column-gap: 2rem;
+    column-gap: var(--space-6);
     max-width: 1400px;
     padding: 0 1.5rem 3rem;
   }
@@ -3787,7 +3628,7 @@ summary.bcol-head::after {
 @media (max-width: 600px) {
   .pipeline-filters-toggle {
     display: inline-block;
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--space-3);
   }
 
   .pipeline-filters {
@@ -4001,7 +3842,7 @@ button:not(:disabled):active,
 }
 
 .onboarding-sample {
-  margin-top: 0.5rem;
+  margin-top: var(--space-2);
   font-size: var(--text-body);
 }
 
@@ -4011,12 +3852,140 @@ button:not(:disabled):active,
 }
 
 .confirm-dialog p {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--space-4);
+}
+
+/* ============================================================
+   Control normalization layer (#314) — one recipe per control
+   family, enforced late in the cascade so the dozen historical
+   per-context variants above collapse without markup changes.
+   ============================================================ */
+
+/* Secondary buttons — default size. One metric set, one fill,
+   every one with a hover state. */
+.btn-secondary,
+.card-actions button,
+.detail-actions button,
+.settings-modal > button,
+.shortcut-help button,
+.form-actions button,
+.share-actions button {
+  padding: 0.4rem 0.8rem;
+  font-size: var(--text-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 34px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover,
+.card-actions button:hover,
+.detail-actions button:hover,
+.settings-modal > button:hover,
+.shortcut-help button:hover,
+.form-actions button:hover,
+.share-actions button:hover {
+  background: var(--bg);
+}
+
+/* Secondary buttons — compact, for dense inline rows. */
+/* Primary buttons that weren't button.primary: same metrics + the same
+   hover darken as the canonical one. */
+.login-card button[type="submit"],
+.upload-btn {
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-weight: 650;
+  font-size: var(--text-body);
+}
+
+.login-card button[type="submit"]:hover,
+.upload-btn:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+/* Danger stays danger; .form-actions/.card-actions danger buttons keep
+   their red identity over the neutral normalization above. */
+.card-actions button.danger,
+.form-actions button.danger,
+.detail-actions button.danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+}
+
+/* Quiet destructive icons: one treatment — muted at rest, danger on
+   hover/focus (previously three different resting colors). */
+.tl-del,
+.view-del,
+.prep-checklist li button {
+  color: var(--muted);
+}
+
+.tl-del:hover,
+.tl-del:focus-visible,
+.view-del:hover,
+.view-del:focus-visible,
+.prep-checklist li button:hover,
+.prep-checklist li button:focus-visible {
+  color: var(--danger);
+}
+
+/* Inputs: one metric recipe (fill stays context-dependent — --bg inside
+   surface panels, --surface on the page ground). */
+.form input,
+.form select,
+.form textarea,
+.settings-field input,
+.settings-field select,
+.settings-add input,
+.prep-add input,
+.tl-add input,
+.tl-add select,
+.tl-retro input,
+.docs-add input,
+.weekly-goal-edit input,
+.toolbar .search {
+  font-size: var(--text-body);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-md);
+}
+
+/* Chips: one metric set so co-occurring chips baseline-align. */
+.badge,
+.outreach-pill,
+.tag-chip,
+.doc-label,
+/* Toolbar rows: one control height on every viewport (previously five
+   different heights in a single flex row; a mobile-only patch existed). */
+.toolbar input,
+.toolbar select,
+.toolbar button {
+  min-height: 36px;
+}
+
+/* Segmented controls: one shape — the subnav pill. */
+.board-group-toggle {
+  border-radius: var(--radius-full);
+  padding: 0.2rem;
+}
+
+.board-group-toggle button {
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.9rem;
+  font-size: var(--text-body);
+}
+
+/* WinsJournal finally gets its own rhythm instead of riding on .tl-add. */
+.wins-journal {
+  margin: 0 0 1.2rem;
 }
 
 /* Cascade repairs (#314 round 3) — must stay after the control-normalization
    layer: its generic hover and min-heights win source-order ties against
-   earlier rules regardless of media queries. Nothing appends below this. */
+   earlier rules regardless of media queries. Only the print stylesheet
+   sits below this band; nothing else appends after it. */
 .form-actions button.primary:hover,
 .card-actions button.primary:hover,
 .detail-actions button.primary:hover {
@@ -4038,3 +4007,48 @@ button:not(:disabled):active,
     min-height: 40px;
   }
 }
+/* Print stylesheet (#208) — the app previously only had print rules
+   inside the two dedicated jsPDF exports (CV, cheat sheet). This
+   covers Ctrl/Cmd+P from any other view: the main tab content, or a
+   detail modal if one happens to be open. */
+@media print {
+  .header,
+  .tabs,
+  .quick-add-fab,
+  .toast,
+  .error-dismiss,
+  .modal-close,
+  button,
+  .toolbar .search,
+  input[type="search"] {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .content {
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Let a detail modal print as a normal full-width page instead of a
+     small centered overlay box. */
+  .modal-backdrop {
+    position: static;
+    background: none;
+    padding: 0;
+    display: block;
+  }
+
+  .modal {
+    max-width: none;
+    width: auto;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+}
+
