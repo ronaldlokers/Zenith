@@ -2312,11 +2312,7 @@ export default function App() {
   const navigate = useNavigate();
   const { tab, id: detailIdFromUrl } = parsePath(location.pathname);
   const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
-  // Mobile quick-add FAB (#135) — reachable from any tab, not just from
-  // inside the Jobs toolbar. A counter rather than a boolean so repeated
-  // taps re-trigger the effect in ApplicationsTab even if the form was
-  // already open and got closed again.
-  const [quickAddSignal, setQuickAddSignal] = useState(0);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -2505,6 +2501,20 @@ export default function App() {
 
   return (
     <div className="app">
+      {showQuickAdd && (
+        <QuickAddDialog
+          companies={visibleCompanies}
+          onClose={() => setShowQuickAdd(false)}
+          onError={setError}
+          onCreated={(a, open) => {
+            setShowQuickAdd(false);
+            notify(t("common.saved"));
+            reload().then(() => {
+              if (open) navigate(`/jobs/${a.id}`);
+            });
+          }}
+        />
+      )}
       {showPalette && (
         <CommandPalette
           applications={activeApps}
@@ -2649,10 +2659,7 @@ export default function App() {
                   jobDone={applications.length > 0}
                   onGoToProfile={() => setTab("cv")}
                   onGoToCompanies={() => setTab("companies")}
-                  onAddJob={() => {
-                    setTab("applications");
-                    setQuickAddSignal((n) => n + 1);
-                  }}
+                  onAddJob={() => setShowQuickAdd(true)}
                   onDismiss={dismissOnboarding}
                 />
               )}
@@ -2729,7 +2736,6 @@ export default function App() {
                 onDetailIdChange={(id) =>
                   navigate(id ? `/jobs/${id}` : "/jobs")
                 }
-                quickAddSignal={quickAddSignal}
               />
             )}
             {tab === "board" && !routedJob && (
@@ -2836,10 +2842,7 @@ export default function App() {
 
       <button
         className="quick-add-fab"
-        onClick={() => {
-          setTab("applications");
-          setQuickAddSignal((n) => n + 1);
-        }}
+        onClick={() => setShowQuickAdd(true)}
         aria-label={t("toolbar.addJob")}
       >
         +
@@ -5448,6 +5451,115 @@ function ApplicationDetailModal({
   );
 }
 
+// Quick-add sheet (#314) — the FAB opens four fields, not the 23-field
+// full form. "Add & open" lands on the new job's detail page where
+// everything else lives.
+function QuickAddDialog({
+  companies,
+  onClose,
+  onCreated,
+  onError,
+}: {
+  companies: Company[];
+  onClose: () => void;
+  onCreated: (app: Application, open: boolean) => void;
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [title, setTitle] = useState("");
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [url, setUrl] = useState("");
+  const [status, setStatus] = useState<Status>("interested");
+  const [busy, setBusy] = useState(false);
+
+  const submit = (open: boolean) => {
+    if (!title.trim() || busy) return;
+    setBusy(true);
+    api
+      .create<Application>("applications", {
+        title: title.trim(),
+        company_id: companyId,
+        url: url.trim() || null,
+        status,
+      })
+      .then((a) => onCreated(a, open))
+      .catch((e) => {
+        onError((e as Error).message);
+        setBusy(false);
+      });
+  };
+
+  return (
+    <Dialog label={t("quickAdd.title")} onClose={onClose}>
+      <h2>{t("quickAdd.title")}</h2>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit(true);
+        }}
+      >
+        <label className="settings-field">
+          <span>{t("forms.title")}</span>
+          <input
+            autoFocus
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </label>
+        <label className="settings-field">
+          <span>{t("forms.company")}</span>
+          <select
+            value={companyId ?? ""}
+            onChange={(e) =>
+              setCompanyId(e.target.value ? Number(e.target.value) : null)
+            }
+          >
+            <option value="">—</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="settings-field">
+          <span>{t("forms.url")}</span>
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+        </label>
+        <label className="settings-field">
+          <span>{t("detail.status")}</span>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as Status)}
+          >
+            {STATUSES.map((st) => (
+              <option key={st} value={st}>
+                {t(`stages.${st}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="form-actions">
+          <button type="submit" className="primary" disabled={busy || !title.trim()}>
+            {t("quickAdd.addOpen")}
+          </button>
+          <button type="button" disabled={busy || !title.trim()} onClick={() => submit(false)}>
+            {t("quickAdd.add")}
+          </button>
+          <button type="button" onClick={onClose}>
+            {t("common.cancel")}
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
 // Overview home screen (#128) — the new landing tab, replacing "always
 // opens on Jobs." One glanceable screen: a headline pipeline number, the
 // existing next-actions panel, and a recent-activity list built from the
@@ -5651,7 +5763,6 @@ function ApplicationsTab({
   initialQuery,
   initialDetailId,
   onDetailIdChange,
-  quickAddSignal,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -5664,13 +5775,9 @@ function ApplicationsTab({
   // Mobile quick-add FAB (#135) — reachable from any tab. A counter that
   // increments on each tap, so opening the form again after closing it
   // still fires even though 0 -> the initial no-op value never does.
-  quickAddSignal?: number;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Application | "new" | null>(null);
-  useEffect(() => {
-    if (quickAddSignal) setEditing("new");
-  }, [quickAddSignal]);
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [companyFilter, setCompanyFilter] = useState<string>("all");

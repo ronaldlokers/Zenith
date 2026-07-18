@@ -635,5 +635,10 @@
     "staleHint": "The posting may be gone — the URL no longer answers like a live listing.",
     "quiet": "gone quiet",
     "quietHint": "No activity from their side for a while — consider a nudge."
+  },
+  "quickAdd": {
+    "title": "Add a job",
+    "addOpen": "Add & open",
+    "add": "Add"
   }
 }
