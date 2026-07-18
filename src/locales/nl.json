@@ -9,7 +9,8 @@
     "stats": "Statistieken",
     "companies": "Bedrijven",
     "people": "Contacten",
-    "cv": "CV"
+    "cv": "CV",
+    "network": "Netwerk"
   },
   "header": {
     "openCount_one": "{{count}} open",

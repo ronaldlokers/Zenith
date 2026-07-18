@@ -9,7 +9,8 @@
     "stats": "Stats",
     "companies": "Companies",
     "people": "People",
-    "cv": "CV"
+    "cv": "CV",
+    "network": "Network"
   },
   "header": {
     "openCount_one": "{{count}} open",

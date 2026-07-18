@@ -2446,18 +2446,11 @@ export default function App() {
           {t("tabs.stats")}
         </button>
         <button
-          className={tab === "companies" ? "active" : ""}
-          data-tab="companies"
+          className={tab === "companies" || tab === "contacts" ? "active" : ""}
+          data-tab="network"
           onClick={() => setTab("companies")}
         >
-          {t("tabs.companies")}
-        </button>
-        <button
-          className={tab === "contacts" ? "active" : ""}
-          data-tab="contacts"
-          onClick={() => setTab("contacts")}
-        >
-          {t("tabs.people")}
+          {t("tabs.network")}
         </button>
         <button
           className={tab === "cv" ? "active" : ""}
@@ -2563,6 +2556,30 @@ export default function App() {
               />
             )}
             {tab === "stats" && <StatsTab onError={setError} />}
+            {(tab === "companies" || tab === "contacts") && (
+              <div
+                className="subnav"
+                role="tablist"
+                aria-label={t("tabs.network")}
+              >
+                <button
+                  role="tab"
+                  aria-selected={tab === "companies"}
+                  className={tab === "companies" ? "active" : ""}
+                  onClick={() => setTab("companies")}
+                >
+                  {t("tabs.companies")}
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={tab === "contacts"}
+                  className={tab === "contacts" ? "active" : ""}
+                  onClick={() => setTab("contacts")}
+                >
+                  {t("tabs.people")}
+                </button>
+              </div>
+            )}
             {tab === "companies" && (
               <CompaniesTab
                 companies={visibleCompanies}
