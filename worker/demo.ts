@@ -271,12 +271,23 @@ export async function seedSampleData(
   ];
   for (const app of demoApps) {
     const companyId = companyIds.get(app.company)!;
-    const appliedAt = app.daysAgo ? `date('now', '-${app.daysAgo} days')` : "NULL";
+    // Bind the date modifier as a value rather than interpolating SQL
+    // (#285); NULL for leads not yet applied to.
+    const appliedMod = app.daysAgo ? `-${app.daysAgo} days` : null;
     const row = await env.DB.prepare(
       `INSERT INTO applications (user_id, company_id, title, role_type, status, notes, applied_at)
-       VALUES (?, ?, ?, ?, ?, ?, ${appliedAt}) RETURNING id`,
+       VALUES (?, ?, ?, ?, ?, ?, CASE WHEN ? IS NULL THEN NULL ELSE date('now', ?) END) RETURNING id`,
     )
-      .bind(userId, companyId, app.title, app.role, app.status, app.notes ?? null)
+      .bind(
+        userId,
+        companyId,
+        app.title,
+        app.role,
+        app.status,
+        app.notes ?? null,
+        appliedMod,
+        appliedMod,
+      )
       .first<{ id: number }>();
     const path = historyFor(app.status);
     const transitions = path.length - 1;
