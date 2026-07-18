@@ -578,7 +578,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -665,6 +665,8 @@
 
 .palette-item.active {
   outline: 2px solid var(--accent);
+  /* Deliberate inset exception (#314): the item sits inside a scrolling
+     listbox, so an outset ring would clip against the container. */
   outline-offset: -2px;
 }
 
@@ -710,7 +712,7 @@
 
 .card.kb-focused {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px; /* match the global :focus-visible geometry (#314) */
 }
 
 .detail-modal {
@@ -1731,7 +1733,9 @@ select.status {
 .toast button {
   border: none;
   background: none;
-  color: var(--accent);
+  /* The toast surface is the inverted --ink, so the normal accent fails
+     contrast on it (1.6:1 in dark) — use the on-ink accent (#314). */
+  color: var(--accent-on-ink);
   font-weight: 700;
   cursor: pointer;
   padding: 0;
@@ -1750,11 +1754,12 @@ select.status {
   padding: 0.2rem 0;
 }
 
-/* Keyboard focus ring for rows made operable via role="button" (#261) */
+/* Keyboard focus ring for rows made operable via role="button" (#261).
+   No border-radius here — it changed the element's shape on focus (#314);
+   the outline follows the element's own radius natively. */
 [role="button"]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
 }
 
 /* Paginated "load more" control (#261) */
@@ -2038,12 +2043,17 @@ select.status {
   border-left-color: var(--danger);
 }
 
+/* Event colors are deliberately NOT stage colors (#314) — the stage
+   palette is reserved for pipeline state. Scheme, shared with the
+   activity feed below: accent = pipeline motion (applied / status
+   change), --ev-touch = human touchpoints (interactions),
+   --faint = artifacts (documents), danger = due. */
 .agenda-item.kind-applied {
-  border-left-color: var(--st-interested);
+  border-left-color: var(--accent);
 }
 
 .agenda-item.kind-interaction {
-  border-left-color: var(--accent);
+  border-left-color: var(--ev-touch);
 }
 
 /* Activity feed (#129) */
@@ -2074,11 +2084,11 @@ select.status {
 }
 
 .activity-item.kind-interaction {
-  border-left-color: var(--st-interview);
+  border-left-color: var(--ev-touch);
 }
 
 .activity-item.kind-document {
-  border-left-color: var(--st-offer);
+  border-left-color: var(--faint);
 }
 
 .activity-date {
