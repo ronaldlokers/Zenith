@@ -3981,6 +3981,33 @@ button:not(:disabled):active,
   }
 }
 
+/* First-run stitching (#314 round 3). */
+.linklike {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent-ink);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.linklike:hover {
+  color: var(--ink);
+  background: none;
+}
+
+.pipeline-empty-hint {
+  color: var(--muted);
+  font-size: var(--text-body);
+  margin: 0.5rem 0 0.9rem;
+}
+
+.onboarding-sample {
+  margin-top: 0.5rem;
+  font-size: var(--text-body);
+}
+
 /* Styled confirmation dialog (#314 round 3) — replaces window.confirm. */
 .confirm-dialog {
   max-width: 22rem;

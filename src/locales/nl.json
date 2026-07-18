@@ -126,7 +126,8 @@
     "boardEmpty": "leeg",
     "boardKeepPushing": "blijf doorzetten",
     "noFollowUps": "Geen vervolgacties gepland.",
-    "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op “Nu controleren”."
+    "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op “Nu controleren”.",
+    "pipelineNoJobs": "Nog niets bijgehouden."
   },
   "shortcuts": {
     "title": "Sneltoetsen",
@@ -258,7 +259,8 @@
     "title": "Aan de slag",
     "profile": "Vul de basis van je CV-profiel in",
     "company": "Voeg je eerste bedrijf toe",
-    "firstJob": "Voeg je eerste vacature toe"
+    "firstJob": "Voeg je eerste vacature toe",
+    "sampleLink": "Liever eerst verkennen? Laad voorbeelddata"
   },
   "prep": {
     "title": "Interviewvoorbereiding",
@@ -579,7 +581,8 @@
   },
   "confirm": {
     "deleteDocument": "“{{name}}” verwijderen?",
-    "deleteRoleType": "Functietype “{{label}}” verwijderen? Feed-trefwoorden ervoor gaan mee."
+    "deleteRoleType": "Functietype “{{label}}” verwijderen? Feed-trefwoorden ervoor gaan mee.",
+    "discardEdit": "Niet-opgeslagen wijzigingen weggooien?"
   },
   "aria": {
     "moveToStage": "{{title}} naar fase verplaatsen",

@@ -665,6 +665,7 @@ function OnboardingChecklist({
   onGoToCompanies,
   onAddJob,
   onDismiss,
+  onLoadSample,
 }: {
   profileDone: boolean;
   companyDone: boolean;
@@ -673,6 +674,7 @@ function OnboardingChecklist({
   onGoToCompanies: () => void;
   onAddJob: () => void;
   onDismiss: () => void;
+  onLoadSample: () => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -698,6 +700,11 @@ function OnboardingChecklist({
           <button onClick={onAddJob}>{t("onboarding.firstJob")}</button>
         </li>
       </ul>
+      {!jobDone && (
+        <button className="linklike onboarding-sample" onClick={onLoadSample}>
+          {t("onboarding.sampleLink")}
+        </button>
+      )}
     </div>
   );
 }
@@ -2698,9 +2705,11 @@ export default function App() {
           onCreated={(a, open) => {
             setShowQuickAdd(false);
             notify(t("common.saved"));
-            reload().then(() => {
-              if (open) navigate(`/jobs/${a.id}`);
-            });
+            // Navigate on the optimistic append instead of blocking on the
+            // five-endpoint reload — the page fills in as data lands.
+            setApplications((prev) => [...prev, a]);
+            if (open) navigate(`/jobs/${a.id}`);
+            void reload();
           }}
         />
       )}
@@ -2856,8 +2865,13 @@ export default function App() {
         ) : (
           <>
             {tab === "overview" &&
-              applications.length === 0 &&
-              !onboardingDismissed && (
+              !onboardingDismissed &&
+              !(
+                onboardingProfile?.name &&
+                onboardingProfile?.email &&
+                companies.length > 0 &&
+                applications.length > 0
+              ) && (
                 <OnboardingChecklist
                   profileDone={
                     !!(onboardingProfile?.name && onboardingProfile?.email)
@@ -2868,6 +2882,7 @@ export default function App() {
                   onGoToCompanies={() => setTab("companies")}
                   onAddJob={() => setShowQuickAdd(true)}
                   onDismiss={dismissOnboarding}
+                  onLoadSample={() => navigate("/settings?s=data")}
                 />
               )}
             {tab === "overview" && (
@@ -2924,6 +2939,7 @@ export default function App() {
                   navigate(id ? `/jobs/${id}` : "/board")
                 }
                 onOpenQuickAdd={() => setShowQuickAdd(true)}
+                onOpenSampleData={() => navigate("/settings?s=data")}
               />
             )}
             {tab === "feed" && (
@@ -5151,11 +5167,13 @@ function CoverLetterSection({
 
 function JdKeywordMatch({
   onError,
+  initialText,
 }: {
   onError: (message: string | null) => void;
+  initialText?: string;
 }) {
   const { t } = useTranslation();
-  const [jdText, setJdText] = useState("");
+  const [jdText, setJdText] = useState(initialText ?? "");
   const [skills, setSkills] = useState<Skill[] | null>(null);
   const [cvSkillNames, setCvSkillNames] = useState<Set<string> | null>(null);
 
@@ -5175,6 +5193,11 @@ function JdKeywordMatch({
       })
       .catch((e) => onError((e as Error).message));
   };
+
+  useEffect(() => {
+    if (initialText) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const jdLower = jdText.toLowerCase();
   const mentioned =
@@ -5275,13 +5298,21 @@ function ApplicationDetailModal({
   const a = application;
 
   useEffect(() => {
-    if (asPane) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (editing) {
+        // The full form holds ~20 fields; Escape used to discard them
+        // silently (modal) or do nothing (page).
+        void requestConfirm(t("confirm.discardEdit")).then((ok) => {
+          if (ok) setEditing(false);
+        });
+      } else if (!asPane) {
+        onClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, asPane]);
+  }, [onClose, asPane, editing, t]);
 
   const addTag = () => {
     const name = newTag.trim();
@@ -5770,7 +5801,10 @@ function ApplicationDetailModal({
             />
 
             <h3 className="detail-sub">{t("detail.keywordMatch")}</h3>
-            <JdKeywordMatch onError={onError} />
+            <JdKeywordMatch
+              onError={onError}
+              initialText={a.job_description ?? undefined}
+            />
 
             <h3 className="detail-sub">{t("detail.timeline")}</h3>
             <Timeline
@@ -6135,6 +6169,7 @@ function PipelineTab({
   history,
   onOpenJob,
   onOpenQuickAdd,
+  onOpenSampleData,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -6147,6 +6182,7 @@ function PipelineTab({
   lastInteractions: { application_id: number; last_at: string }[];
   onOpenJob: (id: number | null) => void;
   onOpenQuickAdd: () => void;
+  onOpenSampleData: () => void;
 }) {
   const { t } = useTranslation();
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -6339,6 +6375,19 @@ function PipelineTab({
   return (
     <section>
       <StageHistogram applications={filtered} />
+
+      {applications.length === 0 && (
+        <p className="pipeline-empty-hint">
+          {t("empty.pipelineNoJobs")}{" "}
+          <button className="linklike" onClick={onOpenQuickAdd}>
+            {t("toolbar.addJob")}
+          </button>
+          {" · "}
+          <button className="linklike" onClick={onOpenSampleData}>
+            {t("sampleData.load")}
+          </button>
+        </p>
+      )}
 
       <div className="toolbar">
         <input
