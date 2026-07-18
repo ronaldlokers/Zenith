@@ -550,7 +550,8 @@
     "revokeKeyConfirm": "API-sleutel uitschakelen? Elke tool die hem gebruikt werkt niet meer.",
     "deleteAccount": "Account verwijderen",
     "deleteHint": "Verwijdert je account en al je data permanent — sollicitaties, bedrijven, contacten, CV, alles. Dit kan niet ongedaan worden gemaakt.",
-    "deleteConfirm": "Je account en AL je data permanent verwijderen? Dit kan niet ongedaan worden gemaakt."
+    "deleteConfirm": "Je account en AL je data permanent verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "twoFactorDownloadCodes": "Back-upcodes downloaden"
   },
   "companies": {
     "view": "Weergave",
