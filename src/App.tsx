@@ -592,8 +592,8 @@ function CommandPalette({
   contacts: Contact[];
   onClose: () => void;
   onJumpToApplication: (id: number) => void;
-  onJumpToCompany: (name: string) => void;
-  onJumpToContact: (name: string) => void;
+  onJumpToCompany: (id: number) => void;
+  onJumpToContact: (id: number) => void;
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -633,7 +633,7 @@ function CommandPalette({
             domId: `palette-co-${c.id}`,
             group: t("tabs.companies"),
             label: <>{c.name}</>,
-            onSelect: () => onJumpToCompany(c.name),
+            onSelect: () => onJumpToCompany(c.id),
           })),
         ...contacts
           .filter((c) => c.name.toLowerCase().includes(q))
@@ -649,7 +649,7 @@ function CommandPalette({
                 ) : null}
               </>
             ),
-            onSelect: () => onJumpToContact(c.name),
+            onSelect: () => onJumpToContact(c.id),
           })),
       ]
     : [];
@@ -2480,14 +2480,12 @@ export default function App() {
             navigate(`/jobs/${id}`);
             setShowPalette(false);
           }}
-          onJumpToCompany={(name) => {
-            setJumpQuery(name);
-            setTab("companies");
+          onJumpToCompany={(id) => {
+            navigate(`/companies/${id}`);
             setShowPalette(false);
           }}
-          onJumpToContact={(name) => {
-            setJumpQuery(name);
-            setTab("contacts");
+          onJumpToContact={(id) => {
+            navigate(`/people/${id}`);
             setShowPalette(false);
           }}
         />
@@ -2775,6 +2773,10 @@ export default function App() {
                 notify={notify}
                 onDelete={deleteWithUndo}
                 initialQuery={jumpQuery}
+                initialDetailId={detailIdFromUrl}
+                onDetailIdChange={(id) =>
+                  navigate(id ? `/companies/${id}` : "/companies")
+                }
               />
             )}
             {tab === "contacts" && (
@@ -2786,6 +2788,10 @@ export default function App() {
                 notify={notify}
                 onDelete={deleteWithUndo}
                 initialQuery={jumpQuery}
+                initialDetailId={detailIdFromUrl}
+                onDetailIdChange={(id) =>
+                  navigate(id ? `/people/${id}` : "/people")
+                }
               />
             )}
             {tab === "cv" && <CVTab onError={setError} notify={notify} />}
@@ -6687,16 +6693,29 @@ function CompaniesTab({
   notify,
   onDelete,
   initialQuery,
+  initialDetailId,
+  onDetailIdChange,
 }: CrudTabProps & {
   companies: Company[];
   applications: Application[];
   contacts: Contact[];
   initialQuery?: string;
+  initialDetailId?: number | null;
+  onDetailIdChange?: (id: number | null) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Company | "new" | null>(null);
   const [query, setQuery] = useState(initialQuery ?? "");
-  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detailId, setDetailIdState] = useState<number | null>(
+    initialDetailId ?? null,
+  );
+  useEffect(() => {
+    setDetailIdState(initialDetailId ?? null);
+  }, [initialDetailId]);
+  const setDetailId = (id: number | null) => {
+    setDetailIdState(id);
+    onDetailIdChange?.(id);
+  };
   const detailCompany = companies.find((c) => c.id === detailId) ?? null;
   // Logo-first card grid (#132) — scans faster once tracking a dozen+
   // companies than the list rows do. Persisted so the choice sticks
@@ -7138,15 +7157,28 @@ function ContactsTab({
   notify,
   onDelete,
   initialQuery,
+  initialDetailId,
+  onDetailIdChange,
 }: CrudTabProps & {
   contacts: Contact[];
   companies: Company[];
   initialQuery?: string;
+  initialDetailId?: number | null;
+  onDetailIdChange?: (id: number | null) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [query, setQuery] = useState(initialQuery ?? "");
-  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detailId, setDetailIdState] = useState<number | null>(
+    initialDetailId ?? null,
+  );
+  useEffect(() => {
+    setDetailIdState(initialDetailId ?? null);
+  }, [initialDetailId]);
+  const setDetailId = (id: number | null) => {
+    setDetailIdState(id);
+    onDetailIdChange?.(id);
+  };
   const detailContact = contacts.find((c) => c.id === detailId) ?? null;
 
   const q = query.trim().toLowerCase();
