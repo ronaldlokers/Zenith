@@ -3690,3 +3690,27 @@ summary.bcol-head::after {
     gap: 0.3rem;
   }
 }
+
+/* Routed job detail page (#314) — reuses the pane rendering of
+   ApplicationDetailModal but as normal page flow: no stickiness, no
+   internal scroll cage, room to breathe. */
+.job-page {
+  margin-top: 0.75rem;
+}
+
+.job-page .job-back {
+  margin-bottom: 0.75rem;
+}
+
+.job-page .detail-pane {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  max-width: 46rem;
+}
+
+@media (min-width: 900px) {
+  .app:has(.job-page) {
+    max-width: 900px;
+  }
+}

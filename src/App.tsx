@@ -2454,6 +2454,13 @@ export default function App() {
   // Archived applications keep contributing to Stats history but are
   // hidden from the active pipeline views (header count, Board, Next up).
   const activeApps = visibleApps.filter((a) => !a.archived_at);
+  // /jobs/:id and /board/:id render a routed detail page (#314) instead
+  // of the old pane/overlay duality — one presentation for every entry
+  // point, back-button friendly.
+  const routedJob =
+    (tab === "applications" || tab === "board") && detailIdFromUrl != null
+      ? visibleApps.find((a) => a.id === detailIdFromUrl) ?? null
+      : null;
   const visibleCompanies = companies.filter(
     (c) => !hidden.has(`companies:${c.id}`),
   );
@@ -2624,7 +2631,7 @@ export default function App() {
                 onChanged={reload}
               />
             )}
-            {(tab === "applications" || tab === "board") && (
+            {(tab === "applications" || tab === "board") && !routedJob && (
               <div
                 className="subnav"
                 role="tablist"
@@ -2648,7 +2655,31 @@ export default function App() {
                 </button>
               </div>
             )}
-            {tab === "applications" && (
+            {routedJob && (
+              <section className="job-page">
+                <button
+                  className="btn-secondary job-back"
+                  onClick={() => navigate(tab === "board" ? "/board" : "/jobs")}
+                >
+                  ← {t(tab === "board" ? "tabs.board" : "tabs.jobs")}
+                </button>
+                <ApplicationDetailModal
+                  application={routedJob}
+                  allApplications={visibleApps}
+                  companies={visibleCompanies}
+                  contacts={visibleContacts}
+                  roleTypes={roleTypes}
+                  onClose={() => navigate(tab === "board" ? "/board" : "/jobs")}
+                  onChanged={reload}
+                  onError={setError}
+                  notify={notify}
+                  onDelete={deleteWithUndo}
+                  onStatus={setStatus}
+                  asPane
+                />
+              </section>
+            )}
+            {tab === "applications" && !routedJob && (
               <ApplicationsTab
                 applications={visibleApps}
                 companies={visibleCompanies}
@@ -2660,14 +2691,14 @@ export default function App() {
                 onDelete={deleteWithUndo}
                 onStatus={setStatus}
                 initialQuery={jumpQuery}
-                initialDetailId={detailIdFromUrl}
+                initialDetailId={null}
                 onDetailIdChange={(id) =>
                   navigate(id ? `/jobs/${id}` : "/jobs")
                 }
                 quickAddSignal={quickAddSignal}
               />
             )}
-            {tab === "board" && (
+            {tab === "board" && !routedJob && (
               <BoardTab
                 applications={activeApps}
                 companies={visibleCompanies}
@@ -2678,7 +2709,7 @@ export default function App() {
                 notify={notify}
                 onDelete={deleteWithUndo}
                 onStatus={setStatus}
-                initialDetailId={detailIdFromUrl}
+                initialDetailId={null}
                 onDetailIdChange={(id) =>
                   navigate(id ? `/board/${id}` : "/board")
                 }
