@@ -483,6 +483,12 @@
   font-weight: 700;
 }
 
+/* The bottom-nav glyphs only show on the mobile bar; the desktop sidebar
+   and the 600-900px top strip keep their text labels (#346). */
+.tabs button .nav-icon {
+  display: none;
+}
+
 @media (max-width: 600px) {
   .tabs {
     position: fixed;
@@ -491,32 +497,41 @@
     right: 0;
     z-index: 20;
     margin: 0;
-    /* Tightened gap/padding so all seven primary destinations (incl. CV)
-       fit at 420px instead of clipping "Network" mid-word (#346). */
-    gap: 0.2rem;
-    padding: 0.5rem 0.5rem calc(0.6rem + env(safe-area-inset-bottom));
+    gap: 0.1rem;
+    padding: 0.35rem 0.3rem calc(0.5rem + env(safe-area-inset-bottom));
     background: var(--bg);
     border-top: 1px solid var(--border);
-    /* Scroll remains the fallback for narrower phones and longer locales
-       (Settings, or nl labels, can still spill) — never leave a tab
-       unreachable. */
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    /* Fade the trailing edge so a spilled tab reads as "more, scroll for
-       it" rather than a hard cut (#204). */
-    mask-image: linear-gradient(
-      to right,
-      transparent 0,
-      black 0.75rem,
-      black calc(100% - 2rem),
-      transparent 100%
-    );
   }
 
+  /* Icon over label, each column an equal share of the width — eight fit
+     any phone from 320px up, so the bar never scrolls or clips (#346). */
   .tabs button {
-    flex: 0 0 auto;
-    padding: 0.5rem 0.35rem;
-    letter-spacing: 0.02em;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    min-width: 0;
+    padding: 0.3rem 0.15rem;
+    border: none;
+    background: none;
+    font-size: 0.6rem;
+    letter-spacing: 0.01em;
+  }
+
+  .tabs button .nav-icon {
+    display: block;
+  }
+
+  .tabs button.active {
+    border: none;
+  }
+
+  .tabs button .tab-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
