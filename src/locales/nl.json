@@ -627,5 +627,13 @@
   "documents": {
     "labelPlaceholder": "Label (CV v3, motivatiebrief, …)",
     "uploading": "Uploaden…"
+  },
+  "attention": {
+    "overdue": "te laat",
+    "overdueHint": "De opvolgdatum is verstreken — onderneem actie of plan opnieuw.",
+    "stale": "verlopen?",
+    "staleHint": "De vacature is mogelijk weg — de URL reageert niet meer als een actieve vacature.",
+    "quiet": "stilgevallen",
+    "quietHint": "Al een tijd geen activiteit van hun kant — overweeg een reminder."
   }
 }

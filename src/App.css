@@ -1408,17 +1408,6 @@ button.danger {
   transition: border-left-color 0.18s ease, padding 0.15s ease, min-height 0.15s ease;
 }
 
-/* Response-time heat strip (#142) — a right-edge border, deliberately a
-   different position than the left stage-color border, so the two
-   signals never blur together. heat-0 (recently active) shows nothing. */
-.card.row2.heat-1 {
-  border-right: 3px solid var(--heat-watch);
-}
-
-.card.row2.heat-2 {
-  border-right: 3px solid var(--heat-quiet);
-}
-
 /* Compact row density (#209) — trades the roomy 2-line row for a
    tighter one on long lists; nothing moves out of the detail modal,
    only spacing/size shrinks. */
@@ -1442,10 +1431,6 @@ button.danger {
 .cards.compact .card.row2 .l2 {
   margin-top: 0.05rem;
   gap: 0.3rem;
-}
-
-.card.row2.heat-3 {
-  border-right: 3px solid var(--heat-cold);
 }
 
 .card.row2 .l1 {
@@ -1553,10 +1538,6 @@ button.danger {
 .due-line.late {
   color: var(--danger);
   font-weight: 600;
-}
-
-.card.overdue {
-  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
 }
 
 .age {
@@ -3838,4 +3819,18 @@ summary.bcol-head::after {
   .stat-block-wide {
     grid-column: 1 / -1;
   }
+}
+
+/* Worst-wins attention badge (#314) */
+.badge.attention {
+  font-weight: 700;
+}
+
+.badge.attention-overdue {
+  color: var(--danger);
+}
+
+.badge.attention-stale,
+.badge.attention-quiet {
+  color: var(--heat-quiet);
 }

@@ -6165,7 +6165,7 @@ function ApplicationsTab({
         {visible.map((a, i) => (
           <li
             key={a.id}
-            className={`card row2 stage-${a.status} heat-${heatLevel.get(a.id) ?? 0}${isOverdue(a) ? " overdue" : ""}${i === focusedIndex ? " kb-focused" : ""}${a.archived_at ? " archived" : ""}`}
+            className={`card row2 stage-${a.status}${i === focusedIndex ? " kb-focused" : ""}${a.archived_at ? " archived" : ""}`}
             role="button"
             tabIndex={0}
             onClick={() => setDetailId(a.id)}
@@ -6196,37 +6196,27 @@ function ApplicationsTab({
                     {"★".repeat(a.fit_score)}
                   </span>
                 ) : null}
-                {a.archived_at ? (
-                  <span className="badge" title={t("filters.showArchived")}>
-                    {" "}
-                    {t("detail.archived")}
-                  </span>
-                ) : null}
-                {a.referred_by_contact_id ? (
-                  <span className="badge" title={t("referral.referredBy")}>
-                    {" "}
-                    {t("referral.badge")}
-                  </span>
-                ) : null}
-                {a.posting_status === "maybe_stale" ? (
-                  <span className="badge warn" title={t("posting.staleHint")}>
-                    {" "}
-                    {t("posting.staleBadge")}
-                  </span>
-                ) : null}
                 {(() => {
+                  // One worst-wins attention badge (#314) — replaces the
+                  // separate overdue tint, heat strip + badge, stale and
+                  // quiet markers. Why is explained on the detail page.
                   const level = heatLevel.get(a.id) ?? 0;
-                  if (level === 0) return null;
-                  const key = level === 3 ? "cold" : level === 2 ? "quiet" : "watch";
-                  return (
+                  const attention = isOverdue(a)
+                    ? "overdue"
+                    : a.posting_status === "maybe_stale"
+                      ? "stale"
+                      : level >= 2 || quietFlags.has(a.id)
+                        ? "quiet"
+                        : null;
+                  return attention ? (
                     <span
-                      className={`badge heat-badge heat-badge-${level}`}
-                      title={t(`heat.${key}Hint`)}
+                      className={`badge attention attention-${attention}`}
+                      title={t(`attention.${attention}Hint`)}
                     >
                       {" "}
-                      {t(`heat.${key}Badge`)}
+                      {t(`attention.${attention}`)}
                     </span>
-                  );
+                  ) : null;
                 })()}
               </strong>
               <span className="co">
@@ -6260,16 +6250,6 @@ function ApplicationsTab({
                   {t("detail.deadline")}: {formatDate(a.deadline_at)}
                 </span>
               )}
-              {quietFlags.has(a.id) && (
-                <span className="due late" title={t("detail.quietDetail")}>
-                  {t("detail.quiet")}
-                </span>
-              )}
-              {a.tags.map((tg) => (
-                <span key={tg.id} className="tag-chip">
-                  {tg.name}
-                </span>
-              ))}
             </div>
           </li>
         ))}

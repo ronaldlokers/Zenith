@@ -627,5 +627,13 @@
   "documents": {
     "labelPlaceholder": "Label (CV v3, cover letter, …)",
     "uploading": "Uploading…"
+  },
+  "attention": {
+    "overdue": "overdue",
+    "overdueHint": "The follow-up date has passed — act on it or reschedule.",
+    "stale": "stale?",
+    "staleHint": "The posting may be gone — the URL no longer answers like a live listing.",
+    "quiet": "gone quiet",
+    "quietHint": "No activity from their side for a while — consider a nudge."
   }
 }
