@@ -1,4 +1,7 @@
 import { isForbiddenUrl } from "./url-guard.js";
+
+// Consecutive delivery failures before a webhook is switched off (#346).
+const WEBHOOK_DISABLE_AFTER = 10;
 import { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 
@@ -28,7 +31,7 @@ export function registerApiKeyRoutes(app: Hono<AppEnv>) {
 
   app.get("/api/webhooks", async (c) => {
     const { results } = await c.env.DB.prepare(
-      "SELECT id, url, enabled, created_at FROM webhooks WHERE user_id = ? ORDER BY created_at DESC",
+      "SELECT id, url, enabled, created_at, last_status, last_attempt_at, failure_count FROM webhooks WHERE user_id = ? ORDER BY created_at DESC",
     )
       .bind(c.get("userId"))
       .all();
@@ -92,21 +95,19 @@ export async function triggerWebhooks(
   data: Record<string, unknown>,
 ): Promise<void> {
   const { results } = await env.DB.prepare(
-    "SELECT url, secret FROM webhooks WHERE user_id = ? AND enabled = 1",
+    "SELECT id, url, secret, failure_count FROM webhooks WHERE user_id = ? AND enabled = 1",
   )
     .bind(userId)
-    .all<{ url: string; secret: string }>();
+    .all<{ id: number; url: string; secret: string; failure_count: number }>();
   if (results.length === 0) return;
 
   const body = JSON.stringify({ event, data, sent_at: new Date().toISOString() });
   await Promise.all(
     results.map(async (hook) => {
-      try {
+      // One delivery attempt; non-2xx counts as failure.
+      const attempt = async () => {
         const signature = await hmacHex(hook.secret, body);
-        // Re-check at delivery time too — the create-time check alone is
-        // not durable against rows written by other means (#346).
-        if (isForbiddenUrl(new URL(hook.url))) return;
-        await fetch(hook.url, {
+        const res = await fetch(hook.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -117,8 +118,40 @@ export async function triggerWebhooks(
           // callers run this via ctx.waitUntil, but bound each attempt too.
           signal: AbortSignal.timeout(5000),
         });
+        if (!res.ok) throw new Error(`receiver returned ${res.status}`);
+      };
+      // Re-check at delivery time too — the create-time check alone is
+      // not durable against rows written by other means (#346).
+      if (isForbiddenUrl(new URL(hook.url))) return;
+      let ok = false;
+      try {
+        await attempt();
+        ok = true;
       } catch {
-        // best effort
+        // one retry — transient receiver blips shouldn't count as outages
+        try {
+          await attempt();
+          ok = true;
+        } catch {
+          ok = false;
+        }
+      }
+      // Deliveries were previously fire-and-forget with an empty catch, so
+      // a dead receiver looked healthy in Settings forever (#346). Track
+      // the outcome; auto-disable after enough consecutive failures.
+      if (ok) {
+        await env.DB.prepare(
+          `UPDATE webhooks SET last_status = 'ok', last_attempt_at = datetime('now'), failure_count = 0 WHERE id = ?`,
+        )
+          .bind(hook.id)
+          .run();
+      } else {
+        const failures = (hook.failure_count ?? 0) + 1;
+        await env.DB.prepare(
+          `UPDATE webhooks SET last_status = 'failed', last_attempt_at = datetime('now'), failure_count = ?, enabled = CASE WHEN ? >= ${WEBHOOK_DISABLE_AFTER} THEN 0 ELSE enabled END WHERE id = ?`,
+        )
+          .bind(failures, failures, hook.id)
+          .run();
       }
     }),
   );

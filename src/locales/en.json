@@ -537,7 +537,10 @@
     "deleteAccount": "Delete account",
     "deleteHint": "Permanently deletes your account and all your data — applications, companies, contacts, CV, everything. This can't be undone.",
     "deleteConfirm": "Permanently delete your account and ALL your data? This cannot be undone.",
-    "twoFactorDownloadCodes": "Download backup codes"
+    "twoFactorDownloadCodes": "Download backup codes",
+    "webhookDisabled": "disabled after repeated failures — delete and re-add to retry",
+    "webhookFailing": "failing ({{count}} in a row)",
+    "webhookOk": "delivering"
   },
   "companies": {
     "view": "View",
