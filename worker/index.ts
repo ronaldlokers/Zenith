@@ -619,11 +619,13 @@ app.put("/api/applications/:id", async (c) => {
     )
       .bind(c.req.param("id"), userId, existing.status, newStatus)
       .run();
-    await triggerWebhooks(c.env, userId, "application.status_changed", {
-      application_id: Number(c.req.param("id")),
-      from_status: existing.status,
-      to_status: newStatus,
-    });
+    c.executionCtx.waitUntil(
+      triggerWebhooks(c.env, userId, "application.status_changed", {
+        application_id: Number(c.req.param("id")),
+        from_status: existing.status,
+        to_status: newStatus,
+      }),
+    );
   }
   return c.json(result);
 });
@@ -660,11 +662,13 @@ app.patch("/api/applications/:id/status", async (c) => {
     )
       .bind(c.req.param("id"), userId, existing.status, body.status)
       .run();
-    await triggerWebhooks(c.env, userId, "application.status_changed", {
-      application_id: Number(c.req.param("id")),
-      from_status: existing.status,
-      to_status: body.status,
-    });
+    c.executionCtx.waitUntil(
+      triggerWebhooks(c.env, userId, "application.status_changed", {
+        application_id: Number(c.req.param("id")),
+        from_status: existing.status,
+        to_status: body.status,
+      }),
+    );
   }
   return c.json(result);
 });
