@@ -1756,6 +1756,16 @@ type SettingsSection =
   | "data"
   | "admin";
 
+const SETTINGS_SECTIONS: SettingsSection[] = [
+  "general",
+  "feed",
+  "sharing",
+  "security",
+  "integrations",
+  "data",
+  "admin",
+];
+
 function SettingsPage({
   roleTypes,
   onRoleTypesChanged,
@@ -1767,7 +1777,20 @@ function SettingsPage({
 }) {
   const { t, i18n } = useTranslation();
   const { data: session } = useSession();
-  const [section, setSection] = useState<SettingsSection>("general");
+  const location = useLocation();
+  // Deep-linkable sections (#314): /settings?s=feed lands on Feed sources.
+  const requested = new URLSearchParams(location.search).get("s");
+  const [section, setSection] = useState<SettingsSection>(
+    SETTINGS_SECTIONS.includes(requested as SettingsSection)
+      ? (requested as SettingsSection)
+      : "general",
+  );
+  useEffect(() => {
+    const q = new URLSearchParams(location.search).get("s");
+    if (q && SETTINGS_SECTIONS.includes(q as SettingsSection)) {
+      setSection(q as SettingsSection);
+    }
+  }, [location.search]);
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
   );
@@ -2723,7 +2746,7 @@ export default function App() {
                 onError={setError}
                 notify={notify}
                 roleTypes={roleTypes}
-                onOpenSettings={() => setTab("settings")}
+                onOpenSettings={() => navigate("/settings?s=feed")}
               />
             )}
             {tab === "calendar" && (
@@ -5737,6 +5760,9 @@ function PipelineTab({
   const [showArchived, setShowArchived] = useState(false);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [showHelp, setShowHelp] = useState(false);
+  // Mobile: filters + saved views collapse behind one toggle (#314) so
+  // triage starts at the board, not below a stack of controls.
+  const [showFilters, setShowFilters] = useState(false);
 
   // One-shot: consume the jump query then clear it upstream, so a single
   // Calendar jump doesn't re-inject the search on every later visit (#314).
@@ -5912,6 +5938,14 @@ function PipelineTab({
         </button>
       </div>
 
+      <button
+        className="btn-secondary pipeline-filters-toggle"
+        aria-expanded={showFilters}
+        onClick={() => setShowFilters((v) => !v)}
+      >
+        {t("filters.toggle")}
+      </button>
+      <div className={`pipeline-filters${showFilters ? " open" : ""}`}>
       <div className="filters">
         <select
           value={roleFilter}
@@ -5979,6 +6013,7 @@ function PipelineTab({
         <button className="view-save" onClick={() => setNamingView(true)}>
           {t("savedViews.save")}
         </button>
+      </div>
       </div>
 
       {namingView && (

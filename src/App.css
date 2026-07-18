@@ -3781,3 +3781,23 @@ summary.bcol-head::after {
   color: var(--faint);
   font-variant-numeric: tabular-nums;
 }
+
+/* Mobile: pipeline filters + saved views behind one disclosure (#314). */
+.pipeline-filters-toggle {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .pipeline-filters-toggle {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+  }
+
+  .pipeline-filters {
+    display: none;
+  }
+
+  .pipeline-filters.open {
+    display: block;
+  }
+}

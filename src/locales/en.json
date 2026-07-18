@@ -113,7 +113,8 @@
     "allRoles": "All roles",
     "allCompanies": "All companies",
     "allTags": "All tags",
-    "showArchived": "Show archived"
+    "showArchived": "Show archived",
+    "toggle": "Filters"
   },
   "empty": {
     "noCompanies": "No companies yet. Add the ones you're targeting — applications and contacts link to them.",
