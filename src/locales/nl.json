@@ -147,7 +147,6 @@
     "cvLanguage": "CV-taal",
     "theme": "Thema",
     "themeAuto": "Automatisch (licht/donker)",
-    "themeControlRoom": "Control room",
     "shareLink": "Openbare deel-link",
     "generateLink": "Link genereren",
     "regenerateLink": "Opnieuw genereren",
@@ -165,7 +164,9 @@
       "admin": "Beheer",
       "feed": "Feed-bronnen"
     },
-    "keyShortcuts": "Enkele-toets sneltoetsen (n, /)"
+    "keyShortcuts": "Enkele-toets sneltoetsen (n, /)",
+    "themeLight": "Licht",
+    "themeDark": "Donker"
   },
   "feed": {
     "pulledFrom": "Opgehaald uit je ingestelde vacaturesites (Greenhouse, Ashby), Adzuna en HN Who's Hiring, elke 6 uur.",
