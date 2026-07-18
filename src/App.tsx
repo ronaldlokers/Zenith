@@ -380,6 +380,24 @@ function SettingsIcon() {
   );
 }
 
+// Filter (funnel) + Archive (lidded box) glyphs for the board bar chips
+// (#346) — same 24x24 currentColor / strokeWidth 2 style as the nav set.
+function FilterIcon() {
+  return (
+    <svg className="chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 5h16l-6 7v6l-4 2v-8z" />
+    </svg>
+  );
+}
+function ArchiveIcon() {
+  return (
+    <svg className="chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M5 8v11h14V8M10 12h4" />
+    </svg>
+  );
+}
+
 // Matches the stroke-based hand-drawn style of the Empty*Icon set —
 // the error banner previously had no icon at all (#206).
 function ErrorIcon() {
@@ -6570,6 +6588,7 @@ function PipelineTab({
           aria-expanded={showFilters}
           onClick={() => setShowFilters((v) => !v)}
         >
+          <FilterIcon />
           {t("board.filterBtn")}
           {activeFilterCount ? ` · ${activeFilterCount}` : ""}
         </button>
@@ -6586,6 +6605,7 @@ function PipelineTab({
           className="board-bar-btn"
           onClick={() => setShowArchivedModal(true)}
         >
+          <ArchiveIcon />
           {t("board.archivedBtn")}
           {inactive.length ? ` · ${inactive.length}` : ""}
         </button>
