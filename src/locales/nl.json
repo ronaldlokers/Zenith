@@ -113,7 +113,8 @@
     "allRoles": "Alle rollen",
     "allCompanies": "Alle bedrijven",
     "allTags": "Alle labels",
-    "showArchived": "Toon gearchiveerd"
+    "showArchived": "Toon gearchiveerd",
+    "toggle": "Filters"
   },
   "empty": {
     "noCompanies": "Nog geen bedrijven. Voeg de bedrijven toe waar je op mikt — vacatures en contacten linken hiernaar.",
