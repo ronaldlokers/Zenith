@@ -158,7 +158,9 @@
     "regenerateLink": "Opnieuw genereren",
     "disableLink": "Uitschakelen",
     "calendarLink": "Agenda-abonneerlink",
-    "calendarLinkHint": "Voeg deze URL toe als geabonneerde agenda in Google/Outlook/Apple Calendar — vervolgacties, deadlines en gesprekken blijven automatisch synchroon. Alleen-lezen, wordt bijgewerkt telkens als je agenda-app ververst."
+    "calendarLinkHint": "Voeg deze URL toe als geabonneerde agenda in Google/Outlook/Apple Calendar — vervolgacties, deadlines en gesprekken blijven automatisch synchroon. Alleen-lezen, wordt bijgewerkt telkens als je agenda-app ververst.",
+    "regenerateLinkConfirm": "Deze link opnieuw genereren? De huidige link werkt direct niet meer voor iedereen met wie je hem hebt gedeeld.",
+    "disableLinkConfirm": "Deze link uitschakelen? De huidige link werkt niet meer voor iedereen met wie je hem hebt gedeeld."
   },
   "feed": {
     "pulledFrom": "Opgehaald van Adzuna en HN Who's Hiring, elke 6 uur.",
@@ -536,7 +538,9 @@
     "twoFactorReset": "2FA gereset voor {{email}} — ze kunnen nu inloggen met alleen hun wachtwoord.",
     "removeUser": "Verwijderen",
     "removeUserConfirm": "{{email}} verwijderen? Hun account en alle data worden permanent verwijderd.",
-    "removeUserError": "Gebruiker verwijderen mislukt."
+    "removeUserError": "Gebruiker verwijderen mislukt.",
+    "regenerateKeyConfirm": "API-sleutel opnieuw genereren? De huidige sleutel werkt direct niet meer en elke tool die hem gebruikt moet worden bijgewerkt.",
+    "revokeKeyConfirm": "API-sleutel uitschakelen? Elke tool die hem gebruikt werkt niet meer."
   },
   "companies": {
     "view": "Weergave",
