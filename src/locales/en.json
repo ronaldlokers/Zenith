@@ -601,5 +601,8 @@
     "title": "Add a job",
     "addOpen": "Add & open",
     "add": "Add"
+  },
+  "contacts": {
+    "view": "People view"
   }
 }
