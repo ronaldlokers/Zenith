@@ -51,7 +51,7 @@
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   width: 1.9rem;
   height: 1.9rem;
   cursor: pointer;
@@ -68,7 +68,7 @@
   min-width: 1.05rem;
   height: 1.05rem;
   padding: 0 0.2rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--danger);
   color: var(--danger-text);
   font-size: var(--text-chrome);
@@ -163,7 +163,7 @@
   font-size: var(--text-body);
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--ink);
 }
@@ -181,7 +181,7 @@
   max-width: 22rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem 1.4rem;
 }
 
@@ -201,7 +201,7 @@
   background: var(--accent);
   color: var(--accent-text);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.6rem 0.9rem;
   cursor: pointer;
   font-weight: 650;
@@ -252,7 +252,7 @@
   font-size: var(--text-body);
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   word-break: break-all;
 }
@@ -265,7 +265,7 @@
   margin: 0.4rem 0;
   padding: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   font-family: var(--mono);
   font-size: var(--text-body);
@@ -293,7 +293,7 @@
   gap: 0.6rem;
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .session-list li.current {
@@ -312,7 +312,7 @@
   font-size: var(--text-body);
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--ink);
   font-family: var(--mono);
@@ -326,7 +326,7 @@
 .settings-modal > button {
   padding: 0.5rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   cursor: pointer;
 }
@@ -338,7 +338,7 @@
   letter-spacing: var(--track-chrome);
   color: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.2rem 0.5rem;
   background: var(--surface);
 }
@@ -465,7 +465,7 @@
   flex: 1;
   padding: 0.55rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   cursor: pointer;
   font-family: var(--mono);
@@ -518,7 +518,7 @@
   gap: 0.5rem;
   background: color-mix(in srgb, var(--danger) 12%, var(--surface));
   border: 1px solid var(--danger);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.6rem 0.8rem;
   color: var(--danger);
 }
@@ -558,7 +558,7 @@
   height: 2.2rem;
   flex-shrink: 0;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
@@ -567,7 +567,7 @@
 
 .btn-secondary {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
@@ -651,7 +651,7 @@
   text-align: left;
   padding: 0.5rem 0.6rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink);
   font-size: var(--text-body);
@@ -695,7 +695,7 @@
   font-family: var(--mono);
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 0.15rem 0.45rem;
   min-width: 2.4rem;
   text-align: center;
@@ -705,7 +705,7 @@
   margin-top: 0.4rem;
   padding: 0.5rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   cursor: pointer;
 }
@@ -789,7 +789,7 @@
 .detail-actions button {
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   cursor: pointer;
 }
@@ -839,7 +839,7 @@
   min-width: 0;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   font-size: var(--text-body);
 }
@@ -899,7 +899,7 @@
   gap: 0.2rem;
   margin: 0.25rem 0 0.9rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   padding: 0.2rem;
   background: var(--surface);
 }
@@ -909,7 +909,7 @@
   background: transparent;
   color: var(--muted);
   padding: 0.3rem 0.9rem;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-size: var(--text-body);
   cursor: pointer;
 }
@@ -1032,7 +1032,7 @@
   display: inline-flex;
   align-items: stretch;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   overflow: hidden;
   background: var(--surface);
 }
@@ -1068,7 +1068,7 @@
 
 .view-save {
   border: 1px dashed var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
@@ -1085,14 +1085,14 @@
   margin-bottom: 0.75rem;
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
   border: 1px solid var(--accent);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: var(--text-body);
 }
 
 .bulk-bar select {
   padding: 0.3rem 0.45rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--ink);
   font-size: var(--text-meta);
@@ -1101,7 +1101,7 @@
 .bulk-bar button {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.3rem 0.55rem;
   font-size: var(--text-meta);
   cursor: pointer;
@@ -1110,7 +1110,7 @@
 .filters select {
   padding: 0.4rem 0.45rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   font-family: var(--mono);
   font-size: var(--text-chrome);
@@ -1137,7 +1137,7 @@
 .toolbar select {
   padding: 0.45rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   font-family: var(--mono);
   font-size: var(--text-meta);
@@ -1149,7 +1149,7 @@ button.primary {
   background: var(--accent);
   color: var(--accent-text);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.55rem 0.9rem;
   cursor: pointer;
   font-weight: 650;
@@ -1229,7 +1229,7 @@ button.danger {
 .company-logo {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   object-fit: contain;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -1255,14 +1255,14 @@ button.danger {
   padding: 1rem 0.5rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
 .company-tile .company-logo {
   width: 3rem;
   height: 3rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
 .company-logo-placeholder {
@@ -1327,7 +1327,7 @@ button.danger {
 .card-actions button {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.38rem 0.65rem;
   cursor: pointer;
   font-size: var(--text-body);
@@ -1473,7 +1473,7 @@ button.danger {
   font-size: var(--text-chrome);
   letter-spacing: var(--track-chrome);
   padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--sc) 16%, var(--surface));
   color: var(--sc);
 }
@@ -1485,7 +1485,7 @@ button.danger {
   font-size: var(--text-chrome);
   letter-spacing: var(--track-chrome);
   padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--track);
   color: var(--muted);
 }
@@ -1530,7 +1530,7 @@ button.danger {
   font-size: var(--text-chrome);
   letter-spacing: var(--track-chrome);
   padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--muted);
@@ -1580,7 +1580,7 @@ button.danger {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--ink);
   font-size: var(--text-body);
@@ -1613,7 +1613,7 @@ button.danger {
   letter-spacing: var(--track-chrome);
   color: var(--accent);
   border: 1px solid var(--accent);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.08rem 0.4rem;
   margin-left: 0.4rem;
   vertical-align: middle;
@@ -1674,7 +1674,7 @@ select.status {
   letter-spacing: var(--track-chrome);
   font-weight: 650;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 0.32rem 0.45rem;
   background: color-mix(in srgb, var(--sc) 14%, transparent);
   color: var(--sc);
@@ -1723,7 +1723,7 @@ select.status {
   gap: 0.8rem;
   background: var(--ink);
   color: var(--bg);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.55rem 0.9rem;
   font-size: var(--text-body);
   box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
@@ -1777,7 +1777,7 @@ select.status {
   gap: 0.6rem;
   padding: 1.25rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--surface);
 }
 
@@ -1787,7 +1787,7 @@ select.status {
 
 .skeleton-card {
   height: 3.6rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: linear-gradient(
     100deg,
@@ -1822,7 +1822,7 @@ select.status {
 .onboarding {
   padding: 0.9rem 1rem;
   margin-bottom: 1rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }
@@ -1883,7 +1883,7 @@ select.status {
   gap: 0.15rem;
   padding: 0.9rem 1rem;
   margin-bottom: 1.2rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--surface);
 }
@@ -1918,7 +1918,7 @@ select.status {
   gap: 0.6rem;
   padding: 0.7rem 0.9rem;
   margin-bottom: 1.2rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
 
@@ -1957,7 +1957,7 @@ select.status {
   gap: 0.6rem;
   padding: 0.7rem 0.9rem;
   margin-bottom: 1.2rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--surface);
 }
@@ -1990,7 +1990,7 @@ select.status {
   width: 3.5rem;
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
 }
 
@@ -2033,7 +2033,7 @@ select.status {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--faint);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.55rem 0.75rem;
   font-size: var(--text-body);
   cursor: pointer;
@@ -2073,7 +2073,7 @@ select.status {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--faint);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.55rem 0.75rem;
   font-size: var(--text-body);
   cursor: pointer;
@@ -2115,7 +2115,7 @@ select.status {
 .stat-callout {
   margin: 0;
   padding: 0.5rem 0.7rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   border: 1px solid var(--border);
   font-size: var(--text-body);
@@ -2253,7 +2253,7 @@ select.status {
   text-decoration: none;
   font-size: var(--text-body);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.3rem 0.6rem;
   background: var(--surface);
 }
@@ -2276,7 +2276,7 @@ select.status {
 .tl-add input {
   padding: 0.35rem 0.45rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   font-size: var(--text-body);
 }
@@ -2293,7 +2293,7 @@ select.status {
   min-width: 12rem;
   padding: 0.35rem 0.45rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   font-size: var(--text-body);
 }
@@ -2380,7 +2380,7 @@ select.status {
 .feed-settings {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1rem 1rem;
   margin-bottom: 0.75rem;
 }
@@ -2405,7 +2405,7 @@ select.status {
   flex: 1;
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   font-size: var(--text-body);
 }
@@ -2430,14 +2430,14 @@ select.status {
   flex: 1;
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   font-size: var(--text-body);
 }
 
 .settings-add button {
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .source-row {
@@ -2473,7 +2473,7 @@ select.status {
   gap: 0.3rem;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   padding: 0.2rem 0.3rem 0.2rem 0.6rem;
   font-size: var(--text-meta);
 }
@@ -2496,7 +2496,7 @@ select.status {
 .keyword-chips input {
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--bg);
   font-size: var(--text-meta);
   width: 8rem;
@@ -2561,7 +2561,7 @@ select.status {
   flex: 1;
   padding: 0.4rem 0.55rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   color: var(--ink);
   font-size: var(--text-body);
@@ -2582,7 +2582,7 @@ select.status {
   width: 100%;
   padding: 0.6rem 0.7rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   color: var(--ink);
   font-family: inherit;
@@ -2595,7 +2595,7 @@ select.status {
   width: 100%;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   color: var(--ink);
   font-family: inherit;
@@ -2633,7 +2633,7 @@ select.status {
   min-width: 8rem;
   padding: 0.35rem 0.45rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   font-size: var(--text-body);
 }
@@ -2642,7 +2642,7 @@ select.status {
   display: inline-flex;
   align-items: center;
   padding: 0.35rem 0.7rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--accent);
   color: var(--accent-text);
   font-size: var(--text-body);
@@ -2687,7 +2687,7 @@ select.status {
   letter-spacing: var(--track-chrome);
   color: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.05rem 0.35rem;
 }
 
@@ -2749,7 +2749,7 @@ select.status {
 .board-group-toggle {
   display: inline-flex;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -2776,7 +2776,7 @@ select.status {
 
 .lane {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   overflow: hidden;
 }
@@ -2934,7 +2934,7 @@ summary.bcol-head::after {
 .bcol.drag-over {
   outline: 2px dashed var(--accent);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .bcard strong {
@@ -2967,7 +2967,7 @@ summary.bcol-head::after {
 
 .bempty {
   border: 1px dashed var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.5rem 0.75rem;
   font-size: var(--text-meta);
   color: var(--faint);
@@ -3009,7 +3009,7 @@ summary.bcol-head::after {
   grid-template-columns: 1fr 1fr;
   gap: 0.7rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.8rem 0.85rem;
 }
 
@@ -3034,7 +3034,7 @@ summary.bcol-head::after {
 .form textarea {
   padding: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   width: 100%;
   font-family: var(--sans);
@@ -3053,7 +3053,7 @@ summary.bcol-head::after {
   border: 1px solid var(--accent);
   color: var(--accent);
   background: var(--surface);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--text-body);
   white-space: nowrap;
@@ -3072,7 +3072,7 @@ summary.bcol-head::after {
 .form-actions button {
   padding: 0.55rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   cursor: pointer;
 }
@@ -3135,7 +3135,7 @@ summary.bcol-head::after {
   width: 100%;
   aspect-ratio: 210 / 297;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
 }
 
@@ -3161,7 +3161,7 @@ summary.bcol-head::after {
     display: block;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     padding: 0.9rem 1rem;
     position: sticky;
     top: 4.5rem;
@@ -3270,7 +3270,7 @@ summary.bcol-head::after {
   display: block;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.9rem 1rem;
 }
 
@@ -3322,7 +3322,7 @@ summary.bcol-head::after {
   gap: 0.35rem;
   padding: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg);
   color: var(--ink);
   font-size: var(--text-meta);
@@ -3344,7 +3344,7 @@ summary.bcol-head::after {
   padding: 0.25rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .cv-template-thumb-two-col {
@@ -3378,7 +3378,7 @@ summary.bcol-head::after {
 .cv-section {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 0.9rem;
 }
 
@@ -3393,7 +3393,7 @@ summary.bcol-head::after {
 
 .cv-item {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 0.65rem 0.8rem;
 }
 
@@ -3413,7 +3413,7 @@ summary.bcol-head::after {
 .cv-item-actions button {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.3rem 0.55rem;
   font-size: var(--text-meta);
   cursor: pointer;
