@@ -132,6 +132,43 @@ function useFocusTrap<T extends HTMLElement>(active = true) {
   return ref;
 }
 
+// Shared dialog primitive (#314) — backdrop, focus trap, Escape, and
+// aria-modal in one place instead of re-implemented per modal.
+function Dialog({
+  label,
+  onClose,
+  className,
+  children,
+}: {
+  label: string;
+  onClose: () => void;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const ref = useFocusTrap<HTMLDivElement>();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        ref={ref}
+        className={`modal${className ? ` ${className}` : ""}`}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // Terminal error state for a tab whose data fetch failed (#261). Without
 // it, a failed load left the "Loading…" placeholder up forever while the
 // only signal was the easy-to-miss top banner.
@@ -493,17 +530,8 @@ const SHORTCUT_KEYS: [string, string][] = [
 
 function ShortcutHelp({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
-  const dialogRef = useFocusTrap<HTMLDivElement>();
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className="modal shortcut-help"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("shortcuts.title")}
-      >
+    <Dialog label={t("shortcuts.title")} onClose={onClose} className="shortcut-help">
         <h2>{t("shortcuts.title")}</h2>
         <p className="muted small">{t("shortcuts.subtitle")}</p>
         <ul>
@@ -515,8 +543,7 @@ function ShortcutHelp({ onClose }: { onClose: () => void }) {
           ))}
         </ul>
         <button onClick={onClose}>{t("common.close")}</button>
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -599,7 +626,6 @@ function CommandPalette({
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dialogRef = useFocusTrap<HTMLDivElement>();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -671,15 +697,7 @@ function CommandPalette({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className="modal command-palette"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("palette.title")}
-      >
+    <Dialog label={t("palette.title")} onClose={onClose} className="command-palette">
         <input
           ref={inputRef}
           type="search"
@@ -732,8 +750,7 @@ function CommandPalette({
             )}
           </div>
         )}
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -6023,13 +6040,8 @@ function ApplicationsTab({
       </div>
 
       {namingView && (
-        <div className="modal-backdrop" onClick={() => setNamingView(false)}>
+        <Dialog label={t("savedViews.save")} onClose={() => setNamingView(false)}>
           <form
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("savedViews.save")}
-            onClick={(e) => e.stopPropagation()}
             onSubmit={(e) => {
               e.preventDefault();
               saveCurrentView();
@@ -6052,7 +6064,7 @@ function ApplicationsTab({
               </button>
             </div>
           </form>
-        </div>
+        </Dialog>
       )}
 
       {selected.size > 0 && (
@@ -7035,15 +7047,6 @@ function CompanyDetailModal({
   const [editing, setEditing] = useState(false);
   const [researching, setResearching] = useState(false);
   const c = company;
-  const dialogRef = useFocusTrap<HTMLDivElement>();
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
 
   const research = () => {
     setResearching(true);
@@ -7058,15 +7061,7 @@ function CompanyDetailModal({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className="modal detail-modal"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={c.name}
-      >
+    <Dialog label={c.name} onClose={onClose} className="detail-modal">
         <div className="detail-head">
           <div>
             <h2>
@@ -7144,8 +7139,7 @@ function CompanyDetailModal({
             </div>
           </>
         )}
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
@@ -7434,28 +7428,11 @@ function ContactDetailModal({
   onDelete: (resource: string, id: number, name: string) => void;
 }) {
   const { t } = useTranslation();
-  const dialogRef = useFocusTrap<HTMLDivElement>();
   const [editing, setEditing] = useState(false);
   const c = contact;
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className="modal detail-modal"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={c.name}
-      >
+    <Dialog label={c.name} onClose={onClose} className="detail-modal">
         <div className="detail-head">
           <div>
             <h2>{c.name}</h2>
@@ -7540,8 +7517,7 @@ function ContactDetailModal({
             <Timeline resource="contacts" targetId={c.id} onError={onError} />
           </>
         )}
-      </div>
-    </div>
+    </Dialog>
   );
 }
 
