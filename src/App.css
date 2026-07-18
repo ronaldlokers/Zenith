@@ -211,7 +211,8 @@
 .login-error {
   color: var(--danger);
   font-size: var(--text-body);
-  margin: -0.4rem 0 0.8rem;
+  /* Was a -0.4rem claw-back of the preceding field's margin (#314) */
+  margin: 0 0 0.8rem;
 }
 
 .login-hint {
@@ -3468,4 +3469,159 @@ summary.bcol-head::after {
     box-shadow: none;
     padding: 0;
   }
+}
+
+/* ============================================================
+   Control normalization layer (#314) — one recipe per control
+   family, enforced late in the cascade so the dozen historical
+   per-context variants above collapse without markup changes.
+   ============================================================ */
+
+/* Secondary buttons — default size. One metric set, one fill,
+   every one with a hover state. */
+.btn-secondary,
+.card-actions button,
+.detail-actions button,
+.settings-modal > button,
+.shortcut-help button,
+.form-actions button,
+.share-actions button {
+  padding: 0.4rem 0.8rem;
+  font-size: var(--text-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 34px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover,
+.card-actions button:hover,
+.detail-actions button:hover,
+.settings-modal > button:hover,
+.shortcut-help button:hover,
+.form-actions button:hover,
+.share-actions button:hover {
+  background: var(--bg);
+}
+
+/* Secondary buttons — compact, for dense inline rows. */
+.bulk-bar button,
+.admin-user-actions button,
+.cv-item-actions button,
+.nextup-actions button {
+  padding: 0.25rem 0.6rem;
+  font-size: var(--text-meta);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.bulk-bar button:hover,
+.admin-user-actions button:hover,
+.cv-item-actions button:hover,
+.nextup-actions button:hover {
+  background: var(--bg);
+}
+
+/* Primary buttons that weren't button.primary: same metrics + the same
+   hover darken as the canonical one. */
+.login-card button[type="submit"],
+.upload-btn {
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-weight: 650;
+  font-size: var(--text-body);
+}
+
+.login-card button[type="submit"]:hover,
+.upload-btn:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+/* Danger stays danger; .form-actions/.card-actions danger buttons keep
+   their red identity over the neutral normalization above. */
+.card-actions button.danger,
+.form-actions button.danger,
+.detail-actions button.danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+}
+
+/* Quiet destructive icons: one treatment — muted at rest, danger on
+   hover/focus (previously three different resting colors). */
+.tl-del,
+.view-del,
+.prep-checklist li button {
+  color: var(--muted);
+}
+
+.tl-del:hover,
+.tl-del:focus-visible,
+.view-del:hover,
+.view-del:focus-visible,
+.prep-checklist li button:hover,
+.prep-checklist li button:focus-visible {
+  color: var(--danger);
+}
+
+/* Inputs: one metric recipe (fill stays context-dependent — --bg inside
+   surface panels, --surface on the page ground). */
+.form input,
+.form select,
+.form textarea,
+.settings-field input,
+.settings-field select,
+.settings-add input,
+.prep-add input,
+.tl-add input,
+.tl-add select,
+.tl-retro input,
+.docs-add input,
+.weekly-goal-edit input,
+.toolbar .search {
+  font-size: var(--text-body);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-md);
+}
+
+/* Chips: one metric set so co-occurring chips baseline-align. */
+.badge,
+.pill,
+.outreach-pill,
+.tag-chip,
+.doc-label,
+.open-count {
+  font-size: var(--text-chrome);
+  letter-spacing: var(--track-chrome);
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Toolbar rows: one control height on every viewport (previously five
+   different heights in a single flex row; a mobile-only patch existed). */
+.toolbar input,
+.toolbar select,
+.toolbar button {
+  min-height: 36px;
+}
+
+/* Segmented controls: one shape — the subnav pill. */
+.board-group-toggle {
+  border-radius: var(--radius-full);
+  padding: 0.2rem;
+}
+
+.board-group-toggle button {
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.9rem;
+  font-size: var(--text-body);
+}
+
+/* WinsJournal finally gets its own rhythm instead of riding on .tl-add. */
+.wins-journal {
+  margin: 0 0 1.2rem;
 }
