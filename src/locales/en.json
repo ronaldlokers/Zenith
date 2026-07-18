@@ -326,7 +326,9 @@
     "followUpFallback": "follow up"
   },
   "nextUp": {
-    "title": "Next up"
+    "title": "Next up",
+    "done": "Done",
+    "snooze": "Snooze 3d"
   },
   "company": {
     "notResearched": "not researched",

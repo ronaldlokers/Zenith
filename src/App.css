@@ -870,6 +870,27 @@
   flex-shrink: 0;
 }
 
+/* Inline follow-up actions in the Next Up panel (#285) */
+.nextup-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.nextup-actions button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.nextup-actions button:hover {
+  color: var(--ink);
+}
+
 /* Sub-navigation toggle within a merged tab (Network = Companies/People, #285) */
 .subnav {
   display: inline-flex;

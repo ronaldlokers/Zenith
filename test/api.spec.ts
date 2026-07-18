@@ -284,6 +284,19 @@ describe("applications", () => {
     ]);
   });
 
+  it("updates just the follow-up (done / snooze) without a status change", async () => {
+    const app = await seedApplication({ next_action_at: "2020-01-01" });
+    const cleared = (await (
+      await authedFetch(`${BASE}/api/applications/${app.id}/follow-up`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ next_action: null, next_action_at: null }),
+      })
+    ).json()) as { next_action_at: string | null; status: string };
+    expect(cleared.next_action_at).toBeNull();
+    expect(cleared.status).toBe("interested"); // status untouched
+  });
+
   it("clears the pending follow-up when status changes", async () => {
     const app = await seedApplication({
       next_action: "Nudge recruiter",

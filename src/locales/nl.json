@@ -326,7 +326,9 @@
     "followUpFallback": "opvolgen"
   },
   "nextUp": {
-    "title": "Binnenkort"
+    "title": "Binnenkort",
+    "done": "Klaar",
+    "snooze": "3d uitstellen"
   },
   "company": {
     "notResearched": "niet onderzocht",
