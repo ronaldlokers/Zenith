@@ -10,7 +10,8 @@
     "companies": "Bedrijven",
     "people": "Contacten",
     "cv": "CV",
-    "network": "Netwerk"
+    "network": "Netwerk",
+    "pipeline": "Pijplijn"
   },
   "header": {
     "openCount_one": "{{count}} open",
