@@ -20,6 +20,8 @@
   --accent-text: #ffffff;
   --accent-soft: #d9ebe8;
   --accent-ink: #0b5e56;
+  --hover: color-mix(in srgb, var(--ink) 7%, var(--surface));
+  --empty-stroke: color-mix(in srgb, var(--ink) 55%, var(--surface));
   --danger: #b91c1c;
 
   /* Re-tuned for #201: passes WCAG contrast (≥4.5:1 on --surface) and
@@ -39,6 +41,7 @@
      deliberately its own color family (blue → red) so it never reads as
      a 6th stage color. */
   --heat-quiet: #ea580c;
+  --heat-quiet-text: #a04508;
 
   /* Design-review fixes (#314): accent readable on the inverted toast
      (--ink background); a per-theme modal scrim; and a non-stage event
@@ -113,6 +116,7 @@
     --st-dead: #6d7684;
 
       --heat-quiet: #e07b39;
+      --heat-quiet-text: #f0955a;
   
     /* Dark: the toast surface is light (--ink), so it needs the
        light-surface accent; scrim darker to register on a dark ground. */
@@ -160,6 +164,7 @@
   --st-dead: #64748b;
 
   --heat-quiet: #fb923c;
+  --heat-quiet-text: #fb9f5e;
 
   --accent-on-ink: #0f766e;
   --scrim: rgba(0, 0, 0, 0.7);
