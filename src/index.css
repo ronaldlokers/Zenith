@@ -8,8 +8,12 @@
   --bg: #f4f5f7;
   --surface: #ffffff;
   --ink: #191d23;
-  --muted: #6d7684;
-  --faint: #79828e;
+  /* --muted/--faint darkened to clear WCAG AA (4.5:1) on --bg for the small
+     secondary text they carry (#285 review). --danger-text is the badge
+     text colour, flipped per-theme so it stays legible on --danger. */
+  --muted: #5a626e;
+  --faint: #656d79;
+  --danger-text: #ffffff;
   --border: #e2e5e9;
   --track: #e8eaee;
   --accent: #0f766e;
@@ -69,7 +73,8 @@
     --surface: #171b22;
     --ink: #e8ebef;
     --muted: #8b95a5;
-    --faint: #6d7684;
+    --faint: #7c8592;
+    --danger-text: #0a100e;
     --border: #232935;
     --track: #262d3a;
     --accent: #2dd4bf;
@@ -109,7 +114,8 @@
   --surface: #0d0f12;
   --ink: #e2e8f0;
   --muted: #7b8794;
-  --faint: #4b5563;
+  --faint: #727d8a;
+  --danger-text: #04141a;
   --border: #1f2937;
   --track: #161b22;
   --accent: #22d3ee;

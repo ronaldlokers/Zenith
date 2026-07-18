@@ -70,7 +70,7 @@
   padding: 0 0.2rem;
   border-radius: 999px;
   background: var(--danger);
-  color: #fff;
+  color: var(--danger-text);
   font-size: 0.6rem;
   font-weight: 700;
   display: flex;
@@ -1058,6 +1058,12 @@
   .filters select {
     color: var(--muted);
   }
+}
+
+/* Control-room is a data-theme override, so prefers-color-scheme dark rules
+   never reach it — repeat the dark-only patches for it explicitly (#285). */
+:root[data-theme="control-room"] .filters select {
+  color: var(--muted);
 }
 
 .toolbar select {
@@ -2787,6 +2793,13 @@ select.status {
   .stat-dot {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
   }
+}
+
+/* Same edge ring for control-room (a data-theme, not caught by the media
+   query above) — its near-black surface needs it just as much (#285). */
+:root[data-theme="control-room"] .bcol-head::before,
+:root[data-theme="control-room"] .stat-dot {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 /* Toggle affordance (chevron, pointer cursor) only applies where the
