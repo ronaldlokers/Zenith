@@ -18,6 +18,8 @@
   --track: #e8eaee;
   --accent: #0f766e;
   --accent-text: #ffffff;
+  --accent-soft: #d9ebe8;
+  --accent-ink: #0b5e56;
   --danger: #b91c1c;
 
   /* Re-tuned for #201: passes WCAG contrast (≥4.5:1 on --surface) and
@@ -99,6 +101,8 @@
     --track: #262d3a;
     --accent: #2dd4bf;
     --accent-text: #0c1210;
+    --accent-soft: #12362f;
+    --accent-ink: #7fe6d4;
     --danger: #f87171;
 
     --st-interested: #5aa3e0;
@@ -144,6 +148,8 @@
   --track: #161b22;
   --accent: #22d3ee;
   --accent-text: #04141a;
+  --accent-soft: #0b3038;
+  --accent-ink: #7ce0f2;
   --danger: #f87171;
 
   --st-interested: #a8b9d6;

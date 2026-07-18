@@ -3856,3 +3856,27 @@ summary.bcol-head::after {
     margin-top: 0;
   }
 }
+
+/* Cascade repairs (#314 round 3) — must stay after the control-normalization
+   layer: its generic hover and min-heights win source-order ties against
+   earlier rules regardless of media queries. Nothing appends below this. */
+.form-actions button.primary:hover,
+.card-actions button.primary:hover,
+.detail-actions button.primary:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+@media (max-width: 600px) {
+  /* 44px touch targets on card actions — the status select sits next to
+     Delete; a small target invites mis-taps. */
+  .card-actions button,
+  .card-actions select.status {
+    min-height: 44px;
+  }
+
+  .toolbar input,
+  .toolbar select,
+  .toolbar button {
+    min-height: 40px;
+  }
+}

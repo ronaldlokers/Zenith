@@ -561,7 +561,8 @@
     "savedSettings": "Saved {{source}} settings",
     "feedFound": "Found {{inserted}} new of {{seen}} checked",
     "addedToJobs": "Added \"{{title}}\" to Jobs",
-    "researched": "Researched {{name}}"
+    "researched": "Researched {{name}}",
+    "open": "Open"
   },
   "confirm": {
     "deleteDocument": "Delete \"{{name}}\"?",
