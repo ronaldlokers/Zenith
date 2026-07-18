@@ -35,7 +35,8 @@
     "researching": "Onderzoeken…",
     "log": "Log",
     "fetch": "Ophalen",
-    "fetching": "Ophalen…"
+    "fetching": "Ophalen…",
+    "add": "Toevoegen"
   },
   "savedViews": {
     "namePrompt": "Naam voor deze weergave",
@@ -124,18 +125,17 @@
     "boardEmpty": "leeg",
     "boardKeepPushing": "blijf doorzetten",
     "noFollowUps": "Geen vervolgacties gepland.",
-    "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op \"Nu controleren\"."
+    "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op “Nu controleren”."
   },
   "shortcuts": {
     "title": "Sneltoetsen",
-    "subtitle": "Alleen desktop, tab Vacatures.",
-    "focusSearch": "Focus op zoeken",
-    "addJob": "Nieuwe vacature toevoegen",
-    "moveFocus": "Focus omhoog / omlaag in de lijst",
-    "setStatus": "Status van de gefocuste kaart instellen (interested…ghosted)",
+    "subtitle": "Desktop.",
+    "focusSearch": "Focus op pipeline-zoeken",
+    "addJob": "Vacature toevoegen (snel)",
     "closeHelp": "Sluit een formulier of deze hulp",
-    "toggleHelp": "Deze hulp aan/uit",
-    "feedTriage": "Feed: toevoegen / negeren"
+    "feedTriage": "Feed: toevoegen / negeren",
+    "palette": "Open het commandopalet",
+    "feedMove": "Feed: focus omhoog / omlaag"
   },
   "settings": {
     "title": "Instellingen",
@@ -237,7 +237,10 @@
   "palette": {
     "title": "Ga naar…",
     "placeholder": "Zoek vacatures, bedrijven, mensen… ({{shortcut}})",
-    "noResults": "Geen resultaten."
+    "noResults": "Geen resultaten.",
+    "actions": "Acties",
+    "addJob": "Vacature toevoegen",
+    "goSettings": "Ga naar instellingen"
   },
   "outreach": {
     "status": "Outreach-status",
@@ -292,7 +295,7 @@
     "jobDescription": "Vacaturetekst",
     "jobDescriptionCaptured": "vastgelegd op {{date}}",
     "jobDescriptionPlaceholder": "Plak hier de vacaturetekst — blijft bewaard, ook als de vacature wordt aangepast of verwijderd.",
-    "possibleDuplicate": "Je hebt al een open sollicitatie bij dit bedrijf: \"{{title}}\". Opslaan voegt een aparte toe.",
+    "possibleDuplicate": "Je hebt al een open sollicitatie bij dit bedrijf: “{{title}}”. Opslaan voegt een aparte toe.",
     "archive": "Archiveren",
     "unarchive": "Herstellen",
     "keywordMatch": "Trefwoorden-check",
@@ -482,7 +485,7 @@
     "resetDemoSuccess": "Demo-data gereset.",
     "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?",
     "apiKey": "Persoonlijke API-sleutel",
-    "apiKeyHint": "Alleen-lezen toegang tot je sollicitaties via GET /api/v1/applications — stuur mee als \"Authorization: Bearer <sleutel>\".",
+    "apiKeyHint": "Alleen-lezen toegang tot je sollicitaties via GET /api/v1/applications — stuur mee als “Authorization: Bearer <sleutel>”.",
     "apiKeyGenerate": "Sleutel genereren",
     "webhooks": "Webhooks",
     "webhooksHint": "Ontvang een ondertekende POST zodra de status van een sollicitatie verandert.",
@@ -508,7 +511,7 @@
     "sessions": "Actieve sessies",
     "unknownDevice": "Onbekend apparaat",
     "thisDevice": "dit apparaat",
-    "revoke": "Uitloggen",
+    "revoke": "Intrekken",
     "revokeOthers": "Log andere apparaten uit",
     "changePassword": "Wachtwoord wijzigen",
     "currentPassword": "Huidig wachtwoord",
@@ -543,7 +546,8 @@
     "byStage": "Op status",
     "byCompany": "Op bedrijf",
     "noCompany": "Geen bedrijf",
-    "closedCount": "Gesloten · {{count}}"
+    "closedCount": "Gesloten · {{count}}",
+    "updatedAge": "gew. {{age}}"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
@@ -554,18 +558,18 @@
     "interviewingCount_one": "{{count}} in gesprek of aanbod",
     "interviewingCount_other": "{{count}} in gesprek of aanbod",
     "noActivity": "Nog niets — voeg je eerste vacature toe om te beginnen.",
-    "viewAllJobs": "Bekijk alle vacatures",
+    "viewAllJobs": "Bekijk de pipeline",
     "recentlyUpdated": "Recent bijgewerkt",
     "showActivity": "Alle activiteit tonen",
     "hideActivity": "Activiteit verbergen"
   },
   "toast": {
-    "deleted": "\"{{name}}\" verwijderd",
+    "deleted": "“{{name}}” verwijderd",
     "undo": "Ongedaan maken",
     "roleTypeAdded": "Functietype toegevoegd",
     "savedSettings": "{{source}}-instellingen opgeslagen",
     "feedFound": "{{inserted}} nieuw van {{seen}} gecontroleerd",
-    "addedToJobs": "\"{{title}}\" toegevoegd aan Jobs",
+    "addedToJobs": "“{{title}}” toegevoegd aan de pipeline",
     "researched": "{{name}} onderzocht",
     "open": "Openen",
     "statusChanged": "Verplaatst naar {{stage}}",
@@ -573,8 +577,8 @@
     "setFollowUp": "Follow-up instellen"
   },
   "confirm": {
-    "deleteDocument": "\"{{name}}\" verwijderen?",
-    "deleteRoleType": "Functietype \"{{label}}\" verwijderen? Feed-trefwoorden ervoor gaan mee."
+    "deleteDocument": "“{{name}}” verwijderen?",
+    "deleteRoleType": "Functietype “{{label}}” verwijderen? Feed-trefwoorden ervoor gaan mee."
   },
   "aria": {
     "moveToStage": "{{title}} naar fase verplaatsen",
@@ -601,7 +605,7 @@
   "attention": {
     "overdue": "te laat",
     "overdueHint": "De opvolgdatum is verstreken — onderneem actie of plan opnieuw.",
-    "stale": "verlopen?",
+    "stale": "verlopen",
     "staleHint": "De vacature is mogelijk weg — de URL reageert niet meer als een actieve vacature.",
     "quiet": "stilgevallen",
     "quietHint": "Al een tijd geen activiteit van hun kant — overweeg een reminder."
