@@ -122,7 +122,7 @@
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
   cursor: pointer;
 }
 
@@ -349,7 +349,7 @@
    is a trend over time, not a distribution, so it kept its bars and
    still needs these base rules). */
 .histo {
-  padding: 0.25rem 0.1rem 0.6rem;
+  padding: 0.25rem 0 0.6rem;
 }
 
 .histo .hrow {
@@ -396,7 +396,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.25rem 0.1rem 0.6rem;
+  padding: 0.25rem 0 0.6rem;
 }
 
 .ring-total {
@@ -799,9 +799,9 @@
   font-family: var(--mono);
   font-size: var(--text-chrome);
   text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
+  letter-spacing: var(--track-eyebrow);
   color: var(--muted);
-  margin: 1rem 0 0.3rem;
+  margin: 1rem 0 0.5rem;
 }
 
 /* Contact relationship map (#133) */
@@ -1247,7 +1247,10 @@ button.danger {
   gap: 0.75rem;
 }
 
+/* Elevation rule (#314): clickable cards float (--shadow-1), structural
+   panels sit flat. */
 .company-tile {
+  box-shadow: var(--shadow-1);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1708,7 +1711,7 @@ select.status {
     color: var(--accent-text);
     font-size: 1.8rem;
     line-height: 1;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-2);
     cursor: pointer;
   }
 }
@@ -1727,7 +1730,7 @@ select.status {
   border-radius: var(--radius-md);
   padding: 0.55rem 0.9rem;
   font-size: var(--text-body);
-  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-2);
   max-width: min(92vw, 26rem);
 }
 
@@ -2007,9 +2010,9 @@ select.status {
   font-family: var(--mono);
   font-size: var(--text-chrome);
   text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
+  letter-spacing: var(--track-eyebrow);
   color: var(--muted);
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.5rem;
 }
 
 .agenda-date.today {
@@ -2137,7 +2140,7 @@ select.status {
   display: flex;
   align-items: baseline;
   gap: 0.6rem;
-  padding: 0.35rem 0.1rem;
+  padding: 0.35rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
   font-size: var(--text-body);
 }
@@ -2209,7 +2212,7 @@ select.status {
   letter-spacing: var(--track-chrome);
   color: var(--muted);
   padding: 0.3rem 0.6rem 0.4rem 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
   white-space: nowrap;
 }
 
@@ -2851,7 +2854,7 @@ select.status {
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--sc);
-  padding: 0.3rem 0.1rem 0.45rem;
+  padding: 0.3rem 0.9rem 0.45rem;
   list-style: none;
 }
 
@@ -3173,9 +3176,9 @@ summary.bcol-head::after {
   font-family: var(--mono);
   font-size: var(--text-chrome);
   text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
+  letter-spacing: var(--track-eyebrow);
   color: var(--muted);
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.5rem;
 }
 
 .side-list {
