@@ -3136,7 +3136,153 @@ summary.bcol-head::after {
   aspect-ratio: 210 / 297;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--bg);
+  background: var(--surface-sunken, var(--bg));
+  overflow: auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Styled HTML CV document (#386) — a truthful, themable preview of the export
+   (white page, dark ink) that replaces the embedded PDF viewer. Type is scaled
+   down to the small preview column. */
+.cv-doc {
+  min-height: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  color: #1b1d2e;
+  font-family: var(--sans);
+  font-size: 8.5px;
+  line-height: 1.42;
+  padding: 16px 18px;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(20, 23, 58, 0.12);
+}
+
+.cv-doc-name {
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.cv-doc-head {
+  margin-bottom: 9px;
+}
+
+.cv-doc-contact,
+.cv-doc-links {
+  margin: 0 0 2px;
+  color: #4a4d63;
+  font-size: 8px;
+}
+
+.cv-doc-summary {
+  margin: 0 0 9px;
+}
+
+.cv-doc-sec {
+  margin-bottom: 9px;
+}
+
+.cv-doc-sec > h2 {
+  margin: 0 0 4px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #d8d5cc;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #14173a;
+}
+
+.cv-doc-item {
+  margin-bottom: 6px;
+}
+
+.cv-doc-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cv-doc-item-title {
+  font-weight: 600;
+}
+
+.cv-doc-item-range {
+  flex: 0 0 auto;
+  color: #6b675e;
+  font-size: 7.5px;
+  white-space: nowrap;
+}
+
+.cv-doc-item-desc {
+  margin: 1px 0 0;
+}
+
+.cv-doc-item-skills {
+  margin: 1px 0 0;
+  color: #6b675e;
+  font-style: italic;
+}
+
+.cv-doc-langs {
+  margin: 0;
+}
+
+/* Two-column: a neutral sidebar (contact · skills · languages) beside the
+   main column (summary · work · education), mirroring the two-column PDF. */
+.cv-doc-2col {
+  display: grid;
+  grid-template-columns: 33% 1fr;
+  padding: 0;
+  overflow: hidden;
+}
+
+.cv-doc-2col .cv-doc-aside {
+  background: #f2f0ea;
+  padding: 16px 12px;
+}
+
+.cv-doc-2col .cv-doc-aside .cv-doc-name {
+  font-size: 13px;
+}
+
+.cv-doc-2col .cv-doc-aside-links {
+  margin-bottom: 6px;
+}
+
+.cv-doc-2col .cv-doc-aside-links p {
+  margin: 0 0 1px;
+  color: #4a4d63;
+  font-size: 8px;
+  word-break: break-word;
+}
+
+.cv-doc-2col .cv-doc-aside-sec {
+  margin-top: 8px;
+}
+
+.cv-doc-2col .cv-doc-aside-sec h3 {
+  margin: 0 0 3px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #d8d5cc;
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #14173a;
+}
+
+.cv-doc-2col .cv-doc-aside-sec p {
+  margin: 0;
+  color: #4a4d63;
+  font-size: 8px;
+}
+
+.cv-doc-2col .cv-doc-main {
+  padding: 16px 14px;
 }
 
 @media (min-width: 1100px) {
