@@ -98,155 +98,19 @@ import {
   totalCompBreakdown,
 } from "./format";
 import type { BoardSort, Urgency } from "./format";
+import { ConfirmHost, Dialog, LoadFailed, LoadingSkeleton } from "./ui";
+import {
+  requestConfirm,
+  rowActivate,
+  useFocusTrap,
+  useSubmitGuard,
+} from "./hooks";
 
 // Shared remove-icon glyph (#118) — a plain "×" character renders at
 // inconsistent visual weight across browsers/fonts; an inline SVG at a
 // fixed stroke width looks the same everywhere.
 // Loading skeleton (#122) — replaces the plain "Loading…" text with
 // shimmering placeholder bars shaped like the app's own .card rows.
-function LoadingSkeleton() {
-  return (
-    <div className="skeleton-list" aria-hidden="true">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="skeleton-card" />
-      ))}
-    </div>
-  );
-}
-
-// Guards an async submit against double-fire (#261) and exposes a busy
-// flag for disabling the button. The wrapped handler already returns a
-// promise (the api chain), so we just await it and reset when it settles.
-function useSubmitGuard<T>(onSubmit: (value: T) => void | Promise<void>) {
-  const [submitting, setSubmitting] = useState(false);
-  const submit = async (value: T) => {
-    if (submitting) return;
-    setSubmitting(true);
-    try {
-      await onSubmit(value);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  return [submitting, submit] as const;
-}
-
-// Makes a non-button clickable row keyboard-operable (#261): announces as
-// a button and fires the same action on Enter/Space. Spread onto the
-// element that carries the row's onClick.
-function rowActivate(onActivate: () => void) {
-  return {
-    role: "button",
-    tabIndex: 0,
-    onClick: onActivate,
-    onKeyDown: (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        onActivate();
-      }
-    },
-  } as const;
-}
-
-// Dialog focus management (#261) — moves focus into the dialog on open and
-// traps Tab within it, so keyboard/AT users can't tab out to the page
-// behind the modal. Attach the returned ref to the dialog element.
-function useFocusTrap<T extends HTMLElement>(active = true) {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    if (!active) return;
-    const node = ref.current;
-    if (!node) return;
-    const selector =
-      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
-    const focusable = () =>
-      Array.from(node.querySelectorAll<HTMLElement>(selector)).filter(
-        (el) => el.offsetParent !== null,
-      );
-    // Remember where focus came from — closing a dialog must return the
-    // keyboard user to their place, not drop them at <body> (#346).
-    const opener =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    focusable()[0]?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-      const els = focusable();
-      if (els.length === 0) return;
-      const first = els[0];
-      const last = els[els.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    node.addEventListener("keydown", onKey);
-    return () => {
-      node.removeEventListener("keydown", onKey);
-      if (opener && document.contains(opener)) opener.focus();
-    };
-  }, [active]);
-  return ref;
-}
-
-// Shared dialog primitive (#314) — backdrop, focus trap, Escape, and
-// aria-modal in one place instead of re-implemented per modal.
-function Dialog({
-  label,
-  onClose,
-  className,
-  children,
-}: {
-  label: string;
-  onClose: () => void;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  const ref = useFocusTrap<HTMLDivElement>();
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        ref={ref}
-        className={`modal${className ? ` ${className}` : ""}`}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={label}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// Terminal error state for a tab whose data fetch failed (#261). Without
-// it, a failed load left the "Loading…" placeholder up forever while the
-// only signal was the easy-to-miss top banner.
-function LoadFailed({ onRetry }: { onRetry?: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <div className="load-error" role="alert">
-      <p className="muted small">{t("common.loadError")}</p>
-      {onRetry && (
-        <button type="button" onClick={onRetry}>
-          {t("common.retry")}
-        </button>
-      )}
-    </div>
-  );
-}
-
 type Tab =
   | "overview"
   | "applications"
@@ -296,75 +160,6 @@ function parsePath(pathname: string): { tab: Tab; id: number | null } {
   const tab = (match && PATH_TABS[match[1]]) || "overview";
   const id = match && match[2] ? Number(match[2]) : null;
   return { tab, id };
-}
-
-// One styled confirmation dialog for the whole app (#314 round 3) —
-// replaces the browser's window.confirm, which ignored the design system,
-// the themes, and the focus-trap conventions. requestConfirm resolves like
-// confirm() does, so call sites stay a one-line guard. The module-level
-// indirection exists so deeply nested settings sections don't all need a
-// prop threaded through; ConfirmHost (rendered once at the App root)
-// installs the real implementation.
-let requestConfirm: (message: string) => Promise<boolean> = (message) =>
-  Promise.resolve(window.confirm(message));
-
-function ConfirmHost() {
-  const { t } = useTranslation();
-  const [req, setReq] = useState<{
-    message: string;
-    resolve: (ok: boolean) => void;
-  } | null>(null);
-  useEffect(() => {
-    requestConfirm = (message) =>
-      new Promise((resolve) =>
-        setReq((prev) => {
-          // A second confirm may fire while one is pending (#346); the
-          // replaced caller must resolve (as "cancelled"), not hang forever.
-          prev?.resolve(false);
-          return { message, resolve };
-        }),
-      );
-    return () => {
-      requestConfirm = (message) => Promise.resolve(window.confirm(message));
-    };
-  }, []);
-  const answer = (ok: boolean) => {
-    setReq((cur) => {
-      cur?.resolve(ok);
-      return null;
-    });
-  };
-  // Capture-phase Escape: the dialog may sit on top of another modal whose
-  // own window-level Escape listener would otherwise close both at once.
-  useEffect(() => {
-    if (!req) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopImmediatePropagation();
-        answer(false);
-      }
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [req]);
-  if (!req) return null;
-  return (
-    <Dialog
-      label={req.message}
-      onClose={() => answer(false)}
-      className="confirm-dialog"
-    >
-      <p>{req.message}</p>
-      <div className="form-actions">
-        <button className="danger" onClick={() => answer(true)}>
-          {t("common.confirm")}
-        </button>
-        <button type="button" onClick={() => answer(false)}>
-          {t("common.cancel")}
-        </button>
-      </div>
-    </Dialog>
-  );
 }
 
 const LANGUAGES: [string, string][] = [
