@@ -362,7 +362,7 @@ export default function App() {
       )}
       <header className={`header${scrolled ? " scrolled" : ""}`}>
         <div className="brand">
-          <Logo size={20} />
+          <Logo size={24} />
           <h1>Zenith</h1>
         </div>
         <span className="header-actions">

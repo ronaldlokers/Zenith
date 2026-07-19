@@ -260,27 +260,18 @@ export function RemoveIcon() {
   );
 }
 
+// The Ascent brand mark: a Night squircle with the three-rung ascent path
+// rising to a gold peak-star. Fixed brand fills (not currentColor) so it
+// matches favicon.svg / the PWA icons exactly. Square; pairs with the "Zenith"
+// wordmark in the header.
 export function Logo({ size = 26 }: { size?: number }) {
   return (
-    <svg
-      width={(size * 140) / 56}
-      height={size}
-      viewBox="0 0 140 56"
-      fill="none"
-      aria-hidden="true"
-    >
-      <line x1="14" y1="28" x2="98" y2="28" stroke="currentColor" strokeWidth="4" opacity="0.3" />
-      <circle cx="14" cy="28" r="5.5" fill="currentColor" />
-      <circle cx="38" cy="28" r="5.5" fill="currentColor" />
-      <circle cx="62" cy="28" r="5.5" fill="currentColor" opacity="0.45" />
-      <g stroke="var(--accent)" strokeWidth="3.6">
-        <circle cx="106" cy="28" r="12" />
-        <line x1="106" y1="10" x2="106" y2="16" />
-        <line x1="106" y1="40" x2="106" y2="46" />
-        <line x1="88" y1="28" x2="94" y2="28" />
-        <line x1="118" y1="28" x2="124" y2="28" />
-      </g>
-      <circle cx="106" cy="28" r="4" fill="var(--accent)" />
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="44" height="44" rx="14" fill="#14173a" />
+      <rect x="12" y="34" width="24" height="3.4" rx="1.7" fill="#6f78c4" />
+      <rect x="15.5" y="27.5" width="17" height="3.4" rx="1.7" fill="#8f7bd0" />
+      <rect x="19" y="21" width="10" height="3.4" rx="1.7" fill="#d6a441" />
+      <path d="M24 8.5 l1.3 3.4 3.4 1.3 -3.4 1.3 -1.3 3.4 -1.3 -3.4 -3.4 -1.3 3.4 -1.3 Z" fill="#d6a441" />
     </svg>
   );
 }
