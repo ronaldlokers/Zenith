@@ -1,6 +1,6 @@
 {
-  "name": "JobSeekr",
-  "short_name": "JobSeekr",
+  "name": "Zenith",
+  "short_name": "Zenith",
   "description": "Personal job-hunt tracker: applications, companies, and recruiter contacts.",
   "start_url": "/",
   "display": "standalone",

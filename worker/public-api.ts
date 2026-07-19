@@ -111,7 +111,7 @@ export async function triggerWebhooks(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-JobSeekr-Signature": signature,
+            "X-Zenith-Signature": signature,
           },
           body,
           // A slow/hanging receiver must not tie up the delivery (#285); the

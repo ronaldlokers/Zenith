@@ -3,7 +3,7 @@
 // example of every shipped feature, so it can be shown/tested on
 // production without touching anyone's real pipeline. Extend SEED_* below
 // as new features ship.
-const DEMO_EMAIL = "demo@jobseekr.lokilabs.nl";
+const DEMO_EMAIL = "demo@zenith.lokilabs.nl";
 
 const USER_TABLES = [
   "documents",

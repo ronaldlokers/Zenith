@@ -10,9 +10,9 @@ import { AuthGate } from './AuthGate.tsx'
 // persisted theme choice doesn't flash the default theme first (#146).
 // Legacy "control-room" choices fold into explicit Dark (#346).
 {
-  const saved = localStorage.getItem('jobseekr_theme')
+  const saved = localStorage.getItem('zenith_theme')
   const theme = saved === 'control-room' ? 'dark' : saved
-  if (saved === 'control-room') localStorage.setItem('jobseekr_theme', 'dark')
+  if (saved === 'control-room') localStorage.setItem('zenith_theme', 'dark')
   if (theme === 'light' || theme === 'dark') {
     document.documentElement.dataset.theme = theme
   }

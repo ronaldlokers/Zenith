@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "jobseekr",
+	"name": "zenith",
 	"main": "worker/index.ts",
 	"compatibility_date": "2026-07-15",
 	"assets": {
@@ -27,13 +27,13 @@
 	"r2_buckets": [
 		{
 			"binding": "DOCS",
-			"bucket_name": "jobseekr-documents"
+			"bucket_name": "zenith-documents"
 		}
 	],
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "jobseekr",
+			"database_name": "zenith",
 			"database_id": "ca1cf5c8-4d60-4bb6-80dc-89265bd4e9aa",
 			"migrations_dir": "./migrations"
 		}

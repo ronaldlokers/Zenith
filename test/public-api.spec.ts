@@ -5,7 +5,7 @@ import { authedFetch } from "./helpers";
 // Own file (#285): generating an API key writes to the profile row, which
 // would clobber api.spec's "profile starts empty" expectation. Storage is
 // isolated per file.
-const BASE = "http://jobseekr.test";
+const BASE = "http://zenith.test";
 
 async function apiKey(): Promise<string> {
   const r = await authedFetch(`${BASE}/api/profile/api-key`, { method: "POST" });

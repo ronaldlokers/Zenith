@@ -5,7 +5,7 @@ import { authedFetch } from "./helpers";
 // seed-admin's whole account, which would clobber the migration-seeded
 // defaults (role types, feed sources) that api.spec's tests rely on.
 // Storage is isolated per test file, so this destruction stays contained.
-const BASE = "http://jobseekr.test";
+const BASE = "http://zenith.test";
 
 type Status = { loaded: boolean; hasData: boolean };
 const getStatus = async () =>

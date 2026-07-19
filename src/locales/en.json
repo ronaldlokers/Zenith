@@ -66,8 +66,8 @@
     "fieldsNote": "Responses include: id, title, status, company_id, role_type, url, source, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, created_at, updated_at. Salary and compensation are never exposed.",
     "exampleHeading": "Example",
     "webhooksHeading": "Webhooks",
-    "webhookIntro": "When an application's status changes, JobSeekr POSTs this JSON to each of your webhook URLs:",
-    "signatureNote": "Every delivery carries an X-JobSeekr-Signature header — a hex HMAC-SHA256 of the raw request body keyed with your webhook secret. Verify it before trusting a payload:"
+    "webhookIntro": "When an application's status changes, Zenith POSTs this JSON to each of your webhook URLs:",
+    "signatureNote": "Every delivery carries an X-Zenith-Signature header — a hex HMAC-SHA256 of the raw request body keyed with your webhook secret. Verify it before trusting a payload:"
   },
   "forms": {
     "appliedOn": "Applied on",
@@ -501,10 +501,10 @@
     "apiKeyGenerate": "Generate key",
     "webhooks": "Webhooks",
     "webhooksHint": "Get a signed POST whenever an application's status changes.",
-    "webhookSecretHint": "Signing secret — shown once, save it now. Verify deliveries with the X-JobSeekr-Signature header (HMAC-SHA256 of the raw body):",
+    "webhookSecretHint": "Signing secret — shown once, save it now. Verify deliveries with the X-Zenith-Signature header (HMAC-SHA256 of the raw body):",
     "push": "Push notifications",
     "pushEnabledHint": "This browser will get a system notification for due follow-ups, stale postings, and new Feed matches.",
-    "pushDisabledHint": "Get a system notification on this device for due follow-ups, stale postings, and new Feed matches — even when JobSeekr isn't open.",
+    "pushDisabledHint": "Get a system notification on this device for due follow-ups, stale postings, and new Feed matches — even when Zenith isn't open.",
     "pushEnable": "Enable push notifications",
     "pushDisable": "Disable push notifications",
     "pushError": "Couldn't do that — check your browser's notification permission.",

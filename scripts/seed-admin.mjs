@@ -6,7 +6,7 @@
 // this app. Run once after migrations are applied:
 //
 //   node scripts/seed-admin.mjs <email>
-//   npx wrangler d1 execute jobseekr --remote --file scripts/.seed-admin.sql
+//   npx wrangler d1 execute zenith --remote --file scripts/.seed-admin.sql
 //
 // Prompts for the password interactively (hidden, not echoed) instead of
 // taking it as an argument — a CLI arg would land in shell history and be
@@ -104,6 +104,6 @@ VALUES ('seed-admin-credential', 'seed-admin', 'credential', 'seed-admin', '${ha
 writeFileSync(new URL("./.seed-admin.sql", import.meta.url), sql);
 console.log("Wrote scripts/.seed-admin.sql — now run:");
 console.log(
-  "  npx wrangler d1 execute jobseekr --remote --file scripts/.seed-admin.sql",
+  "  npx wrangler d1 execute zenith --remote --file scripts/.seed-admin.sql",
 );
 console.log(`\nThen log in with ${email} and the password you just entered.`);

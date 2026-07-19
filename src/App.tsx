@@ -80,7 +80,7 @@ export default function App() {
     null,
   );
   const [onboardingDismissed, setOnboardingDismissed] = useState(
-    () => localStorage.getItem("jobseekr_onboarding_dismissed") === "1",
+    () => localStorage.getItem("zenith_onboarding_dismissed") === "1",
   );
   const [scrolled, setScrolled] = useState(false);
 
@@ -112,7 +112,7 @@ export default function App() {
   }, [onboardingDismissed]);
 
   const dismissOnboarding = () => {
-    localStorage.setItem("jobseekr_onboarding_dismissed", "1");
+    localStorage.setItem("zenith_onboarding_dismissed", "1");
     setOnboardingDismissed(true);
   };
 
@@ -363,7 +363,7 @@ export default function App() {
       <header className={`header${scrolled ? " scrolled" : ""}`}>
         <div className="brand">
           <Logo size={20} />
-          <h1>JobSeekr</h1>
+          <h1>Zenith</h1>
         </div>
         <span className="header-actions">
           <button

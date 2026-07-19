@@ -1,4 +1,4 @@
-# JobSeekr
+# Zenith
 
 Personal job-hunt tracker: applications, companies, and recruiter contacts with pipeline status. Mobile-friendly web app.
 
@@ -15,14 +15,14 @@ Personal job-hunt tracker: applications, companies, and recruiter contacts with 
 
 ```bash
 npm install
-npx wrangler d1 migrations apply jobseekr --local
+npx wrangler d1 migrations apply zenith --local
 npm run dev
 ```
 
 ## Deploy
 
 ```bash
-npx wrangler d1 migrations apply jobseekr --remote
+npx wrangler d1 migrations apply zenith --remote
 npm run deploy
 ```
 

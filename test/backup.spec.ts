@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
 import { runScheduledBackup } from "../worker/index";
 
-const BASE = "http://jobseekr.test";
+const BASE = "http://zenith.test";
 
 describe("runScheduledBackup", () => {
   it("writes a full JSON dump to R2 under backups/", async () => {

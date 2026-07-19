@@ -34,15 +34,15 @@ function buildIcs(events: IcsEvent[]): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//JobSeekr//Calendar Export//EN",
+    "PRODID:-//Zenith//Calendar Export//EN",
     "CALSCALE:GREGORIAN",
-    "X-WR-CALNAME:JobSeekr",
+    "X-WR-CALNAME:Zenith",
   ];
   const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   for (const e of events) {
     lines.push(
       "BEGIN:VEVENT",
-      `UID:${e.uid}@jobseekr`,
+      `UID:${e.uid}@zenith`,
       `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${icsDate(e.date)}`,
       `SUMMARY:${icsEscape(e.summary)}`,
@@ -148,7 +148,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
 
     return c.text(buildIcs(events), 200, {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'inline; filename="jobseekr.ics"',
+      "Content-Disposition": 'inline; filename="zenith.ics"',
     });
   });
 }

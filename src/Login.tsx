@@ -50,7 +50,7 @@ export function Login() {
     return (
       <div className="login-screen">
         <form className="login-card" onSubmit={submitTwoFactor}>
-          <h1>JobSeekr</h1>
+          <h1>Zenith</h1>
           <p className="login-subtitle">
             {useBackupCode ? t("login.enterBackupCode") : t("login.enterTwoFactorCode")}
           </p>
@@ -89,7 +89,7 @@ export function Login() {
   return (
     <div className="login-screen">
       <form className="login-card" onSubmit={submit}>
-        <h1>JobSeekr</h1>
+        <h1>Zenith</h1>
         <p className="login-subtitle">{t("login.subtitle")}</p>
         <label className="settings-field">
           <span>{t("login.email")}</span>

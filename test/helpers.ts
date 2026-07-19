@@ -21,7 +21,7 @@ async function signIn(): Promise<string> {
     .bind(hash, now, now)
     .run();
 
-  const res = await SELF.fetch("http://jobseekr.test/api/auth/sign-in/email", {
+  const res = await SELF.fetch("http://zenith.test/api/auth/sign-in/email", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),

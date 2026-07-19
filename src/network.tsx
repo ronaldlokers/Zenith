@@ -62,11 +62,11 @@ export function CompaniesTab({
   // companies than the list rows do. Persisted so the choice sticks
   // across visits/reloads.
   const [view, setView] = useState<"list" | "grid">(
-    () => (localStorage.getItem("jobseekr_companies_view") as "list" | "grid" | null) ?? "list",
+    () => (localStorage.getItem("zenith_companies_view") as "list" | "grid" | null) ?? "list",
   );
   const setViewAndPersist = (v: "list" | "grid") => {
     setView(v);
-    localStorage.setItem("jobseekr_companies_view", v);
+    localStorage.setItem("zenith_companies_view", v);
   };
 
   const q = query.trim().toLowerCase();
@@ -492,11 +492,11 @@ export function ContactsTab({
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Contact | "new" | null>(null);
   const [view, setView] = useState<"list" | "grid">(
-    () => (localStorage.getItem("jobseekr_contacts_view") as "list" | "grid" | null) ?? "list",
+    () => (localStorage.getItem("zenith_contacts_view") as "list" | "grid" | null) ?? "list",
   );
   const setViewAndPersist = (v: "list" | "grid") => {
     setView(v);
-    localStorage.setItem("jobseekr_contacts_view", v);
+    localStorage.setItem("zenith_contacts_view", v);
   };
   const [query, setQuery] = useState(initialQuery ?? "");
   const [detailId, setDetailIdState] = useState<number | null>(

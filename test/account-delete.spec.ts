@@ -4,7 +4,7 @@ import { authedFetch } from "./helpers";
 
 // Own file (#285): deleting the account removes the seed-admin user other
 // tests depend on. Storage is isolated per file.
-const BASE = "http://jobseekr.test";
+const BASE = "http://zenith.test";
 
 describe("account deletion", () => {
   it("wipes the user's data and removes the account", async () => {

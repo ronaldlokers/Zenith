@@ -370,14 +370,14 @@ export function formatMonthYear(month: number | null, year: number | null): stri
   return month ? `${MONTH_NAMES[month - 1]} ${year}` : `${year}`;
 }
 
-export const KEY_SHORTCUTS_KEY = "jobseekr_key_shortcuts";
+export const KEY_SHORTCUTS_KEY = "zenith_key_shortcuts";
 
 // Keyboard-shortcut opt-out (#—): persisted pref read by App and the board.
 export function keyShortcutsEnabled(): boolean {
   return localStorage.getItem(KEY_SHORTCUTS_KEY) !== "off";
 }
 
-export const CV_LANG_KEY = "jobseekr_cv_lang";
+export const CV_LANG_KEY = "zenith_cv_lang";
 
 export function getCvLanguage(fallback: string): string {
   return localStorage.getItem(CV_LANG_KEY) || fallback;

@@ -875,7 +875,7 @@ async function buildUserExport(
 app.get("/api/export", async (c) => {
   const dump = await buildUserExport(c.env, c.get("userId"));
   return c.json(dump, 200, {
-    "Content-Disposition": `attachment; filename="jobseekr-export-${new Date().toISOString().slice(0, 10)}.json"`,
+    "Content-Disposition": `attachment; filename="zenith-export-${new Date().toISOString().slice(0, 10)}.json"`,
   });
 });
 
@@ -910,7 +910,7 @@ app.get("/api/export/:table", async (c) => {
         .all();
   return c.body(toCsv(results as Record<string, unknown>[]), 200, {
     "Content-Type": "text/csv; charset=utf-8",
-    "Content-Disposition": `attachment; filename="jobseekr-${table}.csv"`,
+    "Content-Disposition": `attachment; filename="zenith-${table}.csv"`,
   });
 });
 
@@ -1340,7 +1340,7 @@ app.get("/shared/:token", async (c) => {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>JobSeekr — shared pipeline</title>
+<title>Zenith — shared pipeline</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; background: #101318; color: #e8ebef; margin: 0; padding: 2rem 1.25rem; }
   .wrap { max-width: 32rem; margin: 0 auto; }
@@ -1366,7 +1366,7 @@ app.get("/shared/:token", async (c) => {
     </div>
     <span class="open-count">${totalOpen} open applications</span>
     ${rows}
-    <footer>Read-only view — no application details, no editing. Powered by JobSeekr.</footer>
+    <footer>Read-only view — no application details, no editing. Powered by Zenith.</footer>
   </div>
 </body>
 </html>`;
@@ -1628,7 +1628,7 @@ app.onError((err, c) => {
 });
 
 // Inbound recruiter emails, forwarded via Cloudflare Email Routing (#111)
-// to a jobseekr.lokilabs.nl address, auto-log as an interaction against
+// to a zenith.lokilabs.nl address, auto-log as an interaction against
 // the matching contact instead of manual entry. Requires an Email Routing
 // rule (Cloudflare dashboard, zone-level — not configurable from this
 // repo) pointing the inbound address at this Worker.
