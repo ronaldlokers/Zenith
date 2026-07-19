@@ -7,10 +7,11 @@
  * paper canvas; dark theme = night sky. Token NAMES are stable across the
  * refresh; only values changed.
  *
- * Stage palette note: the --st-* "ascent" hues (slate → gold) were adopted
- * from the brand skin at the owner's request, overriding the prior
- * accessibility-locked palette. Trade-off accepted: interested/applied now
- * share a hue and the deuteranopia split from #201/#285 is relaxed.
+ * Stage palette note: the --st-* "ascent" hues rise slate → indigo →
+ * blue-violet → magenta-violet → dark gold, adopted from the Zenith design
+ * system (in sync with the claude.ai/design project). Each stage keeps a
+ * distinct hue and lightness, so interested/applied no longer collide and the
+ * pairwise separation from #201/#285 is preserved within the Ascent range.
  */
 :root {
   /* Brand anchors */
@@ -49,12 +50,12 @@
   --scrim: rgba(20, 23, 58, 0.45);
 
   /* The Ascent — pipeline stage palette (reserved for pipeline state) */
-  --st-interested: #8a90b4;
-  --st-applied: #8a90b4;
-  --st-screening: #6f78c4;
-  --st-interview: #7a5fb8;
-  --st-offer: #c68a2f;
-  --st-dead: #a49e92;
+  --st-interested: #5c6285;
+  --st-applied: #4a55a8;
+  --st-screening: #6a4aa8;
+  --st-interview: #8a3f9c;
+  --st-offer: #8a6410;
+  --st-dead: #6b675e;
 
   /* Response-time heat strip (#142) — a separate "gone quiet?" signal, its
      own color family so it never reads as a stage color. */
@@ -126,11 +127,11 @@
     --danger: #d76a60;
     --scrim: rgba(0, 0, 0, 0.6);
 
-    --st-interested: #9aa0c4;
-    --st-applied: #9aa0c4;
-    --st-screening: #8790d6;
-    --st-interview: #9c82cf;
-    --st-offer: #e0a54a;
+    --st-interested: #aab0d4;
+    --st-applied: #8f9ae8;
+    --st-screening: #a98fe0;
+    --st-interview: #c98fd8;
+    --st-offer: #e6b45a;
     --st-dead: #b3ada0;
 
     --heat-quiet: #e0a54a;
@@ -169,11 +170,11 @@
   --danger: #d76a60;
   --scrim: rgba(0, 0, 0, 0.6);
 
-  --st-interested: #9aa0c4;
-  --st-applied: #9aa0c4;
-  --st-screening: #8790d6;
-  --st-interview: #9c82cf;
-  --st-offer: #e0a54a;
+  --st-interested: #aab0d4;
+  --st-applied: #8f9ae8;
+  --st-screening: #a98fe0;
+  --st-interview: #c98fd8;
+  --st-offer: #e6b45a;
   --st-dead: #b3ada0;
 
   --heat-quiet: #e0a54a;
