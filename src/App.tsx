@@ -436,6 +436,7 @@ export default function App() {
         <header className={`top${scrolled ? " scrolled" : ""}`}>
           <span className="top-brand">
             <Logo size={22} />
+            <span>Zenith</span>
           </span>
           <h1 className="top-title">{pageTitle}</h1>
           <button
@@ -451,6 +452,15 @@ export default function App() {
             </kbd>
           </button>
           <NotificationBell />
+          <button
+            className={`settings-btn top-settings${tab === "settings" ? " active" : ""}`}
+            onClick={() => setTab("settings")}
+            title={t("header.settings")}
+            aria-label={t("header.settings")}
+            aria-current={tab === "settings" ? "page" : undefined}
+          >
+            <SettingsIcon />
+          </button>
           <button
             className="primary top-add"
             onClick={() => setShowQuickAdd(true)}
