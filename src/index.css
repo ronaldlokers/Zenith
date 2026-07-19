@@ -210,6 +210,22 @@ textarea {
   color: inherit;
 }
 
+/* Links carry the gold accent, not the UA blue (design review). */
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+
+/* Form controls tint with the brand accent instead of the OS blue. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

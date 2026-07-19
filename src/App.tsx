@@ -500,8 +500,10 @@ export default function App() {
           <button
             className="primary top-add"
             onClick={() => setShowQuickAdd(true)}
+            aria-label={t("toolbar.addJob")}
           >
-            + {t("quickAdd.add")}
+            <span aria-hidden="true">+</span>
+            <span className="top-add-label">{t("quickAdd.add")}</span>
           </button>
         </header>
         <nav className="tabs" ref={tabsRef}>
@@ -715,14 +717,6 @@ export default function App() {
         )}
       </main>
       </div>
-
-      <button
-        className="quick-add-fab"
-        onClick={() => setShowQuickAdd(true)}
-        aria-label={t("toolbar.addJob")}
-      >
-        +
-      </button>
 
       {/* Persistent live region (#285) — always in the DOM so screen
           readers announce each new toast message; the visible toast below
