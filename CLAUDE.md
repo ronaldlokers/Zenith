@@ -1,9 +1,9 @@
-# JobSeekr — working guide
+# Zenith — working guide
 
 Personal job-hunt tracker. Invite-only, multi-user, ambition is a polished public product. This file is the standing brief for anyone (human or agent) working here: the product decisions, the constraints, and how to ship changes.
 
 ## Stack
-- **Backend:** Cloudflare Workers + Hono (`worker/`). D1 (SQLite, `migrations/`, applied automatically on deploy). R2 for documents. Better Auth (email/password + admin + twoFactor plugins); `/api/*` behind a session-auth middleware, `/api/admin/*` behind an admin-role check. D1 binding/database name: `jobseekr`.
+- **Backend:** Cloudflare Workers + Hono (`worker/`). D1 (SQLite, `migrations/`, applied automatically on deploy). R2 for documents. Better Auth (email/password + admin + twoFactor plugins); `/api/*` behind a session-auth middleware, `/api/admin/*` behind an admin-role check. D1 binding/database name: `zenith`.
 - **Frontend:** React 19 + Vite + TypeScript. The whole UI lives in `src/App.tsx` (large; a split is a known TODO). `src/App.css` is one file in documented bands (see its header comment) — new CSS goes in bands 1–3, never after the control-normalization layer. `src/index.css` holds the design tokens.
 - **i18n:** react-i18next, `src/locales/en.json` + `nl.json`. **Strict key parity** between the two — every key exists in both. More locales are planned, so **externalize all user-facing strings** (no hardcoded copy in components).
 - **Public surfaces:** `/shared/:token` (server-rendered aggregate stats, no per-application detail, **no compensation** — never add comp columns to it), `/calendar/:token` (ICS), `/api/v1/*` (read-only Bearer key), outbound webhooks. All server-side fetches of user-supplied URLs go through `worker/url-guard.ts` (SSRF guard).
@@ -35,7 +35,7 @@ Run and confirm green:
 - `npx vitest run --no-file-parallelism` — parallel runs flake locally (CI is authoritative). vitest-pool-workers storage is isolated **per test file**, shared within a file; put destructive whole-account tests in their own spec file.
 - en/nl key parity (every key in both locales).
 
-For non-trivial UI, **verify against the live render**, not just the DOM: run the app and screenshot at the real viewport. Local rig: `npm run dev`; local D1 needs `wrangler d1 migrations apply jobseekr --local` first (and again after restoring any `.wrangler/state` DB snapshot). Snapshot + restore the local DB around any data mutations.
+For non-trivial UI, **verify against the live render**, not just the DOM: run the app and screenshot at the real viewport. Local rig: `npm run dev`; local D1 needs `wrangler d1 migrations apply zenith --local` first (and again after restoring any `.wrangler/state` DB snapshot). Snapshot + restore the local DB around any data mutations.
 
 ## Editing conventions
 - `src/App.tsx` is large — prefer exact-string edits with a pre-checked occurrence count; when deleting a function, match its exact text (not a boundary search, which over-deletes).

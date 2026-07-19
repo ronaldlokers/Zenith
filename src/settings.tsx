@@ -623,7 +623,7 @@ const expected = crypto
   .createHmac("sha256", WEBHOOK_SECRET)
   .update(rawRequestBody)
   .digest("hex");
-// timing-safe compare expected === X-JobSeekr-Signature`}</code>
+// timing-safe compare expected === X-Zenith-Signature`}</code>
       </pre>
     </details>
   );
@@ -801,7 +801,7 @@ export function TwoFactorSettings() {
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");
               a.href = url;
-              a.download = "jobseekr-backup-codes.txt";
+              a.download = "zenith-backup-codes.txt";
               a.click();
               URL.revokeObjectURL(url);
             }}
@@ -925,7 +925,7 @@ const LANGUAGES: [string, string][] = [
 ];
 
 
-const THEME_KEY = "jobseekr_theme";
+const THEME_KEY = "zenith_theme";
 // Single-character shortcuts (n, /) must be switchable off for speech-input
 // and single-switch users (WCAG 2.1.4). Modified chords like ⌘K are exempt
 // and stay on regardless. Read live at keypress so the setting takes effect

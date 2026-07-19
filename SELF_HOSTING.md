@@ -1,6 +1,6 @@
-# Self-hosting JobSeekr
+# Self-hosting Zenith
 
-JobSeekr runs entirely on Cloudflare's free tier (Workers, D1, R2) for personal use. This walks through standing up your own copy from scratch.
+Zenith runs entirely on Cloudflare's free tier (Workers, D1, R2) for personal use. This walks through standing up your own copy from scratch.
 
 ## Prerequisites
 
@@ -11,8 +11,8 @@ JobSeekr runs entirely on Cloudflare's free tier (Workers, D1, R2) for personal 
 ## 1. Clone and install
 
 ```bash
-git clone https://github.com/ronaldlokers/JobSeekr.git
-cd JobSeekr
+git clone https://github.com/ronaldlokers/Zenith.git
+cd Zenith
 npm install
 npx wrangler login
 ```
@@ -20,7 +20,7 @@ npx wrangler login
 ## 2. Create your own D1 database
 
 ```bash
-npx wrangler d1 create jobseekr
+npx wrangler d1 create zenith
 ```
 
 This prints a `database_id`. Open `wrangler.jsonc` and replace the existing `database_id` under `d1_databases` with your own — the one in the repo belongs to the upstream deployment, not yours.
@@ -30,7 +30,7 @@ This prints a `database_id`. Open `wrangler.jsonc` and replace the existing `dat
 Used for CV/cover-letter file attachments and the daily backup cron.
 
 ```bash
-npx wrangler r2 bucket create jobseekr-documents
+npx wrangler r2 bucket create zenith-documents
 ```
 
 If you pick a different bucket name, update `bucket_name` under `r2_buckets` in `wrangler.jsonc` to match.
@@ -44,7 +44,7 @@ npx wrangler secret put BETTER_AUTH_SECRET
 # any long random string — e.g. `openssl rand -base64 32`
 
 npx wrangler secret put BETTER_AUTH_URL
-# the exact URL you'll access the app at, e.g. https://jobseekr.<your-subdomain>.workers.dev
+# the exact URL you'll access the app at, e.g. https://zenith.<your-subdomain>.workers.dev
 ```
 
 For local development, put the same values in a `.dev.vars` file at the repo root (gitignored):
@@ -76,7 +76,7 @@ Without these, the push-notification toggle in Settings tells the user push isn'
 ## 5. Apply migrations and deploy
 
 ```bash
-npx wrangler d1 migrations apply jobseekr --remote
+npx wrangler d1 migrations apply zenith --remote
 npm run deploy
 ```
 
@@ -88,7 +88,7 @@ Account creation is invite-only by design (no public sign-up form) — a seed ad
 
 ```bash
 node scripts/seed-admin.mjs you@example.com
-npx wrangler d1 execute jobseekr --remote --file scripts/.seed-admin.sql
+npx wrangler d1 execute zenith --remote --file scripts/.seed-admin.sql
 ```
 
 You'll be prompted for a password (hidden input, 8+ characters). Log in with that email/password at your deployed URL. Once in, invite any other accounts you want from Settings — the seed admin has an "Invite user" form there (Better Auth's admin plugin under the hood).
@@ -96,7 +96,7 @@ You'll be prompted for a password (hidden input, 8+ characters). Log in with tha
 ## Local development
 
 ```bash
-npx wrangler d1 migrations apply jobseekr --local
+npx wrangler d1 migrations apply zenith --local
 npm run dev
 ```
 
@@ -109,7 +109,7 @@ Pull upstream and redeploy — new D1 migrations apply automatically as part of 
 ```bash
 git pull
 npm install
-npx wrangler d1 migrations apply jobseekr --remote
+npx wrangler d1 migrations apply zenith --remote
 npm run deploy
 ```
 

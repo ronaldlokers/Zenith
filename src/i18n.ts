@@ -16,7 +16,7 @@ i18n
     supportedLngs: ["en", "nl"],
     detection: {
       order: ["localStorage", "navigator"],
-      lookupLocalStorage: "jobseekr_lang",
+      lookupLocalStorage: "zenith_lang",
       caches: ["localStorage"],
     },
     interpolation: { escapeValue: false },

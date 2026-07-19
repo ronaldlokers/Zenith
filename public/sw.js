@@ -7,8 +7,8 @@
  * - push/notificationclick (#214): shows the push payload as a system
  *   notification and focuses/opens the app on click.
  */
-const SHELL_CACHE = "jobseekr-shell-v1";
-const ASSET_CACHE = "jobseekr-assets-v1";
+const SHELL_CACHE = "zenith-shell-v1";
+const ASSET_CACHE = "zenith-assets-v1";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -74,7 +74,7 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "JobSeekr", body: "", url: "/" };
+  let data = { title: "Zenith", body: "", url: "/" };
   try {
     data = { ...data, ...event.data.json() };
   } catch {

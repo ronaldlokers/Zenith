@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
 import { logInboundEmail } from "../worker/index";
 
-const BASE = "http://jobseekr.test";
+const BASE = "http://zenith.test";
 
 async function post(path: string, body: unknown) {
   return authedFetch(`${BASE}${path}`, {
