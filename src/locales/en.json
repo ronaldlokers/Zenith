@@ -174,7 +174,7 @@
     "themeDark": "Dark"
   },
   "feed": {
-    "pulledFrom": "Pulled from your configured job boards (Greenhouse, Ashby), Adzuna, and HN Who's Hiring every 6 hours.",
+    "pulledFrom": "Pulled from your configured job boards (Greenhouse, Ashby) and Adzuna every 6 hours.",
     "settings": "Settings",
     "checkNow": "Check now",
     "checking": "Checking…",
