@@ -45,6 +45,7 @@ import { DashboardTab } from "./dashboard";
 import { ApplicationDetailModal } from "./detail";
 import { PipelineTab } from "./board";
 import { CommandPalette, NotificationBell, OnboardingChecklist, QuickAddDialog } from "./chrome";
+import { useSession } from "./auth-client";
 
 // Shared remove-icon glyph (#118) — a plain "×" character renders at
 // inconsistent visual weight across browsers/fonts; an inline SVG at a
@@ -64,6 +65,11 @@ export default function App() {
   const navigate = useNavigate();
   const { tab, id: detailIdFromUrl } = parsePath(location.pathname);
   const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
+  const { data: session } = useSession();
+  const sessionUser = session?.user;
+  const userInitials = sessionUser?.name
+    ? sessionUser.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
+    : (sessionUser?.email?.[0]?.toUpperCase() ?? "?");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [statsData, setStatsData] = useState<Stats | null>(null);
@@ -430,6 +436,36 @@ export default function App() {
             <SettingsIcon />
             <span>{t("settings.title")}</span>
           </button>
+          {sessionUser && (
+            <button
+              className="side-user"
+              onClick={() => setTab("settings")}
+              aria-label={t("account.signedInAs", { email: sessionUser.email })}
+              title={sessionUser.email}
+            >
+              <span className="avatar" aria-hidden="true">
+                {userInitials}
+              </span>
+              <span className="u-info">
+                <span className="u-name">
+                  {sessionUser.name || sessionUser.email}
+                </span>
+                <span className="u-email">{sessionUser.email}</span>
+              </span>
+              <span className="u-caret" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </span>
+            </button>
+          )}
         </div>
       </aside>
       <div className="main">
