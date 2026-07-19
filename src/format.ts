@@ -369,3 +369,9 @@ export function formatMonthYear(month: number | null, year: number | null): stri
   if (!year) return "";
   return month ? `${MONTH_NAMES[month - 1]} ${year}` : `${year}`;
 }
+
+export const CV_LANG_KEY = "jobseekr_cv_lang";
+
+export function getCvLanguage(fallback: string): string {
+  return localStorage.getItem(CV_LANG_KEY) || fallback;
+}
