@@ -1,132 +1,146 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
+
 /*
- * Zenith design tokens — "Pipeline" direction.
- * Light theme = variant 2B (Daylight), dark theme = variant 2A (Signal).
- * Stage colors are the Spectrum palette and are reserved exclusively for
- * pipeline state; teal is the interaction accent everywhere else.
+ * Zenith design tokens — "Ascent" brand direction.
+ * Brand: Night (deep indigo #14173a) + Gold (#d6a441, the single interaction
+ * accent — primary actions, links, focus, selected state). Light theme = warm
+ * paper canvas; dark theme = night sky. Token NAMES are stable across the
+ * refresh; only values changed.
+ *
+ * Stage palette note: the --st-* "ascent" hues (slate → gold) were adopted
+ * from the brand skin at the owner's request, overriding the prior
+ * accessibility-locked palette. Trade-off accepted: interested/applied now
+ * share a hue and the deuteranopia split from #201/#285 is relaxed.
  */
 :root {
-  --bg: #f4f5f7;
+  /* Brand anchors */
+  --night: #14173a;
+  --night-raised: #1b1f4d;
+  --gold: #d6a441;
+  --gold-deep: #c68a2f;
+  --gold-soft: rgba(214, 164, 65, 0.14);
+
+  /* Surfaces & ink (light / "Daylight") */
+  --bg: #f4f2ec;
   --surface: #ffffff;
-  --ink: #191d23;
-  /* --muted/--faint darkened to clear WCAG AA (4.5:1) on --bg for the small
-     secondary text they carry (#285 review). --danger-text is the badge
-     text colour, flipped per-theme so it stays legible on --danger. */
-  --muted: #5a626e;
-  --faint: #656d79;
+  --surface-sunken: #faf9f5;
+  --ink: #14173a;
+  --muted: #5c5f76;
+  --faint: #8f8d84;
   --danger-text: #ffffff;
-  --border: #e2e5e9;
-  --track: #e8eaee;
-  --accent: #0f766e;
-  --accent-text: #ffffff;
-  --accent-soft: #d9ebe8;
-  --accent-ink: #0b5e56;
-  --hover: color-mix(in srgb, var(--ink) 7%, var(--surface));
-  --empty-stroke: color-mix(in srgb, var(--ink) 55%, var(--surface));
-  --danger: #b91c1c;
+  --border: #e7e4db;
+  --line: #efece4;
+  --track: #efece4;
+  --hover: color-mix(in srgb, var(--ink) 6%, var(--surface));
+  --empty-stroke: color-mix(in srgb, var(--ink) 45%, var(--surface));
 
-  /* Re-tuned for #201: passes WCAG contrast (≥4.5:1 on --surface) and
-     stays pairwise distinguishable under simulated deuteranopia (ΔE ≥
-     16 for every pair, vs. ~1 between applied/screening before). The
-     applied/screening pair specifically leans on a lightness split
-     (gold vs. dark brick) rather than hue alone, since deuteranopia
-     collapses orange/red/brown hues onto nearly the same axis. */
-  --st-interested: #0063a3;
-  --st-applied: #8a6d00;
-  --st-screening: #7a2500;
-  --st-interview: #a3348f;
-  --st-offer: #00795a;
-  --st-dead: #79828e;
+  /* Accent (gold) — primary actions, links, focus, peak/offer, key metrics */
+  --accent: #d6a441;
+  --accent-text: #14173a;
+  --accent-soft: var(--gold-soft);
+  --accent-ink: #a9803a;
+  --accent-on-ink: #e8c072;
 
-  /* Response-time heat strip (#142) — a separate "gone quiet?" signal,
-     deliberately its own color family (blue → red) so it never reads as
-     a 6th stage color. */
-  --heat-quiet: #ea580c;
-  --heat-quiet-text: #a04508;
+  /* Semantic */
+  --success: #3f8f6b;
+  --warning: #c98a2b;
+  --danger: #b0453c;
+  --info: #4a6ea3;
+  --scrim: rgba(20, 23, 58, 0.45);
 
-  /* Design-review fixes (#314): accent readable on the inverted toast
-     (--ink background); a per-theme modal scrim; and a non-stage event
-     hue for interaction/touchpoint events so agenda/activity stop
-     borrowing stage colors. */
-  --accent-on-ink: #2dd4bf;
-  --scrim: rgba(0, 0, 0, 0.45);
-  --ev-touch: #6558c4;
+  /* The Ascent — pipeline stage palette (reserved for pipeline state) */
+  --st-interested: #8a90b4;
+  --st-applied: #8a90b4;
+  --st-screening: #6f78c4;
+  --st-interview: #7a5fb8;
+  --st-offer: #c68a2f;
+  --st-dead: #a49e92;
 
-  --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Response-time heat strip (#142) — a separate "gone quiet?" signal, its
+     own color family so it never reads as a stage color. */
+  --heat-quiet: #c98a2b;
+  --heat-quiet-text: #9a6a1f;
 
-  /* Type scale (#314) — six roles replace the 26 ad-hoc sizes that had
-     accumulated. Chrome/meta are the mono bands; body/title carry copy.
-     Letter-spacing comes in exactly two flavors: chrome labels and
-     section eyebrows. Theme-independent. */
-  --text-display: 1.35rem;
-  --text-heading: 1.1rem;
+  /* Non-stage event hue (interaction/touchpoint events) */
+  --ev-touch: #7a5fb8;
+
+  /* Type — Geist for wordmark/headings/body, Geist Mono for chrome/meta.
+     --serif is a stable token name that resolves to Geist (display voice,
+     set at 600 where used); there is no serif in the brand. */
+  --serif: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
+    Roboto, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+  /* Type scale — six roles. Chrome/meta are the mono bands; body/title carry
+     copy; display/heading are the Geist display voice. Theme-independent. */
+  --text-display: 2.125rem;
+  --text-heading: 1.375rem;
   --text-title: 0.95rem;
-  --text-body: 0.85rem;
+  --text-body: 0.875rem;
   --text-meta: 0.75rem;
   --text-chrome: 0.64rem;
-  --track-chrome: 0.05em;
-  --track-eyebrow: 0.08em;
+  --track-chrome: 0.06em;
+  --track-eyebrow: 0.12em;
 
-  /* Structural scale (#279 design refresh) — theme-independent spacing and
-     corner radii so surfaces share one rhythm instead of ad-hoc values. */
+  /* Structural scale — theme-independent spacing and corner radii. */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
-  /* Re-based on the app's dominant corner (#314): 8px was used 31× but
-     couldn't be expressed by the old 6/10/12 scale. */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* 10px (--radius-md) is the dominant control corner; 14px (lg) for cards. */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-full: 999px;
 
   /* Elevation — two levels: raised surfaces (cards/panels) and overlays
      (modals/dropdowns). Per-theme below since shadow needs the ground. */
-  --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.04),
-    0 2px 8px -2px rgba(16, 24, 40, 0.08);
-  --shadow-2: 0 4px 12px -2px rgba(16, 24, 40, 0.1),
-    0 12px 32px -8px rgba(16, 24, 40, 0.16);
+  --shadow-1: 0 1px 2px rgba(20, 23, 58, 0.04),
+    0 2px 10px -3px rgba(20, 23, 58, 0.1);
+  --shadow-2: 0 4px 14px -3px rgba(20, 23, 58, 0.12),
+    0 16px 40px -10px rgba(20, 23, 58, 0.2);
 
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101318;
-    --surface: #171b22;
-    --ink: #e8ebef;
-    --muted: #8b95a5;
-    --faint: #7c8592;
-    --danger-text: #0a100e;
-    --border: #232935;
-    --track: #262d3a;
-    --accent: #2dd4bf;
-    --accent-text: #0c1210;
-    --accent-soft: #12362f;
-    --accent-ink: #7fe6d4;
-    --danger: #f87171;
-
-    --st-interested: #5aa3e0;
-    --st-applied: #d4b13a;
-    --st-screening: #e0784f;
-    --st-interview: #e08fd0;
-    --st-offer: #4ccf9e;
-    --st-dead: #6d7684;
-
-      --heat-quiet: #e07b39;
-      --heat-quiet-text: #f0955a;
-  
-    /* Dark: the toast surface is light (--ink), so it needs the
-       light-surface accent; scrim darker to register on a dark ground. */
-    --accent-on-ink: #0f766e;
+    --bg: #0f1130;
+    --surface: #191c40;
+    --surface-sunken: #14173a;
+    --ink: #ecebf4;
+    --muted: #9a9db8;
+    --faint: #7f83a0;
+    --danger-text: #14173a;
+    --border: #2a2f5a;
+    --line: #242851;
+    --track: #242851;
+    --accent: #d6a441;
+    --accent-text: #14173a;
+    --accent-soft: rgba(214, 164, 65, 0.16);
+    --accent-ink: #e8c072;
+    --accent-on-ink: #e8c072;
+    --danger: #d76a60;
     --scrim: rgba(0, 0, 0, 0.6);
-    --ev-touch: #8f86e0;
 
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
-    --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.5),
-      0 16px 40px -8px rgba(0, 0, 0, 0.6);
+    --st-interested: #9aa0c4;
+    --st-applied: #9aa0c4;
+    --st-screening: #8790d6;
+    --st-interview: #9c82cf;
+    --st-offer: #e0a54a;
+    --st-dead: #b3ada0;
+
+    --heat-quiet: #e0a54a;
+    --heat-quiet-text: #f0c070;
+    --ev-touch: #9c82cf;
+
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35),
+      0 2px 10px -3px rgba(0, 0, 0, 0.45);
+    --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55),
+      0 18px 44px -10px rgba(0, 0, 0, 0.65);
   }
 }
 
@@ -135,41 +149,41 @@
 }
 
 :root[data-theme="dark"] {
-  /* Explicit Dark — same palette as the OS-dark auto theme, so the two
-     never diverge. Wins over prefers-color-scheme via the attribute. */
-  --bg: #101318;
-  --surface: #171b22;
-  --ink: #e8ebef;
-  --muted: #8b95a5;
-  --faint: #7c8592;
-  --danger-text: #0a100e;
-  --border: #232935;
-  --track: #262d3a;
-  --accent: #2dd4bf;
-  --accent-text: #0c1210;
-  --accent-soft: #12362f;
-  --accent-ink: #7fe6d4;
-  --danger: #f87171;
-
-  --st-interested: #5aa3e0;
-  --st-applied: #d4b13a;
-  --st-screening: #e0784f;
-  --st-interview: #e08fd0;
-  --st-offer: #4ccf9e;
-  --st-dead: #6d7684;
-
-    --heat-quiet: #e07b39;
-    --heat-quiet-text: #f0955a;
-  
-    /* Dark: the toast surface is light (--ink), so it needs the
-       light-surface accent; scrim darker to register on a dark ground. */
-  --accent-on-ink: #0f766e;
+  /* Explicit Dark — same palette as the OS-dark auto theme, so the two never
+     diverge. Wins over prefers-color-scheme via the attribute. */
+  --bg: #0f1130;
+  --surface: #191c40;
+  --surface-sunken: #14173a;
+  --ink: #ecebf4;
+  --muted: #9a9db8;
+  --faint: #7f83a0;
+  --danger-text: #14173a;
+  --border: #2a2f5a;
+  --line: #242851;
+  --track: #242851;
+  --accent: #d6a441;
+  --accent-text: #14173a;
+  --accent-soft: rgba(214, 164, 65, 0.16);
+  --accent-ink: #e8c072;
+  --accent-on-ink: #e8c072;
+  --danger: #d76a60;
   --scrim: rgba(0, 0, 0, 0.6);
-  --ev-touch: #8f86e0;
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
-  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.5),
-      0 16px 40px -8px rgba(0, 0, 0, 0.6);
+  --st-interested: #9aa0c4;
+  --st-applied: #9aa0c4;
+  --st-screening: #8790d6;
+  --st-interview: #9c82cf;
+  --st-offer: #e0a54a;
+  --st-dead: #b3ada0;
+
+  --heat-quiet: #e0a54a;
+  --heat-quiet-text: #f0c070;
+  --ev-touch: #9c82cf;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 2px 10px -3px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55),
+    0 18px 44px -10px rgba(0, 0, 0, 0.65);
 
   color-scheme: dark;
 }
@@ -183,8 +197,6 @@ body {
   font-family: var(--sans);
   background: var(--bg);
   color: var(--ink);
-  /* Base line-height (#314) — previously unset, so dense small text
-     wrapped at the UA default (~1.15). */
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
