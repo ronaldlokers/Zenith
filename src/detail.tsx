@@ -600,9 +600,11 @@ export function ApplicationDetailModal({
               {a.contact_name ? ` · ${a.contact_name}` : ""}
             </span>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
-            ×
-          </button>
+          {!asPane && (
+            <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
+              ×
+            </button>
+          )}
         </div>
 
         {editing ? (

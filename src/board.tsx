@@ -735,9 +735,6 @@ export function PipelineTab({
           {t("board.archivedBtn")}
           {inactive.length ? ` · ${inactive.length}` : ""}
         </button>
-        <button className="primary" onClick={onOpenQuickAdd}>
-          {t("toolbar.addJob")}
-        </button>
       </div>
 
       {showFilters && (

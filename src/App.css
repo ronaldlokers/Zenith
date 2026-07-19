@@ -103,14 +103,18 @@
   padding: 1px 6px;
 }
 
+/* The single add affordance (the FAB and the board's duplicate were removed —
+   design review). Full "+ Add" from 600px up; a compact "+" on phones. */
 .top-add {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex: 0 0 auto;
 }
 
-@media (min-width: 600px) {
-  .top-add {
-    display: inline-flex;
+@media (max-width: 599px) {
+  .top-add .top-add-label {
+    display: none;
   }
 }
 
@@ -935,6 +939,14 @@
   font-size: var(--text-body);
 }
 
+/* On phones the search takes its own full-width row instead of being crushed
+   to a sliver next to the Add / view-toggle controls (design review). */
+@media (max-width: 560px) {
+  .toolbar .search {
+    flex-basis: 100%;
+  }
+}
+
 .filters {
   display: flex;
   gap: 0.4rem;
@@ -1446,11 +1458,11 @@ button.danger {
    detail modal on click, so the list stays scannable instead of
    carrying a meta row, action buttons, and a rail on every card. */
 .card.row2 {
-  /* Fallback to --accent for rows with no stage color (Companies,
-     People) — --sc is only defined by a .stage-* class, and without
-     a fallback the whole declaration is invalid and silently dropped,
-     leaving those rows with no left inset at all (#76). */
-  border-left: 3px solid var(--sc, var(--accent));
+  /* Neutral fallback for rows with no stage color (Companies, People) —
+     --sc is only defined by a .stage-* class, and a fallback keeps the
+     declaration valid (#76). Neutral, not gold, so the accent isn't spent
+     on every row (design review). */
+  border-left: 3px solid var(--sc, var(--border));
   padding: 0.55rem 0.8rem;
   cursor: pointer;
   min-height: 44px;
@@ -2406,10 +2418,18 @@ select.status {
   display: flex;
   gap: 0.4rem;
   margin-bottom: var(--space-4);
+  /* Wrap the inline add-rows (e.g. language name + proficiency + Add) so a
+     select + button never overflow a phone (design review). */
+  flex-wrap: wrap;
+}
+
+.settings-add select {
+  min-width: 0;
 }
 
 .settings-add input {
   flex: 1;
+  min-width: 0;
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -3169,10 +3189,9 @@ summary.bcol-head::after {
   display: flex;
   flex-direction: column;
   gap: 0.05rem;
-  /* Fallback for rows with no stage class (e.g. CV completeness) —
-     --sc unresolved would otherwise drop the whole declaration, same
-     bug fixed for .card.row2 in #76. */
-  border-left: 3px solid var(--sc, var(--accent));
+  /* Neutral fallback for rows with no stage class (e.g. CV completeness) —
+     keeps the declaration valid (#76) without spending gold on every row. */
+  border-left: 3px solid var(--sc, var(--border));
   padding: 0.15rem 0 0.15rem 0.6rem;
 }
 
@@ -3273,6 +3292,9 @@ summary.bcol-head::after {
   justify-content: flex-end;
   align-items: center;
   gap: 0.6rem;
+  /* Wrap on narrow viewports so the template picker + Download button never
+     push past the edge (design review — was causing horizontal body scroll). */
+  flex-wrap: wrap;
 }
 
 .cv-template-picker {
@@ -3292,6 +3314,7 @@ summary.bcol-head::after {
 .cv-template-options {
   display: flex;
   gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .cv-template-option {
@@ -3730,7 +3753,7 @@ summary.bcol-head::after {
   .app:has(.settings-page),
   .app:has(.stats),
   .app:has(.company-grid),
-  .app:has(.overview),
+  .app:has(.dash),
   .app:has(.job-page) {
     max-width: none;
   }
@@ -3760,7 +3783,7 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .app:has(.overview) .content,
+  .app:has(.dash) .content,
   .app:has(.company-grid) .content,
   .app:has(.job-page) .content {
     max-width: 1000px;
@@ -4345,6 +4368,10 @@ button:not(:disabled):active,
   width: 100%;
 }
 .dash-card.dash-card-lead { border-left: 3px solid var(--accent); }
+/* NextUpPanel reuses .jobs-side (display:none by default); inside the dashboard
+   lead card it must show at every width, including mobile, when a follow-up is
+   due — otherwise the card renders empty (design review). */
+.dash-card-lead .jobs-side { display: block; }
 .dash-card.click { cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease; }
 .dash-card.click:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
 .dash-ch {
@@ -4696,6 +4723,8 @@ button:not(:disabled):active,
    covers Ctrl/Cmd+P from any other view: the main tab content, or a
    detail modal if one happens to be open. */
 @media print {
+  .side,
+  .top,
   .header,
   .tabs,
   .quick-add-fab,
