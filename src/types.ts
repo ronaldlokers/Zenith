@@ -325,3 +325,13 @@ export interface Language {
   name: string;
   proficiency: "conversational" | "fluent" | "native";
 }
+
+export interface TabProps {
+  onChanged: () => Promise<void>;
+  onError: (message: string | null) => void;
+}
+
+export interface CrudTabProps extends TabProps {
+  notify: (message: string, undo?: () => void) => void;
+  onDelete: (resource: string, id: number, name: string) => void;
+}

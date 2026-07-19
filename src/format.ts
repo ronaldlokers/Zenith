@@ -359,3 +359,13 @@ export function computeWeeklyMomentum(
   const streakBroken = streak === 0 && activityWeeks.slice(0, -1).some(Boolean);
   return { weeks, streak, streakBroken };
 }
+
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+export function formatMonthYear(month: number | null, year: number | null): string {
+  if (!year) return "";
+  return month ? `${MONTH_NAMES[month - 1]} ${year}` : `${year}`;
+}
