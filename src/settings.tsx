@@ -1103,6 +1103,7 @@ export function SettingsPage({
         {apiError && <p className="login-error">{apiError}</p>}
         {section === "general" && (
           <>
+        <div className="settings-fieldgrid">
         <label className="settings-field">
           <span>{t("settings.language")}</span>
           <select
@@ -1147,6 +1148,7 @@ export function SettingsPage({
             ))}
           </select>
         </label>
+        </div>
         <label className="settings-field settings-check">
           <input
             type="checkbox"
