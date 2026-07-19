@@ -582,7 +582,7 @@ function WorkExperienceSection({
           onSubmit={(data) => run(() => api.create("work-experience", data))}
         />
       ) : (
-        <button className="primary" onClick={() => setEditing("new")}>
+        <button className="btn-secondary" onClick={() => setEditing("new")}>
           {t("cv.addWorkExperience")}
         </button>
       )}
@@ -764,7 +764,7 @@ function EducationSection({
           onSubmit={(data) => run(() => api.create("education", data))}
         />
       ) : (
-        <button className="primary" onClick={() => setEditing("new")}>
+        <button className="btn-secondary" onClick={() => setEditing("new")}>
           {t("cv.addEducation")}
         </button>
       )}
@@ -841,7 +841,7 @@ function LanguagesSection({
           <option value="fluent">{t("cv.proficiency.fluent")}</option>
           <option value="native">{t("cv.proficiency.native")}</option>
         </select>
-        <button type="submit" className="primary">
+        <button type="submit" className="btn-secondary">
           {t("feedSettings.add")}
         </button>
       </form>
