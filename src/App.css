@@ -17,44 +17,82 @@
   padding: 0 0.75rem 5rem;
 }
 
-.header {
+/* App-shell top bar (chrome) — replaces the old .header. The brand shows
+   here below 900px (no rail); the per-page title shows at ≥900px, where the
+   Night rail carries the brand instead. */
+.top {
   position: sticky;
   top: 0;
-  background: var(--bg);
-  padding: 0.45rem 0 0.4rem;
   z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.15s ease;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
-.header.scrolled {
-  border-bottom-color: var(--border);
-}
-
-.brand {
+.top-brand {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
 }
 
-.brand svg {
-  display: block;
+.top-title {
+  display: none;
 }
 
-.brand h1 {
-  margin: 0;
-  font-size: var(--text-title);
-  letter-spacing: -0.01em;
-}
-
-.header-actions {
+/* Search launcher — an icon-only button below 900px, a full ⌘K pill at rail
+   widths. */
+.cmdk {
+  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 8px;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cmdk svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.cmdk-label {
+  display: none;
+}
+
+.cmdk kbd {
+  display: none;
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+
+.top-add {
+  display: none;
+  flex: 0 0 auto;
+}
+
+@media (min-width: 600px) {
+  .top-add {
+    display: inline-flex;
+  }
+}
+
+/* The Night rail is desktop-only (≥900px; styled in the sidebar-shell band). */
+.side {
+  display: none;
 }
 
 .settings-btn {
@@ -3415,106 +3453,202 @@ summary.bcol-head::after {
   max-width: 46rem;
 }
 
-@media (min-width: 900px) {
-  .app:has(.job-page) {
-    max-width: 900px;
-  }
-}
-
 /* ============================================================
-   Sidebar shell (#314) — on desktop the tab bar becomes a slim
-   left rail: it scales past seven destinations, gives Settings
-   a home, and frees the full viewport width for content. Mobile
-   keeps the fixed bottom bar; 601–899px keeps horizontal tabs.
+   Sidebar shell (chrome) — on desktop (≥900px) the shell is a Night
+   left rail (brand · nav · onboarding · Settings) beside a content column
+   with a per-page top bar. Below 900px the rail is hidden and the top bar +
+   .tabs carry navigation: a horizontal strip at 601–899px, a fixed bottom
+   icon-bar under 600px.
    ============================================================ */
-.tabs .tab-settings {
-  display: none;
-}
-
 @media (min-width: 900px) {
   .app {
-    display: grid;
-    grid-template-columns: 190px minmax(0, 1fr);
-    grid-template-areas:
-      "side header"
-      "side main";
-    column-gap: var(--space-6);
-    max-width: 1400px;
-    padding: 0 1.5rem 3rem;
-  }
-
-  /* The per-view caps that used to size .app now cap the content
-     column instead — the shell stays one width. */
-  .app:has(.board),
-  .app:has(.board-swimlanes),
-  .app:has(.jobs-layout),
-  .app:has(.cv-layout),
-  .app:has(.job-page),
-  .app:has(.settings-page) {
-    max-width: 1400px;
-  }
-
-  .app > .header {
-    grid-area: header;
-    align-self: start;
-  }
-
-  .app > main {
-    grid-area: main;
-    min-width: 0;
-    max-width: 760px;
-  }
-
-  .app:has(.board) > main,
-  .app:has(.board-swimlanes) > main,
-  .app:has(.settings-page) > main {
+    display: flex;
+    align-items: stretch;
     max-width: none;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
   }
 
-  .app:has(.cv-layout) > main {
-    max-width: 1100px;
-  }
-
-  .app:has(.job-page) > main {
-    max-width: 900px;
-  }
-
-  .app > .tabs {
-    grid-area: side;
+  /* The Night rail. */
+  .side {
+    display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    align-self: start;
+    flex: 0 0 210px;
+    width: 210px;
+    box-sizing: border-box;
+    padding: 20px 0;
     position: sticky;
     top: 0;
     height: 100vh;
-    padding: 1.1rem 0.9rem 1rem 0;
-    border-right: 1px solid var(--border);
     overflow-y: auto;
+    background: var(--night);
+    color: #e7e6f0;
   }
 
-  .app > .tabs button {
-    flex: 0 0 auto;
-    text-align: left;
+  .side-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px 22px;
+  }
+
+  .side-brand span {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    color: #f4f2ec;
+  }
+
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 12px;
+  }
+
+  .side-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 9px 12px;
     border: none;
-    background: transparent;
-    padding: 0.5rem 0.65rem;
+    background: none;
     border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    color: #b9b8cc;
+    cursor: pointer;
   }
 
-  .app > .tabs button:hover {
-    background: var(--hover);
+  .side-nav-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f4f2ec;
+  }
+
+  .side-nav-item.on {
+    background: rgba(214, 164, 65, 0.16);
+    color: var(--accent);
+  }
+
+  .side-nav-item svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+  }
+
+  .side-foot {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 12px 0;
+  }
+
+  /* Onboarding recolored for the dark rail. */
+  .side .onboarding {
+    margin: 0;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .side .onboarding h3 {
+    color: #f4f2ec;
+  }
+
+  .side .onboarding li button {
+    color: #b9b8cc;
+  }
+
+  .side .onboarding li.done button,
+  .side .onboarding li.done span {
+    color: #7d7c95;
+  }
+
+  .side .onboarding-dismiss {
+    color: #9a99ad;
+  }
+
+  .side .onboarding-sample {
+    color: var(--accent-on-ink);
+  }
+
+  /* Content column with its per-page top bar. */
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .main > .tabs {
+    display: none;
+  }
+
+  .top {
+    padding: 14px 24px;
+    gap: 12px;
+  }
+
+  .top-brand {
+    display: none;
+  }
+
+  .top-title {
+    display: block;
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 21px;
+    letter-spacing: -0.01em;
     color: var(--ink);
   }
 
-  .app > .tabs button.active {
-    background: var(--accent-soft);
-    color: var(--accent-ink);
-    font-weight: 700;
+  .cmdk {
+    min-width: 220px;
+    padding: 8px 12px;
   }
 
-  .app > .tabs .tab-settings {
-    display: block;
-    margin-top: auto;
+  .cmdk-label {
+    display: inline;
+  }
+
+  .cmdk kbd {
+    display: inline-block;
+  }
+
+  /* The per-view caps that used to size .app > main now cap the content
+     column; the shell itself stays full width. */
+  .content {
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px 24px 56px;
+    box-sizing: border-box;
+  }
+
+  /* The rail carries onboarding at rail widths; hide the in-content copy
+     (kept for the sub-900px layouts where there is no rail). */
+  .content .onboarding {
+    display: none;
+  }
+
+  .app:has(.board) .content,
+  .app:has(.board-swimlanes) .content,
+  .app:has(.settings-page) .content {
+    max-width: none;
+  }
+
+  .app:has(.cv-layout) .content {
+    max-width: 1100px;
+  }
+
+  .app:has(.job-page) .content {
+    max-width: 900px;
   }
 }
 

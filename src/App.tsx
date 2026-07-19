@@ -304,6 +304,34 @@ export default function App() {
     (c) => !hidden.has(`contacts:${c.id}`),
   );
 
+  // Primary destinations, rendered from one list into both the desktop rail
+  // (.side) and the sub-900px .tabs bar so the two never drift. Settings is
+  // pinned separately (rail foot / last tab). `data` drives the mobile
+  // scroll-into-view probe (tabsRef).
+  const navItems: {
+    data: string;
+    to: Tab;
+    active: boolean;
+    icon: React.ReactNode;
+    label: string;
+  }[] = [
+    { data: "overview", to: "overview", active: tab === "overview", icon: <NavOverviewIcon />, label: t("tabs.overview") },
+    { data: "pipeline", to: "board", active: tab === "applications" || tab === "board", icon: <NavPipelineIcon />, label: t("tabs.pipeline") },
+    { data: "feed", to: "feed", active: tab === "feed", icon: <NavFeedIcon />, label: t("tabs.feed") },
+    { data: "calendar", to: "calendar", active: tab === "calendar", icon: <NavCalendarIcon />, label: t("tabs.calendar") },
+    { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
+    { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
+  ];
+  const pageTitle =
+    tab === "settings"
+      ? t("settings.title")
+      : (navItems.find((n) => n.active)?.label ?? t("tabs.overview"));
+  const onboardingComplete =
+    !!(onboardingProfile?.name && onboardingProfile?.email) &&
+    companies.length > 0 &&
+    applications.length > 0;
+  const showOnboarding = !onboardingDismissed && !onboardingComplete;
+
   return (
     <div className="app">
       {showQuickAdd && (
@@ -360,97 +388,99 @@ export default function App() {
           ]}
         />
       )}
-      <header className={`header${scrolled ? " scrolled" : ""}`}>
-        <div className="brand">
+      <aside className="side">
+        <div className="side-brand">
           <Logo size={24} />
-          <h1>Zenith</h1>
+          <span>Zenith</span>
         </div>
-        <span className="header-actions">
+        <nav className="side-nav" aria-label={t("tabs.overview")}>
+          {navItems.map((n) => (
+            <button
+              key={n.data}
+              className={`side-nav-item${n.active ? " on" : ""}`}
+              aria-current={n.active ? "page" : undefined}
+              data-tab={n.data}
+              onClick={() => setTab(n.to)}
+            >
+              {n.icon}
+              <span>{n.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="side-foot">
+          {showOnboarding && (
+            <OnboardingChecklist
+              profileDone={
+                !!(onboardingProfile?.name && onboardingProfile?.email)
+              }
+              companyDone={companies.length > 0}
+              jobDone={applications.length > 0}
+              onGoToProfile={() => setTab("cv")}
+              onGoToCompanies={() => setTab("companies")}
+              onAddJob={() => setShowQuickAdd(true)}
+              onDismiss={dismissOnboarding}
+              onLoadSample={() => navigate("/settings?s=data")}
+            />
+          )}
           <button
-            className="settings-btn"
+            className={`side-nav-item side-settings${tab === "settings" ? " on" : ""}`}
+            aria-current={tab === "settings" ? "page" : undefined}
+            onClick={() => setTab("settings")}
+          >
+            <SettingsIcon />
+            <span>{t("settings.title")}</span>
+          </button>
+        </div>
+      </aside>
+      <div className="main">
+        <header className={`top${scrolled ? " scrolled" : ""}`}>
+          <span className="top-brand">
+            <Logo size={22} />
+          </span>
+          <h1 className="top-title">{pageTitle}</h1>
+          <button
+            className="cmdk"
             onClick={() => setShowPalette(true)}
             title={t("header.search")}
             aria-label={t("header.search")}
           >
             <SearchIcon />
+            <span className="cmdk-label">{t("header.search")}</span>
+            <kbd>
+              {/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl+K"}
+            </kbd>
           </button>
           <NotificationBell />
           <button
-            className={`settings-btn${tab === "settings" ? " active" : ""}`}
-            onClick={() => setTab("settings")}
-            title={t("header.settings")}
-            aria-label={t("header.settings")}
+            className="primary top-add"
+            onClick={() => setShowQuickAdd(true)}
+          >
+            + {t("quickAdd.add")}
+          </button>
+        </header>
+        <nav className="tabs" ref={tabsRef}>
+          {navItems.map((n) => (
+            <button
+              key={n.data}
+              className={n.active ? "active" : ""}
+              aria-current={n.active ? "page" : undefined}
+              data-tab={n.data}
+              onClick={() => setTab(n.to)}
+            >
+              {n.icon}
+              <span className="tab-label">{n.label}</span>
+            </button>
+          ))}
+          <button
+            className={`tab-settings${tab === "settings" ? " active" : ""}`}
+            data-tab="settings"
             aria-current={tab === "settings" ? "page" : undefined}
+            onClick={() => setTab("settings")}
           >
             <SettingsIcon />
+            <span className="tab-label">{t("settings.title")}</span>
           </button>
-        </span>
-      </header>
-      <nav className="tabs" ref={tabsRef}>
-        <button
-          className={tab === "overview" ? "active" : ""}
-          aria-current={tab === "overview" ? "page" : undefined}
-          data-tab="overview"
-          onClick={() => setTab("overview")}
-        >
-          <NavOverviewIcon />
-          <span className="tab-label">{t("tabs.overview")}</span>
-        </button>
-        <button
-          className={tab === "applications" || tab === "board" ? "active" : ""}
-          aria-current={tab === "applications" || tab === "board" ? "page" : undefined}
-          data-tab="pipeline"
-          onClick={() => setTab("board")}
-        >
-          <NavPipelineIcon />
-          <span className="tab-label">{t("tabs.pipeline")}</span>
-        </button>
-        <button
-          className={tab === "feed" ? "active" : ""}
-          aria-current={tab === "feed" ? "page" : undefined}
-          data-tab="feed"
-          onClick={() => setTab("feed")}
-        >
-          <NavFeedIcon />
-          <span className="tab-label">{t("tabs.feed")}</span>
-        </button>
-        <button
-          className={tab === "calendar" ? "active" : ""}
-          aria-current={tab === "calendar" ? "page" : undefined}
-          data-tab="calendar"
-          onClick={() => setTab("calendar")}
-        >
-          <NavCalendarIcon />
-          <span className="tab-label">{t("tabs.calendar")}</span>
-        </button>
-        <button
-          className={tab === "companies" || tab === "contacts" ? "active" : ""}
-          aria-current={tab === "companies" || tab === "contacts" ? "page" : undefined}
-          data-tab="network"
-          onClick={() => setTab("companies")}
-        >
-          <NavNetworkIcon />
-          <span className="tab-label">{t("tabs.network")}</span>
-        </button>
-        <button
-          className={tab === "cv" ? "active" : ""}
-          aria-current={tab === "cv" ? "page" : undefined}
-          data-tab="cv"
-          onClick={() => setTab("cv")}
-        >
-          <NavCvIcon />
-          <span className="tab-label">{t("tabs.cv")}</span>
-        </button>
-        <button
-          className={`tab-settings${tab === "settings" ? " active" : ""}`}
-          data-tab="settings"
-          aria-current={tab === "settings" ? "page" : undefined}
-          onClick={() => setTab("settings")}
-        >
-          <SettingsIcon />
-          <span className="tab-label">{t("settings.title")}</span>
-        </button>
-      </nav>
+        </nav>
 
       {error && (
         <p className="error">
@@ -638,6 +668,7 @@ export default function App() {
           </>
         )}
       </main>
+      </div>
 
       <button
         className="quick-add-fab"
