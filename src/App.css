@@ -3579,7 +3579,11 @@ summary.bcol-head::after {
   grid-template-columns: 170px 1fr;
   gap: var(--space-5);
   align-items: start;
-  margin-top: var(--space-3);
+  /* Wide two-pane (#386 #10) — the block fills typical desktops and only caps
+     (centred) on very wide screens, so the panel stops floating in a narrow
+     column with a big empty right band. */
+  max-width: 78rem;
+  margin: var(--space-3) auto 0;
 }
 
 .settings-nav {
@@ -3618,7 +3622,16 @@ summary.bcol-head::after {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-1);
   padding: 1.2rem 1.4rem;
-  max-width: 34rem;
+  /* Fill the pane rather than capping at a narrow column (#386 #10). */
+  max-width: none;
+}
+
+/* Short fields (the General selects) flow two-up on a wide panel, one-up when
+   narrow; long fields (webhook URLs, API keys) stay full-width outside it. */
+.settings-fieldgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.5rem 1.2rem;
 }
 
 @media (max-width: 700px) {
