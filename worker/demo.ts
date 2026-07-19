@@ -68,9 +68,9 @@ export async function seedSampleData(
     .run();
   await env.DB.prepare(
     `INSERT INTO feed_sources (user_id, source, enabled, location) VALUES
-     (?, 'adzuna', 1, 'nl'), (?, 'hn', 1, NULL)`,
+     (?, 'adzuna', 1, 'nl')`,
   )
-    .bind(userId, userId)
+    .bind(userId)
     .run();
   await env.DB.prepare(
     "INSERT INTO feed_role_keywords (user_id, role_slug, keyword) VALUES (?, 'platform-engineer', 'platform engineer')",
@@ -195,7 +195,7 @@ export async function seedSampleData(
 
   const ghosted = await env.DB.prepare(
     `INSERT INTO applications (user_id, company_id, title, role_type, status, applied_at, source)
-     VALUES (?, ?, 'DevOps Engineer', 'other', 'ghosted', date('now', '-45 days'), 'feed:hn')
+     VALUES (?, ?, 'DevOps Engineer', 'other', 'ghosted', date('now', '-45 days'), 'feed:adzuna')
      RETURNING id`,
   )
     .bind(userId, globex!.id)

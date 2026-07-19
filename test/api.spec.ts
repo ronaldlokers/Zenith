@@ -827,12 +827,12 @@ describe("feed config", () => {
       sources: { source: string; enabled: number }[];
       keywords: { role_slug: string; keyword: string }[];
     };
-    expect(sources.map((s) => s.source).sort()).toEqual(["adzuna", "hn"]);
+    expect(sources.map((s) => s.source).sort()).toEqual(["adzuna"]);
     expect(keywords.some((k) => k.role_slug === "devops")).toBe(true);
   });
 
   it("toggles a source and updates its location", async () => {
-    const res = await authedFetch(`${BASE}/api/feed/config/sources/hn`, {
+    const res = await authedFetch(`${BASE}/api/feed/config/sources/adzuna`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ enabled: false, location: "berlin" }),

@@ -73,7 +73,7 @@ function guessRoleType(text: string, keywords: RoleKeywords): string | null {
 }
 
 interface FeedCandidate {
-  source: "adzuna" | "hn" | "greenhouse" | "ashby";
+  source: "adzuna" | "greenhouse" | "ashby";
   external_id: string;
   title: string;
   company: string | null;
@@ -136,55 +136,6 @@ async function fetchAdzuna(
     }
   }
   return out;
-}
-
-async function fetchHnWhoIsHiring(
-  keywords: RoleKeywords,
-  locationFilter: string | null,
-): Promise<FeedCandidate[]> {
-  try {
-    const storyRes = await fetch(
-      "https://hn.algolia.com/api/v1/search_by_date?tags=story,author_whoishiring&query=Who%20is%20Hiring&hitsPerPage=1",
-    );
-    if (!storyRes.ok) return [];
-    const storyData = (await storyRes.json()) as {
-      hits: Array<{ objectID: string; created_at: string }>;
-    };
-    const story = storyData.hits[0];
-    if (!story) return [];
-
-    const commentsRes = await fetch(
-      `https://hn.algolia.com/api/v1/search_by_date?tags=comment,story_${story.objectID}&hitsPerPage=500`,
-    );
-    if (!commentsRes.ok) return [];
-    const commentsData = (await commentsRes.json()) as {
-      hits: Array<{ objectID: string; comment_text: string | null; created_at: string }>;
-    };
-
-    const out: FeedCandidate[] = [];
-    const locNeedle = locationFilter?.toLowerCase() ?? null;
-    for (const hit of commentsData.hits) {
-      const text = hit.comment_text ?? "";
-      if (locNeedle && !text.toLowerCase().includes(locNeedle)) continue;
-      const firstLine = text.split(/<p>|\n/)[0].replace(/<[^>]+>/g, "");
-      const role = guessRoleType(text, keywords);
-      if (!role) continue;
-      out.push({
-        source: "hn",
-        external_id: hit.objectID,
-        title: firstLine.slice(0, 140) || "HN Who's Hiring listing",
-        company: null,
-        location: null,
-        url: `https://news.ycombinator.com/item?id=${hit.objectID}`,
-        salary_text: null,
-        role_type: role,
-        posted_at: hit.created_at,
-      });
-    }
-    return out;
-  } catch {
-    return [];
-  }
 }
 
 // Direct ATS sourcing (#219) — Greenhouse and Ashby both publish free,
@@ -273,9 +224,6 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   const jobs: Promise<FeedCandidate[]>[] = [];
   for (const cfg of configs.filter((c) => c.source === "adzuna")) {
     jobs.push(fetchAdzuna(env, keywords, cfg.location));
-  }
-  for (const cfg of configs.filter((c) => c.source === "hn")) {
-    jobs.push(fetchHnWhoIsHiring(keywords, cfg.location));
   }
   for (const board of atsBoards.filter((b) => b.source === "greenhouse")) {
     jobs.push(fetchGreenhouse(board.slug, keywords));
