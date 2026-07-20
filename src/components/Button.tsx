@@ -6,8 +6,16 @@ import "./Button.css";
 // looks — it must not lean on any App.css rule, because Storybook loads only
 // the design tokens and the catalog has to match what ships.
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Visual emphasis. */
-  variant?: "default" | "primary" | "ghost" | "dark" | "danger";
+  /**
+   * Visual emphasis.
+   *  - "default"   — neutral surface + border (App.css's pre-existing base look).
+   *  - "primary"   — Recipe A, App.css:1212 button.primary.
+   *  - "secondary" — Recipe B, App.css:4649 (.card-actions/.detail-actions/
+   *    .settings-modal/.shortcut-help/.form-actions/.share-actions button).
+   *  - "danger"    — Recipe B + App.css:4693 colour/border-colour override.
+   *  - "ghost", "dark" — design-system additions, no current call sites.
+   */
+  variant?: "default" | "primary" | "secondary" | "ghost" | "dark" | "danger";
   /** Control height / type scale. */
   size?: "sm" | "md" | "lg";
   /** Optional leading icon element. */

@@ -23,6 +23,35 @@ describe("Button", () => {
     expect(cls).toContain("zui-btn--primary");
   });
 
+  // Recipe B (App.css:4649, the "control normalization layer"). Distinct
+  // from "danger", which composes the same recipe plus a colour override.
+  test("secondary variant emits its class", () => {
+    render(<Button variant="secondary">Cancel</Button>);
+    expect(screen.getByRole("button")).toHaveClass("zui-btn--secondary");
+  });
+
+  // Danger composes Recipe B (App.css:4693) — it must not also carry the
+  // secondary class, since variant is a single exclusive class, not a
+  // combination of two.
+  test("danger composes its own complete recipe, not the secondary class", () => {
+    render(<Button variant="danger">Delete</Button>);
+    const cls = screen.getByRole("button").className.split(/\s+/);
+    expect(cls).toContain("zui-btn--danger");
+    expect(cls).not.toContain("zui-btn--secondary");
+  });
+
+  test.each([
+    ["default", "zui-btn--default"],
+    ["primary", "zui-btn--primary"],
+    ["secondary", "zui-btn--secondary"],
+    ["ghost", "zui-btn--ghost"],
+    ["dark", "zui-btn--dark"],
+    ["danger", "zui-btn--danger"],
+  ] as const)("variant=%s emits %s", (variant, expectedClass) => {
+    render(<Button variant={variant}>Save</Button>);
+    expect(screen.getByRole("button")).toHaveClass(expectedClass);
+  });
+
   test("applies the zui size class", () => {
     render(<Button size="sm">Save</Button>);
     expect(screen.getByRole("button")).toHaveClass("zui-btn--sm");
