@@ -181,7 +181,8 @@
     "viaSource": "via {{source}}",
     "viewPosting": "Bekijk vacature ↗",
     "addToJobs": "Toevoegen aan Jobs",
-    "dismiss": "Negeren"
+    "dismiss": "Negeren",
+    "triageHint": "j / k navigeren · a toevoegen · d negeren"
   },
   "stats": {
     "momentumLabel": "Pipeline-momentum",

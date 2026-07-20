@@ -7,7 +7,7 @@ import { api } from "./api";
 import { LoadFailed, LoadingSkeleton } from "./ui";
 import { requestConfirm } from "./hooks";
 import { EmptyFeedIcon, RemoveIcon } from "./icons";
-import { safeHref } from "./format";
+import { safeHref, formatDate } from "./format";
 import type {
   AtsBoard,
   FeedCursor,
@@ -503,6 +503,13 @@ export function FeedTab({
     return () => window.removeEventListener("keydown", handler);
   }, [items, focusedIndex]);
 
+  // The desktop triage pane mirrors the keyboard/click-selected list row.
+  const focusedItem = (items ?? [])[focusedIndex] ?? null;
+  const focusedRole = focusedItem
+    ? (roleTypes.find((r) => r.slug === focusedItem.role_type)?.label ??
+      focusedItem.role_type)
+    : "";
+
   return (
     <section>
       <div className="toolbar">
@@ -520,25 +527,84 @@ export function FeedTab({
       {failed && !items && <LoadFailed onRetry={load} />}
       {!failed && !items && <LoadingSkeleton />}
 
-      <ul className="cards" ref={cardsRef}>
-        {(items ?? []).map((item, i) => (
-          <FeedCard
-            key={item.id}
-            item={item}
-            roleLabel={roleTypes.find((r) => r.slug === item.role_type)?.label ?? item.role_type}
-            focused={i === focusedIndex}
-            adding={addingIds.has(item.id)}
-            onAdd={() => addToPipeline(item)}
-            onDismiss={() => dismiss(item)}
-          />
-        ))}
-        {items?.length === 0 && (
+      {items && items.length > 0 && (
+        <div className="feed-triage">
+          <ul className="cards feed-list" ref={cardsRef}>
+            {items.map((item, i) => (
+              <FeedCard
+                key={item.id}
+                item={item}
+                roleLabel={
+                  roleTypes.find((r) => r.slug === item.role_type)?.label ??
+                  item.role_type
+                }
+                focused={i === focusedIndex}
+                adding={addingIds.has(item.id)}
+                onAdd={() => addToPipeline(item)}
+                onDismiss={() => dismiss(item)}
+                onSelect={() => {
+                  kbNav.current = false;
+                  setFocusedIndex(i);
+                }}
+              />
+            ))}
+          </ul>
+          {focusedItem && (
+            <aside className="feed-detail" aria-live="polite">
+              <span className="feed-detail-src">
+                {t("feed.viaSource", { source: focusedItem.source })}
+                {focusedItem.posted_at
+                  ? ` · ${formatDate(focusedItem.posted_at)}`
+                  : ""}
+              </span>
+              <h3>{focusedItem.title}</h3>
+              <p className="feed-detail-co muted">
+                {[focusedItem.company, focusedItem.location]
+                  .filter(Boolean)
+                  .join(" · ") || "—"}
+              </p>
+              <p className="muted small">
+                {focusedRole}
+                {focusedItem.salary_text ? ` · ${focusedItem.salary_text}` : ""}
+              </p>
+              {safeHref(focusedItem.url) && (
+                <a
+                  href={safeHref(focusedItem.url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="small"
+                >
+                  {t("feed.viewPosting")}
+                </a>
+              )}
+              <div className="feed-detail-actions">
+                <button
+                  className="primary"
+                  onClick={() => addToPipeline(focusedItem)}
+                  disabled={addingIds.has(focusedItem.id)}
+                >
+                  {t("feed.addToJobs")}
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => dismiss(focusedItem)}
+                >
+                  {t("feed.dismiss")}
+                </button>
+              </div>
+              <p className="feed-detail-hint">{t("feed.triageHint")}</p>
+            </aside>
+          )}
+        </div>
+      )}
+      {items?.length === 0 && (
+        <ul className="cards">
           <li className="empty">
             <EmptyFeedIcon />
             {t("empty.feedNothingNew")}
           </li>
-        )}
-      </ul>
+        </ul>
+      )}
       {cursor && (
         <div className="load-more">
           <button onClick={loadMore} disabled={loadingMore}>
@@ -563,6 +629,7 @@ function FeedCard({
   adding,
   onAdd,
   onDismiss,
+  onSelect,
 }: {
   item: FeedItem;
   roleLabel: string;
@@ -570,6 +637,7 @@ function FeedCard({
   adding: boolean;
   onAdd: () => void;
   onDismiss: () => void;
+  onSelect: () => void;
 }) {
   const { t } = useTranslation();
   const [dragX, setDragX] = useState(0);
@@ -591,40 +659,63 @@ function FeedCard({
     setDragX(0);
   };
 
+  // One row for both layouts: on the desktop two-pane the row is compact
+  // (title + company; meta/link/actions live in the detail pane), and below
+  // 900px it expands to the full card with inline actions + swipe.
   return (
     <li
-      className={`card feed-card${focused ? " kb-focused" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
+      className={`feed-card feed-row${focused ? " kb-focused sel" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
       tabIndex={focused ? 0 : -1}
       aria-current={focused ? "true" : undefined}
+      onClick={onSelect}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       style={dragging ? { transform: `translateX(${dragX}px)` } : undefined}
     >
-      <div className="card-body">
-        <div className="card-main">
-          <strong>{item.title}</strong>
-          <span className="muted small">
-            {[item.company, item.location].filter(Boolean).join(" · ")}
-          </span>
-          <span className="muted small">
-            {roleLabel}
-            {item.salary_text ? ` · ${item.salary_text}` : ""}
-            {" · "}
-            {t("feed.viaSource", { source: item.source })}
-          </span>
-          {safeHref(item.url) && (
-            <a href={safeHref(item.url)} target="_blank" rel="noreferrer" className="small">
-              {t("feed.viewPosting")}
-            </a>
-          )}
-        </div>
-        <div className="card-actions">
-          <button className="primary" onClick={onAdd} disabled={adding}>
-            {t("feed.addToJobs")}
-          </button>
-          <button onClick={onDismiss}>{t("feed.dismiss")}</button>
-        </div>
+      <div className="feed-row-main">
+        <strong>{item.title}</strong>
+        <span className="muted small">
+          {[item.company, item.location].filter(Boolean).join(" · ")}
+        </span>
+        <span className="muted small feed-row-meta">
+          {roleLabel}
+          {item.salary_text ? ` · ${item.salary_text}` : ""}
+          {" · "}
+          {t("feed.viaSource", { source: item.source })}
+        </span>
+        {safeHref(item.url) && (
+          <a
+            href={safeHref(item.url)}
+            target="_blank"
+            rel="noreferrer"
+            className="small feed-row-link"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {t("feed.viewPosting")}
+          </a>
+        )}
+      </div>
+      <div className="feed-row-actions">
+        <button
+          className="primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd();
+          }}
+          disabled={adding}
+        >
+          {t("feed.addToJobs")}
+        </button>
+        <button
+          className="btn-secondary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDismiss();
+          }}
+        >
+          {t("feed.dismiss")}
+        </button>
       </div>
     </li>
   );

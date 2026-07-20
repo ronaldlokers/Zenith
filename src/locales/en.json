@@ -181,7 +181,8 @@
     "viaSource": "via {{source}}",
     "viewPosting": "View posting ↗",
     "addToJobs": "Add to Jobs",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "triageHint": "j / k move · a add · d dismiss"
   },
   "stats": {
     "momentumLabel": "Pipeline momentum",
