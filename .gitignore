@@ -54,3 +54,4 @@ scripts/.seed-admin.sql
 !.claude/skills/zenith-design/assets/
 .claude/skills/zenith-design/assets/*
 !.claude/skills/zenith-design/assets/icons.tsx
+.superpowers/
