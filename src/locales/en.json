@@ -623,7 +623,13 @@
   },
   "calendar": {
     "empty": "Nothing on the agenda yet. Due dates, logged touchpoints, and applied dates all show up here.",
-    "todaySuffix": " · today"
+    "todaySuffix": " · today",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today",
+    "eventCount": "{{count}} events",
+    "moreEvents": "+{{count}} more",
+    "upcoming": "Upcoming"
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"
