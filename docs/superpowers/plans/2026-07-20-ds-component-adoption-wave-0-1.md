@@ -296,13 +296,15 @@ const OUT = process.env.OUT_DIR ?? "baseline";
 const AUTH = process.env.AUTH_STATE ?? ".auth.json";
 
 // Routes come from TAB_PATHS in src/routing.ts. Keep them in sync.
+// /stats is deliberately absent: PATH_TABS maps it to "overview" (#346 folded
+// /stats and /activity into the Dashboard), so capturing it would duplicate
+// the overview shots and imply a view that no longer exists.
 const VIEWS = [
   ["overview", "/"],
   ["jobs", "/jobs"],
   ["board", "/board"],
   ["feed", "/feed"],
   ["calendar", "/calendar"],
-  ["stats", "/stats"],
   ["companies", "/companies"],
   ["people", "/people"],
   ["cv", "/cv"],
@@ -371,8 +373,8 @@ is git-ignored (`git status --short` must not list it).
 
 Run: `node scripts/screenshot-baseline.mjs`
 
-Expected: 20 lines of `captured <view>-<viewport>`, and 20 PNGs in `baseline/`
-(10 views × 2 viewports).
+Expected: 18 lines of `captured <view>-<viewport>`, and 18 PNGs in `baseline/`
+(9 views × 2 viewports).
 
 If it exits with "No session state" or "Session expired", redo Step 6 — do not
 work around it. The script fails closed precisely because a login-page baseline
@@ -851,7 +853,7 @@ git status --short
 ls baseline/*.png | wc -l
 ```
 
-Expected: no uncommitted changes; 20 baseline PNGs (10 views x 2 viewports).
+Expected: no uncommitted changes; 18 baseline PNGs (9 views x 2 viewports).
 
 - [ ] **Step 2: Swap the buttons in `src/stats-view.tsx`**
 
