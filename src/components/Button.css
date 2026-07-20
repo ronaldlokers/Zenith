@@ -33,7 +33,9 @@
     filter: brightness(0.97);
   }
 
-  /* Matches the global focus geometry (App.css:1853). */
+  /* Matches the global focus geometry (src/index.css:229) — the real
+     :focus-visible rule, not the [role="button"] one (App.css:1853), which
+     targets ARIA-button divs, not <button> elements. */
   .zui-btn:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -60,11 +62,13 @@
     font-size: var(--text-title);
   }
 
+  /* App.css:1215 sets border: none (zero width), not just transparent —
+     with border-box sizing a 1px transparent border still adds ~2px. */
   .zui-btn--primary {
     background: var(--accent);
     color: var(--accent-text);
-    border-color: transparent;
-    font-weight: 700;
+    border: none;
+    font-weight: 650;
   }
 
   .zui-btn--primary:hover:not(:disabled) {
@@ -84,7 +88,7 @@
   .zui-btn--dark {
     background: var(--night);
     color: #f4f2ec;
-    border-color: transparent;
+    border: none;
   }
 
   /* Mobile touch target. App.css applied this per-container
