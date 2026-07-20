@@ -1,0 +1,99 @@
+/* Complete, self-contained. Deliberately reproduces the rules the old raw
+   <button> markup inherited from App.css, because Storybook never loads
+   App.css and the catalog has to match production:
+     - App.css:1212 button.primary     — accent fill, radius, padding
+     - App.css:1222 button.primary:hover
+     - App.css:1226 button.danger      — danger text colour
+     - App.css:4527 band 4             — :active brightness
+     - App.css:1503 @media max-600px   — 44px touch target
+   Layer order (not specificity) is what lets these win; see src/app-styles.css. */
+@layer components {
+  .zui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--sans);
+    font-weight: 500;
+    line-height: 1;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+
+  /* Reproduces App.css band 4 (button:not(:disabled):active). */
+  .zui-btn:not(:disabled):active {
+    filter: brightness(0.97);
+  }
+
+  /* Matches the global focus geometry (App.css:1853). */
+  .zui-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .zui-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .zui-btn--sm {
+    padding: 0.35rem 0.6rem;
+    font-size: var(--text-meta);
+  }
+
+  /* 0.55/0.9 matches App.css button.primary as it ships today. */
+  .zui-btn--md {
+    padding: 0.55rem 0.9rem;
+    font-size: var(--text-body);
+  }
+
+  .zui-btn--lg {
+    padding: 0.6rem 1rem;
+    font-size: var(--text-title);
+  }
+
+  .zui-btn--primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: transparent;
+    font-weight: 700;
+  }
+
+  .zui-btn--primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 85%, black);
+  }
+
+  .zui-btn--danger {
+    color: var(--danger);
+  }
+
+  .zui-btn--ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
+  }
+
+  .zui-btn--dark {
+    background: var(--night);
+    color: #f4f2ec;
+    border-color: transparent;
+  }
+
+  /* Mobile touch target. App.css applied this per-container
+     (.card-actions button, .toolbar button at max-width 600px); a
+     self-contained component cannot know its container, so it guarantees
+     its own. Mobile parity is a locked product decision. */
+  @media (max-width: 600px) {
+    .zui-btn {
+      min-height: 44px;
+    }
+  }
+}
