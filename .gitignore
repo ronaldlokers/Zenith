@@ -26,6 +26,13 @@ dist-ssr
 # storybook build output
 storybook-static
 
+# screenshot baseline for component migration (local only, regenerated)
+baseline/
+after/
+
+# saved browser session for the baseline script — never commit
+.auth.json
+
 # wrangler files
 .wrangler
 .dev.vars*
