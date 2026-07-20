@@ -260,13 +260,17 @@ npx playwright install chromium
 Verify it resolves: `node -e "require.resolve('playwright')" && echo ok`
 Expected: `ok`.
 
-- [ ] **Step 2: Add the baseline output to `.gitignore`**
+- [ ] **Step 2: Add the baseline output and session state to `.gitignore`**
 
 Insert before the `# wrangler files` block:
 
 ```
 # screenshot baseline for component migration (local only, regenerated)
 baseline/
+after/
+
+# saved browser session for the baseline script — never commit
+.auth.json
 ```
 
 - [ ] **Step 3: Write the capture script**
@@ -277,17 +281,30 @@ Create `scripts/screenshot-baseline.mjs`. It drives the already-installed Playwr
 // Captures every app view at desktop and mobile widths. Run BEFORE any
 // component swap, then again after, and diff. Mobile is a locked
 // first-class target, so both widths are mandatory.
+//
+// Requires a saved session: src/AuthGate.tsx renders <Login/> whenever there
+// is no session, so an unauthenticated run would silently capture the login
+// page for every view — and every later diff would then pass while catching
+// nothing. Create the state once with:
+//   npx playwright open --save-storage=.auth.json http://localhost:5173
+// log in in the window that opens, then close it.
 import { chromium } from "playwright";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:5173";
 const OUT = process.env.OUT_DIR ?? "baseline";
+const AUTH = process.env.AUTH_STATE ?? ".auth.json";
+
+// Routes come from TAB_PATHS in src/routing.ts. Keep them in sync.
 const VIEWS = [
-  ["dashboard", "/"],
-  ["board", "/pipeline"],
+  ["overview", "/"],
+  ["jobs", "/jobs"],
+  ["board", "/board"],
   ["feed", "/feed"],
   ["calendar", "/calendar"],
-  ["network", "/network"],
+  ["stats", "/stats"],
+  ["companies", "/companies"],
+  ["people", "/people"],
   ["cv", "/cv"],
   ["settings", "/settings"],
 ];
@@ -296,16 +313,32 @@ const VIEWPORTS = [
   ["mobile", { width: 390, height: 844 }],
 ];
 
+if (!existsSync(AUTH)) {
+  console.error(
+    `No session state at ${AUTH}. Create it with:\n` +
+      `  npx playwright open --save-storage=${AUTH} ${BASE}\n` +
+      `then log in and close the window. Refusing to capture a login-page ` +
+      `baseline, which would make every later diff meaningless.`,
+  );
+  process.exit(1);
+}
+
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 for (const [vpName, viewport] of VIEWPORTS) {
-  const page = await browser.newPage({ viewport });
+  const context = await browser.newContext({ viewport, storageState: AUTH });
+  const page = await context.newPage();
   for (const [name, route] of VIEWS) {
     await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
+    // Fail loudly rather than capture a login page: the session expired.
+    if (await page.getByLabel(/password/i).count()) {
+      console.error(`Session expired — ${route} rendered the login page. Re-create ${AUTH}.`);
+      process.exit(1);
+    }
     await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
     console.log(`captured ${name}-${vpName}`);
   }
-  await page.close();
+  await context.close();
 }
 await browser.close();
 ```
@@ -322,15 +355,33 @@ Run in a background shell: `npm run dev`
 
 Wait for it to report a local URL. Confirm the port matches `BASE_URL` (default `http://localhost:5173`); if Vite picked a different port, pass `BASE_URL` explicitly in the next step.
 
-- [ ] **Step 6: Capture the baseline**
+- [ ] **Step 6: Create the session state (manual, one-off)**
+
+**This step needs a human.** The app gates on auth, so the script refuses to run
+without a saved session.
+
+```bash
+npx playwright open --save-storage=.auth.json http://localhost:5173
+```
+
+Log in in the window that opens, then close it. Confirm `.auth.json` exists and
+is git-ignored (`git status --short` must not list it).
+
+- [ ] **Step 7: Capture the baseline**
 
 Run: `node scripts/screenshot-baseline.mjs`
 
-Expected: 14 lines of `captured <view>-<viewport>`, and 14 PNGs in `baseline/`.
+Expected: 20 lines of `captured <view>-<viewport>`, and 20 PNGs in `baseline/`
+(10 views × 2 viewports).
 
-**Verify by eye before continuing.** Open two or three of the PNGs and confirm they show real rendered views, not a login screen or an error state. A baseline of empty pages makes every later diff meaningless. If the app requires auth, log in in a headed browser first and adapt the script to reuse that storage state.
+If it exits with "No session state" or "Session expired", redo Step 6 — do not
+work around it. The script fails closed precisely because a login-page baseline
+would make every later diff pass while catching nothing.
 
-- [ ] **Step 7: Stop the dev server and commit the script**
+**Then verify by eye**: open two or three PNGs and confirm they show real
+rendered views with actual data, not empty states.
+
+- [ ] **Step 8: Stop the dev server and commit the script**
 
 ```bash
 git add scripts/screenshot-baseline.mjs .gitignore package.json package-lock.json
@@ -800,7 +851,7 @@ git status --short
 ls baseline/*.png | wc -l
 ```
 
-Expected: no uncommitted changes; 14 baseline PNGs.
+Expected: no uncommitted changes; 20 baseline PNGs (10 views x 2 viewports).
 
 - [ ] **Step 2: Swap the buttons in `src/stats-view.tsx`**
 
@@ -868,6 +919,10 @@ git commit -m "refactor: swap Button call sites in stats-view, timeline, login, 
 - Consumes: `Button` from Task 4.
 
 166 buttons across ten files. **Do one file per commit** — a screenshot diff that only spans one view is diagnosable; one spanning ten is not.
+
+Under subagent-driven execution this task is dispatched as **ten separate
+implementer runs (7a–7j), one per file**, each with its own review gate, so a
+reviewer can reject one file while approving its neighbour.
 
 - [ ] **Step 1: Swap one file, smallest first**
 
