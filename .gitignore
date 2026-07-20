@@ -23,6 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# storybook build output
+storybook-static
+
 # wrangler files
 .wrangler
 .dev.vars*
