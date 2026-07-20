@@ -1,0 +1,25 @@
+/* Zenith typography — "Ascent" brand direction (locked).
+ * Single-family system: Geist for the wordmark, headings, and body;
+ * Geist Mono for labels/meta/chrome (uppercase, tracked). Both load
+ * from Google Fonts (they declare their own @font-face w/ gstatic srcs).
+ * --serif is kept as a stable token name but now resolves to Geist
+ * Semibold (the display voice) — there is no serif in the brand. */
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
+
+:root {
+  --serif: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; /* @kind font */ /* headings/display — set at 600 */
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, sans-serif; /* @kind font */ /* body */
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Consolas, monospace; /* @kind font */ /* labels/chrome */
+
+  /* Type scale (theme-independent) */
+  --text-display: 2.125rem; /* 34px — page titles (serif) */
+  --text-heading: 1.375rem; /* 22px — section & card titles (serif) */
+  --text-title: 0.95rem;
+  --text-body: 0.875rem; /* 14px — content */
+  --text-meta: 0.75rem;
+  --text-chrome: 0.64rem;
+
+  /* Letter-spacing */
+  --track-chrome: 0.06em;
+  --track-eyebrow: 0.12em;
+}

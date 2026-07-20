@@ -1,0 +1,50 @@
+/* Zenith base resets — from JobSeekr src/index.css. */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* Standard keyboard focus — one rule covers every interactive component.
+ * Tracks the --ring-color token; components need no per-element focus JS. */
+:focus-visible { outline: 2px solid var(--ring-color); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-ink); text-decoration: underline; }
+
+/* Motion keyframes used by overlay components (Modal, Toast). */
+@keyframes zn-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zn-slide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes zn-spin { to { transform: rotate(360deg); } }
+@keyframes zn-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+input[type="range"] { -webkit-appearance: none; appearance: none; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-text); border: 2px solid var(--accent); box-shadow: var(--shadow-1); cursor: pointer; margin-top: -5px; }
+input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--accent-text); border: 2px solid var(--accent); box-shadow: var(--shadow-1); cursor: pointer; }
+input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--ring-color); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  @keyframes zn-fade { from { opacity: 1; } to { opacity: 1; } }
+  @keyframes zn-slide { from { opacity: 1; transform: none; } to { opacity: 1; transform: none; } }
+  @keyframes zn-spin { to { transform: none; } }
+  @keyframes zn-shimmer { 0% { background-position: 0 0; } 100% { background-position: 0 0; } }
+}
+
+/* Print — for the Detail "cheat sheet" and CV. Drop app chrome, ink on white,
+ * avoid breaking cards across pages. Mark anything screen-only with .no-print;
+ * force a page break before an element with .page-break. */
+@media print {
+  :root { --bg: #ffffff; --surface: #ffffff; --surface-sunken: #ffffff; }
+  body { background: #fff; }
+  aside, nav, .no-print, [data-print="hide"] { display: none !important; }
+  .main, .detail-cols, .cols { display: block !important; overflow: visible !important; }
+  .card, .doc-page, article, section { box-shadow: none !important; break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; color: #555; }
+  .page-break { break-before: page; }
+}
