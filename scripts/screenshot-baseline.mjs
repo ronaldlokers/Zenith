@@ -16,13 +16,15 @@ const OUT = process.env.OUT_DIR ?? "baseline";
 const AUTH = process.env.AUTH_STATE ?? ".auth.json";
 
 // Routes come from TAB_PATHS in src/routing.ts. Keep them in sync.
+// /stats is deliberately absent: PATH_TABS maps it to "overview" (#346 folded
+// /stats and /activity into the Dashboard), so capturing it would duplicate
+// the overview shots and imply a view that no longer exists.
 const VIEWS = [
   ["overview", "/"],
   ["jobs", "/jobs"],
   ["board", "/board"],
   ["feed", "/feed"],
   ["calendar", "/calendar"],
-  ["stats", "/stats"],
   ["companies", "/companies"],
   ["people", "/people"],
   ["cv", "/cv"],
