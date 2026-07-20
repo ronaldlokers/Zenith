@@ -1,0 +1,6 @@
+{
+  "projectId": "1d982e90-4ddb-436a-9941-bb2b0a937016",
+  "shape": "package",
+  "bundleDir": ".claude/skills/zenith-design",
+  "note": "Bundle is a prebuilt off-script design-sync layout, not converter output. Re-adopted 2026-07-19 after local config was lost."
+}

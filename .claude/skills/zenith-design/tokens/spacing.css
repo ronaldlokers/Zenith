@@ -1,0 +1,49 @@
+/* Zenith structural tokens — "Ascent" brand direction. Spacing, radii, elevation. */
+:root {
+  --space-1: 0.25rem; /* 4px base */
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Corner radii — 10px (--radius-md) is the app's dominant corner; 14px (lg) for surfaces/cards */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+
+  /* Elevation — soft, low. level 1 = raised surfaces/cards, level 2 = overlays */
+  --shadow-1: 0 1px 2px rgba(20, 23, 58, 0.04), 0 2px 10px -3px rgba(20, 23, 58, 0.1);
+  --shadow-2: 0 4px 14px -3px rgba(20, 23, 58, 0.12), 0 16px 40px -10px rgba(20, 23, 58, 0.2);
+
+  /* Motion — one snappy default, one for larger surface transitions.
+   * Easing is a gentle "settle" curve; reduce-motion users get instant. */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1); /* @kind other */
+  --ease-emphasized: cubic-bezier(0.3, 0.9, 0.1, 1); /* @kind other */
+  --dur-fast: 120ms; /* @kind other */
+  --dur-base: 220ms; /* @kind other */
+  --dur-slow: 360ms; /* @kind other */
+  --motion-hover: var(--dur-fast) var(--ease-standard);
+  --motion-surface: var(--dur-base) var(--ease-emphasized);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms; /* @kind other */
+    --dur-base: 0ms; /* @kind other */
+    --dur-slow: 0ms; /* @kind other */
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 10px -3px rgba(0, 0, 0, 0.45);
+    --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55), 0 18px 44px -10px rgba(0, 0, 0, 0.65);
+  }
+}
+
+:root[data-theme="dark"] {
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 10px -3px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55), 0 18px 44px -10px rgba(0, 0, 0, 0.65);
+}

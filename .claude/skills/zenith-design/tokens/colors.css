@@ -1,0 +1,188 @@
+/* Zenith color tokens — "Ascent" brand direction.
+ * Brand: Night (deep indigo) + Gold (the peak/accent). Light theme =
+ * warm paper canvas; dark theme = night sky. The pipeline "ascent"
+ * palette (applied→offer) rises from slate to gold and is reserved
+ * EXCLUSIVELY for pipeline state — never reuse for generic UI.
+ * Token NAMES are stable across the system; only values changed. */
+:root {
+  /* Brand */
+  --night: #14173a;
+  --night-raised: #1b1f4d;
+  --gold: #d6a441;
+  --gold-deep: #c68a2f;
+  --gold-soft: rgba(214, 164, 65, 0.14);
+
+  /* Surfaces & ink (light / "Daylight") */
+  --bg: #f4f2ec;
+  --surface: #ffffff;
+  --surface-sunken: #faf9f5;
+  --ink: #14173a;
+  --muted: #5c5f76;
+  --faint: #8f8d84;
+  --border: #e7e4db;
+  --line: #efece4;
+  --track: #efece4;
+  --hover: color-mix(in srgb, var(--ink) 6%, var(--surface));
+  --empty-stroke: color-mix(in srgb, var(--ink) 45%, var(--surface));
+
+  /* Accent (gold) — reserve for primary actions, peak/offer, key metrics */
+  --accent: #d6a441;
+  --accent-text: #14173a;
+  --accent-soft: var(--gold-soft);
+  --accent-ink: #a9803a;
+  --accent-on-ink: #e8c072;
+
+  /* Semantic */
+  --success: #3f8f6b;
+  --warning: #c98a2b;
+  --danger: #b0453c;
+  --danger-text: #ffffff;
+  --info: #4a6ea3;
+  --scrim: rgba(20, 23, 58, 0.45);
+
+  /* Keyboard focus ring — standard across all interactive components. */
+  --ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); /* @kind other */
+  --ring-color: var(--accent); /* @kind color */
+
+  /* The Ascent — pipeline stage palette (reserved for pipeline state).
+   * Accessible ramp: each stage differs in hue AND lightness (deuteranopia-safe),
+   * and every value clears WCAG AA ≈ 4.5:1 for text on white. Always pair with the
+   * text label + dot — never color alone. */
+  --st-interested: #5c6285;  /* slate */
+  --st-applied: #4a55a8;     /* indigo */
+  --st-screening: #6a4aa8;   /* blue-violet */
+  --st-interview: #8a3f9c;   /* magenta-violet */
+  --st-offer: #8a6410;       /* dark gold */
+  --st-dead: #6b675e;        /* warm gray */
+  --st-grounded: #6b675e;
+
+  /* Response-time heat strip ("gone quiet?" — its own family) */
+  --heat-quiet: #c98a2b;
+  --heat-quiet-text: #9a6a1f;
+
+  /* Non-stage event hue (interaction/touchpoint events) */
+  --ev-touch: #7a5fb8;
+
+  /* Data-viz palette — for charts ONLY. Deliberately separate from the reserved
+   * --st-* stage ramp so visualizations never imply pipeline meaning.
+   * Categorical: 6 distinct hues (gold lead, then cool/warm alternation) tuned
+   * for adjacency + AA on surface. Sequential: a single-hue gold ramp for
+   * intensity/heat (light → deep). */
+  --viz-1: #d6a441; /* @kind color */
+  --viz-2: #4a6ea3; /* @kind color */
+  --viz-3: #6a4aa8; /* @kind color */
+  --viz-4: #3f8f6b; /* @kind color */
+  --viz-5: #b0453c; /* @kind color */
+  --viz-6: #7a5fb8; /* @kind color */
+  --viz-grid: var(--line); /* @kind color */
+  --viz-seq-1: #f0e2c2; /* @kind color */
+  --viz-seq-2: #e6c983; /* @kind color */
+  --viz-seq-3: #d6a441; /* @kind color */
+  --viz-seq-4: #a9803a; /* @kind color */
+  --viz-seq-5: #7a5c22; /* @kind color */
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1130;
+    --surface: #191c40;
+    --surface-sunken: #14173a;
+    --ink: #ecebf4;
+    --muted: #9a9db8;
+    --faint: #7f83a0;
+    --border: #2a2f5a;
+    --line: #242851;
+    --track: #242851;
+    --accent: #d6a441;
+    --accent-text: #14173a;
+    --accent-ink: #e8c072;
+    --accent-on-ink: #e8c072;
+    --danger: #d76a60;
+    --danger-text: #14173a;
+    --scrim: rgba(0, 0, 0, 0.6);
+    --st-interested: #aab0d4;
+    --st-applied: #8f9ae8;
+    --st-screening: #a98fe0;
+    --st-interview: #c98fd8;
+    --st-offer: #e6b45a;
+    --st-dead: #b3ada0;
+    --st-grounded: #b3ada0;
+    --heat-quiet: #e0a54a;
+    --heat-quiet-text: #f0c070;
+    --ev-touch: #9c82cf;
+    --viz-1: #e0b24d; --viz-2: #7e9dd4; --viz-3: #b79ae8; --viz-4: #6fc39a; --viz-5: #e08279; --viz-6: #b49ce0; --viz-grid: #242851;
+    --viz-seq-1: #3a3416; --viz-seq-2: #6b5320; --viz-seq-3: #a9803a; --viz-seq-4: #d6a441; --viz-seq-5: #e8c072;
+  }
+}
+
+/* Forced light theme — explicitly restores the light values so it overrides
+ * the prefers-color-scheme: dark block above by specificity, holding light on
+ * any OS. Mirrors the :root defaults. */
+:root[data-theme="light"], [data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f2ec;
+  --surface: #ffffff;
+  --surface-sunken: #faf9f5;
+  --ink: #14173a;
+  --muted: #5c5f76;
+  --faint: #8f8d84;
+  --border: #e7e4db;
+  --line: #efece4;
+  --track: #efece4;
+  --accent: #d6a441;
+  --accent-text: #14173a;
+  --accent-ink: #a9803a;
+  --accent-on-ink: #e8c072;
+  --success: #3f8f6b;
+  --warning: #c98a2b;
+  --danger: #b0453c;
+  --danger-text: #ffffff;
+  --info: #4a6ea3;
+  --scrim: rgba(20, 23, 58, 0.45);
+  --st-interested: #5c6285;
+  --st-applied: #4a55a8;
+  --st-screening: #6a4aa8;
+  --st-interview: #8a3f9c;
+  --st-offer: #8a6410;
+  --st-dead: #6b675e;
+  --st-grounded: #6b675e;
+  --heat-quiet: #c98a2b;
+  --heat-quiet-text: #9a6a1f;
+  --ev-touch: #7a5fb8;
+  --viz-1: #d6a441; --viz-2: #4a6ea3; --viz-3: #6a4aa8; --viz-4: #3f8f6b; --viz-5: #b0453c; --viz-6: #7a5fb8; --viz-grid: #efece4;
+  --viz-seq-1: #f0e2c2; --viz-seq-2: #e6c983; --viz-seq-3: #d6a441; --viz-seq-4: #a9803a; --viz-seq-5: #7a5c22;
+}
+
+:root[data-theme="dark"], [data-theme="dark"] {
+  --bg: #0f1130;
+  --surface: #191c40;
+  --surface-sunken: #14173a;
+  --ink: #ecebf4;
+  --muted: #9a9db8;
+  --faint: #7f83a0;
+  --border: #2a2f5a;
+  --line: #242851;
+  --track: #242851;
+  --accent: #d6a441;
+  --accent-text: #14173a;
+  --accent-ink: #e8c072;
+  --accent-on-ink: #e8c072;
+  --danger: #d76a60;
+  --danger-text: #14173a;
+  --scrim: rgba(0, 0, 0, 0.6);
+  --st-interested: #aab0d4;
+  --st-applied: #8f9ae8;
+  --st-screening: #a98fe0;
+  --st-interview: #c98fd8;
+  --st-offer: #e6b45a;
+  --st-dead: #b3ada0;
+  --st-grounded: #b3ada0;
+  --heat-quiet: #e0a54a;
+  --heat-quiet-text: #f0c070;
+  --ev-touch: #9c82cf;
+  --viz-1: #e0b24d; --viz-2: #7e9dd4; --viz-3: #b79ae8; --viz-4: #6fc39a; --viz-5: #e08279; --viz-6: #b49ce0; --viz-grid: #242851;
+  --viz-seq-1: #3a3416; --viz-seq-2: #6b5320; --viz-seq-3: #a9803a; --viz-seq-4: #d6a441; --viz-seq-5: #e8c072;
+  color-scheme: dark;
+}
