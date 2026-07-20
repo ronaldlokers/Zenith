@@ -11,11 +11,13 @@
 ## Global Constraints
 
 - Never commit to `main`. Branch `feat/ds-components-wave-0-1`. Conventional-commit subjects, lowercase imperative.
-- **`zui-` prefix on every new component class.** App.css band 4 uses bare-element and plain-class selectors (`button:not(:disabled):active`, `.toast`, `.empty svg`); an unprefixed class collides at identical specificity and lets module import order decide the winner.
-- **Button must keep emitting the legacy `primary` / `danger` class names.** App.css band 5 contains `.form-actions button.primary:hover`, `.card-actions button.primary:hover`, `.detail-actions button.primary:hover`. Dropping those class names silently stops those repairs matching.
+- **Components are fully self-contained.** A component's CSS is the complete description of how it looks. It must not depend on any App.css rule — not band 4 normalization, not band 5 mobile repairs, not `button.primary`. Storybook loads only the DS tokens, never App.css, so a component that leans on App.css renders differently in the catalog than in the app.
+- **Component CSS is wrapped in `@layer components { … }`.** Layer order outranks specificity, which is the only way to beat App.css's bare-element selectors (`button:not(:disabled):active` scores (0,2,1); `.zui-btn:active` scores (0,1,1) and loses).
+- **Layers resolve conflicts, not presence.** A property App.css sets and the component never mentions still applies. Each component must declare the full property set it cares about.
+- **`zui-` prefix on every new component class** — for legibility and collision-avoidance, not as the isolation mechanism.
 - **No file under `src/` may import from `.claude/`.** Enforced by test, not convention.
 - All user-facing strings externalized to `src/locales/en.json` **and** `nl.json` — strict key parity, every key in both.
-- `src/App.css` is frozen. New component CSS goes in `src/components/*.css`, never App.css.
+- `src/App.css` content stays byte-identical. Only how it is imported changes (Task 3a). New component CSS goes in `src/components/*.css`, never App.css.
 - `src/index.css` owns tokens. Components consume them, never redeclare them.
 - Verification gate, all green before any commit that closes a task: `npx tsc -b` (noUnusedLocals is on — unused symbols are errors), `npm run build`, `npx oxlint` (must stay at exactly one warning: `src/feed.tsx` exhaustive-deps), `npx vitest run --no-file-parallelism`, `npx storybook build`.
 - Local D1 must be migrated before `npm run dev`: `npx wrangler d1 migrations apply zenith --local`.
@@ -337,6 +339,104 @@ git commit -m "chore: add screenshot baseline capture for component migration"
 
 ---
 
+### Task 3a: Cascade layer infrastructure
+
+**Files:**
+- Create: `src/app-styles.css`
+- Modify: `src/App.tsx:19`
+
+**Interfaces:**
+- Produces: an `app` layer containing all of App.css, and a declared `components` layer above it. Every component CSS file from Task 4 onward wraps its rules in `@layer components { … }`.
+
+This task must land before any component CSS exists, so that the first component
+is authored against the final cascade.
+
+- [ ] **Step 1: Create the layer wrapper**
+
+Create `src/app-styles.css`:
+
+```css
+/* App.css is imported into a named layer so component stylesheets can win
+   conflicts against it without a specificity arms race. App.css contains
+   bare-element selectors (button:not(:disabled):active at :4527, and the
+   print rules at :5204) that match any component's rendered element
+   regardless of its classes; those score higher than any single class
+   selector, so layer order is the only mechanism that works.
+
+   App.css's own band ordering is preserved intact inside layer(app). */
+@layer app, components;
+@import "./App.css" layer(app);
+```
+
+- [ ] **Step 2: Point App.tsx at the wrapper**
+
+In `src/App.tsx` line 19, replace:
+
+```ts
+import "./App.css";
+```
+
+with:
+
+```ts
+import "./app-styles.css";
+```
+
+- [ ] **Step 3: Build and verify the layers survive bundling**
+
+```bash
+npm run build
+CSS=$(ls dist/client/assets/index-*.css | head -1)
+grep -o '@layer[^{;]*[{;]' "$CSS" | head -5
+```
+
+Expected output, in this order:
+
+```
+@layer app{
+@layer components{
+```
+
+If `@layer app{` does not appear, the `@import … layer()` was flattened and the
+whole isolation model is broken — stop and reassess before continuing.
+
+- [ ] **Step 4: Verify tokens are still unlayered**
+
+```bash
+CSS=$(ls dist/client/assets/index-*.css | head -1)
+head -c 300 "$CSS"
+```
+
+Expected: the `:root{--night:…}` custom property block appears **before**
+`@layer app{`, i.e. outside any layer. `src/index.css` is imported separately by
+`main.tsx`; unlayered CSS beats layered CSS, so tokens stay visible to every
+layer. If `:root` ended up inside `layer(app)`, tokens still resolve, but confirm
+no component override depends on it.
+
+- [ ] **Step 5: Confirm the app is visually unchanged**
+
+At this point no component CSS exists, so the `components` layer is empty and the
+rendered output must be identical to before. With the dev server running,
+spot-check two views against `baseline/` from Task 3.
+
+Expected: no visual difference whatsoever. A difference here means the `@import`
+reordered App.css relative to `index.css`.
+
+- [ ] **Step 6: Run the gate**
+
+```bash
+npx tsc -b && npm run build && npx oxlint && npx vitest run --no-file-parallelism
+```
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/app-styles.css src/App.tsx
+git commit -m "refactor: import App.css into a cascade layer for component isolation"
+```
+
+---
+
 ### Task 4: Port Button
 
 **Files:**
@@ -369,16 +469,14 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toHaveAttribute("type", "button");
   });
 
-  // App.css band 5 targets `.form-actions button.primary:hover` and friends.
-  // Emitting only zui- classes would silently stop those repairs matching.
-  test("keeps the legacy primary class so App.css bands 4/5 still match", () => {
+  // The component must be self-contained: no App.css class names, because
+  // Storybook never loads App.css and the catalog must match production.
+  test("emits only zui- classes, never legacy App.css class names", () => {
     render(<Button variant="primary">Save</Button>);
-    expect(screen.getByRole("button")).toHaveClass("primary");
-  });
-
-  test("keeps the legacy danger class", () => {
-    render(<Button variant="danger">Delete</Button>);
-    expect(screen.getByRole("button")).toHaveClass("danger");
+    const cls = screen.getByRole("button").className.split(/\s+/);
+    expect(cls).not.toContain("primary");
+    expect(cls).not.toContain("danger");
+    expect(cls).toContain("zui-btn--primary");
   });
 
   test("applies the zui size class", () => {
@@ -415,14 +513,9 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import "./Button.css";
 
 // Ported from the design system (components/core/Button.jsx), which expressed
-// this as inline styles. Here the visual contract stays in CSS: `variant` emits
-// the legacy App.css class names so bands 4/5 keep matching, and the zui-
-// classes carry only what the DS API adds on top — sizing and icon layout.
-const LEGACY_VARIANT_CLASS: Record<string, string> = {
-  primary: "primary",
-  danger: "danger",
-};
-
+// this as inline styles. Button.css is the complete description of how this
+// looks — it must not lean on any App.css rule, because Storybook loads only
+// the design tokens and the catalog has to match what ships.
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Visual emphasis. */
   variant?: "default" | "primary" | "ghost" | "dark" | "danger";
@@ -441,13 +534,7 @@ export function Button({
   children,
   ...rest
 }: ButtonProps) {
-  const classes = [
-    "zui-btn",
-    `zui-btn--${size}`,
-    `zui-btn--${variant}`,
-    LEGACY_VARIANT_CLASS[variant],
-    className,
-  ]
+  const classes = ["zui-btn", `zui-btn--${size}`, `zui-btn--${variant}`, className]
     .filter(Boolean)
     .join(" ");
   return (
@@ -461,59 +548,116 @@ export function Button({
 
 - [ ] **Step 4: Write the stylesheet**
 
-Create `src/components/Button.css`. Only the additive surface — `primary` and `danger` colours already live in App.css and must not be duplicated here.
+Create `src/components/Button.css`. This is the **complete** description of the
+control — every property the old markup used to inherit from App.css is
+reproduced here.
+
+Values are taken from what the app renders **today**, not from the DS source,
+wherever the two disagree. They do disagree: App.css `button.primary` pads
+`0.55rem 0.9rem` while the DS `md` size pads `0.5rem 0.75rem`. App.css has
+drifted from the design system. Matching current values keeps the zero-diff bar
+meaningful; realigning to the DS is a separate, deliberate decision, not
+something to smuggle into a migration.
 
 ```css
-/* Additive only. Colour for the primary/danger variants stays in App.css
-   (button.primary, button.danger) so the existing cascade and band 5
-   repairs keep owning it. */
-.zui-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  font-family: var(--sans);
-  font-weight: 500;
-  line-height: 1;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
-}
+/* Complete, self-contained. Deliberately reproduces the rules the old raw
+   <button> markup inherited from App.css, because Storybook never loads
+   App.css and the catalog has to match production:
+     - App.css:1212 button.primary     — accent fill, radius, padding
+     - App.css:1222 button.primary:hover
+     - App.css:1226 button.danger      — danger text colour
+     - App.css:4527 band 4             — :active brightness
+     - App.css:1503 @media max-600px   — 44px touch target
+   Layer order (not specificity) is what lets these win; see src/app-styles.css. */
+@layer components {
+  .zui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: var(--sans);
+    font-weight: 500;
+    line-height: 1;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
 
-.zui-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
+  /* Reproduces App.css band 4 (button:not(:disabled):active). */
+  .zui-btn:not(:disabled):active {
+    filter: brightness(0.97);
+  }
 
-.zui-btn--sm {
-  padding: 0.35rem 0.6rem;
-  font-size: var(--text-meta);
-}
+  /* Matches the global focus geometry (App.css:1853). */
+  .zui-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
-.zui-btn--md {
-  padding: 0.5rem 0.75rem;
-  font-size: var(--text-body);
-}
+  .zui-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 
-.zui-btn--lg {
-  padding: 0.6rem 1rem;
-  font-size: var(--text-title);
-}
+  .zui-btn--sm {
+    padding: 0.35rem 0.6rem;
+    font-size: var(--text-meta);
+  }
 
-.zui-btn--ghost {
-  background: transparent;
-  border-color: transparent;
-  color: var(--muted);
-}
+  /* 0.55/0.9 matches App.css button.primary as it ships today. */
+  .zui-btn--md {
+    padding: 0.55rem 0.9rem;
+    font-size: var(--text-body);
+  }
 
-.zui-btn--dark {
-  background: var(--night);
-  color: #f4f2ec;
-  border-color: transparent;
+  .zui-btn--lg {
+    padding: 0.6rem 1rem;
+    font-size: var(--text-title);
+  }
+
+  .zui-btn--primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: transparent;
+    font-weight: 700;
+  }
+
+  .zui-btn--primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 85%, black);
+  }
+
+  .zui-btn--danger {
+    color: var(--danger);
+  }
+
+  .zui-btn--ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
+  }
+
+  .zui-btn--dark {
+    background: var(--night);
+    color: #f4f2ec;
+    border-color: transparent;
+  }
+
+  /* Mobile touch target. App.css applied this per-container
+     (.card-actions button, .toolbar button at max-width 600px); a
+     self-contained component cannot know its container, so it guarantees
+     its own. Mobile parity is a locked product decision. */
+  @media (max-width: 600px) {
+    .zui-btn {
+      min-height: 44px;
+    }
+  }
 }
 ```
 
@@ -684,7 +828,27 @@ OUT_DIR=after node scripts/screenshot-baseline.mjs
 
 Then compare each pair visually — `baseline/calendar-desktop.png` against `after/calendar-desktop.png`, and the same for mobile.
 
-**Every difference must be explained before continuing.** Expected differences: none. A changed button height, padding, or hover state means the legacy class mapping dropped something — most likely a band 4 or band 5 rule that matched the old markup.
+**Every difference must be explained before continuing.** The bar is zero diff.
+
+The likely source of a diff is **container-contextual App.css rules**, which
+still match the new markup (it is still a `<button>` inside `.card-actions`) but
+now lose to the `components` layer on any conflicting property. The known cases:
+
+- `.card-actions button` at `@media (max-width: 600px)` sets `padding: 0.5rem
+  0.8rem`; `.zui-btn--md` sets `0.55rem 0.9rem` and now wins. Mobile screenshots
+  of card action rows will differ.
+- `.toolbar button` at the same breakpoint sets `min-height: 40px`; the component
+  sets `44px` and now wins.
+
+When one of these appears, choose deliberately and record the choice:
+
+1. **Accept it** if the component's value is the better one — 44px is the
+   accessible touch target, and 40px was the outlier.
+2. **Add a prop** if the context genuinely needs a different size, e.g. render
+   those call sites with `size="sm"`.
+
+Do not resolve it by reaching back into App.css — that reintroduces the coupling
+this design removes.
 
 - [ ] **Step 6: Commit**
 
@@ -774,13 +938,20 @@ Add to the Frontend section, alongside the existing App.css band description:
 
 ```markdown
 - **Ported DS components** live in `src/components/` as owned TypeScript with
-  co-located CSS (`Button.tsx` + `Button.css`). Every class in those files
-  carries a `zui-` prefix: App.css band 4 uses bare-element and plain-class
-  selectors, so an unprefixed component class collides at equal specificity and
-  lets module import order pick the winner. Components that replace existing
-  markup must keep emitting the legacy class names (e.g. `primary`, `danger`)
-  so bands 4/5 keep matching. `.claude/skills/zenith-design/` is a read-only
-  reference — importing it from `src/` fails `test-node/no-claude-imports.spec.ts`.
+  co-located CSS (`Button.tsx` + `Button.css`), classes `zui-` prefixed.
+  A component's CSS is the **complete** description of how it looks — it must
+  never depend on an App.css rule, because Storybook loads only the design
+  tokens and the catalog has to match production.
+- **Cascade layers enforce that.** `src/app-styles.css` declares
+  `@layer app, components` and imports App.css into `layer(app)`; component CSS
+  wraps its rules in `@layer components { … }`. Layer order outranks
+  specificity, which is the only way to beat App.css's bare-element selectors
+  (`button:not(:disabled):active`). Note layers resolve *conflicts* only — a
+  property App.css sets and the component never mentions still applies, so each
+  component must declare its full property set. Print rules stay global on
+  purpose.
+- `.claude/skills/zenith-design/` is a read-only reference — importing it from
+  `src/` fails `test-node/no-claude-imports.spec.ts`.
 ```
 
 - [ ] **Step 3: Document the test projects**
@@ -845,4 +1016,11 @@ Expected: both "checks" and "preview" jobs pass.
 - **The 28 deferred components** — on-demand only, per the spec.
 - **`src/ui.tsx` reconciliation** — its `Dialog`/`LoadingSkeleton`/`LoadFailed` overlap the DS `Modal`/`Spinner`/`EmptyState`. Deliberate follow-up.
 - **`src/timeline.tsx` reconciliation** — an existing 165-line component overlapping the DS `Timeline`.
-- **Removing legacy classes from App.css** — Button still emits them by design.
+- **Dead App.css rules.** Once every `<button>` call site is swapped,
+  `button.primary` / `button.danger` and the band 5 `.form-actions
+  button.primary:hover` repairs have no markup left to match. Deleting them is a
+  separate cleanup — App.css content stays byte-identical in this plan.
+- **Realigning to DS values.** App.css has drifted from the design system
+  (`button.primary` pads `0.55rem 0.9rem`; the DS `md` size pads `0.5rem
+  0.75rem`). This plan reproduces current app values to keep the zero-diff bar
+  meaningful. Closing that gap is a deliberate design decision for later.
