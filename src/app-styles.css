@@ -1,0 +1,26 @@
+/* Single stylesheet entry point, establishing the cascade order the component
+   architecture depends on.
+
+   Three layers, lowest priority first:
+     reset      — index.css: design tokens plus the base element reset
+     app        — App.css: every view rule the app ships today
+     components — src/components/*.css, each wrapping its rules in
+                  @layer components
+
+   Layer order outranks specificity, which is the point: App.css contains
+   bare-element selectors (button:not(:disabled):active at App.css:4527) that
+   match a component's rendered element whatever its classes and out-specify
+   any single class selector. Layers let component CSS win without a
+   specificity arms race.
+
+   index.css MUST be layered too, not left unlayered. Unlayered declarations
+   beat every layered one regardless of specificity, so its base reset
+   (`button, input, select, textarea { font: inherit; color: inherit }` and the
+   `a { color: … }` rules at index.css:205-220) would otherwise defeat every
+   font-or-colour rule App.css sets on those elements — the active sidebar item
+   loses its gold and its size. Its :root token blocks are unaffected by the
+   move: nothing else declares those custom properties, so there is no conflict
+   for layer order to resolve. */
+@layer reset, app, components;
+@import "./index.css" layer(reset);
+@import "./App.css" layer(app);

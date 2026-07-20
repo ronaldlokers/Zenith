@@ -16,7 +16,6 @@ import {
   type Status,
   type Profile,
 } from "./types";
-import "./App.css";
 import {
   ErrorIcon,
   Logo,
