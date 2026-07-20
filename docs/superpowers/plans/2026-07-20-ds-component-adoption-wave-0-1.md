@@ -417,7 +417,8 @@ Create `src/app-styles.css`:
    selector, so layer order is the only mechanism that works.
 
    App.css's own band ordering is preserved intact inside layer(app). */
-@layer app, components;
+@layer reset, app, components;
+@import "./index.css" layer(reset);
 @import "./App.css" layer(app);
 ```
 
@@ -446,8 +447,9 @@ grep -o '@layer[^{;]*[{;]' "$CSS" | head -5
 Expected output, in this order:
 
 ```
+@layer reset{
 @layer app{
-@layer components{
+@layer components;
 ```
 
 If `@layer app{` does not appear, the `@import … layer()` was flattened and the

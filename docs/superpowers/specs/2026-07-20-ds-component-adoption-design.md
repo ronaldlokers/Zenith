@@ -79,10 +79,12 @@ The specificity is unwinnable: `button:not(:disabled):active` scores (0,2,1)
 while `.zui-btn:active` scores (0,1,1) and loses. Cascade layers resolve this
 without a specificity arms race, because layer order outranks specificity.
 
-A new `src/app-styles.css` becomes App.tsx's stylesheet import:
+A new `src/app-styles.css` becomes the single stylesheet entry point, imported
+by `main.tsx`:
 
 ```css
-@layer app, components;
+@layer reset, app, components;
+@import "./index.css" layer(reset);
 @import "./App.css" layer(app);
 ```
 
@@ -90,10 +92,20 @@ Component CSS wraps its rules in `@layer components { … }`. App.css's internal
 band ordering is preserved intact inside the `app` layer; the `components` layer
 sits above it and wins every conflict.
 
-Verified against Vite 8: the build emits `@layer app{…}` followed by
-`@layer components{…}`, with App.css content correctly nested in the `app`
-layer. `src/index.css` is imported separately by `main.tsx` and stays
-**unlayered**, so its `:root` custom properties remain visible to every layer.
+Verified against Vite 8: the build emits `@layer reset{…}`, `@layer app{…}`,
+then `@layer components`, with each stylesheet correctly nested.
+
+**`index.css` must be layered too.** An earlier revision of this spec left it
+unlayered on the reasoning that its `:root` custom properties should stay
+visible to every layer. That was wrong and broke the app: unlayered
+declarations beat every layered one regardless of specificity, so index.css's
+base reset (`button, input, select, textarea { font: inherit; color: inherit }`
+and the `a { color: … }` rules at index.css:205-220) defeated every
+font-or-colour rule App.css sets on those elements — the active sidebar item
+lost its gold and its size. The tokens are unaffected by the move: nothing else
+declares those custom properties, so there is no conflict for layer order to
+resolve. Confirmed by capturing all 18 baseline screenshots before and after:
+`compare -metric AE` reports 0 differing pixels on every one.
 
 **Two deliberate limitations:**
 
