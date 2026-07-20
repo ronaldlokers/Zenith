@@ -623,7 +623,13 @@
   },
   "calendar": {
     "empty": "Nog niets op de agenda. Deadlines, vastgelegde contactmomenten en sollicitatiedata verschijnen hier.",
-    "todaySuffix": " · vandaag"
+    "todaySuffix": " · vandaag",
+    "prevMonth": "Vorige maand",
+    "nextMonth": "Volgende maand",
+    "today": "Vandaag",
+    "eventCount": "{{count}} items",
+    "moreEvents": "+{{count}} meer",
+    "upcoming": "Binnenkort"
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"
