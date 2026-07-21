@@ -130,11 +130,10 @@
      recipe to match.
 
      NOT reproduced: App.css:1510 bumps .card-actions button specifically
-     (not the other five Recipe B containers) to padding 0.5rem 0.8rem at
-     max-width 600px. That's a single-container special case, not part of
-     Recipe B itself, and this component can't know which container it's
-     in — so mobile only gets the universal 44px min-height touch target
-     (below), same treatment as every other variant. */
+     (not the other five Recipe B containers) to min-height 44px + padding
+     0.5rem 0.8rem at max-width 600px. That's a single-container special
+     case with zero call sites (see the closing comment), not part of
+     Recipe B itself, so this component reproduces none of it. */
   .zui-btn--secondary.zui-btn--md {
     padding: 0.4rem 0.8rem;
   }
@@ -188,15 +187,14 @@
     background: color-mix(in srgb, var(--night) 85%, white);
   }
 
-  /* Mobile touch target. App.css applied this per-container
-     (.card-actions button, .toolbar button at max-width 600px); a
-     self-contained component cannot know its container, so it guarantees
-     its own. Mobile parity is a locked product decision. Must stay last:
-     it ties in specificity with .zui-btn--secondary/--danger's
-     min-height: 34px, and source order decides the tie. */
-  @media (max-width: 600px) {
-    .zui-btn {
-      min-height: 44px;
-    }
-  }
+  /* No mobile min-height. App.css's only button-targeting 44px rule is
+     `.card-actions button` (App.css:1510) at max-width 600px, and
+     .card-actions has ZERO call sites in the app — so no real button ever
+     rendered at a 44px mobile min-height. An earlier version of this file
+     imposed a universal 44px here for "touch target parity", but that
+     diverged from production: it made every swapped secondary/danger button
+     10px taller on mobile than the raw markup it replaced. Matching the
+     shipped cascade wins, so the rule is deliberately absent — primary/
+     default/ghost/dark keep their natural height and secondary/danger keep
+     their own unconditional min-height: 34px, exactly as today. */
 }
