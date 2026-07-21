@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
 import { EmptyCompaniesIcon, EmptyPeopleIcon } from "./icons";
-import { Badge, Button, EmptyState, Row } from "./components";
+import { Badge, Button, EmptyState, FieldLabel, Row, SegmentedControl } from "./components";
 import {
   ageDays,
   formatDate,
@@ -102,7 +102,7 @@ export function CompaniesTab({
         <Button variant="primary" onClick={() => setEditing("new")}>
           {t("toolbar.addCompany")}
         </Button>
-        <div className="board-group-toggle" role="group" aria-label={t("companies.view")}>
+        <SegmentedControl role="group" aria-label={t("companies.view")}>
           <button
             className={view === "list" ? "active" : ""}
             onClick={() => setViewAndPersist("list")}
@@ -115,7 +115,7 @@ export function CompaniesTab({
           >
             {t("companies.viewGrid")}
           </button>
-        </div>
+        </SegmentedControl>
       </div>
 
       {editing && (
@@ -429,13 +429,13 @@ function CompanyDetailModal({
               )}
               {c.description && (
                 <div>
-                  <span className="field-label">{t("detail.description")}</span>
+                  <FieldLabel>{t("detail.description")}</FieldLabel>
                   <p className="notes">{c.description}</p>
                 </div>
               )}
               {c.notes && (
                 <div>
-                  <span className="field-label">{t("detail.notes")}</span>
+                  <FieldLabel>{t("detail.notes")}</FieldLabel>
                   <p className="notes">{c.notes}</p>
                 </div>
               )}
@@ -544,7 +544,7 @@ export function ContactsTab({
         <Button variant="primary" onClick={() => setEditing("new")}>
           {t("toolbar.addContact")}
         </Button>
-        <div className="board-group-toggle" role="group" aria-label={t("contacts.view")}>
+        <SegmentedControl role="group" aria-label={t("contacts.view")}>
           <button
             className={view === "list" ? "active" : ""}
             onClick={() => setViewAndPersist("list")}
@@ -557,7 +557,7 @@ export function ContactsTab({
           >
             {t("companies.viewGrid")}
           </button>
-        </div>
+        </SegmentedControl>
       </div>
 
       {editing && (
@@ -865,7 +865,7 @@ function ContactDetailModal({
                 </a>
               )}
               <div>
-                <span className="field-label">{t("outreach.status")}</span>
+                <FieldLabel>{t("outreach.status")}</FieldLabel>
                 <span className="muted small">
                   {t(`outreach.statuses.${c.outreach_status}`)}
                 </span>

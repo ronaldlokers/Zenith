@@ -851,15 +851,8 @@
 
 /* Small caption above an otherwise-bare value in a detail modal —
    matches .form label's mono/uppercase treatment (#92). */
-.field-label {
-  display: block;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--faint);
-  margin-bottom: 0.1rem;
-}
+/* .field-label moved to the owned FieldLabel component
+   (src/components/FieldLabel.css). */
 
 .detail-actions {
   display: flex;
@@ -2929,29 +2922,8 @@ select.status {
   margin-top: var(--space-2);
 }
 
-.board-group-toggle {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.board-group-toggle button {
-  border: none;
-  background: var(--surface);
-  color: var(--muted);
-  padding: 0.28rem 0.7rem;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  cursor: pointer;
-}
-
-.board-group-toggle button.active {
-  background: var(--accent);
-  color: var(--accent-text);
-}
+/* .board-group-toggle moved to the owned SegmentedControl component
+   (src/components/SegmentedControl.css). */
 
 .board-swimlanes {
   display: flex;
@@ -4576,17 +4548,6 @@ button:not(:disabled):active,
   min-height: 36px;
 }
 
-/* Segmented controls: one shape — the subnav pill. */
-.board-group-toggle {
-  border-radius: var(--radius-full);
-  padding: 0.2rem;
-}
-
-.board-group-toggle button {
-  border-radius: var(--radius-full);
-  padding: 0.3rem 0.9rem;
-  font-size: var(--text-body);
-}
 
 /* WinsJournal finally gets its own rhythm instead of riding on .tl-add. */
 .wins-journal {
