@@ -24,6 +24,7 @@ import {
 } from "./format";
 import { StatsTab } from "./stats-view";
 import { ActivityTab } from "./calendar";
+import { StatCard } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
@@ -80,34 +81,33 @@ export function DashboardTab({
 
   const kpis = (
     <div className="dash-kpis">
-      <button type="button" className="dash-kpi click" onClick={onGoToJobs}>
-        <span className="dash-kpi-n">{open.length}</span>
-        <span className="dash-kpi-k">{t("dashboard.kpiOpen")}</span>
-      </button>
-      <button type="button" className="dash-kpi click" onClick={onGoToJobs}>
-        <span className="dash-kpi-n">{Math.round(resp.rate * 100)}%</span>
-        <span className="dash-kpi-k">
-          {t("dashboard.kpiResponse", {
-            responded: resp.responded,
-            applied: resp.applied,
-          })}
-        </span>
-      </button>
-      <button
-        type="button"
-        className="dash-kpi click"
+      <StatCard
+        value={open.length}
+        label={t("dashboard.kpiOpen")}
+        onClick={onGoToJobs}
+      />
+      <StatCard
+        value={`${Math.round(resp.rate * 100)}%`}
+        label={t("dashboard.kpiResponse", {
+          responded: resp.responded,
+          applied: resp.applied,
+        })}
+        onClick={onGoToJobs}
+      />
+      <StatCard
+        value={liveOffers.length}
+        label={
+          <>
+            {t("dashboard.kpiOffers")}
+            {topComp != null ? ` · ${fmtComp(topComp)}` : ""}
+          </>
+        }
         onClick={() => liveOffers[0] && onOpenJob(liveOffers[0].id)}
-      >
-        <span className="dash-kpi-n">{liveOffers.length}</span>
-        <span className="dash-kpi-k">
-          {t("dashboard.kpiOffers")}
-          {topComp != null ? ` · ${fmtComp(topComp)}` : ""}
-        </span>
-      </button>
-      <div className="dash-kpi">
-        <span className="dash-kpi-n">{t2o != null ? `~${Math.round(t2o)}d` : "—"}</span>
-        <span className="dash-kpi-k">{t("dashboard.kpiToOffer")}</span>
-      </div>
+      />
+      <StatCard
+        value={t2o != null ? `~${Math.round(t2o)}d` : "—"}
+        label={t("dashboard.kpiToOffer")}
+      />
     </div>
   );
 
