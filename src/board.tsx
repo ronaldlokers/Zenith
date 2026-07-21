@@ -30,7 +30,7 @@ import {
 } from "./format";
 import { Dialog } from "./ui";
 import { ApplicationDetailModal } from "./detail";
-import { Button, FilterTab } from "./components";
+import { ActionBar, Button, FilterTab } from "./components";
 
 function CardMenu({
   a,
@@ -828,7 +828,7 @@ export function PipelineTab({
                 onChange={(e) => setNewViewName(e.target.value)}
               />
             </label>
-            <div className="form-actions">
+            <ActionBar variant="form">
               <Button
                 type="submit"
                 variant="primary"
@@ -839,7 +839,7 @@ export function PipelineTab({
               <Button type="button" variant="secondary" onClick={() => setNamingView(false)}>
                 {t("common.cancel")}
               </Button>
-            </div>
+            </ActionBar>
           </form>
         </Dialog>
       )}

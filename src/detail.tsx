@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
-import { Button, Chip, FieldLabel } from "./components";
+import { ActionBar, Button, Chip, FieldLabel } from "./components";
 import type {
   Application,
   Company,
@@ -990,7 +990,7 @@ export function ApplicationDetailModal({
               />
             </div>
 
-            <div className="detail-actions">
+            <ActionBar variant="detail">
               <Button variant="secondary" onClick={() => setEditing(true)}>
                 {t("common.edit")}
               </Button>
@@ -1023,7 +1023,7 @@ export function ApplicationDetailModal({
               >
                 {t("common.delete")}
               </Button>
-            </div>
+            </ActionBar>
           </div>
           <div className="detail-secondary">
             <h3 className="detail-sub">{t("prep.title")}</h3>
@@ -1479,14 +1479,14 @@ function ApplicationForm({
         </label>
       </div>
 
-      <div className="form-actions">
+      <ActionBar variant="form">
         <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }

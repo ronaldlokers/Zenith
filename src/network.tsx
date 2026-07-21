@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
 import { EmptyCompaniesIcon, EmptyPeopleIcon } from "./icons";
-import { Badge, Button, EmptyState, FieldLabel, Row, SegmentedControl } from "./components";
+import { ActionBar, Badge, Button, EmptyState, FieldLabel, Row, SegmentedControl } from "./components";
 import {
   ageDays,
   formatDate,
@@ -288,14 +288,14 @@ function CompanyForm({
           onChange={(e) => set({ notes: e.target.value || null })}
         />
       </label>
-      <div className="form-actions">
+      <ActionBar variant="form">
         <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }
@@ -448,7 +448,7 @@ function CompanyDetailModal({
 
             <ContactRelationshipMap contacts={contacts} applications={applications} />
 
-            <div className="detail-actions">
+            <ActionBar variant="detail">
               <Button
                 variant="secondary"
                 disabled={!c.website || researching}
@@ -466,7 +466,7 @@ function CompanyDetailModal({
               >
                 {t("common.delete")}
               </Button>
-            </div>
+            </ActionBar>
           </>
         )}
     </Dialog>
@@ -783,14 +783,14 @@ function ContactForm({
           onChange={(e) => set({ notes: e.target.value || null })}
         />
       </label>
-      <div className="form-actions">
+      <ActionBar variant="form">
         <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }
@@ -885,7 +885,7 @@ function ContactDetailModal({
               {c.notes && <p className="notes">{c.notes}</p>}
             </div>
 
-            <div className="detail-actions">
+            <ActionBar variant="detail">
               <Button variant="secondary" onClick={() => setEditing(true)}>{t("common.edit")}</Button>
               <Button
                 variant="danger"
@@ -896,7 +896,7 @@ function ContactDetailModal({
               >
                 {t("common.delete")}
               </Button>
-            </div>
+            </ActionBar>
 
             <h3 className="detail-sub">{t("detail.timeline")}</h3>
             <Timeline resource="contacts" targetId={c.id} onError={onError} />

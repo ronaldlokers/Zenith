@@ -17,7 +17,7 @@ import {
 } from "./format";
 import type { RoleTypeDef, Webhook } from "./types";
 import { useLocation } from "react-router-dom";
-import { Badge, Button } from "./components";
+import { ActionBar, Badge, Button } from "./components";
 import { FeedSettings } from "./feed";
 
 export function DeleteAccount({
@@ -497,14 +497,14 @@ export function PublicApiSettings({
       {apiKey ? (
         <>
           <input readOnly value={apiKey} onClick={(e) => (e.target as HTMLInputElement).select()} />
-          <div className="share-actions">
+          <ActionBar variant="share">
             <Button disabled={keyBusy} variant="secondary" onClick={generateKey}>
               {t("settings.regenerateLink")}
             </Button>
             <Button disabled={keyBusy} variant="danger" onClick={revokeKey}>
               {t("settings.disableLink")}
             </Button>
-          </div>
+          </ActionBar>
         </>
       ) : (
         <button disabled={keyBusy} onClick={generateKey}>
@@ -1181,14 +1181,14 @@ export function SettingsPage({
           {shareUrl ? (
             <>
               <input readOnly value={shareUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
-              <div className="share-actions">
+              <ActionBar variant="share">
                 <Button disabled={shareBusy} variant="secondary" onClick={generateLink}>
                   {t("settings.regenerateLink")}
                 </Button>
                 <Button disabled={shareBusy} variant="danger" onClick={disableLink}>
                   {t("settings.disableLink")}
                 </Button>
-              </div>
+              </ActionBar>
             </>
           ) : (
             <button disabled={shareBusy} onClick={generateLink}>
@@ -1202,14 +1202,14 @@ export function SettingsPage({
             <>
               <input readOnly value={calendarUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
               <p className="muted small">{t("settings.calendarLinkHint")}</p>
-              <div className="share-actions">
+              <ActionBar variant="share">
                 <Button disabled={calendarBusy} variant="secondary" onClick={generateCalendarLink}>
                   {t("settings.regenerateLink")}
                 </Button>
                 <Button disabled={calendarBusy} variant="danger" onClick={disableCalendarLink}>
                   {t("settings.disableLink")}
                 </Button>
-              </div>
+              </ActionBar>
             </>
           ) : (
             <button disabled={calendarBusy} onClick={generateCalendarLink}>
