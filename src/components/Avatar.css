@@ -1,0 +1,24 @@
+/* Complete, self-contained. Reproduces the App.css .side-user .avatar recipe
+   (App.css:4070) so the badge renders identically whether it lives in the
+   app (inside .side-user, which owns only the surrounding row layout) or
+   standalone in Storybook, which loads no App.css.
+
+   flex: 0 0 34px is a flex-item sizing hint for the .side-user row's own
+   flex layout — harmless when the element isn't a flex child, so it's kept
+   for fidelity with the exact rule being reproduced. */
+@layer components {
+  .zui-avatar {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 14px;
+  }
+}
