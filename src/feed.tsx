@@ -473,10 +473,21 @@ export function FeedTab({
   // swipe gesture from the same issue is mobile-only (a mouse-drag
   // simulation of a touch gesture reads as gimmicky, not efficient); both
   // input methods keep the existing buttons as the accessible fallback.
+  // Latest triage state for the global key handler. The list, focus, and the
+  // add/dismiss closures all change on nearly every render; keeping them in a
+  // ref lets the keydown listener subscribe once instead of tearing down and
+  // re-adding on every focus move or item change, while still acting on
+  // current values.
+  const triageRef = useRef({ items, focusedIndex, addToPipeline, dismiss });
+  useEffect(() => {
+    triageRef.current = { items, focusedIndex, addToPipeline, dismiss };
+  });
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const { items, focusedIndex, addToPipeline, dismiss } = triageRef.current;
       const list = items ?? [];
       if (e.key === "j") {
         e.preventDefault();
@@ -502,7 +513,7 @@ export function FeedTab({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [items, focusedIndex]);
+  }, []);
 
   // The desktop triage pane mirrors the keyboard/click-selected list row.
   const focusedItem = (items ?? [])[focusedIndex] ?? null;
