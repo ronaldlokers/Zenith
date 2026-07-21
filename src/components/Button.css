@@ -28,9 +28,16 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
     font-family: var(--sans);
-    line-height: 1;
+    /* No line-height override. The raw app buttons carried index.css's
+       `button { font: inherit }`, so they inherited the body's 1.5 — and
+       button.primary (App.css:1212) declares none, so its box height is
+       padding + 1.5*font-size. Forcing line-height:1 here made every
+       primary button ~7px shorter than the markup it replaces, shifting
+       the top-bar "+ Add" (present on every view) and the whole content
+       column with it. Inheriting matches the shipped cascade. Secondary/
+       danger are pinned by min-height:34px, so they're unaffected either
+       way. */
     border-radius: var(--radius-md);
     cursor: pointer;
     white-space: nowrap;
@@ -42,6 +49,13 @@
 
   /* Reproduces App.css band 4 (button:not(:disabled):active) — global,
      applies to every recipe regardless of variant. */
+  /* Spacing between the `icon` prop and the label. Scoped to with-icon so a
+     button whose children carry their own layout (and often their own gap
+     class) is never force-spaced by the component. */
+  .zui-btn--with-icon {
+    gap: 0.4rem;
+  }
+
   .zui-btn:not(:disabled):active {
     filter: brightness(0.97);
   }
@@ -72,6 +86,19 @@
   /* 0.55/0.9 matches App.css button.primary as it ships today. */
   .zui-btn--md {
     padding: 0.55rem 0.9rem;
+  }
+
+  /* md font-size is owned by the size EXCEPT for primary, which must inherit.
+     button.primary (App.css:1212) sets no font-size, so a *standalone*
+     primary inherits the body's 1rem, but a primary *inside* a Recipe-B
+     container renders at var(--text-body): `.form-actions button` (App.css
+     :4650, 0,1,1) ties button.primary (0,1,1) on specificity and wins by
+     source order. The element stays a <button> in its container after the
+     swap, so leaving md-primary's font-size unset lets that exact cascade
+     decide — 1rem standalone, --text-body in a container — reproducing both.
+     Setting any component font-size on primary (higher layer) would force
+     one value and break the other. */
+  .zui-btn--md:not(.zui-btn--primary) {
     font-size: var(--text-body);
   }
 
@@ -135,6 +162,26 @@
      case with zero call sites (see the closing comment), not part of
      Recipe B itself, so this component reproduces none of it. */
   .zui-btn--secondary.zui-btn--md {
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* Container normalization. App.css's Recipe B layer (App.css:4649) compacts
+     EVERY <button> in these six containers to 0.4/0.8 — not just secondary/
+     danger — so a primary submit dropped into a .form-actions row renders
+     compact too. After the swap the element is still a <button> in that
+     container, so `.form-actions button` (@layer app) already supplies its
+     14px + 34px; only the padding needs reproducing here, because
+     .zui-btn--md's 0.55/0.9 (this higher layer) would otherwise override the
+     app rule and leave an in-form primary over-padded and ~4px too tall.
+     Mirrors the App.css container list exactly (inline-edit-actions is NOT
+     in it, so primaries there stay full-size). Scoped to md — the swap uses
+     md only. */
+  .card-actions .zui-btn--md,
+  .detail-actions .zui-btn--md,
+  .settings-modal > .zui-btn--md,
+  .shortcut-help .zui-btn--md,
+  .form-actions .zui-btn--md,
+  .share-actions .zui-btn--md {
     padding: 0.4rem 0.8rem;
   }
 

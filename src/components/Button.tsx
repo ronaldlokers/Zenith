@@ -31,7 +31,18 @@ export function Button({
   children,
   ...rest
 }: ButtonProps) {
-  const classes = ["zui-btn", `zui-btn--${size}`, `zui-btn--${variant}`, className]
+  const classes = [
+    "zui-btn",
+    `zui-btn--${size}`,
+    `zui-btn--${variant}`,
+    // Gap only exists to space the `icon` prop from the label; applying it
+    // unconditionally overrode the bespoke gap of app buttons whose own
+    // layout class already spaces multi-element children (e.g. .top-add's
+    // gap: 4px), making them wider. Only opt in when an icon is actually
+    // rendered.
+    icon ? "zui-btn--with-icon" : null,
+    className,
+  ]
     .filter(Boolean)
     .join(" ");
   return (
