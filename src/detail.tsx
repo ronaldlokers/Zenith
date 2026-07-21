@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
-import { Button } from "./components";
+import { Button, Chip } from "./components";
 import type {
   Application,
   Company,
@@ -425,12 +425,9 @@ function JdKeywordMatch({
           </strong>
           <div className="keyword-chips">
             {mentioned.map((s) => (
-              <span
-                key={s.id}
-                className={`chip${matched.includes(s) ? " chip-matched" : ""}`}
-              >
+              <Chip key={s.id} matched={matched.includes(s)}>
                 {s.name}
-              </span>
+              </Chip>
             ))}
           </div>
         </div>
@@ -949,7 +946,7 @@ export function ApplicationDetailModal({
 
             <div className="keyword-chips">
               {a.tags.map((tg, i) => (
-                <span key={tg.id} className="chip">
+                <Chip key={tg.id}>
                   <button
                     className="chip-move"
                     aria-label={t("cv.moveUp")}
@@ -978,7 +975,7 @@ export function ApplicationDetailModal({
                   >
                     <RemoveIcon />
                   </button>
-                </span>
+                </Chip>
               ))}
               <input
                 placeholder={t("detail.addTag")}

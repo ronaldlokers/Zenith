@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
 import { EmptyCompaniesIcon, EmptyPeopleIcon } from "./icons";
-import { Badge, Button, EmptyState } from "./components";
+import { Badge, Button, EmptyState, Row } from "./components";
 import {
   ageDays,
   formatDate,
@@ -172,9 +172,8 @@ export function CompaniesTab({
               !isDead(a.status),
           ).length;
           return (
-          <li
+          <Row
             key={c.id}
-            className="card row2"
             {...rowActivate(() => setDetailId(c.id))}
           >
             <div className="l1">
@@ -198,7 +197,7 @@ export function CompaniesTab({
                   : t("company.notResearched")}
               </span>
             </div>
-          </li>
+          </Row>
           );
         })}
         {visible.length === 0 && (
@@ -612,9 +611,8 @@ export function ContactsTab({
       ) : (
       <ul className="cards">
         {visible.map((c) => (
-          <li
+          <Row
             key={c.id}
-            className="card row2"
             {...rowActivate(() => setDetailId(c.id))}
           >
             <div className="l1">
@@ -638,7 +636,7 @@ export function ContactsTab({
                 </span>
               )}
             </div>
-          </li>
+          </Row>
         ))}
         {visible.length === 0 && (
           <EmptyState as="li">

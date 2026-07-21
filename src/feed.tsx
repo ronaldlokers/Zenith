@@ -14,7 +14,7 @@ import type {
   FeedItem,
   RoleTypeDef,
 } from "./types";
-import { Button, EmptyState } from "./components";
+import { Button, Chip, EmptyState } from "./components";
 
 export function FeedSettings({
   roleTypes,
@@ -259,7 +259,7 @@ export function FeedSettings({
             <span className="muted small">{r.label}</span>
             <div className="keyword-chips">
               {kws.map((k) => (
-                <span key={k.id} className="chip">
+                <Chip key={k.id}>
                   {k.keyword}
                   <button
                     onClick={() => removeKeyword(k.id)}
@@ -267,7 +267,7 @@ export function FeedSettings({
                   >
                     <RemoveIcon />
                   </button>
-                </span>
+                </Chip>
               ))}
               <input
                 placeholder={t("feedSettings.keywordPlaceholder")}
@@ -290,7 +290,7 @@ export function FeedSettings({
       <h3 className="detail-sub">{t("feedSettings.blocklist")}</h3>
       <div className="keyword-chips">
         {(blocklist ?? []).map((b) => (
-          <span key={b.id} className="chip">
+          <Chip key={b.id}>
             {b.company}
             <button
               onClick={() => removeBlockedCompany(b.id)}
@@ -298,7 +298,7 @@ export function FeedSettings({
             >
               <RemoveIcon />
             </button>
-          </span>
+          </Chip>
         ))}
         <form onSubmit={addBlockedCompany}>
           <input

@@ -1,0 +1,43 @@
+/* Complete, self-contained. Reproduces the App.css .keyword-chips .chip recipe
+   (App.css:2738) so the pill renders identically standalone in Storybook
+   (which loads no App.css) and in the app.
+
+   Callers keep className="chip-move" on their move buttons (disabled state is
+   scoped to that class, matching App.css:2759 — a plain remove button has no
+   disabled styling in the source recipe either). */
+@layer components {
+  .zui-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 0.2rem 0.3rem 0.2rem 0.6rem;
+    font-size: var(--text-meta);
+  }
+
+  /* App.css:2749 */
+  .zui-chip button {
+    border: none;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: var(--text-title);
+    line-height: 1;
+    padding: 0 0.2rem;
+  }
+
+  /* App.css:2759 */
+  .zui-chip .chip-move:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  /* App.css:2879 */
+  .zui-chip--matched {
+    background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}

@@ -1,0 +1,70 @@
+/* Complete, self-contained. Reproduces the computed look of a `.card.row2`
+   element — the .card base (App.css:1264) plus the .row2 modifier
+   (App.css:1550) — so the row renders identically standalone in Storybook
+   (which loads no App.css) and in the app.
+
+   .row2 only overrides the left border side (`border-left`); the class
+   combo has higher specificity than the base `.card` rule, but the base
+   `border` shorthand's top/right/bottom sides are untouched, so they're
+   reproduced here alongside .row2's own border-left. background,
+   border-radius, box-shadow and overflow come from .card, unchanged by
+   .row2.
+
+   NOT reproduced: `.card:has(.card-main.clickable):hover` (App.css:1272) —
+   row2 rows never contain a .card-main, so that rule never matches here. */
+@layer components {
+  .zui-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+
+    /* App.css:1550 — neutral fallback for rows with no stage color (no
+       .stage-* ancestor sets --sc for network rows); overrides only the
+       left border side set by the base `border` shorthand above. */
+    border-left: 3px solid var(--sc, var(--border));
+    padding: 0.55rem 0.8rem;
+    cursor: pointer;
+    min-height: 44px;
+    transition: border-left-color 0.18s ease, padding 0.15s ease, min-height 0.15s ease;
+  }
+
+  /* App.css:1567 — callers keep the .l1/.l2 class names on their children. */
+  .zui-row .l1 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* App.css:1573 */
+  .zui-row .l1 strong {
+    font-size: var(--text-title);
+  }
+
+  /* App.css:1577 */
+  .zui-row .l1 .co {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: var(--text-meta);
+  }
+
+  /* App.css:1583 */
+  .zui-row .l2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+  }
+
+  /* App.css:4451 */
+  .zui-row:hover {
+    background: var(--hover);
+  }
+
+  /* App.css:4461 */
+  .zui-row:active {
+    filter: brightness(0.97);
+  }
+}

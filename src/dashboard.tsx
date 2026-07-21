@@ -24,7 +24,7 @@ import {
 } from "./format";
 import { StatsTab } from "./stats-view";
 import { ActivityTab } from "./calendar";
-import { Button, DashCard, StatCard } from "./components";
+import { Button, DashCard, StatCard, StatLine } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
@@ -191,18 +191,18 @@ export function DashboardTab({
 
   const fortnightCard = (
     <DashCard heading={t("dashboard.thisFortnight")} win={t("dashboard.win2wk")} key="fortnight">
-      <div className="dash-stat">
-        <span>{t("dashboard.response")}</span>
-        <span className="sv">{Math.round(resp.rate * 100)}%</span>
-      </div>
-      <div className="dash-stat">
-        <span>{t("dashboard.toOffer")}</span>
-        <span className="sv">{t2o != null ? `~${Math.round(t2o)}d` : "—"}</span>
-      </div>
-      <div className="dash-stat">
-        <span>{t("dashboard.momentumTitle")}</span>
-        <span className="sv">{t(`stats.momentum.${pipe.verdict}`)}</span>
-      </div>
+      <StatLine
+        label={t("dashboard.response")}
+        value={`${Math.round(resp.rate * 100)}%`}
+      />
+      <StatLine
+        label={t("dashboard.toOffer")}
+        value={t2o != null ? `~${Math.round(t2o)}d` : "—"}
+      />
+      <StatLine
+        label={t("dashboard.momentumTitle")}
+        value={t(`stats.momentum.${pipe.verdict}`)}
+      />
     </DashCard>
   );
 
