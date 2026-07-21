@@ -24,7 +24,7 @@ import {
 } from "./format";
 import { StatsTab } from "./stats-view";
 import { ActivityTab } from "./calendar";
-import { DashCard, StatCard } from "./components";
+import { Button, DashCard, StatCard } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
@@ -258,13 +258,11 @@ export function DashboardTab({
             <span className="dash-caughtup-tick">✓</span>
             <span className="dash-caughtup-t">{t("dashboard.caughtUp")}</span>
             <span className="sp" />
-            <button
-              type="button"
-              className="linklike"
+            <Button variant="link"
               onClick={onOpenQuickAdd}
             >
               {t("dashboard.addFollowUp")}
-            </button>
+            </Button>
           </div>
           <div className="dash-cols">
             <div className="dash-col">{analytics}</div>

@@ -47,6 +47,8 @@ describe("Button", () => {
     ["ghost", "zui-btn--ghost"],
     ["dark", "zui-btn--dark"],
     ["danger", "zui-btn--danger"],
+    ["link", "zui-btn--link"],
+    ["close", "zui-btn--close"],
   ] as const)("variant=%s emits %s", (variant, expectedClass) => {
     render(<Button variant={variant}>Save</Button>);
     expect(screen.getByRole("button")).toHaveClass(expectedClass);

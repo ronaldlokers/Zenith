@@ -63,9 +63,9 @@ export function OnboardingChecklist({
         </li>
       </ul>
       {!jobDone && (
-        <button className="linklike onboarding-sample" onClick={onLoadSample}>
+        <Button variant="link" className="onboarding-sample" onClick={onLoadSample}>
           {t("onboarding.sampleLink")}
-        </button>
+        </Button>
       )}
     </div>
   );

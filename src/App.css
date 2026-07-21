@@ -843,16 +843,7 @@
   font-size: var(--text-heading);
 }
 
-.modal-close {
-  border: none;
-  background: none;
-  color: var(--muted);
-  font-size: var(--text-display);
-  line-height: 1;
-  cursor: pointer;
-  padding: 0.1rem 0.3rem;
-  flex-shrink: 0;
-}
+/* .modal-close is now the Button "close" variant (src/components/Button.css). */
 
 .detail-fields {
   display: flex;
@@ -4539,20 +4530,7 @@ button:not(:disabled):active,
 }
 
 /* First-run stitching (#314 round 3). */
-.linklike {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--accent-ink);
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: inherit;
-}
-
-.linklike:hover {
-  color: var(--ink);
-  background: none;
-}
+/* .linklike is now the Button "link" variant (src/components/Button.css). */
 
 .pipeline-empty-hint {
   color: var(--muted);
@@ -5083,7 +5061,6 @@ button:not(:disabled):active,
   .quick-add-fab,
   .toast,
   .error-dismiss,
-  .modal-close,
   button,
   .toolbar .search,
   input[type="search"] {

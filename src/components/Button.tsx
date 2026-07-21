@@ -14,8 +14,18 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    *    .settings-modal/.shortcut-help/.form-actions/.share-actions button).
    *  - "danger"    — Recipe B + App.css:4693 colour/border-colour override.
    *  - "ghost", "dark" — design-system additions, no current call sites.
+   *  - "link"      — borderless underlined text link (App.css:4542 .linklike).
+   *  - "close"     — borderless × button in modal headers (App.css:846 .modal-close).
    */
-  variant?: "default" | "primary" | "secondary" | "ghost" | "dark" | "danger";
+  variant?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "ghost"
+    | "dark"
+    | "danger"
+    | "link"
+    | "close";
   /** Control height / type scale. */
   size?: "sm" | "md" | "lg";
   /** Optional leading icon element. */
