@@ -2,8 +2,14 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "./Button";
 
 const meta: Meta<typeof Button> = {
-  title: "Ported/Button",
+  // Nests under the "Core" catalog group beside the DS-bundle stories, which
+  // is where a browsing user looks for Button. The bundle's monolithic
+  // Core.stories.jsx still ships its own flat Button entries during migration;
+  // this owned story is the authoritative one and takes over the slot when the
+  // bundle stories are repointed at src/ (see .storybook/main.js).
+  title: "Core/Button",
   component: Button,
+  tags: ["autodocs"],
 };
 export default meta;
 
