@@ -32,7 +32,7 @@ Ask clarifying questions before large design work; prefer `AskUserQuestion` with
 Run and confirm green:
 - `npx tsc -b` — note `noUnusedLocals` is on: unused symbols are **errors**, so remove dead code (or it won't compile).
 - `npm run build`
-- `npm run lint` (oxlint) — one pre-existing exhaustive-deps warning in FeedTab is expected; don't add more.
+- `npm run lint` (oxlint) — must be clean, zero warnings; don't introduce any (exhaustive-deps in particular).
 - `npx vitest run --no-file-parallelism` — parallel runs flake locally (CI is authoritative). vitest-pool-workers storage is isolated **per test file**, shared within a file; put destructive whole-account tests in their own spec file.
 - en/nl key parity (every key in both locales).
 
