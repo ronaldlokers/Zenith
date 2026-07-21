@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
 import { EmptyCompaniesIcon, EmptyPeopleIcon } from "./icons";
-import { Button } from "./components";
+import { Badge, Button } from "./components";
 import {
   ageDays,
   formatDate,
@@ -149,7 +149,7 @@ export function CompaniesTab({
               )}
               <span className="company-tile-name">
                 {c.name}
-                {c.is_agency ? <span className="badge">{t("company.agencyBadge")}</span> : null}
+                {c.is_agency ? <Badge>{t("company.agencyBadge")}</Badge> : null}
               </span>
             </li>
           ))}
@@ -180,12 +180,12 @@ export function CompaniesTab({
             <div className="l1">
               <strong>
                 {c.name}
-                {c.is_agency ? <span className="badge">{t("company.agencyBadge")}</span> : null}
+                {c.is_agency ? <Badge>{t("company.agencyBadge")}</Badge> : null}
                 {referrals > 0 ? (
-                  <span className="badge">
+                  <Badge>
                     {" "}
                     {t("referral.badgeCount", { count: referrals })}
-                  </span>
+                  </Badge>
                 ) : null}
               </strong>
               <span className="co">{c.location ?? ""}</span>
@@ -396,7 +396,7 @@ function CompanyDetailModal({
           <div>
             <h2>
               {c.name}
-              {c.is_agency ? <span className="badge">{t("company.agencyBadge")}</span> : null}
+              {c.is_agency ? <Badge>{t("company.agencyBadge")}</Badge> : null}
             </h2>
             <span className="muted small">{c.location ?? ""}</span>
           </div>

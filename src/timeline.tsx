@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
-import { Button } from "./components";
+import { Badge, Button } from "./components";
 import { formatDate, today } from "./format";
 import { RemoveIcon } from "./icons";
 import { INTERACTION_TYPES } from "./types";
@@ -141,7 +141,7 @@ export function Timeline({
                 </span>
               )}
               {it.notes ?? ""}
-              {it.via_contact ? <span className="badge">{t("timeline.viaContact")}</span> : null}
+              {it.via_contact ? <Badge>{t("timeline.viaContact")}</Badge> : null}
             </span>
             <button
               className="tl-del danger"

@@ -1,0 +1,37 @@
+/* Complete, self-contained. Reproduces the App.css .badge recipe (App.css:1710)
+   so the pill renders identically standalone in Storybook (which loads no
+   App.css) and in the app.
+
+   In App.css every variant sets border-color equal to its text colour
+   (accent/accent, danger/danger, --sc/--sc), so the border is `currentColor`
+   here and each variant only needs to move `color` — computed value is
+   identical.
+
+   NOT reproduced: the shared chip rule (App.css:4738) adds min-height: 36px to
+   .badge, but that is inert on a non-replaced inline <span> — it only sizes
+   the block/flex chips grouped in the same selector, so it never affected the
+   badge's box. */
+@layer components {
+  .zui-badge {
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-chrome);
+    color: var(--accent);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    padding: 0.08rem 0.4rem;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+  }
+
+  /* App.css:1723 */
+  .zui-badge--warn {
+    color: var(--danger);
+  }
+
+  /* App.css:1728 — --sc is the stage colour set by a .stage-* ancestor. */
+  .zui-badge--stage {
+    color: var(--sc);
+  }
+}

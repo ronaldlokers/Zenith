@@ -3,6 +3,7 @@
 // export) shown behind the Dashboard's "all the numbers" drawer.
 import { useTranslation } from "react-i18next";
 import { LoadingSkeleton } from "./ui";
+import { Badge } from "./components";
 import {
   funnelConversions,
   medianTimeInStageDays,
@@ -301,7 +302,7 @@ export function StatsTab({
                   <td>{a.title}</td>
                   <td>{a.company_name ?? "—"}</td>
                   <td>
-                    <span className="badge stage">{t(`stages.${a.status}`)}</span>
+                    <Badge variant="stage">{t(`stages.${a.status}`)}</Badge>
                   </td>
                   <td className="compare-comp">{formatComp(a)}</td>
                   <td className="compare-comp" title={totalCompBreakdown(a)}>

@@ -1707,28 +1707,8 @@ button.danger {
   overflow-y: auto;
 }
 
-.badge {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  padding: 0.08rem 0.4rem;
-  margin-left: 0.4rem;
-  vertical-align: middle;
-}
-
-.badge.warn {
-  color: var(--danger);
-  border-color: var(--danger);
-}
-
-.badge.stage {
-  color: var(--sc);
-  border-color: var(--sc);
-}
+/* The pill itself (.badge, .badge.warn, .badge.stage) now lives in the owned
+   Badge component (src/components/Badge.css, @layer components). */
 
 .warn-text {
   color: var(--danger);
@@ -4288,20 +4268,6 @@ summary.bcol-head::after {
   }
 }
 
-/* Worst-wins attention badge (#314) */
-.badge.attention {
-  font-weight: 700;
-}
-
-.badge.attention-overdue {
-  color: var(--danger);
-}
-
-.badge.attention-stale,
-.badge.attention-quiet {
-  color: var(--heat-quiet-text);
-}
-
 /* Network grid gets a deliberate width under the sidebar shell (#314). */
 @media (min-width: 1000px) {
   .app:has(.company-grid) > main {
@@ -4734,8 +4700,9 @@ button:not(:disabled):active,
   border-radius: var(--radius-md);
 }
 
-/* Chips: one metric set so co-occurring chips baseline-align. */
-.badge,
+/* Chips: one metric set so co-occurring chips baseline-align. (The badge
+   pill moved to the Badge component; min-height was inert on it anyway — it
+   is an inline <span>.) */
 .outreach-pill,
 .tag-chip,
 .doc-label,

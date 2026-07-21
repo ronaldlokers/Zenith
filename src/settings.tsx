@@ -17,7 +17,7 @@ import {
 } from "./format";
 import type { RoleTypeDef, Webhook } from "./types";
 import { useLocation } from "react-router-dom";
-import { Button } from "./components";
+import { Badge, Button } from "./components";
 import { FeedSettings } from "./feed";
 
 export function DeleteAccount({
@@ -206,7 +206,7 @@ export function AdminUsers({
               {u.name ?? u.email}
               <span className="muted small"> · {u.email}</span>
               {u.twoFactorEnabled ? (
-                <span className="badge"> 2FA</span>
+                <Badge> 2FA</Badge>
               ) : null}
             </span>
             {u.id !== session?.user.id && (
