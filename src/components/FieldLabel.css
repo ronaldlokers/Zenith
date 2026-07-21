@@ -1,0 +1,14 @@
+/* Complete, self-contained. Reproduces the App.css .field-label recipe
+   (App.css:854) so the caption renders identically standalone in Storybook
+   (which loads no App.css) and in the app. */
+@layer components {
+  .zui-fieldlabel {
+    display: block;
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-chrome);
+    color: var(--faint);
+    margin-bottom: 0.1rem;
+  }
+}

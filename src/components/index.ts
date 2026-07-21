@@ -18,3 +18,7 @@ export { FilterTab } from "./FilterTab";
 export type { FilterTabProps } from "./FilterTab";
 export { Row } from "./Row";
 export type { RowProps } from "./Row";
+export { FieldLabel } from "./FieldLabel";
+export type { FieldLabelProps } from "./FieldLabel";
+export { SegmentedControl } from "./SegmentedControl";
+export type { SegmentedControlProps } from "./SegmentedControl";
