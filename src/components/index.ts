@@ -22,3 +22,5 @@ export { FieldLabel } from "./FieldLabel";
 export type { FieldLabelProps } from "./FieldLabel";
 export { SegmentedControl } from "./SegmentedControl";
 export type { SegmentedControlProps } from "./SegmentedControl";
+export { ActionBar } from "./ActionBar";
+export type { ActionBarProps } from "./ActionBar";
