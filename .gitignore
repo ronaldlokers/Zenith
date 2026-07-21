@@ -26,9 +26,12 @@ dist-ssr
 # storybook build output
 storybook-static
 
-# screenshot baseline for component migration (local only, regenerated)
+# screenshot baseline for component migration (local only, regenerated).
+# after*/ and control/ are throwaway OUT_DIR captures used to diff a swap
+# against the pre-swap render (compare -metric AE); never commit any of them.
 baseline/
-after/
+after*/
+control/
 
 # saved browser session for the baseline script — never commit
 .auth.json
