@@ -1,0 +1,247 @@
+/* Complete, self-contained. Deliberately reproduces the rules the old raw
+   <button> markup inherited from App.css, because Storybook never loads
+   App.css and the catalog has to match production.
+
+   App.css actually ships two distinct button recipes, not one:
+     - Recipe A, "primary"   — App.css:1212 button.primary (+ :1222 hover)
+     - Recipe B, "secondary" — App.css:4649 .card-actions/.detail-actions/
+       .settings-modal/.shortcut-help/.form-actions/.share-actions button
+       (the "control normalization layer", :4665 hover). This supersedes
+       the older per-container declarations at :406, :799, :884, :1493 and
+       :3381 — same specificity, later source order wins.
+     - "danger" is Recipe B plus a colour/border-colour override
+       (App.css:4693), scoped to the same three containers; there is no
+       danger-specific hover, so it uses Recipe B's hover unchanged. The
+       *bare* global `button.danger` (App.css:1226) is thinner still (just
+       `color`) — real danger buttons in the app all live inside one of
+       Recipe B's containers, so that's the recipe this variant models.
+
+   Layer priority applies per-property, not per-rule: a property this file
+   declares unconditionally beats a lower-layer (App.css / @layer app)
+   :hover-scoped rule for that same property, hover or not. That's why the
+   base rule below only declares what's genuinely identical across every
+   recipe — anything that differs (background, border, color, padding,
+   font-weight, min-height) is owned entirely by each variant, hover
+   included, so no variant can shadow another's state styling. */
+@layer components {
+  .zui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sans);
+    /* No line-height override. The raw app buttons carried index.css's
+       `button { font: inherit }`, so they inherited the body's 1.5 — and
+       button.primary (App.css:1212) declares none, so its box height is
+       padding + 1.5*font-size. Forcing line-height:1 here made every
+       primary button ~7px shorter than the markup it replaces, shifting
+       the top-bar "+ Add" (present on every view) and the whole content
+       column with it. Inheriting matches the shipped cascade. Secondary/
+       danger are pinned by min-height:34px, so they're unaffected either
+       way. */
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+
+  /* Reproduces App.css band 4 (button:not(:disabled):active) — global,
+     applies to every recipe regardless of variant. */
+  /* Spacing between the `icon` prop and the label. Scoped to with-icon so a
+     button whose children carry their own layout (and often their own gap
+     class) is never force-spaced by the component. */
+  .zui-btn--with-icon {
+    gap: 0.4rem;
+  }
+
+  .zui-btn:not(:disabled):active {
+    filter: brightness(0.97);
+  }
+
+  /* Matches the global focus geometry (src/index.css:229) — the real
+     :focus-visible rule, not the [role="button"] one (App.css:1853), which
+     targets ARIA-button divs, not <button> elements. */
+  .zui-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .zui-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Sizes set type scale for every variant, and the *default* padding,
+     which is Recipe A's (0.55/0.9 at md — see .zui-btn--primary below).
+     Recipe B's variants (secondary/danger) override padding for md only,
+     just below, so sm/lg keep scaling off these generic values — App.css
+     has no sm/lg version of either recipe to reproduce. */
+  .zui-btn--sm {
+    padding: 0.35rem 0.6rem;
+    font-size: var(--text-meta);
+  }
+
+  /* 0.55/0.9 matches App.css button.primary as it ships today. */
+  .zui-btn--md {
+    padding: 0.55rem 0.9rem;
+  }
+
+  /* md font-size is owned by the size EXCEPT for primary, which must inherit.
+     button.primary (App.css:1212) sets no font-size, so a *standalone*
+     primary inherits the body's 1rem, but a primary *inside* a Recipe-B
+     container renders at var(--text-body): `.form-actions button` (App.css
+     :4650, 0,1,1) ties button.primary (0,1,1) on specificity and wins by
+     source order. The element stays a <button> in its container after the
+     swap, so leaving md-primary's font-size unset lets that exact cascade
+     decide — 1rem standalone, --text-body in a container — reproducing both.
+     Setting any component font-size on primary (higher layer) would force
+     one value and break the other. */
+  .zui-btn--md:not(.zui-btn--primary) {
+    font-size: var(--text-body);
+  }
+
+  .zui-btn--lg {
+    padding: 0.6rem 1rem;
+    font-size: var(--text-title);
+  }
+
+  /* Pre-existing base look, kept as its own variant so removing the
+     unconditional background/border from .zui-btn above doesn't leave the
+     default (no variant prop) button unstyled. Not a reproduction of any
+     single App.css recipe — it's what "default" already rendered as
+     before this file had per-variant states. */
+  .zui-btn--default {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .zui-btn--default:hover:not(:disabled) {
+    background: var(--bg);
+  }
+
+  /* Recipe A — App.css:1212. border: none (zero width), not just
+     transparent — with border-box sizing a 1px transparent border still
+     adds ~2px. */
+  .zui-btn--primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    font-weight: 650;
+  }
+
+  /* App.css:1222 */
+  .zui-btn--primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 85%, black);
+  }
+
+  /* Recipe B — App.css:4649. No font-weight is declared there, so these
+     buttons inherit ~400 from the body; do not add one here. */
+  .zui-btn--secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    min-height: 34px;
+  }
+
+  /* App.css:4665 */
+  .zui-btn--secondary:hover:not(:disabled) {
+    background: var(--bg);
+  }
+
+  /* Recipe B's padding (0.4/0.8) only at md — sm/lg fall back to the
+     generic scale above, since App.css has no sm/lg equivalent of this
+     recipe to match.
+
+     NOT reproduced: App.css:1510 bumps .card-actions button specifically
+     (not the other five Recipe B containers) to min-height 44px + padding
+     0.5rem 0.8rem at max-width 600px. That's a single-container special
+     case with zero call sites (see the closing comment), not part of
+     Recipe B itself, so this component reproduces none of it. */
+  .zui-btn--secondary.zui-btn--md {
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* Container normalization. App.css's Recipe B layer (App.css:4649) compacts
+     EVERY <button> in these six containers to 0.4/0.8 — not just secondary/
+     danger — so a primary submit dropped into a .form-actions row renders
+     compact too. After the swap the element is still a <button> in that
+     container, so `.form-actions button` (@layer app) already supplies its
+     14px + 34px; only the padding needs reproducing here, because
+     .zui-btn--md's 0.55/0.9 (this higher layer) would otherwise override the
+     app rule and leave an in-form primary over-padded and ~4px too tall.
+     Mirrors the App.css container list exactly (inline-edit-actions is NOT
+     in it, so primaries there stay full-size). Scoped to md — the swap uses
+     md only. */
+  .card-actions .zui-btn--md,
+  .detail-actions .zui-btn--md,
+  .settings-modal > .zui-btn--md,
+  .shortcut-help .zui-btn--md,
+  .form-actions .zui-btn--md,
+  .share-actions .zui-btn--md {
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* Recipe B + App.css:4693 colour/border-colour override. Composed
+     directly (not layered on top of .zui-btn--secondary) because variant
+     is a single exclusive class, not a combination. */
+  .zui-btn--danger {
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--border));
+    color: var(--danger);
+    min-height: 34px;
+  }
+
+  /* No danger-specific hover exists in App.css for these containers —
+     it falls through to Recipe B's hover unchanged (App.css:4665). */
+  .zui-btn--danger:hover:not(:disabled) {
+    background: var(--bg);
+  }
+
+  .zui-btn--danger.zui-btn--md {
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* Design-system addition, no current call sites and no App.css
+     recipe to match — preserves the pre-refactor base look/weight so it
+     doesn't regress now that .zui-btn no longer sets these unconditionally.
+     border is a full 1px solid transparent (not just border-color) so the
+     box model matches the bordered variants above. */
+  .zui-btn--ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .zui-btn--ghost:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  /* Design-system addition, no current call sites and no App.css recipe
+     to match. */
+  .zui-btn--dark {
+    background: var(--night);
+    color: #f4f2ec;
+    border: none;
+    font-weight: 500;
+  }
+
+  .zui-btn--dark:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--night) 85%, white);
+  }
+
+  /* No mobile min-height. App.css's only button-targeting 44px rule is
+     `.card-actions button` (App.css:1510) at max-width 600px, and
+     .card-actions has ZERO call sites in the app — so no real button ever
+     rendered at a 44px mobile min-height. An earlier version of this file
+     imposed a universal 44px here for "touch target parity", but that
+     diverged from production: it made every swapped secondary/danger button
+     10px taller on mobile than the raw markup it replaced. Matching the
+     shipped cascade wins, so the rule is deliberately absent — primary/
+     default/ghost/dark keep their natural height and secondary/danger keep
+     their own unconditional min-height: 34px, exactly as today. */
+}

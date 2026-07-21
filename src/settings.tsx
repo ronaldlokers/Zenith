@@ -17,6 +17,7 @@ import {
 } from "./format";
 import type { RoleTypeDef, Webhook } from "./types";
 import { useLocation } from "react-router-dom";
+import { Button } from "./components";
 import { FeedSettings } from "./feed";
 
 export function DeleteAccount({
@@ -497,12 +498,12 @@ export function PublicApiSettings({
         <>
           <input readOnly value={apiKey} onClick={(e) => (e.target as HTMLInputElement).select()} />
           <div className="share-actions">
-            <button disabled={keyBusy} onClick={generateKey}>
+            <Button disabled={keyBusy} variant="secondary" onClick={generateKey}>
               {t("settings.regenerateLink")}
-            </button>
-            <button disabled={keyBusy} className="danger" onClick={revokeKey}>
+            </Button>
+            <Button disabled={keyBusy} variant="danger" onClick={revokeKey}>
               {t("settings.disableLink")}
-            </button>
+            </Button>
           </div>
         </>
       ) : (
@@ -555,9 +556,9 @@ export function PublicApiSettings({
           value={newWebhookUrl}
           onChange={(e) => setNewWebhookUrl(e.target.value)}
         />
-        <button type="submit" className="primary" disabled={webhookBusy}>
+        <Button type="submit" variant="primary" disabled={webhookBusy}>
           {t("feedSettings.add")}
-        </button>
+        </Button>
       </form>
 
       <ApiDocs />
@@ -1181,12 +1182,12 @@ export function SettingsPage({
             <>
               <input readOnly value={shareUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
               <div className="share-actions">
-                <button disabled={shareBusy} onClick={generateLink}>
+                <Button disabled={shareBusy} variant="secondary" onClick={generateLink}>
                   {t("settings.regenerateLink")}
-                </button>
-                <button disabled={shareBusy} className="danger" onClick={disableLink}>
+                </Button>
+                <Button disabled={shareBusy} variant="danger" onClick={disableLink}>
                   {t("settings.disableLink")}
-                </button>
+                </Button>
               </div>
             </>
           ) : (
@@ -1202,12 +1203,12 @@ export function SettingsPage({
               <input readOnly value={calendarUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
               <p className="muted small">{t("settings.calendarLinkHint")}</p>
               <div className="share-actions">
-                <button disabled={calendarBusy} onClick={generateCalendarLink}>
+                <Button disabled={calendarBusy} variant="secondary" onClick={generateCalendarLink}>
                   {t("settings.regenerateLink")}
-                </button>
-                <button disabled={calendarBusy} className="danger" onClick={disableCalendarLink}>
+                </Button>
+                <Button disabled={calendarBusy} variant="danger" onClick={disableCalendarLink}>
                   {t("settings.disableLink")}
-                </button>
+                </Button>
               </div>
             </>
           ) : (

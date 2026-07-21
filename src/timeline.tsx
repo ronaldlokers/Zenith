@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
+import { Button } from "./components";
 import { formatDate, today } from "./format";
 import { RemoveIcon } from "./icons";
 import { INTERACTION_TYPES } from "./types";
@@ -124,9 +125,9 @@ export function Timeline({
             />
           </div>
         )}
-        <button type="submit" className="primary" disabled={logging}>
+        <Button type="submit" variant="primary" disabled={logging}>
           {t("common.log")}
-        </button>
+        </Button>
       </form>
       <ul className="tl-items">
         {(items ?? []).map((it) => (

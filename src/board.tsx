@@ -30,6 +30,7 @@ import {
 } from "./format";
 import { Dialog } from "./ui";
 import { ApplicationDetailModal } from "./detail";
+import { Button } from "./components";
 
 function CardMenu({
   a,
@@ -138,9 +139,9 @@ function CardMenu({
                   onChange={(e) => setFuDate(e.target.value)}
                 />
                 <div className="card-menu-fu-actions">
-                  <button type="submit" className="primary">
+                  <Button type="submit" variant="primary">
                     {t("common.save")}
-                  </button>
+                  </Button>
                   {a.next_action_at && (
                     <button
                       type="button"
@@ -828,16 +829,16 @@ export function PipelineTab({
               />
             </label>
             <div className="form-actions">
-              <button
+              <Button
                 type="submit"
-                className="primary"
+                variant="primary"
                 disabled={!newViewName.trim()}
               >
                 {t("common.save")}
-              </button>
-              <button type="button" onClick={() => setNamingView(false)}>
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setNamingView(false)}>
                 {t("common.cancel")}
-              </button>
+              </Button>
             </div>
           </form>
         </Dialog>

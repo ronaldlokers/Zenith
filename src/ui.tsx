@@ -2,6 +2,7 @@
 // load-failed, the Dialog + ConfirmHost modal stack, and the small hooks.
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "./components";
 import { setConfirmImpl, useFocusTrap } from "./hooks";
 
 export function LoadingSkeleton() {
@@ -118,12 +119,12 @@ export function ConfirmHost() {
     >
       <p>{req.message}</p>
       <div className="form-actions">
-        <button className="danger" onClick={() => answer(true)}>
+        <Button variant="danger" onClick={() => answer(true)}>
           {t("common.confirm")}
-        </button>
-        <button type="button" onClick={() => answer(false)}>
+        </Button>
+        <Button variant="secondary" type="button" onClick={() => answer(false)}>
           {t("common.cancel")}
-        </button>
+        </Button>
       </div>
     </Dialog>
   );

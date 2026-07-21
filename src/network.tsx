@@ -8,6 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
 import { EmptyCompaniesIcon, EmptyPeopleIcon } from "./icons";
+import { Button } from "./components";
 import {
   ageDays,
   formatDate,
@@ -98,9 +99,9 @@ export function CompaniesTab({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button className="primary" onClick={() => setEditing("new")}>
+        <Button variant="primary" onClick={() => setEditing("new")}>
           {t("toolbar.addCompany")}
-        </button>
+        </Button>
         <div className="board-group-toggle" role="group" aria-label={t("companies.view")}>
           <button
             className={view === "list" ? "active" : ""}
@@ -289,12 +290,12 @@ function CompanyForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary" disabled={submitting}>
+        <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
-        </button>
-        <button type="button" onClick={onCancel}>
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -449,22 +450,23 @@ function CompanyDetailModal({
             <ContactRelationshipMap contacts={contacts} applications={applications} />
 
             <div className="detail-actions">
-              <button
+              <Button
+                variant="secondary"
                 disabled={!c.website || researching}
                 onClick={research}
               >
                 {researching ? t("common.researching") : t("common.research")}
-              </button>
-              <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
-              <button
-                className="danger"
+              </Button>
+              <Button variant="secondary" onClick={() => setEditing(true)}>{t("common.edit")}</Button>
+              <Button
+                variant="danger"
                 onClick={() => {
                   onDelete("companies", c.id, c.name);
                   onClose();
                 }}
               >
                 {t("common.delete")}
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -540,9 +542,9 @@ export function ContactsTab({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button className="primary" onClick={() => setEditing("new")}>
+        <Button variant="primary" onClick={() => setEditing("new")}>
           {t("toolbar.addContact")}
-        </button>
+        </Button>
         <div className="board-group-toggle" role="group" aria-label={t("contacts.view")}>
           <button
             className={view === "list" ? "active" : ""}
@@ -784,12 +786,12 @@ function ContactForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary" disabled={submitting}>
+        <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
-        </button>
-        <button type="button" onClick={onCancel}>
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -886,16 +888,16 @@ function ContactDetailModal({
             </div>
 
             <div className="detail-actions">
-              <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
-              <button
-                className="danger"
+              <Button variant="secondary" onClick={() => setEditing(true)}>{t("common.edit")}</Button>
+              <Button
+                variant="danger"
                 onClick={() => {
                   onDelete("contacts", c.id, c.name);
                   onClose();
                 }}
               >
                 {t("common.delete")}
-              </button>
+              </Button>
             </div>
 
             <h3 className="detail-sub">{t("detail.timeline")}</h3>
