@@ -1,0 +1,37 @@
+/* Complete, self-contained. Reproduces the App.css .archived-tabs .chip
+   recipe (App.css:4938) so the tab renders identically standalone in
+   Storybook (which loads no App.css) and in the app. */
+@layer components {
+  .zui-filtertab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    padding: 0.22rem 0.6rem;
+    border: none;
+    border-radius: var(--radius-full);
+    background: var(--track);
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  /* App.css:4946 */
+  .zui-filtertab--active {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+
+  /* App.css:4947 */
+  .zui-filtertab-n {
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* App.css:4948 */
+  .zui-filtertab--active .zui-filtertab-n {
+    color: var(--accent-ink);
+  }
+}

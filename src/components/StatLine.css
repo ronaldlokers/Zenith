@@ -1,0 +1,23 @@
+/* Complete, self-contained. Reproduces the App.css .dash-stat recipe
+   (App.css:4756) so the row renders identically standalone in Storybook
+   (which loads no App.css) and in the app. */
+@layer components {
+  .zui-statline {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    padding: 0.32rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* App.css:4757 — no border above the first row in a stack. */
+  .zui-statline:first-of-type {
+    border-top: none;
+  }
+
+  /* App.css:4758 */
+  .zui-statline-value {
+    font-family: var(--mono);
+    font-weight: 600;
+  }
+}
