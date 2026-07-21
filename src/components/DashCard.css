@@ -1,0 +1,69 @@
+/* Complete, self-contained. Reproduces the App.css .dash-card recipe
+   (App.css:4745) so the panel renders identically in the app and standalone in
+   Storybook (which loads no App.css). The body content (dash-funnel, dash-stat,
+   side-list, …) stays at the call site — this component owns only the shell
+   and its heading. */
+@layer components {
+  .zui-dashcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+    padding: 0.85rem 0.95rem;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    display: block;
+    width: 100%;
+  }
+
+  /* App.css:4757 */
+  .zui-dashcard--lead {
+    border-left: 3px solid var(--accent);
+  }
+
+  /* App.css:4761 — the lead card's NextUpPanel reuses .jobs-side (display:none
+     by default); it must show at every width inside the lead card, or the card
+     renders empty. Reproduced here because the swap drops the .dash-card-lead
+     class that the app rule keyed on. */
+  .zui-dashcard--lead .jobs-side {
+    display: block;
+  }
+
+  /* App.css:4762 — only the clickable variant lifts on hover. */
+  .zui-dashcard--click {
+    cursor: pointer;
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease;
+  }
+
+  .zui-dashcard--click:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+  }
+
+  /* App.css:4764 — the eyebrow heading. */
+  .zui-dashcard-head {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: var(--track-eyebrow);
+    text-transform: uppercase;
+    color: var(--faint);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.55rem;
+  }
+
+  /* App.css:4775 — the right-aligned "win" pill. */
+  .zui-dashcard-win {
+    margin-left: auto;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.54rem;
+    letter-spacing: 0.04em;
+  }
+}

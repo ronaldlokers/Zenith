@@ -4742,45 +4742,11 @@ button:not(:disabled):active,
 @media (min-width: 900px) { .dash-cols { grid-template-columns: 1.05fr 0.95fr; } }
 .dash-col { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
 
-.dash-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-1);
-  padding: 0.85rem 0.95rem;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  display: block;
-  width: 100%;
-}
-.dash-card.dash-card-lead { border-left: 3px solid var(--accent); }
-/* NextUpPanel reuses .jobs-side (display:none by default); inside the dashboard
-   lead card it must show at every width, including mobile, when a follow-up is
-   due — otherwise the card renders empty (design review). */
-.dash-card-lead .jobs-side { display: block; }
-.dash-card.click { cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease; }
-.dash-card.click:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
-.dash-ch {
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--faint);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.55rem;
-}
-.dash-win {
-  margin-left: auto;
-  color: var(--accent-ink);
-  background: var(--accent-soft);
-  border-radius: 999px;
-  padding: 0.05rem 0.4rem;
-  font-size: 0.54rem;
-  letter-spacing: 0.04em;
-}
+/* The dashboard content card (.dash-card, its lead/click variants, and the
+   .dash-ch heading + .dash-win pill) now lives in the owned DashCard component
+   (src/components/DashCard.css, @layer components). The body classes below
+   (.dash-funnel, .dash-stat, .dash-offers, …) stay — DashCard owns only the
+   shell + heading, not the card contents. */
 
 .dash-funnel { display: flex; flex-direction: column; gap: 0.3rem; }
 .dash-fn { display: grid; grid-template-columns: 5.4rem 1fr 1.6rem; align-items: center; gap: 0.5rem; }

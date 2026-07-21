@@ -24,7 +24,7 @@ import {
 } from "./format";
 import { StatsTab } from "./stats-view";
 import { ActivityTab } from "./calendar";
-import { StatCard } from "./components";
+import { DashCard, StatCard } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
@@ -133,16 +133,12 @@ export function DashboardTab({
   );
 
   const funnelCard = (
-    <button
-      type="button"
-      className="dash-card click"
+    <DashCard
+      heading={t("dashboard.funnelConv")}
+      win={t("dashboard.winLiveAllTime")}
       onClick={onGoToJobs}
       key="funnel"
     >
-      <div className="dash-ch">
-        {t("dashboard.funnelConv")}
-        <span className="dash-win">{t("dashboard.winLiveAllTime")}</span>
-      </div>
       <div className="dash-funnel">
         {FUNNEL_STAGES.map((st, i) => (
           <div className={`dash-fn stage-${st}`} key={st}>
@@ -158,15 +154,11 @@ export function DashboardTab({
         {conv.map((c) => `${Math.round(c.rate * 100)}%`).join(" · ")}{" "}
         {t("dashboard.stageToStage")}
       </div>
-    </button>
+    </DashCard>
   );
 
   const offersCard = (
-    <div className="dash-card" key="offers">
-      <div className="dash-ch">
-        {t("dashboard.offers")}
-        <span className="dash-win">{t("dashboard.winOpen")}</span>
-      </div>
+    <DashCard heading={t("dashboard.offers")} win={t("dashboard.winOpen")} key="offers">
       {liveOffers.length === 0 ? (
         <p className="muted small" style={{ margin: 0 }}>
           {t("dashboard.noOffers")}
@@ -194,15 +186,11 @@ export function DashboardTab({
           })}
         </ul>
       )}
-    </div>
+    </DashCard>
   );
 
   const fortnightCard = (
-    <div className="dash-card" key="fortnight">
-      <div className="dash-ch">
-        {t("dashboard.thisFortnight")}
-        <span className="dash-win">{t("dashboard.win2wk")}</span>
-      </div>
+    <DashCard heading={t("dashboard.thisFortnight")} win={t("dashboard.win2wk")} key="fortnight">
       <div className="dash-stat">
         <span>{t("dashboard.response")}</span>
         <span className="sv">{Math.round(resp.rate * 100)}%</span>
@@ -215,14 +203,13 @@ export function DashboardTab({
         <span>{t("dashboard.momentumTitle")}</span>
         <span className="sv">{t(`stats.momentum.${pipe.verdict}`)}</span>
       </div>
-    </div>
+    </DashCard>
   );
 
   const analytics = [funnelCard, offersCard, fortnightCard];
 
   const activityCard = (
-    <div className="dash-card" key="activity">
-      <div className="dash-ch">{t("overview.recentlyUpdated")}</div>
+    <DashCard heading={t("overview.recentlyUpdated")} key="activity">
       {recent.length === 0 ? (
         <p className="muted small" style={{ margin: 0 }}>
           {t("overview.noActivity")}
@@ -243,7 +230,7 @@ export function DashboardTab({
           ))}
         </ul>
       )}
-    </div>
+    </DashCard>
   );
 
   return (
@@ -253,14 +240,14 @@ export function DashboardTab({
       {hasActions ? (
         <div className="dash-cols">
           <div className="dash-col">
-            <div className="dash-card dash-card-lead">
+            <DashCard lead>
               <NextUpPanel
                 notify={notify}
                 applications={applications}
                 onChanged={onChanged}
                 onError={onError}
               />
-            </div>
+            </DashCard>
             {activityCard}
           </div>
           <div className="dash-col">{analytics}</div>
