@@ -4,3 +4,7 @@ export { StatCard } from "./StatCard";
 export type { StatCardProps } from "./StatCard";
 export { Badge } from "./Badge";
 export type { BadgeProps } from "./Badge";
+export { Avatar } from "./Avatar";
+export type { AvatarProps } from "./Avatar";
+export { EmptyState } from "./EmptyState";
+export type { EmptyStateProps } from "./EmptyState";

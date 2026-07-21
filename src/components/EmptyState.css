@@ -1,0 +1,27 @@
+/* Complete, self-contained. Reproduces the App.css .empty recipe (App.css:1717)
+   so the placeholder renders identically whether it lives in the app or
+   standalone in Storybook, which loads no App.css. */
+@layer components {
+  .zui-emptystate {
+    text-align: center;
+    color: var(--muted);
+    padding: 3.75rem 0 3rem;
+  }
+
+  /* App.css:1723 declares color: var(--muted) here, but App.css:4501 — later
+     in source order, same specificity — overrides it to var(--empty-stroke)
+     for contrast reasons (a comment there notes --muted drops to ~1.6:1 on
+     the dark themes at the icons' internal opacities). var(--empty-stroke)
+     is the value that actually ships; reproduce that, not the superseded
+     one. */
+  .zui-emptystate svg {
+    display: block;
+    margin: 0 auto 0.9rem;
+    color: var(--empty-stroke);
+  }
+
+  /* App.css:1729 */
+  .zui-emptystate .accent-stroke {
+    stroke: var(--accent);
+  }
+}

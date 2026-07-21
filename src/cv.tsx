@@ -7,7 +7,7 @@ import { api } from "./api";
 import { LoadingSkeleton } from "./ui";
 import { useSubmitGuard } from "./hooks";
 import { EmptyCvIcon, RemoveIcon } from "./icons";
-import { Button } from "./components";
+import { Button, EmptyState } from "./components";
 import type {
   Education,
   Language,
@@ -716,10 +716,10 @@ function WorkExperienceSection({
           </li>
         ))}
         {items.length === 0 && (
-          <li className="empty">
+          <EmptyState as="li">
             <EmptyCvIcon />
             {t("cv.noWorkExperience")}
-          </li>
+          </EmptyState>
         )}
       </ul>
       {editing === "new" ? (
@@ -902,7 +902,7 @@ function EducationSection({
             )}
           </li>
         ))}
-        {items.length === 0 && <li className="empty">{t("cv.noEducation")}</li>}
+        {items.length === 0 && <EmptyState as="li">{t("cv.noEducation")}</EmptyState>}
       </ul>
       {editing === "new" ? (
         <EducationForm
@@ -970,7 +970,7 @@ function LanguagesSection({
             </button>
           </li>
         ))}
-        {items.length === 0 && <li className="empty">{t("cv.noLanguages")}</li>}
+        {items.length === 0 && <EmptyState as="li">{t("cv.noLanguages")}</EmptyState>}
       </ul>
       <form className="settings-add" onSubmit={addLanguage}>
         <input

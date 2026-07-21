@@ -14,7 +14,7 @@ import type {
   FeedItem,
   RoleTypeDef,
 } from "./types";
-import { Button } from "./components";
+import { Button, EmptyState } from "./components";
 
 export function FeedSettings({
   roleTypes,
@@ -611,10 +611,10 @@ export function FeedTab({
       )}
       {items?.length === 0 && (
         <ul className="cards">
-          <li className="empty">
+          <EmptyState as="li">
             <EmptyFeedIcon />
             {t("empty.feedNothingNew")}
-          </li>
+          </EmptyState>
         </ul>
       )}
       {cursor && (

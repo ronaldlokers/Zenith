@@ -45,7 +45,7 @@ import { ApplicationDetailModal } from "./detail";
 import { PipelineTab } from "./board";
 import { CommandPalette, NotificationBell, OnboardingChecklist, QuickAddDialog } from "./chrome";
 import { useSession } from "./auth-client";
-import { Button } from "./components";
+import { Avatar, Button } from "./components";
 
 // Shared remove-icon glyph (#118) — a plain "×" character renders at
 // inconsistent visual weight across browsers/fonts; an inline SVG at a
@@ -443,9 +443,7 @@ export default function App() {
               aria-label={t("account.signedInAs", { email: sessionUser.email })}
               title={sessionUser.email}
             >
-              <span className="avatar" aria-hidden="true">
-                {userInitials}
-              </span>
+              <Avatar initials={userInitials} aria-hidden="true" />
               <span className="u-info">
                 <span className="u-name">
                   {sessionUser.name || sessionUser.email}
