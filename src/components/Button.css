@@ -244,4 +244,36 @@
      shipped cascade wins, so the rule is deliberately absent — primary/
      default/ghost/dark keep their natural height and secondary/danger keep
      their own unconditional min-height: 34px, exactly as today. */
+
+  /* Link + close — the app's own borderless button recipes (App.css .linklike
+     :4542, .modal-close :846). Both are "unsized": they override the size
+     class's padding and font-size, so the selectors carry an extra class for
+     specificity (0,2,0, beating .zui-btn--md and the md font-size :not rule)
+     and sit after the size rules. */
+  .zui-btn.zui-btn--link {
+    /* A raw .linklike is a bare <button> — display: inline-block. The base
+       .zui-btn is inline-flex, which renders ~4px taller/wider in a text run;
+       override so an inline text link sits on the baseline exactly as before. */
+    display: inline-block;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--accent-ink);
+    text-decoration: underline;
+    font-size: inherit;
+  }
+
+  .zui-btn--link:hover:not(:disabled) {
+    color: var(--ink);
+  }
+
+  .zui-btn.zui-btn--close {
+    padding: 0.1rem 0.3rem;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-size: var(--text-display);
+    line-height: 1;
+    flex-shrink: 0;
+  }
 }

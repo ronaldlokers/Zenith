@@ -42,6 +42,10 @@ export const Variants: Story = {
       <Button variant="dark">Dark</Button>
       <Button variant="ghost">Ghost</Button>
       <Button variant="danger">Danger</Button>
+      <Button variant="link">Link</Button>
+      <Button variant="close" aria-label="Close">
+        ×
+      </Button>
       <Button disabled>Disabled</Button>
     </div>
   ),
