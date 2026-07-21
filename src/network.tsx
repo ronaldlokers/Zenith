@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
 import { EmptyCompaniesIcon, EmptyPeopleIcon } from "./icons";
-import { Badge, Button } from "./components";
+import { Badge, Button, EmptyState } from "./components";
 import {
   ageDays,
   formatDate,
@@ -154,12 +154,12 @@ export function CompaniesTab({
             </li>
           ))}
           {visible.length === 0 && (
-            <li className="empty">
+            <EmptyState as="li">
               <EmptyCompaniesIcon />
               {companies.length === 0
                 ? t("empty.noCompanies")
                 : t("empty.noCompaniesMatch")}
-            </li>
+            </EmptyState>
           )}
         </ul>
       ) : (
@@ -202,12 +202,12 @@ export function CompaniesTab({
           );
         })}
         {visible.length === 0 && (
-          <li className="empty">
+          <EmptyState as="li">
             <EmptyCompaniesIcon />
             {companies.length === 0
               ? t("empty.noCompanies")
               : t("empty.noCompaniesMatch")}
-          </li>
+          </EmptyState>
         )}
       </ul>
       )}
@@ -601,12 +601,12 @@ export function ContactsTab({
             </li>
           ))}
           {visible.length === 0 && (
-            <li className="empty">
+            <EmptyState as="li">
               <EmptyPeopleIcon />
               {contacts.length === 0
                 ? t("empty.noPeople")
                 : t("empty.noPeopleMatch")}
-            </li>
+            </EmptyState>
           )}
         </ul>
       ) : (
@@ -641,12 +641,12 @@ export function ContactsTab({
           </li>
         ))}
         {visible.length === 0 && (
-          <li className="empty">
+          <EmptyState as="li">
             <EmptyPeopleIcon />
             {contacts.length === 0
               ? t("empty.noPeople")
               : t("empty.noPeopleMatch")}
-          </li>
+          </EmptyState>
         )}
       </ul>
       )}

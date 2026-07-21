@@ -7,6 +7,7 @@ import { api } from "./api";
 import { LoadFailed, LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 import { EmptyActivityIcon, EmptyCalendarIcon } from "./icons";
+import { EmptyState } from "./components";
 import { formatDate, today } from "./format";
 import type { ActivityEvent, AgendaEntry } from "./types";
 
@@ -219,10 +220,10 @@ export function CalendarTab({
   return (
     <section className="calendar-view">
       {days.length === 0 && (
-        <p className="empty">
+        <EmptyState>
           <EmptyCalendarIcon />
           {t("calendar.empty")}
-        </p>
+        </EmptyState>
       )}
       {/* Desktop: month grid. Mobile: the agenda list below. */}
       {days.length > 0 && <CalendarMonth entries={entries} onJump={onJump} />}
@@ -305,10 +306,10 @@ export function ActivityTab({
   return (
     <section className="activity">
       {events.length === 0 && (
-        <p className="empty">
+        <EmptyState>
           <EmptyActivityIcon />
           {t("activityFeed.empty")}
-        </p>
+        </EmptyState>
       )}
       <ul className="activity-list">
         {events.map((e) => (

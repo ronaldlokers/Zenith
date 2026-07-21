@@ -1714,21 +1714,9 @@ button.danger {
   color: var(--danger);
 }
 
-.empty {
-  text-align: center;
-  color: var(--muted);
-  padding: 3.75rem 0 3rem;
-}
-
-.empty svg {
-  display: block;
-  margin: 0 auto 0.9rem;
-  color: var(--muted);
-}
-
-.empty .accent-stroke {
-  stroke: var(--accent);
-}
+/* The empty-list/empty-view placeholder (.empty, .empty svg,
+   .empty .accent-stroke) now lives in the owned EmptyState component
+   (src/components/EmptyState.css, @layer components). */
 
 /* Status select styled as stage pill */
 select.status {
@@ -4067,20 +4055,8 @@ summary.bcol-head::after {
   .side-user:hover {
     background: rgba(255, 255, 255, 0.06);
   }
-  .side-user .avatar {
-    flex: 0 0 34px;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--accent-text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--serif);
-    font-weight: 600;
-    font-size: 14px;
-  }
+  /* .side-user .avatar moved to the owned Avatar component
+     (src/components/Avatar.css, @layer components). */
   .side-user .u-info {
     min-width: 0;
     display: flex;
@@ -4496,11 +4472,6 @@ button:not(:disabled):active,
   filter: brightness(0.97);
 }
 
-/* Empty-state line art: --muted at the icons' internal opacities drops
-   to ~1.6:1 on the dark themes. */
-.empty svg {
-  color: var(--empty-stroke);
-}
 
 .bcol.drag-over {
   background: color-mix(in srgb, var(--accent) 7%, transparent);
