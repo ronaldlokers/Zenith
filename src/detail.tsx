@@ -602,9 +602,9 @@ export function ApplicationDetailModal({
             </span>
           </div>
           {!asPane && (
-            <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
+            <Button variant="close" onClick={onClose} aria-label={t("common.close")}>
               ×
-            </button>
+            </Button>
           )}
         </div>
 

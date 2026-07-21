@@ -684,13 +684,13 @@ export function PipelineTab({
       {applications.length === 0 && (
         <p className="pipeline-empty-hint">
           {t("empty.pipelineNoJobs")}{" "}
-          <button className="linklike" onClick={onOpenQuickAdd}>
+          <Button variant="link" onClick={onOpenQuickAdd}>
             {t("toolbar.addJob")}
-          </button>
+          </Button>
           {" · "}
-          <button className="linklike" onClick={onOpenSampleData}>
+          <Button variant="link" onClick={onOpenSampleData}>
             {t("sampleData.load")}
-          </button>
+          </Button>
         </p>
       )}
 

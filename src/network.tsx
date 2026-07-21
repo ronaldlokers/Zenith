@@ -400,9 +400,9 @@ function CompanyDetailModal({
             </h2>
             <span className="muted small">{c.location ?? ""}</span>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
+          <Button variant="close" onClick={onClose} aria-label={t("common.close")}>
             ×
-          </button>
+          </Button>
         </div>
 
         {editing ? (
@@ -827,9 +827,9 @@ function ContactDetailModal({
               {[c.role, c.company_name].filter(Boolean).join(" · ")}
             </span>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
+          <Button variant="close" onClick={onClose} aria-label={t("common.close")}>
             ×
-          </button>
+          </Button>
         </div>
 
         {editing ? (
