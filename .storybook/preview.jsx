@@ -3,7 +3,7 @@
    component; there is nowhere else for them to live. */
 import React from "react";
 // The design-system token files, so stories render on real Zenith tokens.
-import "../.claude/skills/zenith-design/styles.css";
+import "./preview-styles.css";
 
 /**
  * Theme switcher mirroring the app's three locked themes: Automatic follows the
