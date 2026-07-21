@@ -1,0 +1,52 @@
+/* Complete, self-contained. Reproduces the App.css .dash-kpi recipe
+   (App.css:4776) so the tile renders identically whether it lives in the app
+   (inside the .dash-kpis grid, which owns only layout) or standalone in
+   Storybook, which loads no App.css.
+
+   font/color: inherit reset the UA <button> styling when the tile is the
+   interactive variant, exactly as the app's .dash-kpi does — a KPI rendered
+   as a <button> must look identical to one rendered as a <div>. */
+@layer components {
+  .zui-statcard {
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+    padding: 0.8rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font: inherit;
+    color: inherit;
+  }
+
+  /* App.css:4789 — only the clickable variant lifts on hover. */
+  .zui-statcard--click {
+    cursor: pointer;
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease;
+  }
+
+  .zui-statcard--click:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+  }
+
+  /* App.css:4791 — the figure. */
+  .zui-statcard-value {
+    font-family: var(--mono);
+    font-size: 1.7rem;
+    font-weight: 620;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* App.css:4799 */
+  .zui-statcard-label {
+    font-size: 0.74rem;
+    color: var(--muted);
+  }
+}
