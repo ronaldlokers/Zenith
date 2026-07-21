@@ -17,6 +17,7 @@ import { BellIcon } from "./icons";
 import { formatDate } from "./format";
 import { Dialog } from "./ui";
 import { rowActivate, useFocusTrap } from "./hooks";
+import { Button } from "./components";
 
 export function OnboardingChecklist({
   profileDone,
@@ -429,15 +430,15 @@ export function QuickAddDialog({
           </select>
         </label>
         <div className="form-actions">
-          <button type="submit" className="primary" disabled={busy || !title.trim()}>
+          <Button type="submit" variant="primary" disabled={busy || !title.trim()}>
             {t("quickAdd.addOpen")}
-          </button>
-          <button type="button" disabled={busy || !title.trim()} onClick={() => submit(false)}>
+          </Button>
+          <Button type="button" variant="secondary" disabled={busy || !title.trim()} onClick={() => submit(false)}>
             {t("quickAdd.add")}
-          </button>
-          <button type="button" onClick={onClose}>
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose}>
             {t("common.cancel")}
-          </button>
+          </Button>
         </div>
       </form>
     </Dialog>

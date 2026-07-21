@@ -14,6 +14,7 @@ import type {
   FeedItem,
   RoleTypeDef,
 } from "./types";
+import { Button } from "./components";
 
 export function FeedSettings({
   roleTypes,
@@ -216,9 +217,9 @@ export function FeedSettings({
           value={newRoleLabel}
           onChange={(e) => setNewRoleLabel(e.target.value)}
         />
-        <button type="submit" className="primary">
+        <Button type="submit" variant="primary">
           {t("feedSettings.add")}
-        </button>
+        </Button>
       </form>
 
       <h3 className="detail-sub">{t("feedSettings.sources")}</h3>
@@ -335,9 +336,9 @@ export function FeedSettings({
           value={newBoardSlug}
           onChange={(e) => setNewBoardSlug(e.target.value)}
         />
-        <button type="submit" className="primary">
+        <Button type="submit" variant="primary">
           {t("feedSettings.add")}
-        </button>
+        </Button>
       </form>
     </div>
   );
@@ -519,9 +520,9 @@ export function FeedTab({
         <button className="btn-secondary" onClick={onOpenSettings}>
           {t("feed.settings")}
         </button>
-        <button className="primary" disabled={refreshing} onClick={refresh}>
+        <Button variant="primary" disabled={refreshing} onClick={refresh}>
           {refreshing ? t("feed.checking") : t("feed.checkNow")}
-        </button>
+        </Button>
       </div>
 
       {failed && !items && <LoadFailed onRetry={load} />}
@@ -578,13 +579,13 @@ export function FeedTab({
                 </a>
               )}
               <div className="feed-detail-actions">
-                <button
-                  className="primary"
+                <Button
+                  variant="primary"
                   onClick={() => addToPipeline(focusedItem)}
                   disabled={addingIds.has(focusedItem.id)}
                 >
                   {t("feed.addToJobs")}
-                </button>
+                </Button>
                 <button
                   className="btn-secondary"
                   onClick={() => dismiss(focusedItem)}
@@ -697,8 +698,8 @@ function FeedCard({
         )}
       </div>
       <div className="feed-row-actions">
-        <button
-          className="primary"
+        <Button
+          variant="primary"
           onClick={(e) => {
             e.stopPropagation();
             onAdd();
@@ -706,7 +707,7 @@ function FeedCard({
           disabled={adding}
         >
           {t("feed.addToJobs")}
-        </button>
+        </Button>
         <button
           className="btn-secondary"
           onClick={(e) => {

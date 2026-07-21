@@ -7,6 +7,7 @@ import { api } from "./api";
 import { LoadingSkeleton } from "./ui";
 import { useSubmitGuard } from "./hooks";
 import { EmptyCvIcon, RemoveIcon } from "./icons";
+import { Button } from "./components";
 import type {
   Education,
   Language,
@@ -130,9 +131,9 @@ export function CVTab({
             </button>
           </div>
         </div>
-        <button className="primary" onClick={downloadPdf}>
+        <Button variant="primary" onClick={downloadPdf}>
           {t("cv.downloadPdf")}
-        </button>
+        </Button>
       </div>
       <div className="cv-layout">
         <div className="cv-main">
@@ -455,9 +456,9 @@ function ProfileSection({
         </label>
       </div>
       <div className="form-actions">
-        <button type="submit" className="primary" disabled={submitting}>
+        <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -567,12 +568,12 @@ function WorkExperienceForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary" disabled={submitting}>
+        <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
-        </button>
-        <button type="button" onClick={onCancel}>
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -801,12 +802,12 @@ function EducationForm({
         />
       </label>
       <div className="form-actions">
-        <button type="submit" className="primary" disabled={submitting}>
+        <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
-        </button>
-        <button type="button" onClick={onCancel}>
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
-        </button>
+        </Button>
       </div>
     </form>
   );

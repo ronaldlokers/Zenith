@@ -45,6 +45,7 @@ import { ApplicationDetailModal } from "./detail";
 import { PipelineTab } from "./board";
 import { CommandPalette, NotificationBell, OnboardingChecklist, QuickAddDialog } from "./chrome";
 import { useSession } from "./auth-client";
+import { Button } from "./components";
 
 // Shared remove-icon glyph (#118) — a plain "×" character renders at
 // inconsistent visual weight across browsers/fonts; an inline SVG at a
@@ -496,14 +497,15 @@ export default function App() {
           >
             <SettingsIcon />
           </button>
-          <button
-            className="primary top-add"
+          <Button
+            variant="primary"
+            className="top-add"
             onClick={() => setShowQuickAdd(true)}
             aria-label={t("toolbar.addJob")}
           >
             <span aria-hidden="true">+</span>
             <span className="top-add-label">{t("quickAdd.add")}</span>
-          </button>
+          </Button>
         </header>
         <nav className="tabs" ref={tabsRef}>
           {navItems.map((n) => (

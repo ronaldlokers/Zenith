@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
+import { Button } from "./components";
 import type {
   Application,
   Company,
@@ -344,9 +345,9 @@ function CoverLetterSection({
         <button onClick={generate} disabled={generating}>
           {t("coverLetter.generateDraft")}
         </button>
-        <button className="primary" disabled={saving} onClick={save}>
+        <Button variant="primary" disabled={saving} onClick={save}>
           {t("common.save")}
-        </button>
+        </Button>
       </div>
       <textarea
         rows={10}
@@ -833,9 +834,9 @@ export function ApplicationDetailModal({
                     onChange={(e) => setFuDate(e.target.value)}
                   />
                   <div className="inline-edit-actions">
-                    <button type="submit" className="primary" disabled={patchBusy}>
+                    <Button type="submit" variant="primary" disabled={patchBusy}>
                       {t("common.save")}
-                    </button>
+                    </Button>
                     <button type="button" onClick={() => setInlineField(null)}>
                       {t("common.cancel")}
                     </button>
@@ -892,9 +893,9 @@ export function ApplicationDetailModal({
                     autoFocus
                   />
                   <div className="inline-edit-actions">
-                    <button type="submit" className="primary" disabled={patchBusy}>
+                    <Button type="submit" variant="primary" disabled={patchBusy}>
                       {t("common.save")}
-                    </button>
+                    </Button>
                     <button type="button" onClick={() => setInlineField(null)}>
                       {t("common.cancel")}
                     </button>
@@ -993,13 +994,16 @@ export function ApplicationDetailModal({
             </div>
 
             <div className="detail-actions">
-              <button onClick={() => setEditing(true)}>{t("common.edit")}</button>
-              <button disabled={printingCheatSheet} onClick={printCheatSheet}>
+              <Button variant="secondary" onClick={() => setEditing(true)}>
+                {t("common.edit")}
+              </Button>
+              <Button variant="secondary" disabled={printingCheatSheet} onClick={printCheatSheet}>
                 {printingCheatSheet
                   ? t("detail.cheatSheet.printing")
                   : t("detail.cheatSheet.print")}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() =>
                   (a.archived_at
                     ? api.unarchiveApplication(a.id)
@@ -1012,16 +1016,16 @@ export function ApplicationDetailModal({
                 {a.archived_at
                   ? t("detail.unarchive")
                   : t("detail.archive")}
-              </button>
-              <button
-                className="danger"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => {
                   onDelete("applications", a.id, a.title);
                   onClose();
                 }}
               >
                 {t("common.delete")}
-              </button>
+              </Button>
             </div>
           </div>
           <div className="detail-secondary">
@@ -1479,12 +1483,12 @@ function ApplicationForm({
       </div>
 
       <div className="form-actions">
-        <button type="submit" className="primary" disabled={submitting}>
+        <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
-        </button>
-        <button type="button" onClick={onCancel}>
+        </Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
-        </button>
+        </Button>
       </div>
     </form>
   );
