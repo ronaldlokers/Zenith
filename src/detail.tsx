@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
-import { Button, Chip } from "./components";
+import { Button, Chip, FieldLabel } from "./components";
 import type {
   Application,
   Company,
@@ -634,7 +634,7 @@ export function ApplicationDetailModal({
           <div className="detail-primary">
             <div className="detail-fields">
               <div>
-                <span className="field-label">{t("detail.status")}</span>
+                <FieldLabel>{t("detail.status")}</FieldLabel>
                 <select
                   className={`status stage-${a.status}`}
                   value={a.status}
@@ -648,16 +648,16 @@ export function ApplicationDetailModal({
                 </select>
               </div>
               <div>
-                <span className="field-label">{t("detail.role")}</span>
+                <FieldLabel>{t("detail.role")}</FieldLabel>
                 <span className="muted small">
                   {roleTypes.find((r) => r.slug === a.role_type)?.label ??
                     a.role_type}
                 </span>
               </div>
               <div>
-                <span className="field-label" id={`fit-label-${a.id}`}>
+                <FieldLabel id={`fit-label-${a.id}`}>
                   {t("detail.fitScore")}
-                </span>
+                </FieldLabel>
                 <span
                   className="fit-edit"
                   role="radiogroup"

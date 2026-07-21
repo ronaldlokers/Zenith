@@ -1,0 +1,46 @@
+/* Complete, self-contained. Reproduces the computed look of
+   .board-group-toggle — the computed MERGE of two App.css rule sets, the
+   later one reshaping the earlier per-property, so the control renders
+   identically standalone in Storybook (which loads no App.css) and in the
+   app.
+
+   Container: App.css:2932 (display/border/overflow) merged with
+   App.css:4580 (border-radius/padding — same properties, later wins, but
+   here both agree on border-radius: full so it's a no-op restate).
+
+   Button: App.css:2939 (border/background/color/font-family/text-transform/
+   letter-spacing/cursor) merged with App.css:4585, whose border-radius,
+   padding and font-size WIN over App.css:2939's border-radius (inherited
+   from the container's overflow:hidden shape), 0.28rem 0.7rem padding and
+   --text-chrome font-size. */
+@layer components {
+  .zui-segmented {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    padding: 0.2rem;
+  }
+
+  /* App.css:2939 base, App.css:4585 reshape (radius/padding/font-size win).
+     Callers keep authoring raw <button> children — not the Button
+     component. */
+  .zui-segmented button {
+    border: none;
+    background: var(--surface);
+    color: var(--muted);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    padding: 0.3rem 0.9rem;
+    font-size: var(--text-body);
+  }
+
+  /* App.css:2951 — callers keep className="active" on the selected button. */
+  .zui-segmented button.active {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+}
