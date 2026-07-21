@@ -30,7 +30,7 @@ import {
 } from "./format";
 import { Dialog } from "./ui";
 import { ApplicationDetailModal } from "./detail";
-import { Button } from "./components";
+import { Button, FilterTab } from "./components";
 
 function CardMenu({
   a,
@@ -876,19 +876,18 @@ export function PipelineTab({
             <>
             <div className="archived-tabs">
               {archivedTabs.map((tobj) => (
-                <button
+                <FilterTab
                   key={tobj.key}
-                  type="button"
-                  className={`chip${archivedFilter === tobj.key ? " active" : ""}`}
+                  active={archivedFilter === tobj.key}
+                  count={tobj.n}
                   onClick={() => setArchivedFilter(tobj.key)}
                 >
                   {tobj.key === "all"
                     ? t("board.archAll")
                     : t(
                         `board.reason${tobj.key[0].toUpperCase()}${tobj.key.slice(1)}`,
-                      )}{" "}
-                  <span className="chip-n">{tobj.n}</span>
-                </button>
+                      )}
+                </FilterTab>
               ))}
             </div>
             <ul className="archived-list">

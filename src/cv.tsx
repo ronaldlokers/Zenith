@@ -7,7 +7,7 @@ import { api } from "./api";
 import { LoadingSkeleton } from "./ui";
 import { useSubmitGuard } from "./hooks";
 import { EmptyCvIcon, RemoveIcon } from "./icons";
-import { Button, EmptyState } from "./components";
+import { Button, Chip, EmptyState } from "./components";
 import type {
   Education,
   Language,
@@ -675,7 +675,7 @@ function WorkExperienceSection({
             {w.description && <p className="notes">{w.description}</p>}
             <div className="keyword-chips">
               {w.skills.map((s) => (
-                <span key={s.id} className="chip">
+                <Chip key={s.id}>
                   {s.name}
                   <button
                     onClick={() =>
@@ -688,7 +688,7 @@ function WorkExperienceSection({
                   >
                     <RemoveIcon />
                   </button>
-                </span>
+                </Chip>
               ))}
               <input
                 placeholder={t("cv.addSkill")}

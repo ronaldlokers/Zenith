@@ -805,11 +805,6 @@
   cursor: pointer;
 }
 
-.card.kb-focused {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px; /* match the global :focus-visible geometry (#314) */
-}
-
 .detail-modal {
   max-width: 34rem;
   max-height: 85vh;
@@ -955,10 +950,6 @@
   letter-spacing: var(--track-chrome);
   color: var(--muted);
   padding: 0.4rem 0.2rem;
-}
-
-.card.archived {
-  opacity: 0.6;
 }
 
 /* Inline follow-up actions in the Next Up panel (#285) */
@@ -1261,18 +1252,10 @@ button.danger {
   }
 }
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-1);
-  overflow: hidden;
-}
-
-.card:has(.card-main.clickable):hover {
-  background: var(--bg);
-}
-
+/* The `.card`/`.card.row2` list-row element (base, kb-focused, archived, and
+   the 2-line row2 layout) now lives in the owned Row component
+   (src/components/Row.css). The separate .card-body / .card-menu / .card-main
+   classes are unrelated and stay. */
 .card-body {
   padding: 0.75rem 0.85rem 0.6rem;
   display: flex;
@@ -1544,49 +1527,8 @@ button.danger {
   font-size: var(--text-body);
 }
 
-/* 2-line job rows (#48 mockup #7) — everything else lives in the
-   detail modal on click, so the list stays scannable instead of
-   carrying a meta row, action buttons, and a rail on every card. */
-.card.row2 {
-  /* Neutral fallback for rows with no stage color (Companies, People) —
-     --sc is only defined by a .stage-* class, and a fallback keeps the
-     declaration valid (#76). Neutral, not gold, so the accent isn't spent
-     on every row (design review). */
-  border-left: 3px solid var(--sc, var(--border));
-  padding: 0.55rem 0.8rem;
-  cursor: pointer;
-  min-height: 44px;
-  /* Filter/status changes (#210) previously snapped instantly — a
-     stage move now eases the border color instead of hard-cutting. */
-  transition: border-left-color 0.18s ease, padding 0.15s ease, min-height 0.15s ease;
-}
-
-/* Compact row density (#209) — trades the roomy 2-line row for a
-   tighter one on long lists; nothing moves out of the detail modal,
-   only spacing/size shrinks. */
-.card.row2 .l1 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.card.row2 .l1 strong {
-  font-size: var(--text-title);
-}
-
-.card.row2 .l1 .co {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: var(--text-meta);
-}
-
-.card.row2 .l2 {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.2rem;
-}
+/* The 2-line job row (.card.row2 + .l1/.l2) moved to the owned Row component
+   (src/components/Row.css). */
 
 /* No stage-* ancestor sets --sc here, so this doesn't reuse .pill (see
    the #76/#93 --sc-without-fallback bug). */
@@ -2735,31 +2677,9 @@ select.status {
   margin-top: 0.3rem;
 }
 
-.keyword-chips .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  padding: 0.2rem 0.3rem 0.2rem 0.6rem;
-  font-size: var(--text-meta);
-}
-
-.keyword-chips .chip button {
-  border: none;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: var(--text-title);
-  line-height: 1;
-  padding: 0 0.2rem;
-}
-
-.keyword-chips .chip button.chip-move:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
+/* The keyword/tag chip (.keyword-chips .chip + its buttons and matched state)
+   moved to the owned Chip component (src/components/Chip.css). The
+   .keyword-chips container + its input stay. */
 
 .keyword-chips input {
   padding: var(--space-1) var(--space-2);
@@ -2876,11 +2796,6 @@ select.status {
   font-size: var(--text-body);
 }
 
-.keyword-chips .chip.chip-matched {
-  background: color-mix(in srgb, var(--accent) 15%, var(--bg));
-  border-color: var(--accent);
-  color: var(--accent);
-}
 
 /* Documents */
 .docs {
@@ -4448,7 +4363,6 @@ summary.bcol-head::after {
 
 /* Feedback pass (#314 round 3) — pointer, pressed, and motion states for
    the pre-#314 row families; nothing here changes layout. */
-.card.row2:hover,
 .bcard:hover,
 .company-tile:hover,
 .agenda-item:hover,
@@ -4458,7 +4372,6 @@ summary.bcol-head::after {
 }
 
 button:not(:disabled):active,
-.card.row2:active,
 .bcard:active {
   filter: brightness(0.97);
 }
@@ -4753,9 +4666,7 @@ button:not(:disabled):active,
 .dash-ov { font-family: var(--mono); font-weight: 620; text-align: right; }
 .dash-oc { font-size: 0.7rem; grid-column: 1 / -1; }
 
-.dash-stat { display: flex; justify-content: space-between; font-size: 0.78rem; padding: 0.32rem 0; border-top: 1px solid var(--border); }
-.dash-stat:first-of-type { border-top: none; }
-.dash-stat .sv { font-family: var(--mono); font-weight: 600; }
+/* .dash-stat moved to the owned StatLine component (src/components/StatLine.css). */
 
 .dash-caughtup {
   display: flex;
@@ -4936,16 +4847,8 @@ button:not(:disabled):active,
 
 /* Archived modal: reason tabs + list rows (#346). */
 .archived-tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
-.archived-tabs .chip {
-  display: inline-flex; align-items: center; gap: 0.3rem;
-  font-family: var(--mono); font-size: var(--text-chrome);
-  text-transform: uppercase; letter-spacing: var(--track-eyebrow);
-  padding: 0.22rem 0.6rem; border: none; border-radius: var(--radius-full);
-  background: var(--track); color: var(--muted); cursor: pointer;
-}
-.archived-tabs .chip.active { background: var(--accent-soft); color: var(--accent-ink); }
-.archived-tabs .chip-n { color: var(--faint); font-variant-numeric: tabular-nums; }
-.archived-tabs .chip.active .chip-n { color: var(--accent-ink); }
+/* The archived-filter tab (.archived-tabs .chip) moved to the owned FilterTab
+   component (src/components/FilterTab.css). The .archived-tabs container stays. */
 
 /* column header funnel proportion */
 .bcol-prop { height: 3px; border-radius: 2px; background: var(--track); overflow: hidden; margin: 0 0.1rem 0.55rem; }
