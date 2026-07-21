@@ -4773,30 +4773,9 @@ button:not(:disabled):active,
   grid-template-columns: repeat(4, 1fr);
   gap: 0.7rem;
 }
-.dash-kpi {
-  text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-1);
-  padding: 0.8rem 0.9rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font: inherit;
-  color: inherit;
-}
-.dash-kpi.click { cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease; }
-.dash-kpi.click:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
-.dash-kpi-n {
-  font-family: var(--mono);
-  font-size: 1.7rem;
-  font-weight: 620;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.dash-kpi-k { font-size: 0.74rem; color: var(--muted); }
+/* The KPI tile itself (.dash-kpi / -n / -k) now lives in the owned StatCard
+   component (src/components/StatCard.css, @layer components). .dash-kpis above
+   stays here — it is only the grid that lays the tiles out. */
 
 .dash-band {
   background: var(--surface);
