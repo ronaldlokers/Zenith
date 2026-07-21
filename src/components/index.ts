@@ -8,3 +8,5 @@ export { Avatar } from "./Avatar";
 export type { AvatarProps } from "./Avatar";
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
+export { DashCard } from "./DashCard";
+export type { DashCardProps } from "./DashCard";
