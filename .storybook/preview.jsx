@@ -54,7 +54,7 @@ export const parameters = {
   controls: { matchers: { color: /(background|color)$/i, date: /Date$/ } },
   options: {
     storySort: {
-      order: ["Foundations", "Core", "Forms", "Feedback", "Navigation", "Data", "Icons"],
+      order: ["Core", "Feedback", "Feature"],
     },
   },
 };
