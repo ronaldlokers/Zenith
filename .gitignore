@@ -53,6 +53,10 @@ scripts/.seed-admin.sql
 .claude/*
 !.claude/skills/
 .claude/skills/*
+# Owned workflow skills — hand-authored, tracked in full (unlike the
+# design-sync bundle below, which only tracks specific files).
+!.claude/skills/component-extraction/
+!.claude/skills/zero-diff-verify/
 !.claude/skills/zenith-design/
 .claude/skills/zenith-design/*
 !.claude/skills/zenith-design/SKILL.md
