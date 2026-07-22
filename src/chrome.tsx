@@ -19,58 +19,6 @@ import { Dialog } from "./ui";
 import { rowActivate, useFocusTrap } from "./hooks";
 import { ActionBar, Button } from "./components";
 
-export function OnboardingChecklist({
-  profileDone,
-  companyDone,
-  jobDone,
-  onGoToProfile,
-  onGoToCompanies,
-  onAddJob,
-  onDismiss,
-  onLoadSample,
-}: {
-  profileDone: boolean;
-  companyDone: boolean;
-  jobDone: boolean;
-  onGoToProfile: () => void;
-  onGoToCompanies: () => void;
-  onAddJob: () => void;
-  onDismiss: () => void;
-  onLoadSample: () => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="onboarding">
-      <div className="onboarding-head">
-        <h3>{t("onboarding.title")}</h3>
-        <button
-          className="onboarding-dismiss"
-          onClick={onDismiss}
-          aria-label={t("common.close")}
-        >
-          ×
-        </button>
-      </div>
-      <ul>
-        <li className={profileDone ? "done" : ""}>
-          <button onClick={onGoToProfile}>{t("onboarding.profile")}</button>
-        </li>
-        <li className={companyDone ? "done" : ""}>
-          <button onClick={onGoToCompanies}>{t("onboarding.company")}</button>
-        </li>
-        <li className={jobDone ? "done" : ""}>
-          <button onClick={onAddJob}>{t("onboarding.firstJob")}</button>
-        </li>
-      </ul>
-      {!jobDone && (
-        <Button variant="link" className="onboarding-sample" onClick={onLoadSample}>
-          {t("onboarding.sampleLink")}
-        </Button>
-      )}
-    </div>
-  );
-}
-
 export function CommandPalette({
   applications,
   companies,
