@@ -49,18 +49,18 @@ function applyTheme(value: string) {
 // 14+ stacked sections (incl. an admin console) inside a 416px modal.
 type SettingsSection =
   | "general"
+  | "account"
   | "feed"
   | "sharing"
-  | "security"
   | "integrations"
   | "data"
   | "admin";
 
 const SETTINGS_SECTIONS: SettingsSection[] = [
   "general",
+  "account",
   "feed",
   "sharing",
-  "security",
   "integrations",
   "data",
   "admin",
@@ -183,9 +183,10 @@ export function SettingsPage({
 
   const sections: SettingsSection[] = [
     "general",
+    ...(session ? (["account"] as const) : []),
     "feed",
     "sharing",
-    ...(session ? (["security", "integrations", "data"] as const) : []),
+    ...(session ? (["integrations", "data"] as const) : []),
     ...(session?.user.role === "admin" ? (["admin"] as const) : []),
   ];
 
@@ -205,12 +206,6 @@ export function SettingsPage({
       </nav>
       <div className="settings-content settings-modal">
         <h2>{t(`settings.section.${section}`)}</h2>
-        {session && (
-          <div className="account-signed-in">
-            <span>{t("account.signedInAs", { email: session.user.email })}</span>
-            <button onClick={() => signOut()}>{t("account.signOut")}</button>
-          </div>
-        )}
         {apiError && <p className="login-error">{apiError}</p>}
         {section === "general" && (
           <>
@@ -333,11 +328,18 @@ export function SettingsPage({
         </div>
           </>
         )}
-        {section === "security" && session && (
+        {section === "account" && session && (
           <div className="account-section">
+            <div className="account-signed-in">
+              <span>
+                {t("account.signedInAs", { email: session.user.email })}
+              </span>
+              <button onClick={() => signOut()}>{t("account.signOut")}</button>
+            </div>
+            <ChangePassword />
             <TwoFactorSettings />
             <SessionManagement />
-            <ChangePassword />
+            <DeleteAccount onError={setApiError} />
           </div>
         )}
         {section === "integrations" && session && (
@@ -349,7 +351,6 @@ export function SettingsPage({
         {section === "data" && session && (
           <div className="account-section">
             <SampleDataSettings onError={setApiError} />
-            <DeleteAccount onError={setApiError} />
           </div>
         )}
         {section === "admin" && session?.user.role === "admin" && (
