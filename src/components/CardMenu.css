@@ -1,0 +1,30 @@
+/* Reproduces the App.css "⋯ menu" recipe (App.css:4652-4678) under the
+   .zui-cardmenu* names CardMenu.tsx emits — moved verbatim, renamed only. */
+@layer components {
+  .zui-cardmenu { position: absolute; top: 0.3rem; right: 0.35rem; }
+  .zui-cardmenu-btn {
+    border: none; background: none; color: var(--faint); cursor: pointer;
+    font-size: 1rem; line-height: 1; padding: 0.1rem 0.3rem; border-radius: var(--radius-sm);
+  }
+  .zui-cardmenu-btn:hover { color: var(--ink); background: var(--hover); }
+  .zui-cardmenu-backdrop { position: fixed; inset: 0; z-index: 40; }
+  .zui-cardmenu-pop {
+    position: absolute; top: 1.5rem; right: 0; z-index: 41;
+    min-width: 11rem; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    box-shadow: var(--shadow-2); padding: 0.25rem; display: flex; flex-direction: column;
+  }
+  .zui-cardmenu-pop > button {
+    text-align: left; border: none; background: none; color: var(--ink);
+    padding: 0.4rem 0.55rem; border-radius: var(--radius-sm); cursor: pointer;
+    font-size: var(--text-body); display: flex; align-items: center; gap: 0.4rem;
+  }
+  .zui-cardmenu-pop > button:hover { background: var(--hover); }
+  .zui-cardmenu-pop > button.danger { color: var(--danger); }
+  .zui-cardmenu-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sc, var(--accent)); flex-shrink: 0; }
+  .zui-cardmenu-fu { padding: 0.4rem 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .zui-cardmenu-fu input { padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); }
+  .zui-cardmenu-fu-actions { display: flex; gap: 0.4rem; }
+  .zui-cardmenu-fu-actions button { padding: 0.3rem 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+  .zui-cardmenu-fu-actions button.primary { background: var(--accent); color: var(--accent-text); border: none; }
+}

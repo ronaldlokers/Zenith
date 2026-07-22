@@ -1,5 +1,7 @@
 export { Button } from "./Button";
 export type { ButtonProps } from "./Button";
+export { CardMenu } from "./CardMenu";
+export type { CardMenuProps } from "./CardMenu";
 export { StatCard } from "./StatCard";
 export type { StatCardProps } from "./StatCard";
 export { Badge } from "./Badge";
