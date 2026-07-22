@@ -15,7 +15,6 @@ import type {
   Status,
   StatusHistoryRow,
 } from "./types";
-import { STATUSES } from "./types";
 import { ArchiveIcon, FilterIcon, SearchIcon } from "./icons";
 import type { BoardSort, Urgency } from "./format";
 import {
@@ -30,138 +29,7 @@ import {
 } from "./format";
 import { Dialog } from "./ui";
 import { ApplicationDetailModal } from "./detail";
-import { ActionBar, Button, FilterTab } from "./components";
-
-function CardMenu({
-  a,
-  onMove,
-  onSetFollowUp,
-  onOpenDetail,
-  onArchive,
-}: {
-  a: Application;
-  onMove: (status: string) => void;
-  onSetFollowUp: (date: string | null, text: string | null) => void;
-  onOpenDetail: () => void;
-  onArchive: () => void;
-}) {
-  const { t } = useTranslation();
-  const [mode, setMode] = useState<null | "root" | "move" | "followup">(null);
-  const [fuDate, setFuDate] = useState(a.next_action_at?.slice(0, 10) ?? "");
-  const [fuText, setFuText] = useState(a.next_action ?? "");
-  const close = () => setMode(null);
-  return (
-    <div className="card-menu" onClick={(e) => e.stopPropagation()}>
-      <button
-        type="button"
-        className="card-menu-btn"
-        aria-label={t("board.cardMenu", { title: a.title })}
-        aria-haspopup="menu"
-        onClick={() => setMode((m) => (m ? null : "root"))}
-      >
-        ⋯
-      </button>
-      {mode && (
-        <>
-          <div className="card-menu-backdrop" onClick={close} />
-          <div className="card-menu-pop" role="menu">
-            {mode === "root" && (
-              <>
-                <button type="button" role="menuitem" onClick={() => setMode("move")}>
-                  {t("board.moveToStage")} ▸
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => setMode("followup")}
-                >
-                  {t("detail.setFollowUp")}
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    close();
-                    onOpenDetail();
-                  }}
-                >
-                  {t("common.open")}
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="danger"
-                  onClick={() => {
-                    close();
-                    onArchive();
-                  }}
-                >
-                  {t("detail.archive")}
-                </button>
-              </>
-            )}
-            {mode === "move" && (
-              <>
-                {STATUSES.filter((sName) => sName !== a.status).map((sName) => (
-                  <button
-                    key={sName}
-                    type="button"
-                    role="menuitem"
-                    className={`stage-${sName}`}
-                    onClick={() => {
-                      close();
-                      onMove(sName);
-                    }}
-                  >
-                    <span className="card-menu-dot" /> {t(`stages.${sName}`)}
-                  </button>
-                ))}
-              </>
-            )}
-            {mode === "followup" && (
-              <form
-                className="card-menu-fu"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  close();
-                  onSetFollowUp(fuDate || null, fuText.trim() || null);
-                }}
-              >
-                <input
-                  value={fuText}
-                  onChange={(e) => setFuText(e.target.value)}
-                  placeholder={t("detail.followUpFallback")}
-                  autoFocus
-                />
-                <input
-                  type="date"
-                  value={fuDate}
-                  onChange={(e) => setFuDate(e.target.value)}
-                />
-                <div className="card-menu-fu-actions">
-                  <Button type="submit" variant="primary">
-                    {t("common.save")}
-                  </Button>
-                  {a.next_action_at && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        close();
-                        onSetFollowUp(null, null);
-                      }}
-                    >
-                      {t("nextUp.done")}
-                    </button>
-                  )}
-                </div>
-              </form>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+import { ActionBar, Button, CardMenu, FilterTab } from "./components";
 
 function BoardCard({
   a,

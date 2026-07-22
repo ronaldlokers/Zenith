@@ -1201,8 +1201,9 @@ button.danger {
 
 /* The `.card`/`.card.row2` list-row element (base, kb-focused, archived, and
    the 2-line row2 layout) now lives in the owned Row component
-   (src/components/Row.css). The separate .card-body / .card-menu / .card-main
-   classes are unrelated and stay. */
+   (src/components/Row.css). The separate .card-body / .card-main classes
+   are unrelated and stay (.card-menu moved out too — see
+   src/components/CardMenu.css). */
 .card-body {
   padding: 0.75rem 0.85rem 0.6rem;
   display: flex;
@@ -4649,33 +4650,8 @@ button:not(:disabled):active,
   color: var(--u-edge); background: color-mix(in srgb, var(--u-edge) 14%, transparent);
 }
 
-/* ⋯ menu */
-.card-menu { position: absolute; top: 0.3rem; right: 0.35rem; }
-.card-menu-btn {
-  border: none; background: none; color: var(--faint); cursor: pointer;
-  font-size: 1rem; line-height: 1; padding: 0.1rem 0.3rem; border-radius: var(--radius-sm);
-}
-.card-menu-btn:hover { color: var(--ink); background: var(--hover); }
-.card-menu-backdrop { position: fixed; inset: 0; z-index: 40; }
-.card-menu-pop {
-  position: absolute; top: 1.5rem; right: 0; z-index: 41;
-  min-width: 11rem; background: var(--surface);
-  border: 1px solid var(--border); border-radius: var(--radius-md);
-  box-shadow: var(--shadow-2); padding: 0.25rem; display: flex; flex-direction: column;
-}
-.card-menu-pop > button {
-  text-align: left; border: none; background: none; color: var(--ink);
-  padding: 0.4rem 0.55rem; border-radius: var(--radius-sm); cursor: pointer;
-  font-size: var(--text-body); display: flex; align-items: center; gap: 0.4rem;
-}
-.card-menu-pop > button:hover { background: var(--hover); }
-.card-menu-pop > button.danger { color: var(--danger); }
-.card-menu-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sc, var(--accent)); flex-shrink: 0; }
-.card-menu-fu { padding: 0.4rem 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
-.card-menu-fu input { padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); }
-.card-menu-fu-actions { display: flex; gap: 0.4rem; }
-.card-menu-fu-actions button { padding: 0.3rem 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
-.card-menu-fu-actions button.primary { background: var(--accent); color: var(--accent-text); border: none; }
+/* ⋯ menu: extracted into the owned CardMenu component — see
+   src/components/CardMenu.css (.zui-cardmenu*). */
 
 /* archived modal */
 .archived-modal { max-width: 30rem; }
