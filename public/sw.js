@@ -92,15 +92,28 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url ?? "/";
+  const path = event.notification.data?.url ?? "/";
+  // Absolute for openWindow; the relative path is what the SPA routes on.
+  const target = new URL(path, self.location.origin).href;
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      const existing = clients.find((c) => "focus" in c);
+    (async () => {
+      const clients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      const existing = clients.find(
+        (c) => new URL(c.url).origin === self.location.origin,
+      );
       if (existing) {
-        existing.navigate(url);
-        return existing.focus();
+        // Focus the running app and let it route in place — WindowClient
+        // .navigate() is unreliable on iOS, so drive react-router via a
+        // postMessage the app listens for instead.
+        await existing.focus();
+        existing.postMessage({ type: "notification-navigate", url: path });
+        return;
       }
-      return self.clients.openWindow(url);
-    }),
+      // Cold start: open the deep link directly.
+      await self.clients.openWindow(target);
+    })(),
   );
 });
