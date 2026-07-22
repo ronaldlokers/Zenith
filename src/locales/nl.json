@@ -498,6 +498,13 @@
       "weekly_digest": "Wekelijks overzicht"
     },
     "signedInAs": "Ingelogd als {{email}}",
+    "aiKeyTitle": "AI (Claude)",
+    "aiKeyHint": "Voeg je eigen Anthropic API-sleutel toe om AI-functies te gebruiken (zoals cv-afstemming). Je cv en de vacaturetekst worden onder jouw sleutel naar Anthropic gestuurd wanneer je ze gebruikt; Zenith bewaart de sleutel versleuteld en nooit leesbaar.",
+    "aiKeyLabel": "Anthropic API-sleutel",
+    "aiKeySave": "Sleutel opslaan",
+    "aiKeySaving": "Valideren…",
+    "aiKeyConnected": "Verbonden · sk-ant…{{hint}}",
+    "aiKeyRemove": "Sleutel verwijderen",
     "signOut": "Uitloggen",
     "adminInvite": "Gebruiker uitnodigen",
     "inviteEmail": "E-mail",

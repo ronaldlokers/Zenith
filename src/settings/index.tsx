@@ -16,7 +16,7 @@ import type { RoleTypeDef } from "../types";
 import { useLocation } from "react-router-dom";
 import { ActionBar, Button } from "../components";
 import { FeedSettings } from "../feed";
-import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement } from "./account";
+import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
 import { AdminUsers, AdminInvite, TestPush } from "./admin";
 import { SampleDataSettings } from "./data";
 import { PublicApiSettings } from "./api";
@@ -339,6 +339,7 @@ export function SettingsPage({
             <ChangePassword />
             <TwoFactorSettings />
             <SessionManagement />
+            <AnthropicKeySettings />
             <DeleteAccount onError={setApiError} />
           </div>
         )}

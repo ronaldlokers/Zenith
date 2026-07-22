@@ -43,6 +43,19 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ type }),
     }),
+  // BYO Claude key. The key itself is never returned — only whether one is
+  // configured and its last-4 hint.
+  getAiCredentials: () =>
+    request<{ configured: boolean; hint: string | null }>(
+      "/api/ai/credentials",
+    ),
+  setAiKey: (apiKey: string) =>
+    request<{ configured: boolean; hint: string }>("/api/ai/credentials", {
+      method: "PUT",
+      body: JSON.stringify({ apiKey }),
+    }),
+  deleteAiKey: () =>
+    request<void>("/api/ai/credentials", { method: "DELETE" }),
   updateFollowUp: (
     id: number,
     fields: { next_action?: string | null; next_action_at: string | null },

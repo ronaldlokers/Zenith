@@ -12,4 +12,8 @@ interface Env {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
   VAPID_SUBJECT?: string;
+  // AES-256 master key (base64 32 bytes) for encrypting users' own Anthropic
+  // API keys at rest (BYO Claude key). BYO-key endpoints 503 gracefully when
+  // unset; the rest of the app is unaffected.
+  AI_KEY_ENCRYPTION_KEY?: string;
 }
