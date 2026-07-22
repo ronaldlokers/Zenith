@@ -7,7 +7,7 @@ import { api } from "./api";
 import { LoadingSkeleton } from "./ui";
 import { useSubmitGuard } from "./hooks";
 import { EmptyCvIcon, RemoveIcon } from "./icons";
-import { Button, Chip, EmptyState } from "./components";
+import { ActionBar, Button, Chip, EmptyState } from "./components";
 import type {
   Education,
   Language,
@@ -455,11 +455,11 @@ function ProfileSection({
           />
         </label>
       </div>
-      <div className="form-actions">
+      <ActionBar variant="form">
         <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }
@@ -567,14 +567,14 @@ function WorkExperienceForm({
           onChange={(e) => set({ description: e.target.value })}
         />
       </label>
-      <div className="form-actions">
+      <ActionBar variant="form">
         <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }
@@ -801,14 +801,14 @@ function EducationForm({
           }
         />
       </label>
-      <div className="form-actions">
+      <ActionBar variant="form">
         <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? t("common.saving") : t("common.save")}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel}>
           {t("common.cancel")}
         </Button>
-      </div>
+      </ActionBar>
     </form>
   );
 }

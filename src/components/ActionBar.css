@@ -1,0 +1,45 @@
+/* Complete, self-contained. Reproduces the app's button-row containers
+   (App.css .form-actions:3222, .detail-actions:857, .share-actions:401) AND
+   the button normalization they applied to their children.
+
+   Those containers used to compact their buttons via a shared Recipe-B layer
+   (App.css:4450 `.form-actions button {...}`) plus Button.css's
+   `.form-actions .zui-btn--md { padding }`. Button's secondary/danger variants
+   are self-contained (they carry Recipe B themselves), but the primary variant
+   is deliberately unsized — it relied on the container for var(--text-body) +
+   min-height:34px. So the bar re-homes exactly that here: every md button gets
+   the compact 0.4/0.8 padding (primary's own md padding is 0.55/0.9), and
+   primary additionally gets Recipe B's font-size + min-height. */
+@layer components {
+  .zui-actionbar {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  /* App.css:857 — the modal action row adds vertical margin. */
+  .zui-actionbar--detail {
+    margin: var(--space-3) 0;
+  }
+
+  /* App.css:401 — the share row is tighter. */
+  .zui-actionbar--share {
+    gap: 0.4rem;
+  }
+
+  /* App.css:3157 — a form-actions row inside a .form grid spans full width. */
+  .form .zui-actionbar--form {
+    grid-column: 1 / -1;
+  }
+
+  /* The bar's Button normalization (was App.css:4450 + Button.css container
+     rules). Compact padding for every variant; primary also gets Recipe B's
+     type scale + min-height, which it doesn't set itself. */
+  .zui-actionbar .zui-btn--md {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .zui-actionbar .zui-btn--primary {
+    font-size: var(--text-body);
+    min-height: 34px;
+  }
+}

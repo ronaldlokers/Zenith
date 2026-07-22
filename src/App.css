@@ -398,10 +398,7 @@
   font-family: var(--mono);
 }
 
-.share-actions {
-  display: flex;
-  gap: 0.4rem;
-}
+/* .share-actions moved to the owned ActionBar component (variant="share"). */
 
 .settings-modal > button {
   padding: var(--space-2) var(--space-4);
@@ -854,19 +851,7 @@
 /* .field-label moved to the owned FieldLabel component
    (src/components/FieldLabel.css). */
 
-.detail-actions {
-  display: flex;
-  gap: var(--space-2);
-  margin: var(--space-3) 0;
-}
-
-.detail-actions button {
-  padding: 0.45rem 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  cursor: pointer;
-}
+/* .detail-actions moved to the owned ActionBar component (variant="detail"). */
 
 .detail-sub {
   font-family: var(--mono);
@@ -3154,7 +3139,7 @@ summary.bcol-head::after {
 }
 
 .form label.full,
-.form .form-actions,
+/* (.form .form-actions grid-column moved to ActionBar; .form-group stays.) */
 .form .form-group {
   grid-column: 1 / -1;
 }
@@ -3219,28 +3204,8 @@ summary.bcol-head::after {
   cursor: default;
 }
 
-.form-actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.form-actions button {
-  padding: 0.55rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  cursor: pointer;
-}
-
-/* .form-actions button and button.primary tie in specificity — without
-   this, source order lets the surface background above win over
-   button.primary's teal one, leaving accent-colored (white) text on a
-   white button. */
-.form-actions button.primary {
-  background: var(--accent);
-  color: var(--accent-text);
-  border: none;
-}
+/* .form-actions (container + its button normalization) moved to the owned
+   ActionBar component (variant="form"). */
 
 /* Single-column forms on phones — two columns get cramped below ~600px,
    where most editing happens on mobile (#273). */
@@ -4445,13 +4410,12 @@ button:not(:disabled):active,
 
 /* Secondary buttons — default size. One metric set, one fill,
    every one with a hover state. */
+/* The form/detail/share-actions entries moved to the owned ActionBar
+   component; the remaining containers keep this shared Recipe-B rule. */
 .btn-secondary,
 .card-actions button,
-.detail-actions button,
 .settings-modal > button,
-.shortcut-help button,
-.form-actions button,
-.share-actions button {
+.shortcut-help button {
   padding: 0.4rem 0.8rem;
   font-size: var(--text-body);
   border: 1px solid var(--border);
@@ -4464,11 +4428,8 @@ button:not(:disabled):active,
 
 .btn-secondary:hover,
 .card-actions button:hover,
-.detail-actions button:hover,
 .settings-modal > button:hover,
-.shortcut-help button:hover,
-.form-actions button:hover,
-.share-actions button:hover {
+.shortcut-help button:hover {
   background: var(--bg);
 }
 
@@ -4490,9 +4451,7 @@ button:not(:disabled):active,
 
 /* Danger stays danger; .form-actions/.card-actions danger buttons keep
    their red identity over the neutral normalization above. */
-.card-actions button.danger,
-.form-actions button.danger,
-.detail-actions button.danger {
+.card-actions button.danger {
   color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
 }
@@ -4892,9 +4851,7 @@ button:not(:disabled):active,
    layer: its generic hover and min-heights win source-order ties against
    earlier rules regardless of media queries. Only the print stylesheet
    sits below this band; nothing else appends after it. */
-.form-actions button.primary:hover,
-.card-actions button.primary:hover,
-.detail-actions button.primary:hover {
+.card-actions button.primary:hover {
   background: color-mix(in srgb, var(--accent) 85%, black);
 }
 
