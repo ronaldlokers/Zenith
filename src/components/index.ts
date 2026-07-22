@@ -24,3 +24,5 @@ export { SegmentedControl } from "./SegmentedControl";
 export type { SegmentedControlProps } from "./SegmentedControl";
 export { ActionBar } from "./ActionBar";
 export type { ActionBarProps } from "./ActionBar";
+export { Toolbar } from "./Toolbar";
+export type { ToolbarProps } from "./Toolbar";
