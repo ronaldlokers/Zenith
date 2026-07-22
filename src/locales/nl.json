@@ -465,6 +465,9 @@
   },
   "login": {
     "subtitle": "Log in op je pipeline",
+    "title": "Welkom terug",
+    "twoFactorTitle": "Tweestapsverificatie",
+    "back": "Terug",
     "email": "E-mail",
     "password": "Wachtwoord",
     "signIn": "Inloggen",

@@ -167,57 +167,200 @@
   color: var(--ink);
 }
 
-.login-screen {
+/* Sign-in — a committed Night-ground brand moment (like the always-Night
+   rail), a light card floating over the faint ascent motif. This is chrome,
+   not a themed surface, so it stays Night in both light and dark. */
+.login-stage {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
+  gap: 1.5rem;
+  padding: 3rem 1.25rem;
+  background: radial-gradient(120% 80% at 50% -10%, var(--night-raised) 0%, var(--night) 55%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-ascent {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.16;
 }
 
 .login-card {
+  position: relative;
   width: 100%;
   max-width: 22rem;
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem 1.4rem;
+  padding: 2rem 1.75rem 1.6rem;
+  color: var(--ink);
+  box-shadow:
+    0 24px 60px -20px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.login-card h1 {
-  margin: 0 0 0.2rem;
-  font-size: var(--text-display);
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-wordmark {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.login-title {
+  margin: 0 0 0.35rem;
+  font-size: var(--text-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .login-subtitle {
-  margin: 0 0 1.2rem;
+  margin: 0 0 1.5rem;
   color: var(--muted);
   font-size: var(--text-body);
+  line-height: 1.45;
 }
 
-.login-card button[type="submit"] {
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.login-field span {
+  font-size: var(--text-meta);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.login-field input {
+  font-family: inherit;
+  font-size: var(--text-body);
+  color: var(--ink);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.62rem 0.7rem;
+  width: 100%;
+}
+
+.login-field input.login-code {
+  font-family: var(--mono);
+  font-size: 1.35rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+  padding: 0.62rem 0.4rem;
+}
+
+.login-btn {
   width: 100%;
   background: var(--accent);
   color: var(--accent-text);
   border: none;
   border-radius: var(--radius-md);
-  padding: 0.6rem 0.9rem;
+  padding: 0.7rem 0.9rem;
   cursor: pointer;
+  font-family: inherit;
   font-weight: 650;
-  margin-top: 0.2rem;
+  font-size: var(--text-body);
+  margin-top: 0.4rem;
+}
+
+.login-btn:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.login-link {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: var(--text-body);
+  cursor: pointer;
+  padding: 0.7rem;
+  margin-top: 0.1rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.login-link:hover {
+  color: var(--ink);
+}
+
+.login-back {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.login-back:hover {
+  color: var(--ink);
+}
+
+.login-twofa-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1.4rem;
+}
+
+.login-twofa-badge {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: var(--radius-full);
+  flex: 0 0 auto;
+  color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-twofa-lead .login-title {
+  margin: 0;
+}
+
+.login-twofa-lead .login-subtitle {
+  margin: 0.15rem 0 0;
 }
 
 .login-error {
   color: var(--danger);
   font-size: var(--text-body);
-  /* Was a -0.4rem claw-back of the preceding field's margin (#314) */
   margin: 0 0 0.8rem;
 }
 
 .login-hint {
   color: var(--faint);
   font-size: var(--text-meta);
-  margin: var(--space-4) 0 0;
+  margin: 1.1rem 0 0;
   text-align: center;
 }
 
@@ -3728,20 +3871,6 @@ button:not(:disabled):active,
 .settings-modal > button:hover,
 .shortcut-help button:hover {
   background: var(--bg);
-}
-
-/* Secondary buttons — compact, for dense inline rows. */
-/* Primary buttons that weren't button.primary: same metrics + the same
-   hover darken as the canonical one. */
-.login-card button[type="submit"] {
-  padding: 0.55rem 0.9rem;
-  border-radius: var(--radius-md);
-  font-weight: 650;
-  font-size: var(--text-body);
-}
-
-.login-card button[type="submit"]:hover {
-  background: color-mix(in srgb, var(--accent) 85%, black);
 }
 
 /* Danger stays danger; .form-actions/.card-actions danger buttons keep
