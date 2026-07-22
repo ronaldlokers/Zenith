@@ -465,6 +465,9 @@
   },
   "login": {
     "subtitle": "Sign in to your pipeline",
+    "title": "Welcome back",
+    "twoFactorTitle": "Two-factor code",
+    "back": "Back",
     "email": "Email",
     "password": "Password",
     "signIn": "Sign in",
