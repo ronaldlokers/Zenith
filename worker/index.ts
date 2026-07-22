@@ -8,6 +8,7 @@ import { registerCvRoutes } from "./cv.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
 import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
+import { generateWeeklyDigest } from "./digest.js";
 import { registerCalendarRoutes } from "./calendar.js";
 import { registerPushRoutes } from "./push.js";
 import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
@@ -1706,6 +1707,10 @@ export default {
   async scheduled(event, env, ctx) {
     if (event.cron === "11 3 * * *") {
       ctx.waitUntil(runScheduledBackup(env));
+      return;
+    }
+    if (event.cron === "0 8 * * 1") {
+      ctx.waitUntil(generateWeeklyDigest(env));
       return;
     }
     ctx.waitUntil(

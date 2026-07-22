@@ -286,7 +286,7 @@ export interface JournalEntry {
 
 export interface AppNotification {
   id: number;
-  type: "due_followup" | "stale_posting" | "feed_match" | "due_contact";
+  type: "due_followup" | "stale_posting" | "feed_match" | "due_contact" | "weekly_digest";
   title: string;
   body: string | null;
   link: string | null;

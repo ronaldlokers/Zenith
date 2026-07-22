@@ -41,7 +41,7 @@
 	"triggers": {
 		// Every 6 hours: pull new listings from free job sources into the feed review inbox
 		// Daily at 03:11: full data backup to R2 (see #116)
-		"crons": ["17 */6 * * *", "11 3 * * *"]
+		"crons": ["17 */6 * * *", "11 3 * * *", "0 8 * * 1"]
 	}
 	/**
 	 * Smart Placement
