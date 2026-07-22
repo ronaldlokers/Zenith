@@ -18,6 +18,10 @@ export default defineConfig({
                 TEST_MIGRATIONS: await readD1Migrations(
                   path.join(__dirname, "migrations"),
                 ),
+                // Throwaway AES-256 key so the BYO-key crypto path is exercised
+                // in tests. Not a real secret.
+                AI_KEY_ENCRYPTION_KEY:
+                  "rLJ1uXUzAp6uT+BPCW0DVTuQeVYLKN2J0syY3nYvK6Y=",
               },
             },
           })),

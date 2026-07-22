@@ -498,6 +498,13 @@
       "weekly_digest": "Weekly digest"
     },
     "signedInAs": "Signed in as {{email}}",
+    "aiKeyTitle": "AI (Claude)",
+    "aiKeyHint": "Add your own Anthropic API key to enable AI features (like CV tailoring). Your CV and the job description are sent to Anthropic under your key when you use them; Zenith stores the key encrypted and never in plain text.",
+    "aiKeyLabel": "Anthropic API key",
+    "aiKeySave": "Save key",
+    "aiKeySaving": "Validating…",
+    "aiKeyConnected": "Connected · sk-ant…{{hint}}",
+    "aiKeyRemove": "Remove key",
     "signOut": "Sign out",
     "adminInvite": "Invite a user",
     "inviteEmail": "Email",

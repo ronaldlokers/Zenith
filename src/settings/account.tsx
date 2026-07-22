@@ -304,3 +304,85 @@ export function SessionManagement() {
     </div>
   );
 }
+
+// BYO Claude key — store your own Anthropic API key (encrypted server-side) to
+// enable the AI features. The key is write-only: the server returns only
+// whether one is set plus a last-4 hint, never the key itself.
+export function AnthropicKeySettings() {
+  const { t } = useTranslation();
+  const [state, setState] = useState<{
+    configured: boolean;
+    hint: string | null;
+  } | null>(null);
+  const [apiKey, setApiKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .getAiCredentials()
+      .then(setState)
+      .catch(() => setState({ configured: false, hint: null }));
+  }, []);
+
+  const save = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      setState(await api.setAiKey(apiKey.trim()));
+      setApiKey("");
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.deleteAiKey();
+      setState({ configured: false, hint: null });
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.aiKeyTitle")}</h3>
+      <p className="muted small">{t("account.aiKeyHint")}</p>
+      {error && <p className="login-error">{error}</p>}
+      {state?.configured ? (
+        <div className="settings-fieldgrid">
+          <span className="muted small">
+            {t("account.aiKeyConnected", { hint: state.hint })}
+          </span>
+          <button className="danger" disabled={busy} onClick={remove}>
+            {t("account.aiKeyRemove")}
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={save}>
+          <label className="settings-field">
+            <span>{t("account.aiKeyLabel")}</span>
+            <input
+              type="password"
+              autoComplete="off"
+              placeholder="sk-ant-..."
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+            />
+          </label>
+          <button type="submit" disabled={busy || !apiKey.trim()}>
+            {busy ? t("account.aiKeySaving") : t("account.aiKeySave")}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
