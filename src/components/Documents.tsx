@@ -4,6 +4,7 @@ import { api } from "../api";
 import type { Document } from "../types";
 import { RemoveIcon } from "../icons";
 import { requestConfirm } from "../hooks";
+import { buildCvSnapshotFile, cvSnapshotLabel } from "../cv-snapshot";
 import "./Documents.css";
 
 // Extracted verbatim from detail.tsx (the application detail's document
@@ -54,6 +55,22 @@ export function Documents({ applicationId, onError }: DocumentsProps) {
       .finally(() => setBusy(false));
   };
 
+  // Freeze the current CV builder state into a PDF and attach it here, so the
+  // application keeps a record of exactly what was sent even if the CV is
+  // later edited.
+  const attachCvSnapshot = async () => {
+    setBusy(true);
+    try {
+      const file = await buildCvSnapshotFile();
+      await api.uploadDocument(applicationId, file, cvSnapshotLabel());
+      await load();
+    } catch (e) {
+      onError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="zui-docs">
       <div className="zui-docs-add">
@@ -74,6 +91,14 @@ export function Documents({ applicationId, onError }: DocumentsProps) {
             }}
           />
         </label>
+        <button
+          type="button"
+          className="zui-docs-cv-btn"
+          disabled={busy}
+          onClick={attachCvSnapshot}
+        >
+          {t("documents.attachCv")}
+        </button>
       </div>
       <ul className="zui-docs-items">
         {(items ?? []).map((d) => (
