@@ -26,3 +26,7 @@ export { ActionBar } from "./ActionBar";
 export type { ActionBarProps } from "./ActionBar";
 export { Toolbar } from "./Toolbar";
 export type { ToolbarProps } from "./Toolbar";
+export { SideList } from "./SideList";
+export type { SideListProps } from "./SideList";
+export { CvItem } from "./CvItem";
+export type { CvItemProps } from "./CvItem";
