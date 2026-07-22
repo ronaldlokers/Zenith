@@ -1,0 +1,30 @@
+/* Reproduces the App.css url-row recipe (App.css:2564-2582) under the
+   .zui-url-row* names ApplicationForm.tsx emits — moved verbatim, renamed
+   only. Checked the cascade for a later same-layer (app) rule that could
+   have been winning a property on this button by source order (as happened
+   with .cal-nav padding vs .btn-secondary): none matches — the button
+   carries no class and isn't inside .card-actions/.settings-modal/
+   .shortcut-help/.tabs/etc., so .url-row button was already the effective
+   rule in App.css and stays effective here unchanged. */
+@layer components {
+  .zui-url-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .zui-url-row button {
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--text-body);
+    white-space: nowrap;
+  }
+
+  .zui-url-row button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}

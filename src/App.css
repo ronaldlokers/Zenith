@@ -2561,26 +2561,8 @@ summary.bcol-head::after {
   text-transform: none;
 }
 
-.url-row {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.url-row button {
-  padding: 0.4rem 0.7rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: var(--text-body);
-  white-space: nowrap;
-}
-
-.url-row button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
+/* .url-row moved into the owned ApplicationForm component
+   (src/components/ApplicationForm.css, @layer components, .zui-url-row). */
 
 /* .form-actions (container + its button normalization) moved to the owned
    ActionBar component (variant="form"). */
