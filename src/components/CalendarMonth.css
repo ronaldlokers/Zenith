@@ -1,0 +1,214 @@
+/* Reproduces the App.css calendar month grid recipe (App.css:1729-1935)
+   under the .zui-cal-* names CalendarMonth.tsx emits — moved verbatim,
+   renamed only. CalendarTab's mobile agenda list (.agenda / .agenda-*)
+   stays in App.css — it is a separate view rendered by calendar.tsx, not
+   by this component. */
+@layer components {
+  .zui-cal-month {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .zui-cal-month {
+      display: block;
+      margin-top: var(--space-3);
+    }
+
+    .zui-cal-month-head {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: var(--space-3);
+    }
+    .zui-cal-month-head h3 {
+      margin: 0 0.4rem 0 0;
+      font-size: var(--text-heading);
+    }
+    /* The nav buttons are `.btn-secondary .zui-cal-nav`. In App.css the old
+       `.cal-nav` padding was inert — the later `.btn-secondary` Recipe-B rule
+       (same layer) won it at 0.4/0.8 by source order. Now that this rule lives
+       in @layer components it would OUTRANK .btn-secondary (layer > source
+       order) and shrink the buttons, so its padding is deliberately omitted;
+       .btn-secondary supplies it, exactly as before. Only line-height (which
+       .btn-secondary never set) was ever effective here. */
+    .zui-cal-nav {
+      line-height: 1;
+    }
+    .zui-cal-count {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: var(--text-chrome);
+      text-transform: uppercase;
+      letter-spacing: var(--track-chrome);
+      color: var(--muted);
+    }
+
+    .zui-cal-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: var(--space-4);
+      align-items: start;
+    }
+
+    .zui-cal-grid {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .zui-cal-dow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--surface-sunken);
+      border-bottom: 1px solid var(--border);
+    }
+    .zui-cal-dow span {
+      text-align: center;
+      padding: 6px 0;
+      font-family: var(--mono);
+      font-size: var(--text-chrome);
+      text-transform: uppercase;
+      letter-spacing: var(--track-chrome);
+      color: var(--muted);
+    }
+    .zui-cal-week {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .zui-cal-day {
+      min-height: 92px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 4px 4px 6px;
+      min-width: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .zui-cal-day:nth-child(7n) {
+      border-right: 0;
+    }
+    .zui-cal-week:last-child .zui-cal-day {
+      border-bottom: 0;
+    }
+    .zui-cal-day.out {
+      background: var(--surface-sunken);
+    }
+    .zui-cal-daynum {
+      align-self: flex-start;
+      min-width: 1.35rem;
+      height: 1.35rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: var(--text-meta);
+      color: var(--muted);
+    }
+    .zui-cal-day.out .zui-cal-daynum {
+      opacity: 0.4;
+    }
+    .zui-cal-day.today .zui-cal-daynum {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 700;
+    }
+
+    .zui-cal-chip {
+      --k: var(--muted);
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-left: 2px solid var(--k);
+      background: color-mix(in srgb, var(--k) 12%, transparent);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: var(--text-chrome);
+      line-height: 1.45;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .zui-cal-more {
+      padding-left: 3px;
+      font-size: var(--text-chrome);
+      color: var(--muted);
+    }
+
+    .zui-cal-rail {
+      position: sticky;
+      top: 4.5rem;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.6rem 0.75rem;
+    }
+    .zui-cal-rail-h {
+      margin: 0 0 0.4rem;
+      font-family: var(--mono);
+      font-size: var(--text-chrome);
+      text-transform: uppercase;
+      letter-spacing: var(--track-chrome);
+      color: var(--accent-ink);
+    }
+    .zui-cal-up {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: none;
+      padding: 0.45rem 0;
+      border-top: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .zui-cal-up:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+    .zui-cal-up-body {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .zui-cal-up-title {
+      font-size: var(--text-body);
+      line-height: 1.3;
+      color: var(--ink);
+    }
+    .zui-cal-up-date {
+      font-family: var(--mono);
+      font-size: var(--text-chrome);
+      color: var(--muted);
+    }
+    .zui-cal-up-dot {
+      --k: var(--muted);
+      flex: 0 0 auto;
+      margin-top: 5px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--k);
+    }
+
+    /* Kind colours (not stage colours — agenda kinds). */
+    .zui-cal-chip.kind-applied,
+    .zui-cal-up-dot.kind-applied {
+      --k: var(--st-applied);
+    }
+    .zui-cal-chip.kind-due,
+    .zui-cal-up-dot.kind-due {
+      --k: var(--heat-quiet);
+    }
+    .zui-cal-chip.kind-interaction,
+    .zui-cal-up-dot.kind-interaction {
+      --k: var(--ev-touch);
+    }
+  }
+}
