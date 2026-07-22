@@ -7,7 +7,7 @@ import { api } from "./api";
 import { LoadingSkeleton } from "./ui";
 import { useSubmitGuard } from "./hooks";
 import { EmptyCvIcon, RemoveIcon } from "./icons";
-import { ActionBar, Button, Chip, EmptyState } from "./components";
+import { ActionBar, Button, Chip, CvItem, EmptyState, SideList } from "./components";
 import type {
   Education,
   Language,
@@ -164,7 +164,7 @@ export function CVTab({
         </div>
         <aside className="jobs-side">
           <h3 className="side-h">{t("cv.completeness")}</h3>
-          <ul className="side-list">
+          <SideList>
             <li>
               <span className="side-title">{t("cv.profile")}</span>
               <span className="side-co">
@@ -183,7 +183,7 @@ export function CVTab({
               <span className="side-title">{t("cv.languages")}</span>
               <span className="side-co">{languages.length}</span>
             </li>
-          </ul>
+          </SideList>
           <h3 className="side-h cv-preview-h">{t("cv.livePreview")}</h3>
           <div className="cv-preview-frame" aria-label={t("cv.livePreview")}>
             <CvPreview
@@ -632,7 +632,7 @@ function WorkExperienceSection({
       <h3 className="detail-sub">{t("cv.workExperience")}</h3>
       <ul className="cv-list">
         {items.map((w, i) => (
-          <li key={w.id} className="cv-item">
+          <CvItem key={w.id}>
             <div className="cv-item-head">
               <div>
                 <strong>{w.title}</strong> — {w.company}
@@ -713,7 +713,7 @@ function WorkExperienceSection({
                 }
               />
             )}
-          </li>
+          </CvItem>
         ))}
         {items.length === 0 && (
           <EmptyState as="li">
@@ -853,7 +853,7 @@ function EducationSection({
       <h3 className="detail-sub">{t("cv.education")}</h3>
       <ul className="cv-list">
         {items.map((ed, i) => (
-          <li key={ed.id} className="cv-item">
+          <CvItem key={ed.id}>
             <div className="cv-item-head">
               <div>
                 <strong>{ed.institution}</strong>
@@ -900,7 +900,7 @@ function EducationSection({
                 onSubmit={(data) => run(() => api.update("education", ed.id, data))}
               />
             )}
-          </li>
+          </CvItem>
         ))}
         {items.length === 0 && <EmptyState as="li">{t("cv.noEducation")}</EmptyState>}
       </ul>

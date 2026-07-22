@@ -1444,27 +1444,7 @@ button.danger {
 }
 
 /* Pipeline rail (variant 2A/2B) */
-.rail {
-  display: flex;
-  gap: 2px;
-  padding: 0 0.85rem 0.7rem;
-}
-
-.rail i {
-  height: 4px;
-  flex: 1;
-  border-radius: 2px;
-  background: var(--track);
-}
-
-.rail i.on {
-  background: var(--sc);
-}
-
-.rail.dead i.on {
-  background: var(--st-dead);
-  opacity: 0.5;
-}
+/* .rail was dead CSS (no call sites) — removed. */
 
 .muted {
   color: var(--muted);
@@ -3408,24 +3388,7 @@ summary.bcol-head::after {
   margin: 0 0 var(--space-2);
 }
 
-.side-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.side-list li {
-  display: flex;
-  flex-direction: column;
-  gap: 0.05rem;
-  /* Neutral fallback for rows with no stage class (e.g. CV completeness) —
-     keeps the declaration valid (#76) without spending gold on every row. */
-  border-left: 3px solid var(--sc, var(--border));
-  padding: 0.15rem 0 0.15rem 0.6rem;
-}
+/* .side-list moved to the owned SideList component (src/components/SideList.css). */
 
 .side-date {
   font-family: var(--mono);
@@ -3625,38 +3588,7 @@ summary.bcol-head::after {
   gap: 0.6rem;
 }
 
-.cv-item {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 0.65rem 0.8rem;
-}
-
-.cv-item-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.6rem;
-}
-
-.cv-item-actions {
-  display: flex;
-  gap: 0.4rem;
-  flex-shrink: 0;
-}
-
-.cv-item-actions button {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: var(--radius-sm);
-  padding: 0.3rem 0.55rem;
-  font-size: var(--text-meta);
-  cursor: pointer;
-}
-
-.cv-item-actions button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
+/* .cv-item (+ head/actions) moved to the owned CvItem component (src/components/CvItem.css). */
 
 /* Settings as a routed page with a section nav (#314) — replaces the
    14-section modal. */
