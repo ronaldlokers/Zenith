@@ -67,6 +67,24 @@ export async function generateNotifications(
     [],
   );
 
+  // Due/overdue contact follow-ups — mirrors due_followup but keyed off
+  // the user-set contacts.follow_up_at. dedup_key embeds the date, so
+  // rescheduling produces a fresh nudge and an unchanged date nudges once.
+  await insertAndPush(
+    env,
+    `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
+     SELECT contacts.user_id, 'due_contact', contacts.name,
+            COALESCE(contacts.role, ''), '/people/' || contacts.id,
+            'contact_followup:' || contacts.id || ':' || contacts.follow_up_at
+     FROM contacts
+     WHERE contacts.follow_up_at IS NOT NULL
+       AND contacts.follow_up_at <= date('now')
+       AND contacts.user_id IS NOT NULL
+     ON CONFLICT (user_id, dedup_key) DO NOTHING
+     RETURNING user_id, title, body, link`,
+    [],
+  );
+
   // New Feed matches — one aggregate notification per user per day
   // (not per item) so a 6-hourly cron with a healthy source list
   // doesn't spam the panel.
