@@ -1,0 +1,73 @@
+/* Reproduces the App.css ⌘K command palette recipe (App.css:691-756) under
+   the .zui-commandpalette/.zui-palette-* names CommandPalette.tsx emits —
+   moved verbatim, renamed only. The .cmdk* trigger button (App.css:70-95,
+   :3847) stays in App.css — it lives in App.tsx's top bar, not here. */
+@layer components {
+  .zui-commandpalette {
+    max-width: 32rem;
+    padding: 0;
+    overflow: hidden;
+    align-self: flex-start;
+    margin-top: 4rem;
+  }
+
+  .zui-palette-input {
+    width: 100%;
+    padding: 0.9rem 1.1rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    font-size: 1rem;
+  }
+
+  .zui-palette-input:focus {
+    outline: none;
+  }
+
+  .zui-palette-results {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: var(--space-2);
+  }
+
+  .zui-palette-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--space-2);
+  }
+
+  .zui-palette-group-label {
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-chrome);
+    color: var(--faint);
+    padding: 0.3rem 0.6rem 0.15rem;
+  }
+
+  .zui-palette-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--text-body);
+    cursor: pointer;
+  }
+
+  .zui-palette-item:hover,
+  .zui-palette-item.active {
+    background: var(--bg);
+  }
+
+  .zui-palette-item.active {
+    outline: 2px solid var(--accent);
+    /* Deliberate inset exception (#314): the item sits inside a scrolling
+       listbox, so an outset ring would clip against the container. */
+    outline-offset: -2px;
+  }
+}

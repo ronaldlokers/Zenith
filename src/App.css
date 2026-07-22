@@ -688,73 +688,10 @@
   overflow-y: auto;
 }
 
-.command-palette {
-  max-width: 32rem;
-  padding: 0;
-  overflow: hidden;
-  align-self: flex-start;
-  margin-top: 4rem;
-}
-
-.palette-input {
-  width: 100%;
-  padding: 0.9rem 1.1rem;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  color: var(--ink);
-  font-size: 1rem;
-}
-
-.palette-input:focus {
-  outline: none;
-}
-
-.palette-results {
-  max-height: 60vh;
-  overflow-y: auto;
-  padding: var(--space-2);
-}
-
-.palette-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: var(--space-2);
-}
-
-.palette-group-label {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--faint);
-  padding: 0.3rem 0.6rem 0.15rem;
-}
-
-.palette-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 0.5rem 0.6rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--ink);
-  font-size: var(--text-body);
-  cursor: pointer;
-}
-
-.palette-item:hover,
-.palette-item.active {
-  background: var(--bg);
-}
-
-.palette-item.active {
-  outline: 2px solid var(--accent);
-  /* Deliberate inset exception (#314): the item sits inside a scrolling
-     listbox, so an outset ring would clip against the container. */
-  outline-offset: -2px;
-}
+/* Command palette (⌘K search overlay) now lives in
+   src/components/CommandPalette.css, @layer components — moved verbatim
+   under the .zui-commandpalette/.zui-palette-* names. The .cmdk* trigger
+   button above stays here (App.tsx's top bar). */
 
 .shortcut-help h2 {
   margin: 0 0 0.2rem;
