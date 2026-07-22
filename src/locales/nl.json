@@ -481,6 +481,19 @@
     "useTwoFactorCode": "Gebruik je authenticator-app"
   },
   "account": {
+    "testPushTitle": "Testmelding versturen",
+    "testPushHint": "Stuur jezelf een voorbeeldmelding om bezorging te testen. Op iOS werken webmeldingen alleen vanuit een app die aan het beginscherm is toegevoegd (iOS 16.4+), nooit vanuit een browsertabblad.",
+    "testPushType": "Type melding",
+    "testPushSend": "Testmelding versturen",
+    "testPushSent": "Verstuurd naar {{count}} apparaat/apparaten.",
+    "testPushNoSub": "Geen push-abonnement gevonden — schakel eerst meldingen in (op iOS: voeg toe aan beginscherm).",
+    "notifType": {
+      "due_followup": "Sollicitatie-opvolging verschuldigd",
+      "stale_posting": "Vacature mogelijk verdwenen",
+      "feed_match": "Nieuwe feed-matches",
+      "due_contact": "Contactopvolging verschuldigd",
+      "weekly_digest": "Wekelijks overzicht"
+    },
     "signedInAs": "Ingelogd als {{email}}",
     "signOut": "Uitloggen",
     "adminInvite": "Gebruiker uitnodigen",

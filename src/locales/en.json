@@ -481,6 +481,19 @@
     "useTwoFactorCode": "Use your authenticator app instead"
   },
   "account": {
+    "testPushTitle": "Test push notification",
+    "testPushHint": "Send yourself a sample push to verify delivery. On iOS, web push only works from an app installed to the Home Screen (iOS 16.4+), never a browser tab.",
+    "testPushType": "Notification type",
+    "testPushSend": "Send test push",
+    "testPushSent": "Sent to {{count}} device(s).",
+    "testPushNoSub": "No push subscription found — enable notifications first (on iOS, install to the Home Screen).",
+    "notifType": {
+      "due_followup": "Application follow-up due",
+      "stale_posting": "Posting may be gone",
+      "feed_match": "New feed matches",
+      "due_contact": "Contact follow-up due",
+      "weekly_digest": "Weekly digest"
+    },
     "signedInAs": "Signed in as {{email}}",
     "signOut": "Sign out",
     "adminInvite": "Invite a user",

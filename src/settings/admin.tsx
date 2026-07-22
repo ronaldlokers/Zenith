@@ -201,3 +201,67 @@ export function AdminInvite() {
     </div>
   );
 }
+
+// The five notification types, kept in sync with AppNotification.type
+// (src/types.ts) and the worker's test-push sample map.
+const NOTIFICATION_TYPES = [
+  "due_followup",
+  "stale_posting",
+  "feed_match",
+  "due_contact",
+  "weekly_digest",
+] as const;
+
+// Admin debug tool: send yourself a sample push of a chosen type to verify the
+// push pipeline. Push is best-effort — on iOS it only reaches an installed
+// home-screen app (iOS 16.4+), never a Safari tab, so the hint calls that out.
+export function TestPush({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [type, setType] = useState<string>("weekly_digest");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const send = async () => {
+    setBusy(true);
+    setResult(null);
+    try {
+      const { sent } = await api.testPush(type);
+      setResult(
+        sent > 0
+          ? t("account.testPushSent", { count: sent })
+          : t("account.testPushNoSub"),
+      );
+    } catch (e) {
+      onError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.testPushTitle")}</h3>
+      <p className="muted small">{t("account.testPushHint")}</p>
+      <div className="settings-fieldgrid">
+        <label className="settings-field">
+          <span>{t("account.testPushType")}</span>
+          <select value={type} onChange={(e) => setType(e.target.value)}>
+            {NOTIFICATION_TYPES.map((ty) => (
+              <option key={ty} value={ty}>
+                {t(`account.notifType.${ty}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <button onClick={send} disabled={busy}>
+        {t("account.testPushSend")}
+      </button>
+      {result && <p className="admin-invite-success">{result}</p>}
+    </div>
+  );
+}
