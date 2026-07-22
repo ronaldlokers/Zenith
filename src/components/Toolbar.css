@@ -1,0 +1,65 @@
+/* Complete, self-contained. Reproduces the app's .toolbar row (App.css:639)
+   AND the control normalization it applied to its children — the search field
+   recipe, one min-height for every input/select/button, and the mobile
+   behaviour — which previously lived in scattered App.css rules.
+
+   The .search input and any <select> stay raw at the call site; the toolbar
+   styles them as descendants, exactly as before. Buttons inside (raw or the
+   Button component / SegmentedControl) get the shared control height. */
+@layer components {
+  .zui-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 var(--space-3);
+  }
+
+  /* The search field. App.css:896 set flex/border/bg/font; App.css:4490 (later)
+     won the padding at 0.4/0.6 — reproduce the merged result. */
+  .zui-toolbar .search {
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font-size: var(--text-body);
+  }
+
+  /* App.css:1161 — a filter <select> dropped into a toolbar. */
+  .zui-toolbar select {
+    padding: 0.45rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font-family: var(--mono);
+    font-size: var(--text-meta);
+    text-transform: uppercase;
+    letter-spacing: var(--track-chrome);
+  }
+
+  /* App.css:4504 — one control height across the row. */
+  .zui-toolbar input,
+  .zui-toolbar select,
+  .zui-toolbar button {
+    min-height: 36px;
+  }
+
+  /* App.css:3216/4858 — comfortable touch targets on phones. */
+  @media (max-width: 600px) {
+    .zui-toolbar input,
+    .zui-toolbar select,
+    .zui-toolbar button {
+      min-height: 40px;
+    }
+  }
+
+  /* App.css:909 — the search takes its own full-width row on narrow phones. */
+  @media (max-width: 560px) {
+    .zui-toolbar .search {
+      flex-basis: 100%;
+    }
+  }
+}
