@@ -1,0 +1,103 @@
+/* Reproduces the App.css "Documents" recipe (App.css:2334-2418) under the
+   .zui-docs* names Documents.tsx emits — moved verbatim, renamed only, with
+   two exceptions where a later App.css "control normalization" rule (same
+   .app layer, later source order, so it won the cascade) supplied the
+   effective value instead of this section's own now-renamed rule:
+   .zui-docs-upload-btn inlines the padding/border-radius/font-weight/hover
+   background that used to come from the shared `.upload-btn` entry in the
+   .login-card button[type="submit"], .upload-btn combinator, and
+   .zui-doc-label inlines the min-height that used to come from the shared
+   `.doc-label` entry in the .outreach-pill, .tag-chip, .doc-label
+   combinator — both combinators lost their `.upload-btn`/`.doc-label`
+   branch in App.css since nothing renders those class names anymore. */
+@layer components {
+  .zui-docs {
+    border-top: 1px solid var(--border);
+    padding: 0.65rem 0.85rem 0.6rem;
+    background: color-mix(in srgb, var(--bg) 55%, var(--surface));
+  }
+
+  .zui-docs-add {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.55rem;
+  }
+
+  .zui-docs-add input[placeholder] {
+    flex: 1;
+    min-width: 8rem;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: var(--text-body);
+  }
+
+  .zui-docs-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 0.9rem;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: var(--text-body);
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .zui-docs-upload-btn:hover {
+    background: color-mix(in srgb, var(--accent) 85%, black);
+  }
+
+  .zui-docs-upload-btn.busy {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .zui-docs-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .zui-docs-items li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.28rem 0;
+    font-size: var(--text-body);
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  }
+
+  .zui-docs-items li:last-child {
+    border-bottom: 0;
+  }
+
+  .zui-docs-items a {
+    color: var(--accent);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .zui-doc-label {
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-chrome);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.05rem 0.35rem;
+    min-height: 36px;
+  }
+
+  .zui-doc-size {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}

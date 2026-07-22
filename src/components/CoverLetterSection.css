@@ -1,0 +1,28 @@
+/* Reproduces the App.css "cover letter" recipe (App.css:2231-2253) under
+   the .zui-cover-letter* names CoverLetterSection.tsx emits — moved
+   verbatim, renamed only. */
+@layer components {
+  .zui-cover-letter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .zui-cover-letter-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .zui-cover-letter textarea {
+    width: 100%;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--text-body);
+    line-height: 1.5;
+    resize: vertical;
+  }
+}

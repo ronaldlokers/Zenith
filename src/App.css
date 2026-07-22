@@ -2224,198 +2224,20 @@ select.status {
   width: 8rem;
 }
 
-.prep-checklist ul {
-  list-style: none;
-  margin: 0.4rem 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
+/* Interview prep checklist (prep-checklist / prep-item-actions / prep-add)
+   moved to the owned InterviewPrepSection component
+   (src/components/InterviewPrepSection.css, @layer components). */
 
-.prep-checklist li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  font-size: var(--text-body);
-}
+/* Cover letter (.cover-letter*) moved to the owned CoverLetterSection
+   component (src/components/CoverLetterSection.css, @layer components). */
 
-.prep-checklist li label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.prep-checklist li.done label {
-  color: var(--faint);
-  text-decoration: line-through;
-}
-
-.prep-checklist li button {
-  border: none;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: var(--text-title);
-  line-height: 1;
-}
-
-.prep-item-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  flex-shrink: 0;
-}
-
-.prep-item-actions button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.prep-add {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-}
-
-.prep-add input {
-  flex: 1;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--ink);
-  font-size: var(--text-body);
-}
-
-.cover-letter {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.cover-letter-actions {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.cover-letter textarea {
-  width: 100%;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: var(--text-body);
-  line-height: 1.5;
-  resize: vertical;
-}
-
-.jd-match-input {
-  width: 100%;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: var(--text-body);
-  resize: vertical;
-}
-
-.jd-match-result {
-  margin-top: var(--space-2);
-  font-size: var(--text-body);
-}
+/* JD keyword match (.jd-match-input/.jd-match-result) moved to the owned
+   JdKeywordMatch component (src/components/JdKeywordMatch.css, @layer
+   components). */
 
 
-/* Documents */
-.docs {
-  border-top: 1px solid var(--border);
-  padding: 0.65rem 0.85rem 0.6rem;
-  background: color-mix(in srgb, var(--bg) 55%, var(--surface));
-}
-
-.docs-add {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.55rem;
-}
-
-.docs-add input[placeholder] {
-  flex: 1;
-  min-width: 8rem;
-  padding: 0.35rem 0.45rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  font-size: var(--text-body);
-}
-
-.upload-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.7rem;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-text);
-  font-size: var(--text-body);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.upload-btn.busy {
-  opacity: 0.6;
-  cursor: progress;
-}
-
-.docs-items {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.docs-items li {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-  padding: 0.28rem 0;
-  font-size: var(--text-body);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-}
-
-.docs-items li:last-child {
-  border-bottom: 0;
-}
-
-.docs-items a {
-  color: var(--accent);
-  text-decoration: none;
-  overflow-wrap: anywhere;
-}
-
-.doc-label {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.05rem 0.35rem;
-}
-
-.doc-size {
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
+/* Documents (docs / upload-btn / doc-label / doc-size) moved to the owned
+   Documents component (src/components/Documents.css, @layer components). */
 
 /* Board (variant 2C) */
 .board {
@@ -3929,16 +3751,14 @@ button:not(:disabled):active,
 /* Secondary buttons — compact, for dense inline rows. */
 /* Primary buttons that weren't button.primary: same metrics + the same
    hover darken as the canonical one. */
-.login-card button[type="submit"],
-.upload-btn {
+.login-card button[type="submit"] {
   padding: 0.55rem 0.9rem;
   border-radius: var(--radius-md);
   font-weight: 650;
   font-size: var(--text-body);
 }
 
-.login-card button[type="submit"]:hover,
-.upload-btn:hover {
+.login-card button[type="submit"]:hover {
   background: color-mix(in srgb, var(--accent) 85%, black);
 }
 
@@ -3952,17 +3772,14 @@ button:not(:disabled):active,
 /* Quiet destructive icons: one treatment — muted at rest, danger on
    hover/focus (previously three different resting colors). */
 .tl-del,
-.view-del,
-.prep-checklist li button {
+.view-del {
   color: var(--muted);
 }
 
 .tl-del:hover,
 .tl-del:focus-visible,
 .view-del:hover,
-.view-del:focus-visible,
-.prep-checklist li button:hover,
-.prep-checklist li button:focus-visible {
+.view-del:focus-visible {
   color: var(--danger);
 }
 
@@ -3974,11 +3791,9 @@ button:not(:disabled):active,
 .settings-field input,
 .settings-field select,
 .settings-add input,
-.prep-add input,
 .tl-add input,
 .tl-add select,
 .tl-retro input,
-.docs-add input,
 .weekly-goal-edit input {
   font-size: var(--text-body);
   padding: 0.4rem 0.6rem;
@@ -3991,8 +3806,7 @@ button:not(:disabled):active,
 /* Chip baseline alignment (toolbar control-height moved to the Toolbar
    component). */
 .outreach-pill,
-.tag-chip,
-.doc-label {
+.tag-chip {
   min-height: 36px;
 }
 
