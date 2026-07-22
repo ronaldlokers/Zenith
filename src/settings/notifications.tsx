@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
 
@@ -22,25 +22,43 @@ export function PushSettings() {
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Pre-loaded before the user clicks so subscribe() can call
+  // pushManager.subscribe() synchronously inside the gesture — see subscribe().
+  const regRef = useRef<ServiceWorkerRegistration | null>(null);
+  const keyRef = useRef<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!supported) return;
-    navigator.serviceWorker.ready
-      .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => setSubscribed(!!sub))
+    // Warm up both prerequisites on mount, not on click. On iOS/Safari the
+    // permission prompt only fires if pushManager.subscribe() runs directly in
+    // the click gesture; any awaited network call (fetching the VAPID key) or
+    // even `serviceWorker.ready` before it consumes the gesture and the prompt
+    // silently no-ops in a standalone PWA — which is why no iOS subscription
+    // was ever created.
+    Promise.all([navigator.serviceWorker.ready, api.pushPublicKey()])
+      .then(async ([reg, { publicKey }]) => {
+        regRef.current = reg;
+        keyRef.current = publicKey ?? null;
+        const sub = await reg.pushManager.getSubscription();
+        setSubscribed(!!sub);
+        setReady(!!publicKey);
+      })
       .catch(() => setSubscribed(false));
   }, [supported]);
 
   const subscribe = async () => {
+    const reg = regRef.current;
+    const publicKey = keyRef.current;
+    if (!reg || !publicKey) {
+      setError(t("account.pushNotConfigured"));
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      const { publicKey } = await api.pushPublicKey();
-      if (!publicKey) {
-        setError(t("account.pushNotConfigured"));
-        return;
-      }
-      const reg = await navigator.serviceWorker.ready;
+      // First async call in the gesture — no awaited fetch precedes it, so iOS
+      // still treats this as user-initiated and shows the permission prompt.
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
@@ -58,7 +76,7 @@ export function PushSettings() {
     setBusy(true);
     setError(null);
     try {
-      const reg = await navigator.serviceWorker.ready;
+      const reg = regRef.current ?? (await navigator.serviceWorker.ready);
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
         await api.pushUnsubscribe(sub.endpoint);
@@ -81,7 +99,10 @@ export function PushSettings() {
         {subscribed ? t("account.pushEnabledHint") : t("account.pushDisabledHint")}
       </p>
       {error && <p className="login-error">{error}</p>}
-      <button disabled={busy || subscribed == null} onClick={subscribed ? unsubscribe : subscribe}>
+      <button
+        disabled={busy || subscribed == null || (!subscribed && !ready)}
+        onClick={subscribed ? unsubscribe : subscribe}
+      >
         {subscribed ? t("account.pushDisable") : t("account.pushEnable")}
       </button>
     </div>
