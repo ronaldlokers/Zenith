@@ -30,6 +30,13 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
+  // Mirror the UI language into the user row so the worker can localize the
+  // content it generates (weekly digest). Fire-and-forget from the caller.
+  setLocale: (locale: string) =>
+    request<void>("/api/preferences/locale", {
+      method: "PUT",
+      body: JSON.stringify({ locale }),
+    }),
   updateFollowUp: (
     id: number,
     fields: { next_action?: string | null; next_action_at: string | null },

@@ -1248,6 +1248,21 @@ app.delete("/api/profile/share-token", async (c) => {
   return c.body(null, 204);
 });
 
+// Persist the user's UI language server-side so worker-generated content (the
+// weekly digest) can be localized — the worker has no react-i18next and no
+// other source of the user's locale. The UI still drives the switch via
+// i18n/localStorage; this just mirrors it into the user row.
+app.put("/api/preferences/locale", async (c) => {
+  const { locale } = await c.req.json<{ locale?: string }>();
+  if (locale !== "en" && locale !== "nl") {
+    return c.json({ error: "unsupported locale" }, 400);
+  }
+  await c.env.DB.prepare('UPDATE "user" SET locale = ? WHERE id = ?')
+    .bind(locale, c.get("userId"))
+    .run();
+  return c.body(null, 204);
+});
+
 const SHARE_PIPELINE = ["interested", "applied", "screening", "interview", "offer"];
 
 function shareParseSqlDate(d: string): number {

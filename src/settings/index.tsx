@@ -116,6 +116,14 @@ export function SettingsPage({
     });
   }, []);
 
+  // Mirror the current UI language into the user row on load, so users who set
+  // their language before it was persisted server-side get captured without
+  // having to re-pick it. Fire-and-forget.
+  useEffect(() => {
+    void api.setLocale(i18n.resolvedLanguage === "nl" ? "nl" : "en").catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const shareUrl = shareToken
     ? `${window.location.origin}/shared/${shareToken}`
     : null;
@@ -211,7 +219,11 @@ export function SettingsPage({
           <span>{t("settings.language")}</span>
           <select
             value={i18n.resolvedLanguage}
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
+            onChange={(e) => {
+              const lang = e.target.value;
+              i18n.changeLanguage(lang);
+              void api.setLocale(lang).catch(() => {});
+            }}
           >
             {LANGUAGES.map(([code, labelKey]) => (
               <option key={code} value={code}>
