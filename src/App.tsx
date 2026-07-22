@@ -28,6 +28,7 @@ import { CommandPalette, OnboardingChecklist, QuickAddDialog } from "./component
 import { useAppData, useToasts } from "./app-data";
 import {
   useGlobalShortcuts,
+  useNotificationNavigation,
   useScrollActiveTabIntoView,
   useScrolled,
   useViewportBottomOffset,
@@ -77,6 +78,7 @@ export default function App() {
   const scrolled = useScrolled();
   const tabsRef = useScrollActiveTabIntoView(tab);
   useViewportBottomOffset();
+  useNotificationNavigation();
   useGlobalShortcuts({
     onTogglePalette: () => setShowPalette((v) => !v),
     onQuickAdd: () => setShowQuickAdd(true),

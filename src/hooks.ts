@@ -2,6 +2,7 @@
 // App.tsx (#285 split). No React components here, so react-refresh's
 // only-export-components rule stays satisfied.
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { keyShortcutsEnabled } from "./format";
 
 // Guards an async submit against double-fire (#261) and exposes a busy
@@ -193,4 +194,24 @@ export function setConfirmImpl(
 
 export function requestConfirm(message: string): Promise<boolean> {
   return confirmImpl(message);
+}
+
+// Routes the app in place when the service worker relays a notification tap
+// (`{type:"notification-navigate", url}`). The SW focuses the running window
+// and posts this instead of calling WindowClient.navigate(), which is
+// unreliable on iOS — here react-router does the actual navigation.
+export function useNotificationNavigation() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data as { type?: string; url?: string } | null;
+      if (data?.type === "notification-navigate" && typeof data.url === "string") {
+        navigate(data.url);
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () =>
+      navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [navigate]);
 }
