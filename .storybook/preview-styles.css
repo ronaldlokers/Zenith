@@ -1,15 +1,13 @@
-/* Mirrors the app's cascade (src/app-styles.css) inside Storybook.
+/* Mirrors the app's real cascade (src/app-styles.css) inside Storybook, using
+   the app's OWN token + reset layer (src/index.css) — not the design-system
+   bundle, which the owned components have fully superseded.
 
-   The design-system bundle's tokens/base.css carries the same base reset the
-   app has in index.css — `button, input, select, textarea { font: inherit;
-   color: inherit }`. Imported raw it is unlayered, and unlayered declarations
-   beat every layered one regardless of specificity, so it silently overrode
-   the text colour of every component variant: the dark variant rendered
-   invisible in light theme, and primary failed WCAG AA contrast in dark.
-
-   Layering it as `reset` reproduces the app's real cascade, which is the
-   whole point of the catalog — a component must render here exactly as it
-   ships. There is no `app` layer in Storybook (App.css is deliberately
-   absent), but the name is kept so the order matches src/app-styles.css. */
+   index.css carries the design tokens (:root vars every component reads) plus
+   the base reset (`button, input, select, textarea { font: inherit; color:
+   inherit }`). It is layered as `reset` so those unlayered-in-source rules do
+   not outrank the components' `@layer components` styles — exactly as
+   src/app-styles.css does for the app. There is no `app` layer here (App.css
+   is deliberately absent — owned components are self-contained), but the name
+   is kept so the layer order matches src/app-styles.css. */
 @layer reset, app, components;
-@import "../.claude/skills/zenith-design/styles.css" layer(reset);
+@import "../src/index.css" layer(reset);

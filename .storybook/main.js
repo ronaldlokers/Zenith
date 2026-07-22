@@ -1,13 +1,10 @@
 /** @type {import('@storybook/react-vite').StorybookConfig} */
 const config = {
-  // Phase 1: stories live in the design-system bundle, which is synced from
-  // the Claude Design project (see .design-sync/config.json). As components
-  // are extracted out of src/App.tsx they inherit these components' prop APIs
-  // and the stories get repointed at src/.
-  stories: [
-    "../src/components/**/*.stories.@(ts|tsx)",
-    "../.claude/skills/zenith-design/stories/**/*.stories.@(js|jsx)",
-  ],
+  // The catalog is the owned components in src/components/ — each extracted
+  // from the app's own patterns and self-contained. The design-system bundle
+  // stories (.claude/skills/zenith-design) were the phase-1 scaffold and have
+  // been retired now that the owned components fully supersede them.
+  stories: ["../src/components/**/*.stories.@(ts|tsx)"],
   addons: ["@storybook/addon-a11y", "@storybook/addon-docs"],
   // No telemetry is a locked product decision — Storybook opts in by default.
   core: { disableTelemetry: true },
