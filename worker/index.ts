@@ -10,7 +10,7 @@ import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
 import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { generateWeeklyDigest } from "./digest.js";
 import { registerCalendarRoutes } from "./calendar.js";
-import { registerPushRoutes } from "./push.js";
+import { registerPushRoutes, sendPushToUser } from "./push.js";
 import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
 
 export type AppEnv = {
@@ -1481,6 +1481,50 @@ app.post("/api/admin/reset-demo-data", async (c) => {
     return c.json({ error: "demo account doesn't exist yet — invite it first" }, 404);
   }
   return c.json(result);
+});
+
+// Admin push-notification test — send a sample push of a chosen type to
+// yourself, to verify the push pipeline end to end. Returns how many of your
+// subscriptions it targeted (0 = no push subscription for you; note iOS only
+// delivers web push to an installed PWA, not a Safari tab).
+// Kept in sync with AppNotification.type in src/types.ts (the worker can't
+// import from src across the tsconfig boundary).
+type AppNotificationType =
+  | "due_followup"
+  | "stale_posting"
+  | "feed_match"
+  | "due_contact"
+  | "weekly_digest";
+
+const TEST_PUSH_SAMPLES: Record<
+  AppNotificationType,
+  { title: string; body: string; url: string }
+> = {
+  due_followup: { title: "Follow-up due", body: "Senior Engineer · Acme", url: "/jobs/1" },
+  stale_posting: { title: "Posting may be gone", body: "Senior Engineer · Acme", url: "/jobs/1" },
+  feed_match: { title: "3 new listing(s) in your Feed", body: "", url: "/feed" },
+  due_contact: { title: "Ada Lovelace", body: "Recruiter", url: "/people/1" },
+  weekly_digest: { title: "Your week on Zenith", body: "4 added · 2 advanced · 3 need a nudge", url: "/" },
+};
+
+app.post("/api/admin/test-push", async (c) => {
+  const { type } = await c.req.json<{ type?: string }>();
+  if (!type || !(type in TEST_PUSH_SAMPLES)) {
+    return c.json({ error: "unknown notification type" }, 400);
+  }
+  const userId = c.get("userId");
+  const { results: subs } = await c.env.DB.prepare(
+    "SELECT id FROM push_subscriptions WHERE user_id = ?",
+  )
+    .bind(userId)
+    .all();
+  const sample = TEST_PUSH_SAMPLES[type as AppNotificationType];
+  await sendPushToUser(c.env, userId, {
+    title: `[test] ${sample.title}`,
+    body: sample.body,
+    url: sample.url,
+  });
+  return c.json({ sent: subs.length });
 });
 
 // Admin resets a user's 2FA (#285) — the Better Auth admin plugin can reset

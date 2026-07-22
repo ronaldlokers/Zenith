@@ -17,7 +17,7 @@ import { useLocation } from "react-router-dom";
 import { ActionBar, Button } from "../components";
 import { FeedSettings } from "../feed";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement } from "./account";
-import { AdminUsers, AdminInvite } from "./admin";
+import { AdminUsers, AdminInvite, TestPush } from "./admin";
 import { SampleDataSettings } from "./data";
 import { PublicApiSettings } from "./api";
 import { PushSettings } from "./notifications";
@@ -356,6 +356,7 @@ export function SettingsPage({
           <div className="account-section">
             <AdminUsers onError={setApiError} />
             <AdminInvite />
+            <TestPush onError={setApiError} />
           </div>
         )}
       </div>

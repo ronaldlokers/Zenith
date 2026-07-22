@@ -37,6 +37,12 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ locale }),
     }),
+  // Admin: send yourself a sample push of the given notification type.
+  testPush: (type: string) =>
+    request<{ sent: number }>("/api/admin/test-push", {
+      method: "POST",
+      body: JSON.stringify({ type }),
+    }),
   updateFollowUp: (
     id: number,
     fields: { next_action?: string | null; next_action_at: string | null },
