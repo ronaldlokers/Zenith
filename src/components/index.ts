@@ -36,3 +36,5 @@ export { StarRating } from "./StarRating";
 export type { StarRatingProps } from "./StarRating";
 export { MomentumBand } from "./MomentumBand";
 export type { MomentumBandProps } from "./MomentumBand";
+export { OnboardingChecklist } from "./OnboardingChecklist";
+export type { OnboardingChecklistProps } from "./OnboardingChecklist";

@@ -43,9 +43,9 @@ import { CalendarTab } from "./calendar";
 import { DashboardTab } from "./dashboard";
 import { ApplicationDetailModal } from "./detail";
 import { PipelineTab } from "./board";
-import { CommandPalette, NotificationBell, OnboardingChecklist, QuickAddDialog } from "./chrome";
+import { CommandPalette, NotificationBell, QuickAddDialog } from "./chrome";
 import { useSession } from "./auth-client";
-import { Avatar, Button } from "./components";
+import { Avatar, Button, OnboardingChecklist } from "./components";
 
 // Shared remove-icon glyph (#118) — a plain "×" character renders at
 // inconsistent visual weight across browsers/fonts; an inline SVG at a

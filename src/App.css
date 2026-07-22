@@ -1741,63 +1741,8 @@ select.status {
   margin-top: var(--space-3);
 }
 
-.onboarding {
-  padding: 0.9rem 1rem;
-  margin-bottom: var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-}
-
-.onboarding-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.onboarding-head h3 {
-  margin: 0;
-  font-size: var(--text-title);
-}
-
-.onboarding-dismiss {
-  border: none;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: var(--text-heading);
-  line-height: 1;
-  padding: 0.1rem 0.3rem;
-}
-
-.onboarding ul {
-  list-style: none;
-  margin: var(--space-2) 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.onboarding li {
-  font-size: var(--text-body);
-}
-
-.onboarding li button {
-  border: none;
-  background: none;
-  color: var(--accent);
-  cursor: pointer;
-  padding: 0;
-  font-size: var(--text-body);
-  text-decoration: underline;
-}
-
-.onboarding li.done button,
-.onboarding li.done span {
-  color: var(--faint);
-  text-decoration: line-through;
-}
+/* .onboarding moved into the owned OnboardingChecklist component — see
+   src/components/OnboardingChecklist.css (.zui-onboarding*). */
 
 .momentum {
   display: flex;
@@ -3831,32 +3776,35 @@ summary.bcol-head::after {
     height: 16px;
   }
 
-  /* Onboarding recolored for the dark rail. */
-  .side .onboarding {
+  /* Onboarding recolored for the dark rail. Targets the .zui-onboarding*
+     classes emitted by the owned OnboardingChecklist component (moved out
+     to src/components/OnboardingChecklist.css) — these are ancestor-context
+     overrides, not part of the component's own recipe, so they stay here. */
+  .side .zui-onboarding {
     margin: 0;
     padding: 12px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.05);
   }
 
-  .side .onboarding h3 {
+  .side .zui-onboarding h3 {
     color: #f4f2ec;
   }
 
-  .side .onboarding li button {
+  .side .zui-onboarding li button {
     color: #b9b8cc;
   }
 
-  .side .onboarding li.done button,
-  .side .onboarding li.done span {
+  .side .zui-onboarding li.done button,
+  .side .zui-onboarding li.done span {
     color: #7d7c95;
   }
 
-  .side .onboarding-dismiss {
+  .side .zui-onboarding-dismiss {
     color: #9a99ad;
   }
 
-  .side .onboarding-sample {
+  .side .zui-onboarding-sample {
     color: var(--accent-on-ink);
   }
 
@@ -3935,8 +3883,9 @@ summary.bcol-head::after {
   }
 
   /* The rail carries onboarding at rail widths; hide the in-content copy
-     (kept for the sub-900px layouts where there is no rail). */
-  .content .onboarding {
+     (kept for the sub-900px layouts where there is no rail). Targets
+     .zui-onboarding — see src/components/OnboardingChecklist.css. */
+  .content .zui-onboarding {
     display: none;
   }
 
@@ -4272,10 +4221,8 @@ button:not(:disabled):active,
   margin: 0.5rem 0 0.9rem;
 }
 
-.onboarding-sample {
-  margin-top: var(--space-2);
-  font-size: var(--text-body);
-}
+/* .onboarding-sample moved into src/components/OnboardingChecklist.css
+   (.zui-onboarding-sample). */
 
 /* Styled confirmation dialog (#314 round 3) — replaces window.confirm. */
 .confirm-dialog {
