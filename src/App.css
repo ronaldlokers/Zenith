@@ -636,14 +636,8 @@
   padding: 0.2rem;
 }
 
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: var(--space-2) 0 var(--space-3);
-}
+/* .toolbar (container + its child control normalization) moved to the owned
+   Toolbar component (src/components/Toolbar.css). */
 
 .help-btn {
   width: 2.2rem;
@@ -893,23 +887,7 @@
   padding: 0.2rem 0;
 }
 
-.toolbar .search {
-  flex: 1;
-  min-width: 0;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  font-size: var(--text-body);
-}
-
-/* On phones the search takes its own full-width row instead of being crushed
-   to a sliver next to the Add / view-toggle controls (design review). */
-@media (max-width: 560px) {
-  .toolbar .search {
-    flex-basis: 100%;
-  }
-}
+/* .toolbar .search (+ its mobile full-width) moved to the Toolbar component. */
 
 .filters {
   display: flex;
@@ -1158,16 +1136,7 @@
   color: var(--muted);
 }
 
-.toolbar select {
-  padding: 0.45rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  font-family: var(--mono);
-  font-size: var(--text-meta);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-}
+/* .toolbar select moved to the Toolbar component. */
 
 button.primary {
   background: var(--accent);
@@ -3215,10 +3184,9 @@ summary.bcol-head::after {
     grid-template-columns: 1fr;
   }
 
-  /* Comfortable touch targets for filter/toolbar controls. */
-  .filters select,
-  .toolbar select,
-  .toolbar button {
+  /* Comfortable touch targets for filter controls (toolbar controls moved to
+     the Toolbar component). */
+  .filters select {
     min-height: 40px;
   }
 }
@@ -4486,8 +4454,7 @@ button:not(:disabled):active,
 .tl-add select,
 .tl-retro input,
 .docs-add input,
-.weekly-goal-edit input,
-.toolbar .search {
+.weekly-goal-edit input {
   font-size: var(--text-body);
   padding: 0.4rem 0.6rem;
   border-radius: var(--radius-md);
@@ -4496,14 +4463,11 @@ button:not(:disabled):active,
 /* Chips: one metric set so co-occurring chips baseline-align. (The badge
    pill moved to the Badge component; min-height was inert on it anyway — it
    is an inline <span>.) */
+/* Chip baseline alignment (toolbar control-height moved to the Toolbar
+   component). */
 .outreach-pill,
 .tag-chip,
-.doc-label,
-/* Toolbar rows: one control height on every viewport (previously five
-   different heights in a single flex row; a mobile-only patch existed). */
-.toolbar input,
-.toolbar select,
-.toolbar button {
+.doc-label {
   min-height: 36px;
 }
 
@@ -4863,9 +4827,6 @@ button:not(:disabled):active,
     min-height: 44px;
   }
 
-  .toolbar input,
-  .toolbar select,
-  .toolbar button,
   .filters select {
     min-height: 40px;
   }
@@ -4883,7 +4844,6 @@ button:not(:disabled):active,
   .toast,
   .error-dismiss,
   button,
-  .toolbar .search,
   input[type="search"] {
     display: none !important;
   }

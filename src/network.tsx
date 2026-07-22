@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
 import { EmptyCompaniesIcon, EmptyPeopleIcon } from "./icons";
-import { ActionBar, Badge, Button, EmptyState, FieldLabel, Row, SegmentedControl } from "./components";
+import { ActionBar, Badge, Button, EmptyState, FieldLabel, Row, SegmentedControl, Toolbar } from "./components";
 import {
   ageDays,
   formatDate,
@@ -90,7 +90,7 @@ export function CompaniesTab({
 
   return (
     <section>
-      <div className="toolbar">
+      <Toolbar>
         <input
           type="search"
           className="search"
@@ -116,7 +116,7 @@ export function CompaniesTab({
             {t("companies.viewGrid")}
           </button>
         </SegmentedControl>
-      </div>
+      </Toolbar>
 
       {editing && (
         <CompanyForm
@@ -532,7 +532,7 @@ export function ContactsTab({
 
   return (
     <section>
-      <div className="toolbar">
+      <Toolbar>
         <input
           type="search"
           className="search"
@@ -558,7 +558,7 @@ export function ContactsTab({
             {t("companies.viewGrid")}
           </button>
         </SegmentedControl>
-      </div>
+      </Toolbar>
 
       {editing && (
         <ContactForm

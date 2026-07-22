@@ -14,7 +14,7 @@ import type {
   FeedItem,
   RoleTypeDef,
 } from "./types";
-import { Button, Chip, EmptyState } from "./components";
+import { Button, Chip, EmptyState, Toolbar } from "./components";
 
 export function FeedSettings({
   roleTypes,
@@ -524,7 +524,7 @@ export function FeedTab({
 
   return (
     <section>
-      <div className="toolbar">
+      <Toolbar>
         <p className="muted small" style={{ margin: 0 }}>
           {t("feed.pulledFrom")}
         </p>
@@ -534,7 +534,7 @@ export function FeedTab({
         <Button variant="primary" disabled={refreshing} onClick={refresh}>
           {refreshing ? t("feed.checking") : t("feed.checkNow")}
         </Button>
-      </div>
+      </Toolbar>
 
       {failed && !items && <LoadFailed onRetry={load} />}
       {!failed && !items && <LoadingSkeleton />}
