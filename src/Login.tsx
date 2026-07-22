@@ -57,23 +57,6 @@ export function Login() {
 
   return (
     <div className="login-stage">
-      <svg
-        className="login-ascent"
-        viewBox="0 0 1200 800"
-        preserveAspectRatio="xMidYMid slice"
-        aria-hidden="true"
-      >
-        <g stroke="#6f78c4" strokeWidth="2" fill="none">
-          <path d="M120 660 L1080 660" />
-          <path d="M260 520 L940 520" />
-          <path d="M400 380 L800 380" />
-        </g>
-        <path
-          d="M600 150 l14 36 36 14 -36 14 -14 36 -14 -36 -36 -14 36 -14 Z"
-          fill="#d6a441"
-        />
-      </svg>
-
       {needsTwoFactor ? (
         <form className="login-card" onSubmit={submitTwoFactor}>
           <button type="button" className="login-back" onClick={backToPassword}>
