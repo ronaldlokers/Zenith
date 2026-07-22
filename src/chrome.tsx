@@ -1,124 +1,18 @@
-// App-shell chrome extracted from App.tsx (#285 split): the onboarding
-// checklist, the notification bell, and the quick-add job dialog. All
-// rendered by App(). The ⌘K command palette moved out to
-// src/components/CommandPalette.tsx.
-import { useCallback, useEffect, useState } from "react";
+// App-shell chrome extracted from App.tsx (#285 split): the quick-add job
+// dialog. Rendered by App(). The onboarding checklist, the ⌘K command
+// palette, and the notification bell moved out to
+// src/components/OnboardingChecklist.tsx, src/components/CommandPalette.tsx,
+// and src/components/NotificationBell.tsx respectively.
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { api } from "./api";
-import type { Application, AppNotification, Company, Status } from "./types";
+import type { Application, Company, Status } from "./types";
 import { STATUSES } from "./types";
-import { BellIcon } from "./icons";
-import { formatDate } from "./format";
 import { Dialog } from "./ui";
-import { rowActivate, useFocusTrap } from "./hooks";
 import { ActionBar, Button } from "./components";
 
 // Self-serve account deletion (#285) — GDPR right-to-erasure. Strong
 // confirm, then wipe + sign out.
-// In-app notification center (#213) — due/overdue follow-ups, stale
-// postings, and new Feed matches, generated server-side on the
-// existing 6h cron (see worker/notifications.ts). Polled rather than
-// pushed since there's no realtime transport in this app; a stale
-// unread count for a few minutes is a fine tradeoff against adding one.
-const NOTIFICATION_POLL_MS = 120_000;
-
-export function NotificationBell() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<AppNotification[] | null>(null);
-  const [open, setOpen] = useState(false);
-  const panelRef = useFocusTrap<HTMLDivElement>(open);
-
-  const load = useCallback(() => {
-    api.notifications().then(setNotifications).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    load();
-    const interval = setInterval(load, NOTIFICATION_POLL_MS);
-    return () => clearInterval(interval);
-  }, [load]);
-
-  const unreadCount = (notifications ?? []).filter((n) => !n.read_at).length;
-
-  const openNotification = (n: AppNotification) => {
-    setOpen(false);
-    if (!n.read_at) {
-      api.markNotificationRead(n.id).then(load);
-    }
-    if (n.link) navigate(n.link);
-  };
-
-  const markAllRead = () => {
-    api.markAllNotificationsRead().then(load);
-  };
-
-  return (
-    <span className="notification-bell">
-      <button
-        className="settings-btn"
-        onClick={() => setOpen((v) => !v)}
-        title={t("header.notifications")}
-        aria-label={
-          unreadCount > 0
-            ? t("header.notificationsUnread", { count: unreadCount })
-            : t("header.notifications")
-        }
-        aria-expanded={open}
-      >
-        <BellIcon />
-        {unreadCount > 0 && (
-          <span className="notification-dot" aria-hidden="true">
-            {unreadCount}
-          </span>
-        )}
-      </button>
-      {open && (
-        <>
-          <div className="notification-backdrop" onClick={() => setOpen(false)} />
-          <div
-            ref={panelRef}
-            className="notification-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("header.notifications")}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setOpen(false);
-            }}
-          >
-            <div className="notification-panel-head">
-              <span>{t("header.notifications")}</span>
-              {unreadCount > 0 && (
-                <button className="btn-secondary" onClick={markAllRead}>
-                  {t("header.markAllRead")}
-                </button>
-              )}
-            </div>
-            <ul className="notification-list">
-              {(notifications ?? []).map((n) => (
-                <li
-                  key={n.id}
-                  className={n.read_at ? "read" : "unread"}
-                  {...rowActivate(() => openNotification(n))}
-                >
-                  <span className="notification-title">{n.title}</span>
-                  {n.body && <span className="muted small">{n.body}</span>}
-                  <span className="muted small">{formatDate(n.created_at)}</span>
-                </li>
-              ))}
-              {notifications && notifications.length === 0 && (
-                <li className="notification-empty muted small">
-                  {t("header.notificationsEmpty")}
-                </li>
-              )}
-            </ul>
-          </div>
-        </>
-      )}
-    </span>
-  );
-}
 
 export function QuickAddDialog({
   companies,
