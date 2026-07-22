@@ -24,7 +24,7 @@ import {
 } from "./format";
 import { StatsTab } from "./stats-view";
 import { ActivityTab } from "./calendar";
-import { Button, DashCard, SideList, StatCard, StatLine } from "./components";
+import { Button, DashCard, MomentumBand, SideList, StatCard, StatLine } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
@@ -112,24 +112,15 @@ export function DashboardTab({
   );
 
   const band = (
-    <div className="dash-band">
-      <div>
-        <span className="dash-eyebrow">{t("dashboard.momentumTitle")}</span>
-        <div className="dash-band-verdict">{t(`stats.momentum.${pipe.verdict}`)}</div>
-        <div className="muted small">
-          {t("stats.momentumDetail", { recent: pipe.recent, prior: pipe.prior })}
-        </div>
-      </div>
-      <div className="dash-spark" aria-hidden="true">
-        {mom.weeks.map((w, i) => (
-          <i
-            key={i}
-            style={{ height: `${Math.max(4, (w.count / weekMax) * 100)}%` }}
-            className={w.count === 0 ? "dim" : ""}
-          />
-        ))}
-      </div>
-    </div>
+    <MomentumBand
+      eyebrow={t("dashboard.momentumTitle")}
+      verdict={t(`stats.momentum.${pipe.verdict}`)}
+      detail={t("stats.momentumDetail", { recent: pipe.recent, prior: pipe.prior })}
+      bars={mom.weeks.map((w) => ({
+        heightPct: Math.max(4, (w.count / weekMax) * 100),
+        dim: w.count === 0,
+      }))}
+    />
   );
 
   const funnelCard = (

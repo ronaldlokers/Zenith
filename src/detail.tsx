@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
-import { ActionBar, Button, Chip, FieldLabel } from "./components";
+import { ActionBar, Button, Chip, FieldLabel, StarRating } from "./components";
 import type {
   Application,
   Company,
@@ -658,57 +658,15 @@ export function ApplicationDetailModal({
                 <FieldLabel id={`fit-label-${a.id}`}>
                   {t("detail.fitScore")}
                 </FieldLabel>
-                <span
-                  className="fit-edit"
-                  role="radiogroup"
+                <StarRating
+                  value={a.fit_score ?? null}
                   aria-labelledby={`fit-label-${a.id}`}
-                  onKeyDown={(e) => {
-                    // Arrow/Home/End move the rating like a real radiogroup
-                    // (#346) — the stars were five separate toggles before.
-                    const cur = a.fit_score ?? 0;
-                    let next: number | null = null;
-                    if (e.key === "ArrowRight" || e.key === "ArrowUp")
-                      next = Math.min(5, (cur || 0) + 1);
-                    else if (e.key === "ArrowLeft" || e.key === "ArrowDown")
-                      next = Math.max(1, (cur || 1) - 1);
-                    else if (e.key === "Home") next = 1;
-                    else if (e.key === "End") next = 5;
-                    else return;
-                    e.preventDefault();
-                    if (next !== cur && !patchBusy)
-                      inlinePatch(
-                        api.patchApplication(a.id, { fit_score: next }),
-                      );
-                  }}
-                >
-                  {[1, 2, 3, 4, 5].map((n) => {
-                    const checked = (a.fit_score ?? 0) === n;
-                    // Roving tabindex: only the checked star (or the first,
-                    // when unset) is tabbable; arrows move within the group.
-                    const tabbable = checked || (!a.fit_score && n === 1);
-                    return (
-                      <button
-                        key={n}
-                        type="button"
-                        role="radio"
-                        aria-checked={checked}
-                        tabIndex={tabbable ? 0 : -1}
-                        disabled={patchBusy}
-                        className={`fit-star${(a.fit_score ?? 0) >= n ? " on" : ""}`}
-                        aria-label={t("detail.fitSetAria", { n })}
-                        onClick={() =>
-                          inlinePatch(
-                            api.patchApplication(a.id, {
-                              fit_score: a.fit_score === n ? null : n,
-                            }),
-                          )
-                        }
-                      >
-                        ★
-                      </button>
-                    );
-                  })}
-                </span>
+                  disabled={patchBusy}
+                  starLabel={(n) => t("detail.fitSetAria", { n })}
+                  onChange={(next) =>
+                    inlinePatch(api.patchApplication(a.id, { fit_score: next }))
+                  }
+                />
               </div>
               {safeHref(a.url) && (
                 <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
