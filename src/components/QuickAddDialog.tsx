@@ -1,30 +1,30 @@
-// App-shell chrome extracted from App.tsx (#285 split): the quick-add job
-// dialog. Rendered by App(). The onboarding checklist, the ⌘K command
-// palette, and the notification bell moved out to
-// src/components/OnboardingChecklist.tsx, src/components/CommandPalette.tsx,
-// and src/components/NotificationBell.tsx respectively.
+// Extracted verbatim from chrome.tsx (the quick-add job dialog: a Dialog
+// with a small form to create an application) as part of the #285
+// App.tsx/chrome.tsx split. Not self-contained-styled — it composes Dialog
+// plus the shared app form layer (the .settings-field/form utilities in
+// App.css), so there's no QuickAddDialog.css to go with it.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api } from "./api";
-import type { Application, Company, Status } from "./types";
-import { STATUSES } from "./types";
-import { Dialog } from "./ui";
-import { ActionBar, Button } from "./components";
+import { api } from "../api";
+import type { Application, Company, Status } from "../types";
+import { STATUSES } from "../types";
+import { Dialog } from "../ui";
+import { ActionBar } from "./ActionBar";
+import { Button } from "./Button";
 
-// Self-serve account deletion (#285) — GDPR right-to-erasure. Strong
-// confirm, then wipe + sign out.
+export interface QuickAddDialogProps {
+  companies: Company[];
+  onClose: () => void;
+  onCreated: (app: Application, open: boolean) => void;
+  onError: (message: string | null) => void;
+}
 
 export function QuickAddDialog({
   companies,
   onClose,
   onCreated,
   onError,
-}: {
-  companies: Company[];
-  onClose: () => void;
-  onCreated: (app: Application, open: boolean) => void;
-  onError: (message: string | null) => void;
-}) {
+}: QuickAddDialogProps) {
   const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [companyId, setCompanyId] = useState<number | null>(null);
@@ -119,11 +119,3 @@ export function QuickAddDialog({
     </Dialog>
   );
 }
-
-// Overview home screen (#128) — the new landing tab, replacing "always
-// opens on Jobs." One glanceable screen: a headline pipeline number, the
-// existing next-actions panel, and a recent-activity list built from the
-// same applications data already loaded app-wide (no extra fetch).
-// One pipeline view (#314 follow-up): the Board, with the stage ring
-// (funnel) and the filters on top. The separate list view is gone — the
-// columns are the status filter and drag is the bulk status action.
