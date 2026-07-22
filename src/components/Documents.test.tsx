@@ -16,6 +16,13 @@ describe("Documents", () => {
     expect(screen.getByText("Attach file")).toBeInTheDocument();
   });
 
+  test("renders the attach-current-CV button", () => {
+    render(<Documents applicationId={1} onError={noop} />);
+    expect(
+      screen.getByRole("button", { name: "Attach current CV" }),
+    ).toBeInTheDocument();
+  });
+
   test("renders the empty document list", () => {
     const { container } = render(
       <Documents applicationId={1} onError={noop} />,

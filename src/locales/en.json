@@ -658,7 +658,9 @@
   },
   "documents": {
     "labelPlaceholder": "Label (CV v3, cover letter, …)",
-    "uploading": "Uploading…"
+    "uploading": "Uploading…",
+    "attachCv": "Attach current CV",
+    "cvSnapshotLabel": "CV snapshot {{date}}"
   },
   "attention": {
     "overdue": "overdue",

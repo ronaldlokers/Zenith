@@ -658,7 +658,9 @@
   },
   "documents": {
     "labelPlaceholder": "Label (CV v3, motivatiebrief, …)",
-    "uploading": "Uploaden…"
+    "uploading": "Uploaden…",
+    "attachCv": "Huidige cv toevoegen",
+    "cvSnapshotLabel": "CV-momentopname {{date}}"
   },
   "attention": {
     "overdue": "te laat",
