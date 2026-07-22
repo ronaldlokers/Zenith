@@ -1,0 +1,44 @@
+/* Complete, self-contained. Reproduces the computed look of the app's
+   `.cv-item` list item (App.css:3628) so the card renders identically
+   standalone in Storybook (which loads no App.css) and in the app. */
+@layer components {
+  .zui-cvitem {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 0.8rem;
+  }
+
+  /* App.css:3634 — callers keep the .cv-item-head class name on their
+     children. */
+  .zui-cvitem .cv-item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  /* App.css:3641 — callers keep the .cv-item-actions class name on their
+     children. */
+  .zui-cvitem .cv-item-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  /* App.css:3647 — callers keep authoring raw <button>s inside
+     .cv-item-actions. */
+  .zui-cvitem .cv-item-actions button {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 0.3rem 0.55rem;
+    font-size: var(--text-meta);
+    cursor: pointer;
+  }
+
+  /* App.css:3656 */
+  .zui-cvitem .cv-item-actions button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}

@@ -24,7 +24,7 @@ import {
 } from "./format";
 import { StatsTab } from "./stats-view";
 import { ActivityTab } from "./calendar";
-import { Button, DashCard, StatCard, StatLine } from "./components";
+import { Button, DashCard, SideList, StatCard, StatLine } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
@@ -215,7 +215,7 @@ export function DashboardTab({
           {t("overview.noActivity")}
         </p>
       ) : (
-        <ul className="side-list dash-recent">
+        <SideList className="dash-recent">
           {recent.map((a) => (
             <li
               key={a.id}
@@ -228,7 +228,7 @@ export function DashboardTab({
               <span className="side-stage">{t(`stages.${a.status}`)}</span>
             </li>
           ))}
-        </ul>
+        </SideList>
       )}
     </DashCard>
   );
@@ -352,7 +352,7 @@ function NextUpPanel({
       {upcoming.length === 0 ? (
         <p className="muted small">{t("empty.noFollowUps")}</p>
       ) : (
-        <ul className="side-list">
+        <SideList>
           {upcoming.map((a) => (
             <li key={a.id} className={`stage-${a.status}`}>
               <span
@@ -374,7 +374,7 @@ function NextUpPanel({
               </span>
             </li>
           ))}
-        </ul>
+        </SideList>
       )}
     </aside>
   );

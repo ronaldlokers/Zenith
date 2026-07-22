@@ -1,0 +1,25 @@
+/* Complete, self-contained. Reproduces the App.css `.side-list` recipe
+   (App.css:3411) so the list renders identically standalone in Storybook
+   (which loads no App.css) and in the app. Callers keep the <li> markup and
+   any stage-* class on it for the --sc left border. */
+@layer components {
+  .zui-sidelist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  /* App.css:3420 — neutral fallback border for rows with no stage class
+     (e.g. CV completeness); var(--sc, var(--border)) reads --sc from a
+     stage-* ancestor when the caller's <li> has one. */
+  .zui-sidelist li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    border-left: 3px solid var(--sc, var(--border));
+    padding: 0.15rem 0 0.15rem 0.6rem;
+  }
+}
