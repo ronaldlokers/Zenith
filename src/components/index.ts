@@ -30,3 +30,7 @@ export { SideList } from "./SideList";
 export type { SideListProps } from "./SideList";
 export { CvItem } from "./CvItem";
 export type { CvItemProps } from "./CvItem";
+export { StarRating } from "./StarRating";
+export type { StarRatingProps } from "./StarRating";
+export { MomentumBand } from "./MomentumBand";
+export type { MomentumBandProps } from "./MomentumBand";

@@ -1,0 +1,26 @@
+/* Complete, self-contained. Reproduces the App.css .fit-edit/.fit-star
+   recipe (App.css:4182-4198) so the rating renders identically standalone
+   in Storybook (which loads no App.css) and in the app. */
+@layer components {
+  /* App.css:4182 .fit-edit */
+  .zui-starrating {
+    display: inline-flex;
+    gap: 0.15rem;
+  }
+
+  /* App.css:4187 .fit-star */
+  .zui-star {
+    border: none;
+    background: none;
+    padding: 0 0.05rem;
+    color: var(--border);
+    cursor: pointer;
+    font-size: var(--text-body);
+    line-height: 1;
+  }
+
+  /* App.css:4197 .fit-star.on */
+  .zui-star--on {
+    color: var(--st-offer);
+  }
+}

@@ -4179,24 +4179,7 @@ summary.bcol-head::after {
   background: none;
 }
 
-.fit-edit {
-  display: inline-flex;
-  gap: 0.15rem;
-}
-
-.fit-star {
-  border: none;
-  background: none;
-  padding: 0 0.05rem;
-  color: var(--border);
-  cursor: pointer;
-  font-size: var(--text-body);
-  line-height: 1;
-}
-
-.fit-star.on {
-  color: var(--st-offer);
-}
+/* .fit-edit / .fit-star moved to the owned StarRating component (src/components/StarRating.css). .fit-stars (the text display) stays. */
 
 /* Feedback pass (#314 round 3) — pointer, pressed, and motion states for
    the pre-#314 row families; nothing here changes layout. */
@@ -4422,28 +4405,7 @@ button:not(:disabled):active,
    component (src/components/StatCard.css, @layer components). .dash-kpis above
    stays here — it is only the grid that lays the tiles out. */
 
-.dash-band {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-1);
-  padding: 0.9rem 1.1rem;
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 1rem;
-  align-items: center;
-}
-.dash-eyebrow {
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--faint);
-}
-.dash-band-verdict { font-size: 1.2rem; font-weight: 650; letter-spacing: -0.015em; margin: 0.15rem 0; }
-.dash-spark { display: flex; align-items: flex-end; gap: 3px; height: 44px; }
-.dash-spark > i { flex: 1; background: var(--accent); border-radius: 2px 2px 0 0; opacity: 0.85; min-height: 4px; }
-.dash-spark > i.dim { background: var(--border); opacity: 1; }
+/* .dash-band (+ eyebrow/verdict/spark) moved to the owned MomentumBand component (src/components/MomentumBand.css). */
 
 .dash-cols { display: grid; grid-template-columns: 1fr; gap: 0.8rem; align-items: start; }
 @media (min-width: 900px) { .dash-cols { grid-template-columns: 1.05fr 0.95fr; } }
