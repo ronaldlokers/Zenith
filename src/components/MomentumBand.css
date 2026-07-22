@@ -1,0 +1,64 @@
+/* Complete, self-contained. Reproduces the App.css .dash-band recipe
+   (App.css:4425) so the band renders identically in the app and standalone in
+   Storybook (which loads no App.css). */
+@layer components {
+  /* App.css:4425 */
+  .zui-momentumband {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+    padding: 0.9rem 1.1rem;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  /* App.css:4436 */
+  .zui-momentumband-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: var(--track-eyebrow);
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  /* App.css:4443 */
+  .zui-momentumband-verdict {
+    font-size: 1.2rem;
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    margin: 0.15rem 0;
+  }
+
+  /* App.css:1449-1455 — the global .muted + .small utilities, reproduced here
+     scoped so the component doesn't depend on App.css. */
+  .zui-momentumband-detail {
+    color: var(--muted);
+    font-size: var(--text-body);
+  }
+
+  /* App.css:4444 */
+  .zui-momentumband-spark {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 44px;
+  }
+
+  /* App.css:4445 */
+  .zui-momentumband-spark > i {
+    flex: 1;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    opacity: 0.85;
+    min-height: 4px;
+  }
+
+  /* App.css:4446 */
+  .zui-momentumband-spark > i.dim {
+    background: var(--border);
+    opacity: 1;
+  }
+}
