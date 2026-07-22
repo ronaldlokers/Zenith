@@ -136,92 +136,12 @@
   cursor: pointer;
 }
 
-.notification-bell {
-  position: relative;
-}
-
-.notification-dot {
-  position: absolute;
-  top: -0.3rem;
-  right: -0.3rem;
-  min-width: 1.05rem;
-  height: 1.05rem;
-  padding: 0 0.2rem;
-  border-radius: var(--radius-full);
-  background: var(--danger);
-  color: var(--danger-text);
-  font-size: var(--text-chrome);
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.notification-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 39;
-}
-
-.notification-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.4rem);
-  z-index: 40;
-  width: 18rem;
-  max-width: calc(100vw - 2rem);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-2);
-  overflow: hidden;
-}
-
-.notification-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.7rem;
-  border-bottom: 1px solid var(--border);
-  font-size: var(--text-body);
-  font-weight: 600;
-}
-
-.notification-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 20rem;
-  overflow-y: auto;
-}
-
-.notification-list li {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  cursor: pointer;
-}
-
-.notification-list li:last-child {
-  border-bottom: none;
-}
-
-.notification-list li.unread {
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-}
-
-.notification-title {
-  font-size: var(--text-body);
-  font-weight: 600;
-}
-
-.notification-empty {
-  cursor: default;
-  padding: 0.8rem 0.7rem;
-}
+/* .notification-bell/.notification-dot/.notification-backdrop/
+   .notification-panel/.notification-panel-head/.notification-list/
+   .notification-title/.notification-empty moved to the owned
+   NotificationBell component (src/components/NotificationBell.css). The
+   .settings-btn trigger and .btn-secondary "mark all read" button stay
+   here — both are shared with other buttons elsewhere in the app. */
 
 .settings-modal h2 {
   margin: 0 0 0.8rem;
@@ -4073,10 +3993,11 @@ summary.bcol-head::after {
 .bcard:hover,
 .company-tile:hover,
 .agenda-item:hover,
-.activity-item:hover,
-.notification-list li:hover {
+.activity-item:hover {
   background: var(--hover);
 }
+/* .notification-list li:hover moved to the owned NotificationBell component
+   (src/components/NotificationBell.css → .zui-notification-list li:hover). */
 
 button:not(:disabled):active,
 .bcard:active {
