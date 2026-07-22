@@ -41,3 +41,5 @@ export type { OnboardingChecklistProps } from "./OnboardingChecklist";
 export { CommandPalette } from "./CommandPalette";
 export type { CommandPaletteProps } from "./CommandPalette";
 export { NotificationBell } from "./NotificationBell";
+export { QuickAddDialog } from "./QuickAddDialog";
+export type { QuickAddDialogProps } from "./QuickAddDialog";

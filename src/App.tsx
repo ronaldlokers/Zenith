@@ -43,7 +43,6 @@ import { CalendarTab } from "./calendar";
 import { DashboardTab } from "./dashboard";
 import { ApplicationDetailModal } from "./detail";
 import { PipelineTab } from "./board";
-import { QuickAddDialog } from "./chrome";
 import { useSession } from "./auth-client";
 import {
   Avatar,
@@ -51,6 +50,7 @@ import {
   CommandPalette,
   NotificationBell,
   OnboardingChecklist,
+  QuickAddDialog,
 } from "./components";
 
 // Shared remove-icon glyph (#118) — a plain "×" character renders at
