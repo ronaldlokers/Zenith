@@ -1,0 +1,84 @@
+/* Reproduces the App.css "prep checklist" recipe (App.css:2227-2290) under
+   the zui-prep-checklist / zui-prep-add names InterviewPrepSection.tsx
+   emits — moved verbatim, renamed only, with two exceptions where a later
+   App.css "control normalization" rule (same .app layer, later source
+   order, so it won the cascade) supplied the effective value instead of
+   this section's own now-renamed rule: .zui-prep-checklist li button
+   inlines the hover/focus danger color that used to come from the shared
+   `.prep-checklist li button` entry in the .tl-del, .view-del,
+   .prep-checklist li button combinator, and .zui-prep-add input inlines the
+   padding/border-radius that used to come from the shared `.prep-add input`
+   entry in the form-input-metrics combinator — both combinators lost their
+   `.prep-checklist li button`/`.prep-add input` branch in App.css since
+   nothing renders those class names anymore. */
+@layer components {
+  .zui-prep-checklist ul {
+    list-style: none;
+    margin: 0.4rem 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .zui-prep-checklist li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: var(--text-body);
+  }
+
+  .zui-prep-checklist li label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .zui-prep-checklist li.done label {
+    color: var(--faint);
+    text-decoration: line-through;
+  }
+
+  .zui-prep-checklist li button {
+    border: none;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: var(--text-title);
+    line-height: 1;
+  }
+
+  .zui-prep-checklist li button:hover,
+  .zui-prep-checklist li button:focus-visible {
+    color: var(--danger);
+  }
+
+  .zui-prep-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+  }
+
+  .zui-prep-item-actions button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .zui-prep-add {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+  }
+
+  .zui-prep-add input {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--text-body);
+  }
+}

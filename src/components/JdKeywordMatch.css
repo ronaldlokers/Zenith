@@ -1,0 +1,22 @@
+/* Reproduces the App.css "JD keyword match" recipe (App.css:2234-2249)
+   under the .zui-jd-match-* names JdKeywordMatch.tsx emits — moved
+   verbatim, renamed only. (.jd-match itself had no App.css rule — it was
+   an unstyled wrapper — so it is renamed here with no accompanying CSS.) */
+@layer components {
+  .zui-jd-match-input {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--text-body);
+    resize: vertical;
+  }
+
+  .zui-jd-match-result {
+    margin-top: var(--space-2);
+    font-size: var(--text-body);
+  }
+}
