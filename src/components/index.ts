@@ -38,3 +38,5 @@ export { MomentumBand } from "./MomentumBand";
 export type { MomentumBandProps } from "./MomentumBand";
 export { OnboardingChecklist } from "./OnboardingChecklist";
 export type { OnboardingChecklistProps } from "./OnboardingChecklist";
+export { CommandPalette } from "./CommandPalette";
+export type { CommandPaletteProps } from "./CommandPalette";
