@@ -2737,6 +2737,82 @@ summary.bcol-head::after {
   min-width: 0;
 }
 
+/* AI CV tailoring panel (BYO Claude key). */
+.cv-tailor {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.1rem;
+}
+
+.cv-tailor h3 {
+  margin: 0 0 0.25rem;
+  font-size: var(--text-title);
+}
+
+.cv-tailor-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0.5rem 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font: inherit;
+  font-size: var(--text-body);
+  resize: vertical;
+}
+
+.cv-tailor-go {
+  background: var(--accent);
+  color: var(--accent-text);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.cv-tailor-go:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.cv-tailor-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+}
+
+.cv-tailor-item {
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+}
+
+.cv-tailor-label {
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.cv-tailor-before {
+  color: var(--faint);
+  font-size: var(--text-meta);
+  margin: 0.35rem 0;
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--faint) 50%, transparent);
+}
+
+.cv-tailor-after {
+  color: var(--ink);
+  font-size: var(--text-body);
+  margin: 0.35rem 0 0.5rem;
+}
+
 /* Live PDF preview (#134) */
 .cv-preview-h {
   margin-top: 1.1rem;

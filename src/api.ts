@@ -56,6 +56,15 @@ export const api = {
     }),
   deleteAiKey: () =>
     request<void>("/api/ai/credentials", { method: "DELETE" }),
+  // Tailor the CV to a job description via the user's own Anthropic key.
+  tailorCv: (jobDescription: string) =>
+    request<{
+      summary: string;
+      experiences: { id: number; description: string }[];
+    }>("/api/ai/tailor-cv", {
+      method: "POST",
+      body: JSON.stringify({ jobDescription }),
+    }),
   updateFollowUp: (
     id: number,
     fields: { next_action?: string | null; next_action_at: string | null },

@@ -90,6 +90,94 @@ async function validateAnthropicKey(apiKey: string): Promise<boolean> {
   }
 }
 
+// --- Resume tailoring ---
+
+interface RoleRow {
+  id: number;
+  company: string;
+  title: string;
+  description: string | null;
+}
+
+export interface TailorResult {
+  summary: string;
+  experiences: { id: number; description: string }[];
+}
+
+// Pull a JSON object out of the model's reply, tolerating stray prose or
+// ```json fences.
+function extractJson(text: string): unknown {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end === -1 || end < start) throw new Error("no json");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+async function callClaudeTailor(
+  apiKey: string,
+  jobDescription: string,
+  currentSummary: string,
+  roles: RoleRow[],
+): Promise<TailorResult> {
+  const prompt = `You are helping tailor a CV to a specific job. Rewrite the professional summary and each work-experience description to emphasise the experience and skills most relevant to the job description below. Rules: stay strictly truthful — only rephrase and re-prioritise what is already written; never invent employers, job titles, dates, technologies, metrics, or achievements. Keep each description concise. Return ONLY a JSON object, no prose and no markdown fences, in exactly this shape:
+{"summary": "<tailored summary>", "experiences": [{"id": <id>, "description": "<tailored description>"}]}
+Include one experiences entry per role below, keyed by its id.
+
+JOB DESCRIPTION:
+${jobDescription}
+
+CURRENT SUMMARY:
+${currentSummary || "(none)"}
+
+WORK EXPERIENCE (JSON):
+${JSON.stringify(
+  roles.map((r) => ({
+    id: r.id,
+    company: r.company,
+    title: r.title,
+    description: r.description ?? "",
+  })),
+)}`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5",
+      max_tokens: 2048,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(
+      res.status === 401
+        ? "your Anthropic key was rejected"
+        : "the AI request failed",
+    );
+  }
+  const data = await res.json<{ content: { type: string; text?: string }[] }>();
+  const text = data.content?.find((b) => b.type === "text")?.text ?? "";
+  const parsed = extractJson(text) as Partial<TailorResult>;
+  const validIds = new Set(roles.map((r) => r.id));
+  const experiences = Array.isArray(parsed.experiences)
+    ? parsed.experiences.filter(
+        (e) =>
+          e &&
+          typeof e.id === "number" &&
+          validIds.has(e.id) &&
+          typeof e.description === "string",
+      )
+    : [];
+  return {
+    summary: typeof parsed.summary === "string" ? parsed.summary : "",
+    experiences,
+  };
+}
+
 export function registerAiRoutes(app: Hono<AppEnv>) {
   app.get("/api/ai/credentials", async (c) => {
     const row = await c.env.DB.prepare(
@@ -132,5 +220,45 @@ export function registerAiRoutes(app: Hono<AppEnv>) {
       .bind(c.get("userId"))
       .run();
     return c.body(null, 204);
+  });
+
+  // Tailor the CV (summary + each role's description) to a pasted job
+  // description, using the user's own Anthropic key. Returns suggestions; the
+  // client applies the ones it wants via the existing profile/work-experience
+  // endpoints.
+  app.post("/api/ai/tailor-cv", async (c) => {
+    const userId = c.get("userId");
+    const apiKey = await getUserAnthropicKey(c.env, userId);
+    if (!apiKey) {
+      return c.json(
+        { error: "add your Anthropic API key in Account settings first" },
+        400,
+      );
+    }
+    const { jobDescription } = await c.req.json<{ jobDescription?: string }>();
+    if (!jobDescription || jobDescription.trim().length < 20) {
+      return c.json({ error: "paste a job description first" }, 400);
+    }
+    const profile = await c.env.DB.prepare(
+      "SELECT summary FROM profile WHERE user_id = ?",
+    )
+      .bind(userId)
+      .first<{ summary: string | null }>();
+    const { results: roles } = await c.env.DB.prepare(
+      "SELECT id, company, title, description FROM work_experience WHERE user_id = ? ORDER BY sort_order, id",
+    )
+      .bind(userId)
+      .all<RoleRow>();
+    try {
+      const result = await callClaudeTailor(
+        apiKey,
+        jobDescription,
+        profile?.summary ?? "",
+        roles,
+      );
+      return c.json(result);
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 502);
+    }
   });
 }

@@ -137,6 +137,13 @@ export function CVTab({
       </div>
       <div className="cv-layout">
         <div className="cv-main">
+          <TailorPanel
+            profile={profile}
+            workExp={workExp}
+            onApplied={load}
+            onError={onError}
+            notify={notify}
+          />
           <ProfileSection
             profile={profile}
             onChanged={load}
@@ -197,6 +204,139 @@ export function CVTab({
           </div>
         </aside>
       </div>
+    </section>
+  );
+}
+
+// AI CV tailoring (BYO Claude key): paste a job description, get suggested
+// rewrites of the summary + each role, apply the ones you want. Calls Claude
+// under the user's own key via /api/ai/tailor-cv.
+function TailorPanel({
+  profile,
+  workExp,
+  onApplied,
+  onError,
+  notify,
+}: {
+  profile: Profile;
+  workExp: WorkExperience[];
+  onApplied: () => Promise<unknown> | void;
+  onError: (message: string | null) => void;
+  notify: (message: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [jd, setJd] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    summary: string;
+    experiences: { id: number; description: string }[];
+  } | null>(null);
+  const [applied, setApplied] = useState<Set<string>>(new Set());
+
+  const suggest = async () => {
+    setBusy(true);
+    setError(null);
+    setResult(null);
+    setApplied(new Set());
+    try {
+      setResult(await api.tailorCv(jd.trim()));
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const applySummary = async (summary: string) => {
+    try {
+      await api.updateProfile({ summary });
+      setApplied((s) => new Set(s).add("summary"));
+      notify(t("cv.tailorApplied"));
+      await onApplied();
+    } catch (e) {
+      onError((e as Error).message);
+    }
+  };
+
+  const applyExperience = async (id: number, description: string) => {
+    const item = workExp.find((w) => w.id === id);
+    if (!item) return;
+    try {
+      await api.update("work-experience", id, { ...item, description });
+      setApplied((s) => new Set(s).add(`exp-${id}`));
+      notify(t("cv.tailorApplied"));
+      await onApplied();
+    } catch (e) {
+      onError((e as Error).message);
+    }
+  };
+
+  return (
+    <section className="cv-tailor">
+      <h3>{t("cv.tailorTitle")}</h3>
+      <p className="muted small">{t("cv.tailorHint")}</p>
+      <textarea
+        className="cv-tailor-input"
+        rows={4}
+        placeholder={t("cv.tailorPlaceholder")}
+        value={jd}
+        onChange={(e) => setJd(e.target.value)}
+      />
+      {error && <p className="login-error">{error}</p>}
+      <button
+        type="button"
+        className="cv-tailor-go"
+        disabled={busy || jd.trim().length < 20}
+        onClick={suggest}
+      >
+        {busy ? t("cv.tailorWorking") : t("cv.tailorSuggest")}
+      </button>
+      {result && (
+        <div className="cv-tailor-results">
+          {result.summary && (
+            <div className="cv-tailor-item">
+              <span className="cv-tailor-label">{t("cv.tailorSummary")}</span>
+              <p className="cv-tailor-before">
+                {profile.summary || t("cv.tailorNoCurrent")}
+              </p>
+              <p className="cv-tailor-after">{result.summary}</p>
+              <button
+                type="button"
+                disabled={applied.has("summary")}
+                onClick={() => applySummary(result.summary)}
+              >
+                {applied.has("summary")
+                  ? t("cv.tailorAppliedShort")
+                  : t("cv.tailorApply")}
+              </button>
+            </div>
+          )}
+          {result.experiences.map((ex) => {
+            const item = workExp.find((w) => w.id === ex.id);
+            return (
+              <div className="cv-tailor-item" key={ex.id}>
+                <span className="cv-tailor-label">
+                  {item ? `${item.title} · ${item.company}` : t("cv.workExperience")}
+                </span>
+                <p className="cv-tailor-before">
+                  {item?.description || t("cv.tailorNoCurrent")}
+                </p>
+                <p className="cv-tailor-after">{ex.description}</p>
+                <button
+                  type="button"
+                  disabled={applied.has(`exp-${ex.id}`)}
+                  onClick={() => applyExperience(ex.id, ex.description)}
+                >
+                  {applied.has(`exp-${ex.id}`)
+                    ? t("cv.tailorAppliedShort")
+                    : t("cv.tailorApply")}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
