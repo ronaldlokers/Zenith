@@ -37,11 +37,11 @@
   /* The figure — the display face (--serif) carries the number now, not mono,
      so stats read as the app's voice (refined refresh, #458). */
   .zui-statcard-value {
-    font-family: var(--num-serif, var(--serif));
-    font-size: 2.1rem;
-    font-weight: 500;
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 600;
     line-height: 1;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
   }
 

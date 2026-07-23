@@ -12,7 +12,6 @@ import {
   responseRate,
 } from "./stats";
 import {
-  ageDays,
   computePipelineMomentum,
   computeWeeklyMomentum,
   formatDate,
@@ -217,7 +216,6 @@ export function DashboardTab({
               <span className="side-title">{a.title}</span>
               <span className="side-co">{a.company_name ?? "—"}</span>
               <span className="side-stage">{t(`stages.${a.status}`)}</span>
-              <span className="side-date">{ageDays(a.updated_at)}</span>
             </li>
           ))}
         </ul>

@@ -74,11 +74,6 @@
   --sans: "Geist", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
     Roboto, sans-serif;
   --mono: "Geist Mono", ui-monospace, "SF Mono", Consolas, monospace;
-  /* Serif display face for stat figures (refined refresh, #460) — the one
-     genuine serif in the app, introduced for the elegant numbers approved in
-     the mockup. System serif stack (no bundled serif). */
-  --num-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
-    "Times New Roman", ui-serif, serif;
 
   /* Type scale — six roles. Chrome/meta are the mono bands; body/title carry
      copy; display/heading are the Geist display voice. Theme-independent. */
