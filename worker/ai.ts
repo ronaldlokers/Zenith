@@ -73,7 +73,14 @@ export async function getUserAnthropicKey(
     .bind(userId)
     .first<{ ciphertext: string; iv: string }>();
   if (!row) return null;
-  return decryptSecret(env, row.ciphertext, row.iv);
+  try {
+    return await decryptSecret(env, row.ciphertext, row.iv);
+  } catch {
+    // A rotated master key or corrupted ciphertext makes crypto.subtle.decrypt
+    // throw; treat it as "no key configured" (#449) so the route returns its
+    // clean 400 prompting a re-entry instead of an opaque 500.
+    return null;
+  }
 }
 
 // Cheap auth check: /v1/models returns 200 for a valid key, 401 otherwise, and
