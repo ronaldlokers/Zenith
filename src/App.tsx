@@ -78,6 +78,10 @@ export default function App() {
   // Whether the user has configured the job feed (any search keyword) — an
   // onboarding step, so a new user isn't left on an empty Feed tab (#453).
   const [feedConfigured, setFeedConfigured] = useState(false);
+  // Whether the user has set their own weekly goal (#483) — a momentum-seeding
+  // onboarding step. The goal row auto-creates with a default, so "configured"
+  // means they changed the target or set a search-start date in Settings.
+  const [goalConfigured, setGoalConfigured] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(
     () => localStorage.getItem("zenith_onboarding_dismissed") === "1",
   );
@@ -116,6 +120,14 @@ export default function App() {
     api
       .feedConfig()
       .then((cfg) => setFeedConfigured(cfg.keywords.length > 0))
+      .catch(() => {});
+    api
+      .goals()
+      .then((g) =>
+        setGoalConfigured(
+          g.search_started_at != null || g.weekly_app_goal !== 5,
+        ),
+      )
       .catch(() => {});
   }, [onboardingDismissed]);
 
@@ -170,10 +182,12 @@ export default function App() {
     companyDone: companies.length > 0,
     jobDone: applications.length > 0,
     feedDone: feedConfigured,
+    goalDone: goalConfigured,
     onGoToProfile: () => setTab("cv"),
     onGoToCompanies: () => setTab("companies"),
     onAddJob: () => setShowQuickAdd(true),
     onGoToFeed: () => navigate("/settings?s=feed"),
+    onSetGoal: () => navigate("/settings"),
     onDismiss: dismissOnboarding,
     onLoadSample: () => navigate("/settings?s=data"),
   };
