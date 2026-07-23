@@ -1357,7 +1357,12 @@ button.danger {
 
 /* Feed triage (#386 #10) — desktop two-pane (list + a sticky detail of the
    focused item); below 900px the rows expand to full cards with inline
-   actions + swipe. */
+   actions + swipe.
+   NB: this section intentionally uses a tighter micro-scale (0.15–0.5rem)
+   than the app-wide --space-* tokens (design review, #454). Feed rows are a
+   dense triage surface scanned in bulk; the smaller between-element rhythm is
+   deliberate, not an oversight — new feed rules should match it, not the
+   default scale. */
 .feed-list {
   list-style: none;
   margin: 0;

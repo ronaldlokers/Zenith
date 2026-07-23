@@ -39,6 +39,6 @@ Run and confirm green:
 For non-trivial UI, **verify against the live render**, not just the DOM: run the app and screenshot at the real viewport. Local rig: `npm run dev`; local D1 needs `wrangler d1 migrations apply zenith --local` first (and again after restoring any `.wrangler/state` DB snapshot). Snapshot + restore the local DB around any data mutations.
 
 ## Editing conventions
-- Several files are large (`settings.tsx`, `cv.tsx`, `network.tsx`, `board.tsx`) — prefer exact-string edits with a pre-checked occurrence count; when deleting a function, match its exact text (not a boundary search, which over-deletes).
+- `board.tsx` is still large — prefer exact-string edits with a pre-checked occurrence count; when deleting a function, match its exact text (not a boundary search, which over-deletes). (`settings.tsx` → `src/settings/`, `network.tsx` → `companies.tsx`/`contacts.tsx`, and `cv.tsx` → `src/cv/` have since been split.)
 - Match the surrounding code's style; keep changes surgical.
 - Comments state constraints the code can't show — not narration of the change.
