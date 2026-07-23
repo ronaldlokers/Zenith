@@ -200,6 +200,22 @@ export default function App() {
               },
             },
             {
+              id: "go-feed",
+              label: t("palette.goFeed"),
+              run: () => {
+                setShowPalette(false);
+                navigate("/feed");
+              },
+            },
+            {
+              id: "go-cv",
+              label: t("palette.goCv"),
+              run: () => {
+                setShowPalette(false);
+                navigate("/cv");
+              },
+            },
+            {
               id: "settings",
               label: t("palette.goSettings"),
               run: () => {
@@ -278,9 +294,16 @@ export default function App() {
               <section className="job-page">
                 <button
                   className="btn-secondary job-back"
-                  onClick={() => navigate("/board")}
+                  onClick={() => {
+                    // Return to wherever the user came from — dashboard, feed,
+                    // board — not always the pipeline (#448). location.key is
+                    // "default" only on a direct deep-link with no in-app
+                    // history; fall back to the board there.
+                    if (location.key !== "default") navigate(-1);
+                    else navigate("/board");
+                  }}
                 >
-                  ← {t("tabs.pipeline")}
+                  ← {t("common.back")}
                 </button>
                 <ApplicationDetailModal
                   key={routedJob.id}

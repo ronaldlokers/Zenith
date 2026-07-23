@@ -21,6 +21,7 @@
   },
   "common": {
     "loading": "Loading…",
+    "back": "Back",
     "loadMore": "Load more",
     "loadError": "Couldn’t load this — the request failed.",
     "retry": "Retry",
@@ -259,6 +260,8 @@
     "noResults": "No matches.",
     "actions": "Actions",
     "addJob": "Add a job",
+    "goFeed": "Go to feed",
+    "goCv": "Go to CV",
     "goSettings": "Go to settings"
   },
   "outreach": {
@@ -327,6 +330,8 @@
   "detail": {
     "timeline": "Timeline",
     "documents": "Documents",
+    "sections": "Detail sections",
+    "aiPractice": "AI practice",
     "attachFile": "Attach file",
     "noFiles": "No files attached.",
     "noTouchpoints": "No touchpoints logged yet.",
