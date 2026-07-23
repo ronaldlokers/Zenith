@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
@@ -14,15 +14,35 @@ import {
   RemoveIcon,
 } from "./icons";
 import { ConfirmHost, LoadingSkeleton } from "./ui";
-import { SettingsPage } from "./settings";
 import { type Tab, TAB_PATHS, parsePath } from "./routing";
-import { FeedTab } from "./feed";
-import { CompaniesTab, ContactsTab } from "./network";
-import { CVTab } from "./cv";
-import { CalendarTab } from "./calendar";
 import { DashboardTab } from "./dashboard";
-import { ApplicationDetailModal } from "./detail";
-import { PipelineTab } from "./board";
+
+// Tab bodies are code-split (perf review, #446): only the active tab's chunk
+// loads, instead of shipping every tab in the initial bundle. Dashboard stays
+// eager since it's the default landing view; a Suspense boundary in <main>
+// shows the loading skeleton while a tab chunk fetches.
+const SettingsPage = lazy(() =>
+  import("./settings").then((m) => ({ default: m.SettingsPage })),
+);
+const FeedTab = lazy(() =>
+  import("./feed").then((m) => ({ default: m.FeedTab })),
+);
+const CompaniesTab = lazy(() =>
+  import("./network").then((m) => ({ default: m.CompaniesTab })),
+);
+const ContactsTab = lazy(() =>
+  import("./network").then((m) => ({ default: m.ContactsTab })),
+);
+const CVTab = lazy(() => import("./cv").then((m) => ({ default: m.CVTab })));
+const CalendarTab = lazy(() =>
+  import("./calendar").then((m) => ({ default: m.CalendarTab })),
+);
+const ApplicationDetailModal = lazy(() =>
+  import("./detail").then((m) => ({ default: m.ApplicationDetailModal })),
+);
+const PipelineTab = lazy(() =>
+  import("./board").then((m) => ({ default: m.PipelineTab })),
+);
 import { useSession } from "./auth-client";
 import { CommandPalette, OnboardingChecklist, QuickAddDialog } from "./components";
 import { useAppData, useToasts } from "./app-data";
@@ -237,7 +257,7 @@ export default function App() {
         {loading ? (
           <LoadingSkeleton />
         ) : (
-          <>
+          <Suspense fallback={<LoadingSkeleton />}>
             {tab === "overview" && showOnboarding && (
               <OnboardingChecklist {...onboardingProps} />
             )}
@@ -383,7 +403,7 @@ export default function App() {
                 notify={notify}
               />
             )}
-          </>
+          </Suspense>
         )}
       </main>
       </div>

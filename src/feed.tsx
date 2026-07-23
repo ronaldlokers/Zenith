@@ -13,10 +13,8 @@ import type {
   FeedCursor,
   FeedItem,
   RoleTypeDef,
-  Skill,
-  WorkExperience,
 } from "./types";
-import { skillMatchCount, sortFilterFeed } from "./skill-match";
+import { sortFilterFeed } from "./skill-match";
 import { Button, Chip, EmptyState, SegmentedControl, Toolbar } from "./components";
 
 export function FeedSettings({
@@ -364,51 +362,20 @@ export function FeedTab({
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[] | null>(null);
-  // Loaded once for the feed "fit" badges: the user's skills + which are
-  // backed by their work experience (same inputs as the JD keyword match).
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [cvSkillNames, setCvSkillNames] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    Promise.all([
-      api.list<Skill>("skills"),
-      api.list<WorkExperience>("work-experience"),
-    ])
-      .then(([allSkills, workExp]) => {
-        setSkills(allSkills);
-        setCvSkillNames(
-          new Set(
-            workExp.flatMap((w) => w.skills.map((s) => s.name.toLowerCase())),
-          ),
-        );
-      })
-      .catch(() => {});
-  }, []);
   // Surface high-fit jobs: sort the flat chronological feed by CV skill match
-  // and optionally hide anything below a minimum. Match counts are memoised so
-  // they're computed once per item, not on every keyboard-nav re-render.
+  // and optionally hide anything below a minimum. The match count is computed
+  // server-side now (#446) and arrives on each item as match_count.
   const [sortBy, setSortBy] = useState<"newest" | "match">("newest");
   const [minFit, setMinFit] = useState(0);
-  const matchById = useMemo(() => {
-    const m = new Map<number, number>();
-    for (const item of items ?? []) {
-      m.set(
-        item.id,
-        item.description
-          ? skillMatchCount(item.description, skills, cvSkillNames)
-          : 0,
-      );
-    }
-    return m;
-  }, [items, skills, cvSkillNames]);
   const visibleItems = useMemo(
     () =>
       sortFilterFeed(
         items ?? [],
-        (i) => matchById.get(i.id) ?? 0,
+        (i) => i.match_count ?? 0,
         sortBy,
         minFit,
       ),
-    [items, matchById, sortBy, minFit],
+    [items, sortBy, minFit],
   );
 
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
@@ -650,7 +617,7 @@ export function FeedTab({
                   roleTypes.find((r) => r.slug === item.role_type)?.label ??
                   item.role_type
                 }
-                matched={matchById.get(item.id) ?? null}
+                matched={item.match_count ?? null}
                 focused={i === focusedIndex}
                 adding={addingIds.has(item.id)}
                 onAdd={() => addToPipeline(item)}

@@ -108,9 +108,11 @@ export interface FeedItem {
   fetched_at: string;
   status: "new" | "added" | "dismissed";
   board_slug: string | null;
-  // The job description, captured from the provider (Greenhouse/Ashby full,
-  // Adzuna snippet). Null for older rows fetched before capture existed.
-  description: string | null;
+  // How many of the user's CV-backed skills this posting mentions, computed
+  // server-side (#446). The full job description is captured on the row but
+  // not shipped in the feed list — it's carried into job_description only when
+  // the item is added to the pipeline.
+  match_count: number;
 }
 
 // Keyset cursor for paging the feed (#261): sort key (posted_at or "")
