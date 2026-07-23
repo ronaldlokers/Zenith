@@ -19,9 +19,14 @@
       gap: 0.4rem;
       margin-bottom: var(--space-3);
     }
+    /* Refined refresh (#467): month title takes the display voice
+       (--serif = Geist), matching the other page titles. */
     .zui-cal-month-head h3 {
       margin: 0 0.4rem 0 0;
-      font-size: var(--text-heading);
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 1.5rem;
+      letter-spacing: -0.01em;
     }
     /* The nav buttons are `.btn-secondary .zui-cal-nav`. In App.css the old
        `.cal-nav` padding was inert — the later `.btn-secondary` Recipe-B rule
