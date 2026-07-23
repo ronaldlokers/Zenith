@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
+import { useAiStatus } from "../ai-status-context";
 import { authClient, signOut, useSession } from "../auth-client";
 import { requestConfirm } from "../hooks";
 import { formatDate } from "../format";
@@ -310,28 +311,21 @@ export function SessionManagement() {
 // whether one is set plus a last-4 hint, never the key itself.
 export function AnthropicKeySettings() {
   const { t } = useTranslation();
-  const [state, setState] = useState<{
-    configured: boolean;
-    hint: string | null;
-  } | null>(null);
+  // Single source of truth shared with every AI panel's key gate — so saving
+  // or removing a key here flips those panels live (#443).
+  const { configured, hint, refresh } = useAiStatus();
   const [apiKey, setApiKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    api
-      .getAiCredentials()
-      .then(setState)
-      .catch(() => setState({ configured: false, hint: null }));
-  }, []);
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      setState(await api.setAiKey(apiKey.trim()));
+      await api.setAiKey(apiKey.trim());
       setApiKey("");
+      refresh();
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -344,7 +338,7 @@ export function AnthropicKeySettings() {
     setError(null);
     try {
       await api.deleteAiKey();
-      setState({ configured: false, hint: null });
+      refresh();
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -356,11 +350,16 @@ export function AnthropicKeySettings() {
     <div className="admin-invite">
       <h3>{t("account.aiKeyTitle")}</h3>
       <p className="muted small">{t("account.aiKeyHint")}</p>
+      <ul className="ai-feature-list muted small">
+        <li>{t("account.aiFeatureTailor")}</li>
+        <li>{t("account.aiFeatureInterview")}</li>
+        <li>{t("account.aiFeatureNegotiation")}</li>
+      </ul>
       {error && <p className="login-error">{error}</p>}
-      {state?.configured ? (
+      {configured ? (
         <div className="settings-fieldgrid">
           <span className="muted small">
-            {t("account.aiKeyConnected", { hint: state.hint })}
+            {t("account.aiKeyConnected", { hint })}
           </span>
           <button className="danger" disabled={busy} onClick={remove}>
             {t("account.aiKeyRemove")}

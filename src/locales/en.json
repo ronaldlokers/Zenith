@@ -300,6 +300,12 @@
     "send": "Send",
     "restart": "Restart"
   },
+  "ai": {
+    "needKey": "Add your own Anthropic API key to use this.",
+    "needKeyLink": "Set up in Account settings",
+    "groundedReady": "This job has a description — the AI sessions below are grounded in it.",
+    "groundedMissing": "Add a job description to ground the AI sessions below in this specific role."
+  },
   "coverLetter": {
     "title": "Cover letter",
     "generateDraft": "Generate draft",
@@ -538,6 +544,9 @@
     "aiKeySaving": "Validating…",
     "aiKeyConnected": "Connected · sk-ant…{{hint}}",
     "aiKeyRemove": "Remove key",
+    "aiFeatureTailor": "Tailor your CV to a job description",
+    "aiFeatureInterview": "Practise a mock interview per application",
+    "aiFeatureNegotiation": "Rehearse a salary negotiation per application",
     "signOut": "Sign out",
     "adminInvite": "Invite a user",
     "inviteEmail": "Email",

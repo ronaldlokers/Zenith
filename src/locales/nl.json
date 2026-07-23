@@ -300,6 +300,12 @@
     "send": "Versturen",
     "restart": "Opnieuw"
   },
+  "ai": {
+    "needKey": "Voeg je eigen Anthropic-API-sleutel toe om dit te gebruiken.",
+    "needKeyLink": "Instellen bij Accountinstellingen",
+    "groundedReady": "Deze functie heeft een omschrijving — de AI-sessies hieronder zijn erop gebaseerd.",
+    "groundedMissing": "Voeg een functieomschrijving toe zodat de AI-sessies hieronder op deze specifieke functie zijn gebaseerd."
+  },
   "coverLetter": {
     "title": "Motivatiebrief",
     "generateDraft": "Concept genereren",
@@ -538,6 +544,9 @@
     "aiKeySaving": "Valideren…",
     "aiKeyConnected": "Verbonden · sk-ant…{{hint}}",
     "aiKeyRemove": "Sleutel verwijderen",
+    "aiFeatureTailor": "Stem je cv af op een vacaturetekst",
+    "aiFeatureInterview": "Oefen een sollicitatiegesprek per sollicitatie",
+    "aiFeatureNegotiation": "Oefen een salarisonderhandeling per sollicitatie",
     "signOut": "Uitloggen",
     "adminInvite": "Gebruiker uitnodigen",
     "inviteEmail": "E-mail",
