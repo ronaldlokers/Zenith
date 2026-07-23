@@ -278,6 +278,12 @@
     "goCv": "Ga naar cv",
     "goSettings": "Ga naar instellingen"
   },
+  "salary": {
+    "research": "Salarisonderzoek",
+    "levels": "Levels.fyi ↗",
+    "glassdoor": "Glassdoor ↗",
+    "websearch": "Zoeken op web ↗"
+  },
   "cvVersions": {
     "title": "Versies",
     "namePlaceholder": "Versienaam (bijv. Backend-gericht)",

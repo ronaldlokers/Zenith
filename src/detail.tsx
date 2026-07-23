@@ -32,6 +32,7 @@ import type {
   Status,
 } from "./types";
 import { STATUSES } from "./types";
+import { salaryResearchLinks } from "./salary-research";
 import { EditIcon, RemoveIcon } from "./icons";
 import {
   buildNegotiationDraft,
@@ -340,6 +341,26 @@ export function ApplicationDetailModal({
                 <span className="muted small warn-text">
                   {t("posting.staleHint")}
                 </span>
+              )}
+              {a.company_name && (
+                <div className="salary-research">
+                  <span className="salary-research-h">
+                    {t("salary.research")}
+                  </span>
+                  <span className="salary-research-links">
+                    {salaryResearchLinks(a.company_name, a.title).map((l) => (
+                      <a
+                        key={l.key}
+                        href={l.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="salary-research-link"
+                      >
+                        {t(l.labelKey)}
+                      </a>
+                    ))}
+                  </span>
+                </div>
               )}
               {a.status === "offer" && totalComp(a) != null && (
                 <span className="muted small" title={totalCompBreakdown(a)}>

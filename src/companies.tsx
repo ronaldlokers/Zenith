@@ -110,11 +110,23 @@ export function CompaniesTab({
           initial={editing === "new" ? null : editing}
           onCancel={() => setEditing(null)}
           onSubmit={(data) =>
-            run(() =>
-              editing === "new"
-                ? api.create("companies", data)
-                : api.update("companies", editing.id, data),
-            )
+            run(async () => {
+              if (editing !== "new") {
+                return api.update("companies", editing.id, data);
+              }
+              const created = await api.create<Company>("companies", data);
+              // Auto-enrich (#475): if a website is present, kick off research
+              // in the background so the description + logo populate without a
+              // manual click. Best-effort — a second refresh lands when it
+              // finishes; failures are ignored (the manual button stays).
+              if (created?.website) {
+                api
+                  .researchCompany(created.id)
+                  .then(() => onChanged())
+                  .catch(() => {});
+              }
+              return created;
+            })
           }
         />
       )}

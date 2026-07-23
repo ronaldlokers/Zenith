@@ -3640,6 +3640,33 @@ summary.bcol-head::after {
   max-width: 40rem;
 }
 
+/* Salary-research links (#475) — application detail. */
+.salary-research {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.salary-research-h {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+.salary-research-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+}
+.salary-research-link {
+  font-size: var(--text-meta);
+  color: var(--accent);
+  text-decoration: none;
+}
+.salary-research-link:hover {
+  text-decoration: underline;
+}
+
 /* CV versions library (#474) — side panel. */
 .cv-versions {
   display: flex;

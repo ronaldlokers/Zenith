@@ -278,6 +278,12 @@
     "goCv": "Go to CV",
     "goSettings": "Go to settings"
   },
+  "salary": {
+    "research": "Salary research",
+    "levels": "Levels.fyi ↗",
+    "glassdoor": "Glassdoor ↗",
+    "websearch": "Web search ↗"
+  },
   "cvVersions": {
     "title": "Versions",
     "namePlaceholder": "Version name (e.g. Backend-focused)",
