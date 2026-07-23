@@ -4240,7 +4240,9 @@ button:not(:disabled):active,
 
 .dash-kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0,1fr) lets a wide value (e.g. "~EUR 127,000") shrink with the
+     column instead of forcing the grid past the viewport on mobile (#455). */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.7rem;
 }
 /* The KPI tile itself (.dash-kpi / -n / -k) now lives in the owned StatCard
@@ -4318,7 +4320,7 @@ button:not(:disabled):active,
 .dash-details[open] > summary { color: var(--ink); }
 
 @media (max-width: 600px) {
-  .dash-kpis { grid-template-columns: 1fr 1fr; }
+  .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-band { grid-template-columns: 1fr; }
   .dash-spark { height: 34px; }
 }

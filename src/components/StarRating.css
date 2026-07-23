@@ -23,4 +23,9 @@
   .zui-star--on {
     color: var(--st-offer);
   }
+
+  /* Read-only display (#455): non-interactive, so no pointer affordance. */
+  .zui-starrating--readonly .zui-star {
+    cursor: default;
+  }
 }
