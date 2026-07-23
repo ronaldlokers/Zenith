@@ -171,6 +171,34 @@ describe("webhooks", () => {
     });
     expect(res.status).toBe(401);
   });
+
+  it("exposes contact basics for autofill but never comp", async () => {
+    const key = await apiKey();
+    await authedFetch(`${BASE}/api/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Ada Lovelace",
+        email: "ada@example.com",
+        phone: "555",
+      }),
+    });
+    const res = await SELF.fetch(`${BASE}/api/v1/profile`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    expect(res.status).toBe(200);
+    const p = await res.json<Record<string, unknown>>();
+    expect(p.name).toBe("Ada Lovelace");
+    expect(p.email).toBe("ada@example.com");
+    // contact fields only — no summary, no comp, no api_key leakage
+    expect(p).not.toHaveProperty("summary");
+    expect(p).not.toHaveProperty("api_key");
+  });
+
+  it("requires a key for the autofill profile endpoint", async () => {
+    const res = await SELF.fetch(`${BASE}/api/v1/profile`);
+    expect(res.status).toBe(401);
+  });
 });
 
 describe("ssrf + export guards (#346)", () => {

@@ -103,6 +103,113 @@ $("save").addEventListener("click", async () => {
   }
 });
 
+// Injected into the page: fill common application-form fields from the
+// profile. Self-contained (runs in the page, no closure over popup scope).
+// Matches by name/id/placeholder/aria-label/autocomplete and associated label
+// text; skips fields the user already filled. Returns the count filled.
+function autofillPage(profile) {
+  const parts = (profile.name || "").trim().split(/\s+/);
+  const first = parts[0] || "";
+  const last = parts.length > 1 ? parts.slice(1).join(" ") : "";
+  const map = [
+    { keys: ["given-name", "first name", "firstname", "first_name", "fname"], val: first },
+    { keys: ["family-name", "last name", "lastname", "last_name", "surname", "lname"], val: last },
+    { keys: ["full name", "fullname", "your name", "legal name"], val: profile.name },
+    { keys: ["email", "e-mail"], val: profile.email },
+    { keys: ["phone", "tel", "mobile", "telephone"], val: profile.phone },
+    { keys: ["linkedin"], val: profile.linkedin },
+    { keys: ["github"], val: profile.github },
+    { keys: ["portfolio", "personal site", "personal website"], val: profile.portfolio },
+    { keys: ["city", "location"], val: profile.location },
+  ];
+  const haystack = (el) => {
+    const forLabel = el.id
+      ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`)?.textContent
+      : "";
+    const wrapLabel = el.closest("label")?.textContent || "";
+    return [
+      el.name,
+      el.id,
+      el.placeholder,
+      el.getAttribute("aria-label"),
+      el.getAttribute("autocomplete"),
+      forLabel,
+      wrapLabel,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+  };
+  const nativeSet = (el, value) => {
+    const proto =
+      el instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+    try {
+      setter.call(el, value);
+    } catch {
+      el.value = value;
+    }
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  let filled = 0;
+  for (const el of document.querySelectorAll("input, textarea")) {
+    const skip =
+      el.disabled ||
+      el.value ||
+      ["hidden", "password", "file", "checkbox", "radio", "submit"].includes(
+        el.type,
+      );
+    if (skip) continue;
+    const h = haystack(el);
+    for (const m of map) {
+      if (m.val && m.keys.some((k) => h.includes(k))) {
+        nativeSet(el, m.val);
+        filled++;
+        break;
+      }
+    }
+  }
+  return filled;
+}
+
+$("autofill").addEventListener("click", async () => {
+  const { baseUrl, apiKey } = await chrome.storage.sync.get([
+    "baseUrl",
+    "apiKey",
+  ]);
+  setStatus("Fetching your profile…");
+  let profile;
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/v1/profile`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    profile = await res.json();
+  } catch (e) {
+    setStatus(`Couldn't load your profile: ${e.message}`, "err");
+    return;
+  }
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  try {
+    const [{ result } = {}] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: autofillPage,
+      args: [profile],
+    });
+    setStatus(
+      result > 0
+        ? `Filled ${result} field${result === 1 ? "" : "s"} ✓`
+        : "No matching fields found on this page.",
+      result > 0 ? "ok" : "",
+    );
+  } catch (e) {
+    setStatus(`Autofill failed: ${e.message}`, "err");
+  }
+});
+
 $("open-options-setup").addEventListener("click", () =>
   chrome.runtime.openOptionsPage(),
 );

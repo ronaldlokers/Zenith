@@ -57,6 +57,12 @@
         font-weight: 600;
         cursor: pointer;
       }
+      button.secondary {
+        background: var(--surface);
+        color: var(--ink);
+        border: 1px solid var(--border);
+        margin-top: 8px;
+      }
       button:disabled {
         opacity: 0.6;
         cursor: default;
@@ -100,6 +106,7 @@
       <label for="url">URL</label>
       <input id="url" type="text" />
       <button id="save">Save to pipeline</button>
+      <button id="autofill" class="secondary">Autofill this application form</button>
       <div id="status"></div>
     </div>
     <script src="popup.js"></script>
