@@ -85,6 +85,7 @@ export function DashboardTab({
         value={open.length}
         label={t("dashboard.kpiOpen")}
         onClick={onGoToJobs}
+        hero
       />
       <StatCard
         value={`${Math.round(resp.rate * 100)}%`}
