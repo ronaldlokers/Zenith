@@ -82,6 +82,27 @@ describe("AI resume tailoring", () => {
     ]);
   });
 
+  it("strips a role-heading prefix the model echoes into the description", async () => {
+    await storeKey();
+    const { meta } = await env.DB.prepare(
+      "INSERT INTO work_experience (user_id, company, title, description, sort_order, is_current) VALUES ('seed-admin', 'Acme', 'Engineer', 'x', 0, 0)",
+    ).run();
+    const roleId = meta.last_row_id as number;
+    stubMessages(
+      JSON.stringify({
+        summary: "s",
+        experiences: [{ id: roleId, description: "Engineer (Acme): tailored body" }],
+      }),
+    );
+    const res = await tailor(JD);
+    const body = await res.json<{
+      experiences: { id: number; description: string }[];
+    }>();
+    expect(body.experiences).toEqual([
+      { id: roleId, description: "tailored body" },
+    ]);
+  });
+
   it("drops suggestions for roles that aren't the user's", async () => {
     await storeKey();
     stubMessages(
