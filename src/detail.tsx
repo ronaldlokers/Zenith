@@ -84,6 +84,12 @@ export function ApplicationDetailModal({
   const navigate = useNavigate();
   const dialogRef = useFocusTrap<HTMLDivElement>(!asPane);
   const [editing, setEditing] = useState(false);
+  // Which secondary-column section is shown. The detail page had grown to 7
+  // stacked sections (IA review, #448) — a tab sub-nav shows one at a time,
+  // mirroring the Settings section-nav, and keeps mobile off a long scroll.
+  const [secTab, setSecTab] = useState<
+    "prep" | "ai" | "cover" | "match" | "timeline" | "docs"
+  >("prep");
   const [inlineField, setInlineField] = useState<null | "followup" | "notes">(
     null,
   );
@@ -611,64 +617,112 @@ export function ApplicationDetailModal({
             </ActionBar>
           </div>
           <div className="detail-secondary">
-            <h3 className="detail-sub">{t("prep.title")}</h3>
-            <InterviewPrepSection applicationId={a.id} onError={onError} />
-
-            <p
-              className={`ai-grounding ${
-                a.job_description ? "ai-grounding-ready" : "ai-grounding-missing"
-              }`}
+            <div
+              className="detail-tabs"
+              role="tablist"
+              aria-label={t("detail.sections")}
             >
-              {a.job_description
-                ? t("ai.groundedReady")
-                : t("ai.groundedMissing")}
-            </p>
+              {(
+                [
+                  ["prep", t("prep.title")],
+                  ["ai", t("detail.aiPractice")],
+                  ["cover", t("coverLetter.title")],
+                  ["match", t("detail.keywordMatch")],
+                  ["timeline", t("detail.timeline")],
+                  ["docs", t("detail.documents")],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  id={`detail-tab-${key}`}
+                  aria-selected={secTab === key}
+                  aria-controls={`detail-panel-${key}`}
+                  className={secTab === key ? "active" : ""}
+                  onClick={() => setSecTab(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-            <h3 className="detail-sub">{t("mockInterview.title")}</h3>
-            <AiKeyGate>
-              <MockInterview
-                title={a.title}
-                company={a.company_name ?? null}
-                jobDescription={a.job_description}
-                onError={onError}
-              />
-            </AiKeyGate>
+            <div
+              className="detail-panel"
+              role="tabpanel"
+              id={`detail-panel-${secTab}`}
+              aria-labelledby={`detail-tab-${secTab}`}
+            >
+              {secTab === "prep" && (
+                <InterviewPrepSection applicationId={a.id} onError={onError} />
+              )}
 
-            <h3 className="detail-sub">{t("negotiation.title")}</h3>
-            <AiKeyGate>
-              <NegotiationRoleplay
-                title={a.title}
-                company={a.company_name ?? null}
-                salaryExpectation={a.salary_range}
-                jobDescription={a.job_description}
-                onError={onError}
-              />
-            </AiKeyGate>
+              {secTab === "ai" && (
+                <>
+                  <p
+                    className={`ai-grounding ${
+                      a.job_description
+                        ? "ai-grounding-ready"
+                        : "ai-grounding-missing"
+                    }`}
+                  >
+                    {a.job_description
+                      ? t("ai.groundedReady")
+                      : t("ai.groundedMissing")}
+                  </p>
 
-            <h3 className="detail-sub">{t("coverLetter.title")}</h3>
-            <CoverLetterSection
-              application={a}
-              onChanged={onChanged}
-              onError={onError}
-              notify={notify}
-            />
+                  <h3 className="detail-sub">{t("mockInterview.title")}</h3>
+                  <AiKeyGate>
+                    <MockInterview
+                      title={a.title}
+                      company={a.company_name ?? null}
+                      jobDescription={a.job_description}
+                      onError={onError}
+                    />
+                  </AiKeyGate>
 
-            <h3 className="detail-sub">{t("detail.keywordMatch")}</h3>
-            <JdKeywordMatch
-              onError={onError}
-              initialText={a.job_description ?? undefined}
-            />
+                  <h3 className="detail-sub">{t("negotiation.title")}</h3>
+                  <AiKeyGate>
+                    <NegotiationRoleplay
+                      title={a.title}
+                      company={a.company_name ?? null}
+                      salaryExpectation={a.salary_range}
+                      jobDescription={a.job_description}
+                      onError={onError}
+                    />
+                  </AiKeyGate>
+                </>
+              )}
 
-            <h3 className="detail-sub">{t("detail.timeline")}</h3>
-            <Timeline
-              resource="applications"
-              targetId={a.id}
-              onError={onError}
-              onLogged={() => void onChanged()}
-            />
+              {secTab === "cover" && (
+                <CoverLetterSection
+                  application={a}
+                  onChanged={onChanged}
+                  onError={onError}
+                  notify={notify}
+                />
+              )}
 
-            <h3 className="detail-sub">{t("detail.documents")}</h3>
-            <Documents applicationId={a.id} onError={onError} />
+              {secTab === "match" && (
+                <JdKeywordMatch
+                  onError={onError}
+                  initialText={a.job_description ?? undefined}
+                />
+              )}
+
+              {secTab === "timeline" && (
+                <Timeline
+                  resource="applications"
+                  targetId={a.id}
+                  onError={onError}
+                  onLogged={() => void onChanged()}
+                />
+              )}
+
+              {secTab === "docs" && (
+                <Documents applicationId={a.id} onError={onError} />
+              )}
+            </div>
           </div>
           </div>
           </>

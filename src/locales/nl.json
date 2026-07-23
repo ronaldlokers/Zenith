@@ -21,6 +21,7 @@
   },
   "common": {
     "loading": "Laden…",
+    "back": "Terug",
     "loadMore": "Meer laden",
     "loadError": "Laden mislukt — de aanvraag is niet gelukt.",
     "retry": "Opnieuw",
@@ -259,6 +260,8 @@
     "noResults": "Geen resultaten.",
     "actions": "Acties",
     "addJob": "Vacature toevoegen",
+    "goFeed": "Ga naar feed",
+    "goCv": "Ga naar cv",
     "goSettings": "Ga naar instellingen"
   },
   "outreach": {
@@ -327,6 +330,8 @@
   "detail": {
     "timeline": "Tijdlijn",
     "documents": "Documenten",
+    "sections": "Detailsecties",
+    "aiPractice": "AI-oefening",
     "attachFile": "Bestand bijvoegen",
     "noFiles": "Geen bestanden bijgevoegd.",
     "noTouchpoints": "Nog geen contactmomenten gelogd.",
