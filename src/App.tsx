@@ -28,10 +28,10 @@ const FeedTab = lazy(() =>
   import("./feed").then((m) => ({ default: m.FeedTab })),
 );
 const CompaniesTab = lazy(() =>
-  import("./network").then((m) => ({ default: m.CompaniesTab })),
+  import("./companies").then((m) => ({ default: m.CompaniesTab })),
 );
 const ContactsTab = lazy(() =>
-  import("./network").then((m) => ({ default: m.ContactsTab })),
+  import("./contacts").then((m) => ({ default: m.ContactsTab })),
 );
 const CVTab = lazy(() => import("./cv").then((m) => ({ default: m.CVTab })));
 const CalendarTab = lazy(() =>
