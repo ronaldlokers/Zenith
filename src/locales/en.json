@@ -15,7 +15,12 @@
   "today": {
     "needYou_one": "thing needs you today",
     "needYou_other": "things need you today",
-    "allClear": "You're all caught up today"
+    "allClear": "You're all caught up today",
+    "quietTitle": "Gone quiet",
+    "quietHint": "No reply is on them, not you. Clear these out when you're ready.",
+    "quietAge": "quiet {{days}}d",
+    "closeOut": "Close out",
+    "closedOut": "Archived — one less thing"
   },
   "header": {
     "settings": "Settings",
@@ -316,6 +321,7 @@
     "corrupt": "This version couldn’t be read."
   },
   "goals": {
+    "hit": "Goal hit ✓",
     "weeklyGoal": "Weekly goal",
     "weeklyGoalLabel": "Weekly application goal",
     "searchStartLabel": "Search started",

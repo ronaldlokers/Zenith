@@ -15,7 +15,12 @@
   "today": {
     "needYou_one": "taak wacht op je vandaag",
     "needYou_other": "taken wachten op je vandaag",
-    "allClear": "Je bent helemaal bij vandaag"
+    "allClear": "Je bent helemaal bij vandaag",
+    "quietTitle": "Stil geworden",
+    "quietHint": "Geen reactie ligt aan hen, niet aan jou. Ruim ze op wanneer je er klaar voor bent.",
+    "quietAge": "{{days}} dagen stil",
+    "closeOut": "Afsluiten",
+    "closedOut": "Gearchiveerd — één ding minder"
   },
   "header": {
     "settings": "Instellingen",
@@ -316,6 +321,7 @@
     "corrupt": "Deze versie kon niet worden gelezen."
   },
   "goals": {
+    "hit": "Doel gehaald ✓",
     "weeklyGoal": "Weekdoel",
     "weeklyGoalLabel": "Wekelijks sollicitatiedoel",
     "searchStartLabel": "Zoektocht gestart",

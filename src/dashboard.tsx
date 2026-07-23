@@ -13,6 +13,7 @@ import {
   isDead,
   isDue,
   isOverdue,
+  parseSqlDate,
   searchWeekNumber,
 } from "./format";
 import { Button, DashCard, SideList, StarRating } from "./components";
@@ -56,6 +57,33 @@ export function DashboardTab({
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, 5);
 
+  // Gone-quiet close-out (#484) — early-stage applications with nothing
+  // scheduled that haven't moved in 3+ weeks. A graceful, one-tap way to clear
+  // ghosted roles: no reply is on them, not you.
+  const daysSince = (d: string) =>
+    Math.floor((Date.now() - parseSqlDate(d)) / 86400000);
+  const quiet = applications
+    .filter(
+      (a) =>
+        (a.status === "interested" || a.status === "applied") &&
+        !a.next_action_at &&
+        daysSince(a.updated_at) >= 21,
+    )
+    .sort((a, b) => a.updated_at.localeCompare(b.updated_at))
+    .slice(0, 5);
+
+  const closeOut = (a: Application) =>
+    Promise.resolve(api.archiveApplication(a.id))
+      .then(() => onChanged())
+      .then(() =>
+        notify(t("today.closedOut"), () =>
+          Promise.resolve(api.unarchiveApplication(a.id))
+            .then(() => onChanged())
+            .catch((e) => onError((e as Error).message)),
+        ),
+      )
+      .catch((e) => onError((e as Error).message));
+
   // Weekly-goal momentum (#473) — this week's count vs target, streak, week N.
   const mom = computeWeeklyMomentum(stats.applications, history);
   const goalTarget = goal?.weekly_app_goal ?? 0;
@@ -97,6 +125,9 @@ export function DashboardTab({
         />
       </div>
       <div className="dash-goal-meta">
+        {thisWeek >= goalTarget && (
+          <span className="dash-goal-met">{t("goals.hit")}</span>
+        )}
         {streak > 0 && (
           <span className="dash-goal-streak">
             {t("goals.streak", { count: streak })}
@@ -172,6 +203,36 @@ export function DashboardTab({
           <Button variant="link" onClick={onOpenQuickAdd}>
             {t("dashboard.addFollowUp")}
           </Button>
+        </div>
+      )}
+
+      {quiet.length > 0 && (
+        <div className="today-quiet">
+          <p className="today-quiet-h">{t("today.quietTitle")}</p>
+          <p className="today-quiet-hint muted small">{t("today.quietHint")}</p>
+          <ul className="today-quiet-list">
+            {quiet.map((a) => (
+              <li key={a.id} className={`stage-${a.status}`}>
+                <span className="dash-spine" aria-hidden="true" />
+                <button
+                  className="today-quiet-open"
+                  onClick={() => onOpenJob(a.id)}
+                >
+                  <span className="side-title">{a.title}</span>
+                  <span className="side-co">
+                    {a.company_name ?? "—"} ·{" "}
+                    {t("today.quietAge", { days: daysSince(a.updated_at) })}
+                  </span>
+                </button>
+                <button
+                  className="today-quiet-close"
+                  onClick={() => closeOut(a)}
+                >
+                  {t("today.closeOut")}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
