@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { authClient, useSession } from "../auth-client";
 import { requestConfirm } from "../hooks";
-import { Badge } from "../components";
+import { Badge, Button } from "../components";
 import { ResetDemoData } from "./data";
 
 // Admin user management (#285) — the recovery path for a locked-out user:
@@ -193,9 +193,9 @@ export function AdminInvite() {
             {result.message}
           </p>
         )}
-        <button type="submit" disabled={busy}>
+        <Button type="submit" variant="primary" disabled={busy}>
           {t("account.inviteSubmit")}
-        </button>
+        </Button>
       </form>
       <ResetDemoData />
     </div>
@@ -258,9 +258,9 @@ export function TestPush({
           </select>
         </label>
       </div>
-      <button onClick={send} disabled={busy}>
+      <Button variant="primary" onClick={send} disabled={busy}>
         {t("account.testPushSend")}
-      </button>
+      </Button>
       {result && <p className="admin-invite-success">{result}</p>}
     </div>
   );

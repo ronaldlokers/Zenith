@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { requestConfirm } from "../hooks";
+import { Button } from "../components";
 
 // Per-user sample data (#281) — a new/invited user can fill an empty
 // account with the example dataset to explore, then wipe it in one click.
@@ -58,16 +59,16 @@ export function SampleDataSettings({
       {status.loaded ? (
         <>
           <p className="muted small">{t("sampleData.loadedHint")}</p>
-          <button disabled={busy} onClick={clear}>
+          <Button variant="secondary" disabled={busy} onClick={clear}>
             {t("sampleData.clear")}
-          </button>
+          </Button>
         </>
       ) : (
         <>
           <p className="muted small">{t("sampleData.emptyHint")}</p>
-          <button disabled={busy} onClick={load}>
+          <Button variant="primary" disabled={busy} onClick={load}>
             {t("sampleData.load")}
-          </button>
+          </Button>
         </>
       )}
     </div>
@@ -98,9 +99,9 @@ export function ResetDemoData() {
     <div className="admin-invite">
       <h3>{t("account.resetDemo")}</h3>
       {message && <p className="admin-invite-success">{message}</p>}
-      <button disabled={busy} onClick={reset}>
+      <Button variant="secondary" disabled={busy} onClick={reset}>
         {t("account.resetDemoSubmit")}
-      </button>
+      </Button>
     </div>
   );
 }

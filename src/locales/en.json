@@ -315,6 +315,7 @@
   "coverLetter": {
     "title": "Cover letter",
     "generateDraft": "Generate draft",
+    "generating": "Generating…",
     "placeholder": "Write or generate a cover letter draft for this application…",
     "theCompany": "your company",
     "summaryPlaceholder": "[add a professional summary in your CV profile to improve this draft]",
@@ -407,6 +408,7 @@
   },
   "cv": {
     "downloadPdf": "Download PDF",
+    "removeLanguage": "Remove language",
     "tailorTitle": "Tailor to a job (AI)",
     "tailorHint": "Paste a job description; suggestions rewrite your summary and each role to emphasise the most relevant experience — using your own Anthropic key. Nothing is invented.",
     "tailorPlaceholder": "Paste the job description…",
@@ -502,6 +504,9 @@
     "searchKeywords": "Search keywords per role",
     "keywordPlaceholder": "+ keyword",
     "removeKeyword": "Remove",
+    "roleNameLabel": "Role type name",
+    "removeRole": "Remove role type",
+    "removeBoard": "Remove board",
     "blocklist": "Blocked companies",
     "blocklistPlaceholder": "+ company name…",
     "atsBoards": "Company job boards",

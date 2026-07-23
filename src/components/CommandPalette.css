@@ -23,6 +23,10 @@
 
   .zui-palette-input:focus {
     outline: none;
+    /* Replace the removed native outline with a visible focus indicator
+       (a11y review, #447). */
+    border-bottom-color: var(--accent);
+    box-shadow: 0 1px 0 0 var(--accent);
   }
 
   .zui-palette-results {

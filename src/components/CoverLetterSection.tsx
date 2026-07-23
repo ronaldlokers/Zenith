@@ -69,9 +69,16 @@ export function CoverLetterSection({
   return (
     <div className="zui-cover-letter">
       <div className="zui-cover-letter-actions">
-        <button onClick={generate} disabled={generating}>
-          {t("coverLetter.generateDraft")}
-        </button>
+        <Button
+          variant="secondary"
+          onClick={generate}
+          disabled={generating}
+          aria-busy={generating}
+        >
+          {generating
+            ? t("coverLetter.generating")
+            : t("coverLetter.generateDraft")}
+        </Button>
         <Button variant="primary" disabled={saving} onClick={save}>
           {t("common.save")}
         </Button>

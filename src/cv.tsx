@@ -493,7 +493,7 @@ function CvPreview({
     return (
       <article className="cv-doc cv-doc-2col">
         <aside className="cv-doc-aside">
-          <h1 className="cv-doc-name">{profile.name || "—"}</h1>
+          <h2 className="cv-doc-name">{profile.name || "—"}</h2>
           {contact && <p className="cv-doc-contact">{contact}</p>}
           {links.length > 0 && (
             <div className="cv-doc-aside-links">
@@ -529,7 +529,7 @@ function CvPreview({
   return (
     <article className="cv-doc">
       <header className="cv-doc-head">
-        <h1 className="cv-doc-name">{profile.name || "—"}</h1>
+        <h2 className="cv-doc-name">{profile.name || "—"}</h2>
         {contact && <p className="cv-doc-contact">{contact}</p>}
         {links.length > 0 && (
           <p className="cv-doc-links">{links.join(" · ")}</p>
@@ -1141,6 +1141,7 @@ function LanguagesSection({
             </span>
             <button
               className="danger"
+              aria-label={t("cv.removeLanguage")}
               onClick={() =>
                 api
                   .remove("languages", l.id)

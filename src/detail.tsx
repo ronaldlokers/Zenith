@@ -33,7 +33,7 @@ import type {
   Status,
 } from "./types";
 import { STATUSES } from "./types";
-import { RemoveIcon } from "./icons";
+import { EditIcon, RemoveIcon } from "./icons";
 import {
   buildNegotiationDraft,
   formatDate,
@@ -427,7 +427,7 @@ export function ApplicationDetailModal({
                       setInlineField("followup");
                     }}
                   >
-                    ✎
+                    <EditIcon />
                   </button>
                 </span>
               ) : (
@@ -482,7 +482,7 @@ export function ApplicationDetailModal({
                       setInlineField("notes");
                     }}
                   >
-                    ✎
+                    <EditIcon />
                   </button>
                 </p>
               ) : (

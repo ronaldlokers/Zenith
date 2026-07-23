@@ -105,12 +105,14 @@ export function CompaniesTab({
         <SegmentedControl role="group" aria-label={t("companies.view")}>
           <button
             className={view === "list" ? "active" : ""}
+            aria-pressed={view === "list"}
             onClick={() => setViewAndPersist("list")}
           >
             {t("companies.viewList")}
           </button>
           <button
             className={view === "grid" ? "active" : ""}
+            aria-pressed={view === "grid"}
             onClick={() => setViewAndPersist("grid")}
           >
             {t("companies.viewGrid")}
@@ -547,12 +549,14 @@ export function ContactsTab({
         <SegmentedControl role="group" aria-label={t("contacts.view")}>
           <button
             className={view === "list" ? "active" : ""}
+            aria-pressed={view === "list"}
             onClick={() => setViewAndPersist("list")}
           >
             {t("companies.viewList")}
           </button>
           <button
             className={view === "grid" ? "active" : ""}
+            aria-pressed={view === "grid"}
             onClick={() => setViewAndPersist("grid")}
           >
             {t("companies.viewGrid")}

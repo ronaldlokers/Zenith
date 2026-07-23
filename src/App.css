@@ -3489,8 +3489,15 @@ summary.bcol-head::after {
     min-height: 100vh;
   }
 
-  /* The Night rail. */
+  /* The Night rail. It's always dark regardless of theme, so its text tones
+     can't be the app --ink/--muted tokens — but they were copy-pasted as raw
+     hex 10+ times (design review, #447). Define them once here; descendants
+     inherit these custom properties. */
   .side {
+    --rail-ink: #e7e6f0;
+    --rail-text: #f4f2ec;
+    --rail-muted: #b9b8cc;
+    --rail-faint: #7d7c95;
     display: flex;
     flex-direction: column;
     flex: 0 0 210px;
@@ -3502,7 +3509,7 @@ summary.bcol-head::after {
     height: 100vh;
     overflow-y: auto;
     background: var(--night);
-    color: #e7e6f0;
+    color: var(--rail-ink);
   }
 
   .side-brand {
@@ -3517,7 +3524,7 @@ summary.bcol-head::after {
     font-weight: 600;
     font-size: 20px;
     letter-spacing: -0.02em;
-    color: #f4f2ec;
+    color: var(--rail-text);
   }
 
   .side-nav {
@@ -3539,13 +3546,13 @@ summary.bcol-head::after {
     font-family: inherit;
     font-size: 14px;
     text-align: left;
-    color: #b9b8cc;
+    color: var(--rail-muted);
     cursor: pointer;
   }
 
   .side-nav-item:hover {
     background: rgba(255, 255, 255, 0.06);
-    color: #f4f2ec;
+    color: var(--rail-text);
   }
 
   .side-nav-item.on {
@@ -3597,21 +3604,21 @@ summary.bcol-head::after {
   .side-user .u-name {
     font-size: 13px;
     font-weight: 600;
-    color: #f4f2ec;
+    color: var(--rail-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .side-user .u-email {
     font-size: 11px;
-    color: #7d7c95;
+    color: var(--rail-faint);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .side-user .u-caret {
     margin-left: auto;
-    color: #7d7c95;
+    color: var(--rail-faint);
     display: flex;
   }
   .side-user .u-caret svg {
@@ -3631,16 +3638,16 @@ summary.bcol-head::after {
   }
 
   .side .zui-onboarding h3 {
-    color: #f4f2ec;
+    color: var(--rail-text);
   }
 
   .side .zui-onboarding li button {
-    color: #b9b8cc;
+    color: var(--rail-muted);
   }
 
   .side .zui-onboarding li.done button,
   .side .zui-onboarding li.done span {
-    color: #7d7c95;
+    color: var(--rail-faint);
   }
 
   .side .zui-onboarding-dismiss {
@@ -4296,6 +4303,12 @@ button:not(:disabled):active,
   font-size: var(--text-body);
 }
 .board-bar .search:focus { outline: none; }
+/* The input drops its native outline, so surface focus on the wrapping pill
+   instead — otherwise keyboard users get no focus feedback (a11y review, #447). */
+.board-bar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
 .board-bar .primary {
   height: var(--ctl-h);
   padding: 0 0.8rem;
