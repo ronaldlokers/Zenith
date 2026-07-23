@@ -20,6 +20,7 @@ import {
   InterviewPrepSection,
   JdKeywordMatch,
   MockInterview,
+  NegotiationRoleplay,
   StarRating,
 } from "./components";
 import type {
@@ -616,6 +617,15 @@ export function ApplicationDetailModal({
             <MockInterview
               title={a.title}
               company={a.company_name ?? null}
+              jobDescription={a.job_description}
+              onError={onError}
+            />
+
+            <h3 className="detail-sub">{t("negotiation.title")}</h3>
+            <NegotiationRoleplay
+              title={a.title}
+              company={a.company_name ?? null}
+              salaryExpectation={a.salary_range}
               jobDescription={a.job_description}
               onError={onError}
             />

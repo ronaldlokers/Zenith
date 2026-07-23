@@ -291,6 +291,15 @@
     "send": "Versturen",
     "restart": "Opnieuw"
   },
+  "negotiation": {
+    "title": "Salarisonderhandeling (AI)",
+    "hint": "Oefen het aanbodgesprek met een AI-hiring manager, met je eigen Anthropic-sleutel. Hij doet een bod, houdt tegendruk en coacht je op elke zet.",
+    "start": "Onderhandeling starten",
+    "thinking": "Denken…",
+    "answerPlaceholder": "Typ je reactie…",
+    "send": "Versturen",
+    "restart": "Opnieuw"
+  },
   "coverLetter": {
     "title": "Motivatiebrief",
     "generateDraft": "Concept genereren",

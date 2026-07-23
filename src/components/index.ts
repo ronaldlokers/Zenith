@@ -53,6 +53,8 @@ export { InterviewPrepSection } from "./InterviewPrepSection";
 export type { InterviewPrepSectionProps } from "./InterviewPrepSection";
 export { MockInterview } from "./MockInterview";
 export type { MockInterviewProps } from "./MockInterview";
+export { NegotiationRoleplay } from "./NegotiationRoleplay";
+export type { NegotiationRoleplayProps } from "./NegotiationRoleplay";
 export { CoverLetterSection } from "./CoverLetterSection";
 export type { CoverLetterSectionProps } from "./CoverLetterSection";
 export { JdKeywordMatch } from "./JdKeywordMatch";
