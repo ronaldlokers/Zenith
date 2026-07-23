@@ -6,7 +6,6 @@ import { type Profile } from "./types";
 import {
   AdminIcon,
   ErrorIcon,
-  NavCalendarIcon,
   NavCvIcon,
   NavInsightsIcon,
   NavFeedIcon,
@@ -37,9 +36,6 @@ const ContactsTab = lazy(() =>
   import("./contacts").then((m) => ({ default: m.ContactsTab })),
 );
 const CVTab = lazy(() => import("./cv").then((m) => ({ default: m.CVTab })));
-const CalendarTab = lazy(() =>
-  import("./calendar").then((m) => ({ default: m.CalendarTab })),
-);
 const ApplicationDetailModal = lazy(() =>
   import("./detail").then((m) => ({ default: m.ApplicationDetailModal })),
 );
@@ -150,7 +146,6 @@ export default function App() {
     { data: "overview", to: "overview", active: tab === "overview", icon: <NavOverviewIcon />, label: t("tabs.overview") },
     { data: "pipeline", to: "board", active: tab === "applications" || tab === "board", icon: <NavPipelineIcon />, label: t("tabs.pipeline") },
     { data: "feed", to: "feed", active: tab === "feed", icon: <NavFeedIcon />, label: t("tabs.feed") },
-    { data: "calendar", to: "calendar", active: tab === "calendar", icon: <NavCalendarIcon />, label: t("tabs.calendar") },
     { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
     { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
     { data: "insights", to: "insights", active: tab === "insights", icon: <NavInsightsIcon />, label: t("tabs.insights") },
@@ -324,6 +319,10 @@ export default function App() {
                 onGoToJobs={() => setTab("board")}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}
+                onJump={(title) => {
+                  setJumpQuery(title);
+                  setTab("board");
+                }}
                 stats={statsData}
               />
             )}
@@ -389,15 +388,6 @@ export default function App() {
                 onOpenSettings={() => navigate("/settings?s=feed")}
                 onChanged={reload}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
-              />
-            )}
-            {tab === "calendar" && (
-              <CalendarTab
-                onError={setError}
-                onJump={(title) => {
-                  setJumpQuery(title);
-                  setTab("board");
-                }}
               />
             )}
             {(tab === "companies" || tab === "contacts") && (

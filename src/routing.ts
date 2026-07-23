@@ -7,7 +7,6 @@ export type Tab =
   | "applications"
   | "board"
   | "feed"
-  | "calendar"
   | "insights"
   | "stats"
   | "companies"
@@ -26,7 +25,6 @@ export const TAB_PATHS: Record<Tab, string> = {
   applications: "/jobs",
   board: "/board",
   feed: "/feed",
-  calendar: "/calendar",
   insights: "/insights",
   stats: "/stats",
   companies: "/companies",
@@ -40,12 +38,12 @@ export const PATH_TABS: Record<string, Tab> = {
   jobs: "applications",
   board: "board",
   feed: "feed",
-  calendar: "calendar",
   insights: "insights",
-  // /activity folds into the Dashboard; /stats now lands on the Insights tab
-  // where the analytics moved (#480).
+  // /activity folds into the Dashboard; /stats and /calendar now land on the
+  // Insights tab where the analytics + calendar moved (#480, #481).
   activity: "overview",
   stats: "insights",
+  calendar: "insights",
   companies: "companies",
   people: "contacts",
   cv: "cv",

@@ -19,7 +19,7 @@ import {
   totalComp,
 } from "./format";
 import { StatsTab } from "./stats-view";
-import { ActivityTab } from "./calendar";
+import { ActivityTab, CalendarTab } from "./calendar";
 import { DashCard, MomentumBand, StatCard } from "./components";
 import { LoadingSkeleton } from "./ui";
 
@@ -29,6 +29,7 @@ export function InsightsTab({
   onGoToJobs,
   onOpenJob,
   onError,
+  onJump,
   stats,
 }: {
   applications: Application[];
@@ -36,6 +37,7 @@ export function InsightsTab({
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
   onError: (message: string | null) => void;
+  onJump: (title: string) => void;
   stats: Stats | null;
 }) {
   const { t } = useTranslation();
@@ -171,6 +173,11 @@ export function InsightsTab({
         {showActivity ? t("overview.hideActivity") : t("overview.showActivity")}
       </button>
       {showActivity && <ActivityTab onError={onError} onOpenJob={onOpenJob} />}
+
+      {/* Calendar folded in from its own tab (#481) — deadlines, interviews
+          and applied dates in one place; the ICS feed stays in Settings. */}
+      <h3 className="insights-cal-h">{t("tabs.calendar")}</h3>
+      <CalendarTab onError={onError} onJump={onJump} />
 
       <details className="dash-details">
         <summary>{t("dashboard.allNumbers")}</summary>
