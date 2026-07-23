@@ -143,9 +143,16 @@
    .settings-btn trigger and .btn-secondary "mark all read" button stay
    here — both are shared with other buttons elsewhere in the app. */
 
+/* Refined refresh (#465): section title takes the display voice (--serif =
+   Geist) over a hairline, matching the detail header band. */
 .settings-modal h2 {
-  margin: 0 0 0.8rem;
-  font-size: var(--text-heading);
+  margin: 0 0 1.1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
 }
 
 .settings-field {
@@ -376,9 +383,21 @@
 }
 
 .account-section {
+  margin-top: var(--space-2);
+}
+
+/* Settings sub-group headings become mono eyebrows over a hairline (#465),
+   so the stacked groups (Change password / 2FA / Sessions / AI / Delete)
+   read as distinct blocks with real vertical rhythm instead of a flat run. */
+.account-section h3 {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+  margin: var(--space-5) 0 var(--space-3);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--border);
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
 }
 
 .account-signed-in {
@@ -3620,6 +3639,7 @@ summary.bcol-head::after {
   background: var(--accent-soft);
   color: var(--accent-ink);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .settings-content {
