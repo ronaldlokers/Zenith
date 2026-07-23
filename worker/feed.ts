@@ -83,6 +83,29 @@ interface FeedCandidate {
   role_type: string;
   posted_at: string | null;
   board_slug?: string;
+  // The job description, when the provider returns one. Full for Greenhouse
+  // (HTML, flattened) and Ashby; a truncated snippet for Adzuna. Carried into
+  // an application's job_description on "Add to Jobs".
+  description?: string | null;
+}
+
+// Greenhouse returns the JD as HTML; flatten it to readable plain text and cap
+// the length so a huge posting doesn't bloat the shared feed_items pool.
+export function stripHtml(html: string): string {
+  const text = html
+    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6]|\/tr)\s*\/?>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0?39;|&#x27;/gi, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+  return text.length > 8000 ? text.slice(0, 8000) : text;
 }
 
 async function fetchAdzuna(
@@ -113,6 +136,7 @@ async function fetchAdzuna(
           salary_min?: number;
           salary_max?: number;
           created?: string;
+          description?: string;
         }>;
       };
       for (const job of data.results ?? []) {
@@ -129,6 +153,8 @@ async function fetchAdzuna(
               : null,
           role_type: role,
           posted_at: job.created ?? null,
+          // Adzuna returns only a truncated ~200-char snippet.
+          description: job.description ?? null,
         });
       }
     } catch {
@@ -160,6 +186,7 @@ async function fetchGreenhouse(
         absolute_url?: string;
         location?: { name?: string };
         updated_at?: string;
+        content?: string;
       }>;
     };
     return (data.jobs ?? []).map((job) => ({
@@ -173,6 +200,8 @@ async function fetchGreenhouse(
       role_type: guessRoleType(job.title, keywords) ?? "other",
       posted_at: job.updated_at ?? null,
       board_slug: slug,
+      // ?content=true (already requested) returns the full JD as HTML.
+      description: job.content ? stripHtml(job.content) : null,
     }));
   } catch {
     return [];
@@ -195,6 +224,8 @@ async function fetchAshby(
         jobUrl?: string;
         location?: string;
         publishedAt?: string;
+        descriptionPlain?: string;
+        descriptionHtml?: string;
       }>;
     };
     return (data.jobs ?? []).map((job) => ({
@@ -208,6 +239,12 @@ async function fetchAshby(
       role_type: guessRoleType(job.title, keywords) ?? "other",
       posted_at: job.publishedAt ?? null,
       board_slug: slug,
+      // Ashby returns the full description; prefer plain, else flatten HTML.
+      description: job.descriptionPlain
+        ? job.descriptionPlain.slice(0, 8000)
+        : job.descriptionHtml
+          ? stripHtml(job.descriptionHtml)
+          : null,
     }));
   } catch {
     return [];
@@ -237,8 +274,8 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   // (#285) — a refresh can pull hundreds of listings, and the serial
   // round-trips dominated the cron's runtime.
   const stmt = env.DB.prepare(
-    `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at, board_slug)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at, board_slug, description)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT (source, external_id) DO NOTHING`,
   );
   const results = candidates.length
@@ -255,6 +292,7 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
             c.role_type,
             c.posted_at,
             c.board_slug ?? null,
+            c.description ?? null,
           ),
         ),
       )
@@ -435,6 +473,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
         salary_text: string | null;
         role_type: string;
         source: string;
+        description: string | null;
       }>();
     if (!item) return c.json({ error: "not found" }, 404);
 
@@ -457,9 +496,11 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
       }
     }
 
+    // Carry the feed item's job description onto the new application so
+    // tailoring / cover-letter / keyword-match work without re-pasting it.
     const application = await c.env.DB.prepare(
-      `INSERT INTO applications (user_id, company_id, title, role_type, url, source, salary_range, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'interested') RETURNING *`,
+      `INSERT INTO applications (user_id, company_id, title, role_type, url, source, salary_range, status, job_description, job_description_captured_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'interested', ?, ?) RETURNING *`,
     )
       .bind(
         userId,
@@ -469,6 +510,8 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
         item.url,
         `feed:${item.source}`,
         item.salary_text,
+        item.description,
+        item.description ? new Date().toISOString() : null,
       )
       .first();
 
