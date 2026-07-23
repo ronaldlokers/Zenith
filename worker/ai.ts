@@ -104,6 +104,23 @@ export interface TailorResult {
   experiences: { id: number; description: string }[];
 }
 
+// The model sometimes echoes the role heading into the description
+// ("Title (Company): <body>"), but title/company are separate CV fields. Drop a
+// leading segment (up to the first colon) when it names the role.
+function stripRolePrefix(description: string, role: RoleRow): string {
+  const colon = description.indexOf(":");
+  if (colon > 0 && colon < 120) {
+    const head = description.slice(0, colon).toLowerCase();
+    if (
+      head.includes(role.title.toLowerCase()) ||
+      (role.company && head.includes(role.company.toLowerCase()))
+    ) {
+      return description.slice(colon + 1).replace(/^\s+/, "");
+    }
+  }
+  return description;
+}
+
 // Pull a JSON object out of the model's reply, tolerating stray prose or
 // ```json fences.
 function extractJson(text: string): unknown {
@@ -121,7 +138,7 @@ async function callClaudeTailor(
 ): Promise<TailorResult> {
   const prompt = `You are helping tailor a CV to a specific job. Rewrite the professional summary and each work-experience description to emphasise the experience and skills most relevant to the job description below. Rules: stay strictly truthful — only rephrase and re-prioritise what is already written; never invent employers, job titles, dates, technologies, metrics, or achievements. Keep each description concise. Return ONLY a JSON object, no prose and no markdown fences, in exactly this shape:
 {"summary": "<tailored summary>", "experiences": [{"id": <id>, "description": "<tailored description>"}]}
-Include one experiences entry per role below, keyed by its id.
+Include one experiences entry per role below, keyed by its id. For each description return ONLY the rewritten body text — do NOT prepend the job title, company name, dates, or any "Title (Company):" heading; those are stored separately.
 
 JOB DESCRIPTION:
 ${jobDescription}
@@ -162,16 +179,22 @@ ${JSON.stringify(
   const data = await res.json<{ content: { type: string; text?: string }[] }>();
   const text = data.content?.find((b) => b.type === "text")?.text ?? "";
   const parsed = extractJson(text) as Partial<TailorResult>;
-  const validIds = new Set(roles.map((r) => r.id));
-  const experiences = Array.isArray(parsed.experiences)
-    ? parsed.experiences.filter(
-        (e) =>
-          e &&
-          typeof e.id === "number" &&
-          validIds.has(e.id) &&
-          typeof e.description === "string",
-      )
-    : [];
+  const byId = new Map(roles.map((r) => [r.id, r]));
+  const experiences = (Array.isArray(parsed.experiences)
+    ? parsed.experiences
+    : []
+  )
+    .filter(
+      (e): e is { id: number; description: string } =>
+        !!e &&
+        typeof e.id === "number" &&
+        byId.has(e.id) &&
+        typeof e.description === "string",
+    )
+    .map((e) => ({
+      id: e.id,
+      description: stripRolePrefix(e.description, byId.get(e.id)!),
+    }));
   return {
     summary: typeof parsed.summary === "string" ? parsed.summary : "",
     experiences,
