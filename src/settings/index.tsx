@@ -315,6 +315,9 @@ export function SettingsPage({
             <>
               <input readOnly value={calendarUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
               <p className="muted small">{t("settings.calendarLinkHint")}</p>
+              <p className="settings-warning small">
+                {t("settings.calendarPrivacyWarning")}
+              </p>
               <ActionBar variant="share">
                 <Button disabled={calendarBusy} variant="secondary" onClick={generateCalendarLink}>
                   {t("settings.regenerateLink")}

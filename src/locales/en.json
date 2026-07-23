@@ -159,6 +159,7 @@
     "disableLink": "Disable",
     "calendarLink": "Calendar subscribe link",
     "calendarLinkHint": "Add this URL as a subscribed calendar in Google/Outlook/Apple Calendar — follow-ups, deadlines, and interviews stay in sync automatically. Read-only, updates whenever your calendar app refreshes.",
+    "calendarPrivacyWarning": "This feed names the roles and companies you're interviewing with. Add it only to a private, personal calendar — never a shared or work account. Regenerate the link if it may have leaked.",
     "regenerateLinkConfirm": "Regenerate this link? The current link stops working immediately for anyone you've shared it with.",
     "disableLinkConfirm": "Disable this link? The current link stops working for anyone you've shared it with.",
     "section": {
