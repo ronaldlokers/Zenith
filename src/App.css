@@ -3786,6 +3786,35 @@ summary.bcol-head::after {
   margin-top: var(--space-3);
 }
 
+/* Today home (#480) — action-first hero: a single honest count + label. */
+.dash.today {
+  max-width: 46rem;
+}
+.today-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0.2rem 0 0.4rem;
+}
+.today-hero-n {
+  font-family: var(--serif);
+  font-size: 2.6rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.today-hero-lbl {
+  font-size: var(--text-body);
+  color: var(--muted);
+}
+.today-hero-clear {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
 /* Weekly-goal card (#473) — dashboard. Serif figure, gold progress, streak. */
 .dash-goal {
   background: var(--surface);

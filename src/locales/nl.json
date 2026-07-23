@@ -1,15 +1,21 @@
 {
   "tabs": {
-    "overview": "Dashboard",
+    "overview": "Vandaag",
     "jobs": "Vacatures",
     "feed": "Feed",
     "calendar": "Agenda",
+    "insights": "Inzichten",
     "stats": "Statistieken",
     "companies": "Bedrijven",
     "people": "Contacten",
     "cv": "CV",
     "network": "Netwerk",
     "pipeline": "Pijplijn"
+  },
+  "today": {
+    "needYou_one": "taak wacht op je vandaag",
+    "needYou_other": "taken wachten op je vandaag",
+    "allClear": "Je bent helemaal bij vandaag"
   },
   "header": {
     "settings": "Instellingen",

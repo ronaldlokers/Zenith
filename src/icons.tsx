@@ -152,6 +152,13 @@ export const NavNetworkIcon = () =>
       <path d="M7.7 8.6l3 6.8M16.3 8.6l-3 6.8M8 7h8" />
     </>,
   );
+export const NavInsightsIcon = () =>
+  navSvg(
+    <>
+      <path d="M4 5v14h16" />
+      <path d="M7 15l3-4 3 2 4-6" />
+    </>,
+  );
 export const NavCvIcon = () =>
   navSvg(
     <>

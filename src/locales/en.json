@@ -1,15 +1,21 @@
 {
   "tabs": {
-    "overview": "Dashboard",
+    "overview": "Today",
     "jobs": "Jobs",
     "feed": "Feed",
     "calendar": "Calendar",
+    "insights": "Insights",
     "stats": "Stats",
     "companies": "Companies",
     "people": "People",
     "cv": "CV",
     "network": "Network",
     "pipeline": "Pipeline"
+  },
+  "today": {
+    "needYou_one": "thing needs you today",
+    "needYou_other": "things need you today",
+    "allClear": "You're all caught up today"
   },
   "header": {
     "settings": "Settings",
