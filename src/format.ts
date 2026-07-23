@@ -67,7 +67,11 @@ export function isDeadlinePast(a: Application): boolean {
 }
 
 export function formatDate(d: string): string {
-  return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
+  // Slice to the date part first: most callers pass a date-only "YYYY-MM-DD",
+  // but feed posted_at is a full ISO datetime (Adzuna `created`, etc.) — and
+  // "<iso>" + "T00:00:00" parses to Invalid Date. Anchoring at local midnight
+  // keeps the day stable regardless of the stored time/zone.
+  return new Date(d.slice(0, 10) + "T00:00:00").toLocaleDateString(undefined, {
     day: "numeric",
     month: "short",
   });

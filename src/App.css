@@ -1524,9 +1524,14 @@ button.danger {
     letter-spacing: var(--track-chrome);
     color: var(--muted);
   }
+  /* Focused-item title takes the display voice (--serif = Geist, #468). */
   .feed-detail h3 {
     margin: 0.1rem 0 0;
-    font-size: var(--text-heading);
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.45rem;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
   }
   .feed-detail-co {
     margin: 0.1rem 0 0;
