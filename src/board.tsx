@@ -27,6 +27,7 @@ import {
   PIPELINE,
   sortCards,
   today,
+  totalComp,
 } from "./format";
 import { Dialog } from "./ui";
 import { rowActivate } from "./hooks";
@@ -94,6 +95,13 @@ function BoardCard({
           </span>
         ) : urgency === "stale" || urgency === "quiet" ? (
           <span className={`bbadge u-${urgency}`}>{t(`attention.${urgency}`)}</span>
+        ) : a.status === "offer" && totalComp(a) != null ? (
+          // Offer is the win state — surface the comp figure (serif, #464)
+          // rather than the generic freshness line.
+          <span className="comp">
+            ~{a.salary_currency ?? "€"}{" "}
+            {Math.round(totalComp(a)!).toLocaleString()}
+          </span>
         ) : (
           // Freshness at a glance (design review) — so every card carries a
           // bottom metadata line, not just the actionable ones.

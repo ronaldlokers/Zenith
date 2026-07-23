@@ -2632,7 +2632,7 @@ select.status {
 
 .bcol-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-2);
   font-family: var(--mono);
   font-size: var(--text-chrome);
@@ -2650,6 +2650,7 @@ select.status {
   border-radius: 50%;
   background: var(--sc);
   flex-shrink: 0;
+  align-self: center;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -2686,24 +2687,37 @@ summary.bcol-head::after {
   transform: rotate(90deg);
 }
 
+/* Column count is a display figure (--serif = Geist), matching the dashboard
+   KPIs and the detail title (#464). */
 .bcol-head .n {
   margin-left: auto;
-  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 
+/* Tier-1 flat surface (#464): hairline + stage spine, NO resting shadow.
+   Elevation is reserved for hover/drag, so it reads as "interactive". */
 .bcard {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--sc);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-1);
   padding: 0.6rem 0.75rem;
   margin-bottom: 0.55rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   cursor: grab;
+  transition: box-shadow 0.15s ease;
+}
+
+.bcard:hover {
+  box-shadow: var(--shadow-1);
 }
 
 .bcard.dragging {
@@ -2744,6 +2758,15 @@ summary.bcol-head::after {
 
 .bcard .bmeta .late {
   color: var(--danger);
+}
+
+/* Offer comp as a display figure (#464) — the win-state card's headline. */
+.bcard .comp {
+  font-family: var(--serif);
+  font-size: var(--text-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--accent-ink);
 }
 
 .bcard select.status {
@@ -4486,7 +4509,22 @@ button:not(:disabled):active,
 .u-today { --u-edge: var(--heat-quiet-text); }
 .u-stale { --u-edge: var(--heat-quiet); }
 .u-quiet { --u-edge: var(--faint); }
-.u-calm { --u-edge: var(--border); }
+/* Calm cards carry their stage colour on the spine (#464) — urgency states
+   above still override --u-edge to escalate. */
+.u-calm { --u-edge: var(--sc); }
+
+/* Offer is the win state (#464): a restrained warm-gold tint behind the
+   cards + a gold count figure — the board's single focal accent, echoing
+   the dashboard hero. */
+.bcol.stage-offer .bcol-cards {
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+}
+.bcol.stage-offer .bcol-head .n {
+  color: var(--accent-ink);
+}
 
 /* slim bar */
 /* One rounded pill wrapping the whole bar; small borderless controls
