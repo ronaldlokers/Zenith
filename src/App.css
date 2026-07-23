@@ -3640,6 +3640,51 @@ summary.bcol-head::after {
   max-width: 40rem;
 }
 
+/* LinkedIn optimizer (#476) — CV page; reuses the .cv-tailor-* recipe. */
+.linkedin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.6rem;
+}
+.linkedin-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--text-body);
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+}
+.linkedin-suggestion {
+  margin: 0.2rem 0 0.4rem;
+  font-size: var(--text-body);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.linkedin-copy {
+  font-size: var(--text-meta);
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.linkedin-copy:hover {
+  color: var(--ink);
+}
+.linkedin-tips {
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+  font-size: var(--text-meta);
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
 /* Salary-research links (#475) — application detail. */
 .salary-research {
   display: flex;

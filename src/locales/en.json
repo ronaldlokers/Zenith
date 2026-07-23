@@ -278,6 +278,22 @@
     "goCv": "Go to CV",
     "goSettings": "Go to settings"
   },
+  "linkedin": {
+    "title": "LinkedIn optimizer",
+    "hint": "Paste your current LinkedIn headline and About section — suggestions rewrite them to be sharper and more searchable, grounded in your CV. Uses your own Anthropic key.",
+    "headline": "Headline",
+    "headlinePlaceholder": "Your current LinkedIn headline",
+    "about": "About",
+    "aboutPlaceholder": "Your current LinkedIn About section",
+    "optimize": "Optimize",
+    "working": "Optimizing…",
+    "suggestedHeadline": "Suggested headline",
+    "suggestedAbout": "Suggested About",
+    "tips": "Tips",
+    "copy": "Copy",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Couldn’t copy — copy it manually."
+  },
   "salary": {
     "research": "Salary research",
     "levels": "Levels.fyi ↗",
