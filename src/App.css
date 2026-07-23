@@ -3786,6 +3786,15 @@ summary.bcol-head::after {
   margin-top: var(--space-3);
 }
 
+/* Calendar folded into Insights (#481) — section heading. */
+.insights-cal-h {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+  margin: var(--space-5) 0 var(--space-3);
+}
+
 /* Today home (#480) — action-first hero: a single honest count + label. */
 .dash.today {
   max-width: 46rem;
