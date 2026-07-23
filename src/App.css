@@ -3786,6 +3786,19 @@ summary.bcol-head::after {
   margin-top: var(--space-3);
 }
 
+/* Quick-add paste-a-link row (#482) — URL input + Import button. */
+.quickadd-import-row {
+  display: flex;
+  gap: 0.4rem;
+}
+.quickadd-import-row input {
+  flex: 1;
+  min-width: 0;
+}
+.quickadd-hint {
+  margin: 0.35rem 0 0.9rem;
+}
+
 /* Calendar folded into Insights (#481) — section heading. */
 .insights-cal-h {
   font-family: var(--serif);

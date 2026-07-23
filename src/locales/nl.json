@@ -855,6 +855,11 @@
   },
   "quickAdd": {
     "title": "Vacature toevoegen",
+    "pasteLink": "Plak een link",
+    "pasteLinkPlaceholder": "https://… een vacature",
+    "import": "Importeren",
+    "importing": "Importeren…",
+    "hint": "We halen de titel & het bedrijf op. Of typ hieronder een titel en vul de rest later aan.",
     "addOpen": "Toevoegen & openen",
     "add": "Toevoegen"
   },

@@ -855,6 +855,11 @@
   },
   "quickAdd": {
     "title": "Add a job",
+    "pasteLink": "Paste a link",
+    "pasteLinkPlaceholder": "https://… a job posting",
+    "import": "Import",
+    "importing": "Importing…",
+    "hint": "We'll pull the title & company. Or just type a title below and fill the rest later.",
     "addOpen": "Add & open",
     "add": "Add"
   },
