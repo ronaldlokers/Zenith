@@ -72,6 +72,9 @@ export default function App() {
   const [onboardingProfile, setOnboardingProfile] = useState<Profile | null>(
     null,
   );
+  // Whether the user has configured the job feed (any search keyword) — an
+  // onboarding step, so a new user isn't left on an empty Feed tab (#453).
+  const [feedConfigured, setFeedConfigured] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(
     () => localStorage.getItem("zenith_onboarding_dismissed") === "1",
   );
@@ -107,6 +110,10 @@ export default function App() {
   useEffect(() => {
     if (onboardingDismissed) return;
     api.profile().then(setOnboardingProfile).catch(() => {});
+    api
+      .feedConfig()
+      .then((cfg) => setFeedConfigured(cfg.keywords.length > 0))
+      .catch(() => {});
   }, [onboardingDismissed]);
 
   const dismissOnboarding = () => {
@@ -141,15 +148,18 @@ export default function App() {
   const onboardingComplete =
     !!(onboardingProfile?.name && onboardingProfile?.email) &&
     companies.length > 0 &&
-    applications.length > 0;
+    applications.length > 0 &&
+    feedConfigured;
   const showOnboarding = !onboardingDismissed && !onboardingComplete;
   const onboardingProps = {
     profileDone: !!(onboardingProfile?.name && onboardingProfile?.email),
     companyDone: companies.length > 0,
     jobDone: applications.length > 0,
+    feedDone: feedConfigured,
     onGoToProfile: () => setTab("cv"),
     onGoToCompanies: () => setTab("companies"),
     onAddJob: () => setShowQuickAdd(true),
+    onGoToFeed: () => navigate("/settings?s=feed"),
     onDismiss: dismissOnboarding,
     onLoadSample: () => navigate("/settings?s=data"),
   };

@@ -14,9 +14,11 @@ describe("OnboardingChecklist", () => {
         profileDone={false}
         companyDone={false}
         jobDone={false}
+        feedDone={false}
         onGoToProfile={noop}
         onGoToCompanies={noop}
         onAddJob={noop}
+        onGoToFeed={noop}
         onDismiss={noop}
         onLoadSample={noop}
       />,
@@ -33,6 +35,9 @@ describe("OnboardingChecklist", () => {
     expect(
       screen.getByRole("button", { name: "Add your first job" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Set up your job feed" }),
+    ).toBeInTheDocument();
   });
 
   test("the dismiss button calls onDismiss", () => {
@@ -42,9 +47,11 @@ describe("OnboardingChecklist", () => {
         profileDone={false}
         companyDone={false}
         jobDone={false}
+        feedDone={false}
         onGoToProfile={noop}
         onGoToCompanies={noop}
         onAddJob={noop}
+        onGoToFeed={noop}
         onDismiss={() => {
           dismissed = true;
         }}
@@ -61,9 +68,11 @@ describe("OnboardingChecklist", () => {
         profileDone={true}
         companyDone={true}
         jobDone={true}
+        feedDone={true}
         onGoToProfile={noop}
         onGoToCompanies={noop}
         onAddJob={noop}
+        onGoToFeed={noop}
         onDismiss={noop}
         onLoadSample={noop}
       />,
@@ -79,9 +88,11 @@ describe("OnboardingChecklist", () => {
         profileDone={false}
         companyDone={false}
         jobDone={false}
+        feedDone={false}
         onGoToProfile={noop}
         onGoToCompanies={noop}
         onAddJob={noop}
+        onGoToFeed={noop}
         onDismiss={noop}
         onLoadSample={noop}
       />,

@@ -11,9 +11,11 @@ export interface OnboardingChecklistProps {
   profileDone: boolean;
   companyDone: boolean;
   jobDone: boolean;
+  feedDone: boolean;
   onGoToProfile: () => void;
   onGoToCompanies: () => void;
   onAddJob: () => void;
+  onGoToFeed: () => void;
   onDismiss: () => void;
   onLoadSample: () => void;
 }
@@ -22,9 +24,11 @@ export function OnboardingChecklist({
   profileDone,
   companyDone,
   jobDone,
+  feedDone,
   onGoToProfile,
   onGoToCompanies,
   onAddJob,
+  onGoToFeed,
   onDismiss,
   onLoadSample,
 }: OnboardingChecklistProps) {
@@ -50,6 +54,9 @@ export function OnboardingChecklist({
         </li>
         <li className={jobDone ? "done" : ""}>
           <button onClick={onAddJob}>{t("onboarding.firstJob")}</button>
+        </li>
+        <li className={feedDone ? "done" : ""}>
+          <button onClick={onGoToFeed}>{t("onboarding.feed")}</button>
         </li>
       </ul>
       {!jobDone && (
