@@ -3786,6 +3786,71 @@ summary.bcol-head::after {
   margin-top: var(--space-3);
 }
 
+/* Felt momentum (#484) — goal-met flag + gone-quiet close-out on Today. */
+.dash-goal-met {
+  color: var(--success);
+  font-weight: 600;
+}
+.today-quiet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 0.9rem 1.1rem;
+}
+.today-quiet-h {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+.today-quiet-hint {
+  margin: 0.25rem 0 0.6rem;
+}
+.today-quiet-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.today-quiet-list li {
+  display: grid;
+  grid-template-columns: 3px 1fr auto;
+  align-items: center;
+  column-gap: 0.6rem;
+  padding: 0.4rem 0.15rem;
+}
+.today-quiet-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+.today-quiet-close {
+  flex-shrink: 0;
+  font-size: var(--text-meta);
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.today-quiet-close:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
 /* Quick-add paste-a-link row (#482) — URL input + Import button. */
 .quickadd-import-row {
   display: flex;
