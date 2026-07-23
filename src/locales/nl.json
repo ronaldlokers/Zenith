@@ -282,6 +282,15 @@
     "starterJd": "Neem de vacaturetekst regel voor regel door",
     "starterStories": "Bereid STAR-voorbeelden voor op veelgestelde vragen"
   },
+  "mockInterview": {
+    "title": "Oefengesprek (AI)",
+    "hint": "Oefen met een AI-interviewer voor deze functie, met je eigen Anthropic-sleutel. Eén vraag per keer, met feedback op elk antwoord.",
+    "start": "Gesprek starten",
+    "thinking": "Denken…",
+    "answerPlaceholder": "Typ je antwoord…",
+    "send": "Versturen",
+    "restart": "Opnieuw"
+  },
   "coverLetter": {
     "title": "Motivatiebrief",
     "generateDraft": "Concept genereren",

@@ -19,6 +19,7 @@ import {
   FieldLabel,
   InterviewPrepSection,
   JdKeywordMatch,
+  MockInterview,
   StarRating,
 } from "./components";
 import type {
@@ -610,6 +611,14 @@ export function ApplicationDetailModal({
           <div className="detail-secondary">
             <h3 className="detail-sub">{t("prep.title")}</h3>
             <InterviewPrepSection applicationId={a.id} onError={onError} />
+
+            <h3 className="detail-sub">{t("mockInterview.title")}</h3>
+            <MockInterview
+              title={a.title}
+              company={a.company_name ?? null}
+              jobDescription={a.job_description}
+              onError={onError}
+            />
 
             <h3 className="detail-sub">{t("coverLetter.title")}</h3>
             <CoverLetterSection

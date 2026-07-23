@@ -282,6 +282,15 @@
     "starterJd": "Review the job description line-by-line",
     "starterStories": "Prepare STAR examples for common questions"
   },
+  "mockInterview": {
+    "title": "Mock interview (AI)",
+    "hint": "Practice with an AI interviewer for this role, using your own Anthropic key. It asks one question at a time and gives feedback on each answer.",
+    "start": "Start interview",
+    "thinking": "Thinking…",
+    "answerPlaceholder": "Type your answer…",
+    "send": "Send",
+    "restart": "Restart"
+  },
   "coverLetter": {
     "title": "Cover letter",
     "generateDraft": "Generate draft",

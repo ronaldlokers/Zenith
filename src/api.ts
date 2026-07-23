@@ -65,6 +65,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ jobDescription }),
     }),
+  // One turn of a mock interview; the caller holds the transcript.
+  mockInterview: (
+    context: { title?: string; company?: string; jobDescription?: string },
+    messages: { role: "user" | "assistant"; content: string }[],
+  ) =>
+    request<{ reply: string }>("/api/ai/mock-interview", {
+      method: "POST",
+      body: JSON.stringify({ context, messages }),
+    }),
   updateFollowUp: (
     id: number,
     fields: { next_action?: string | null; next_action_at: string | null },

@@ -51,6 +51,8 @@ export { Documents } from "./Documents";
 export type { DocumentsProps } from "./Documents";
 export { InterviewPrepSection } from "./InterviewPrepSection";
 export type { InterviewPrepSectionProps } from "./InterviewPrepSection";
+export { MockInterview } from "./MockInterview";
+export type { MockInterviewProps } from "./MockInterview";
 export { CoverLetterSection } from "./CoverLetterSection";
 export type { CoverLetterSectionProps } from "./CoverLetterSection";
 export { JdKeywordMatch } from "./JdKeywordMatch";

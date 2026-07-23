@@ -201,6 +201,61 @@ ${JSON.stringify(
   };
 }
 
+// --- Mock interview (stateless multi-turn: the client holds the transcript
+// and sends it back each turn) ---
+
+interface ChatMsg {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface InterviewContext {
+  title?: string;
+  company?: string;
+  jobDescription?: string;
+}
+
+function buildInterviewSystem(ctx: InterviewContext): string {
+  const role = ctx.title
+    ? `the role of ${ctx.title}${ctx.company ? ` at ${ctx.company}` : ""}`
+    : "this role";
+  return `You are a professional interviewer running a realistic practice interview for ${role}. Ask ONE question at a time, relevant to the role${ctx.jobDescription ? " and the job description below" : ""}. After the candidate answers, give brief, specific, constructive feedback (1-2 sentences — what was strong, what to improve), then ask the next question. Make questions realistic and progressively deeper (a mix of behavioural and role-specific). Never answer on the candidate's behalf, and keep each turn concise.${
+    ctx.jobDescription
+      ? `\n\nJOB DESCRIPTION:\n${ctx.jobDescription.slice(0, 4000)}`
+      : ""
+  }`;
+}
+
+async function callClaudeChat(
+  apiKey: string,
+  system: string,
+  messages: ChatMsg[],
+): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5",
+      max_tokens: 1024,
+      system,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(
+      res.status === 401
+        ? "your Anthropic key was rejected"
+        : "the AI request failed",
+    );
+  }
+  const data = await res.json<{ content: { type: string; text?: string }[] }>();
+  return data.content?.find((b) => b.type === "text")?.text ?? "";
+}
+
 export function registerAiRoutes(app: Hono<AppEnv>) {
   app.get("/api/ai/credentials", async (c) => {
     const row = await c.env.DB.prepare(
@@ -280,6 +335,42 @@ export function registerAiRoutes(app: Hono<AppEnv>) {
         roles,
       );
       return c.json(result);
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 502);
+    }
+  });
+
+  // One turn of a practice interview: the client sends the transcript so far
+  // plus the role context; returns the interviewer's next message.
+  app.post("/api/ai/mock-interview", async (c) => {
+    const apiKey = await getUserAnthropicKey(c.env, c.get("userId"));
+    if (!apiKey) {
+      return c.json(
+        { error: "add your Anthropic API key in Account settings first" },
+        400,
+      );
+    }
+    const { context, messages } = await c.req.json<{
+      context?: InterviewContext;
+      messages?: ChatMsg[];
+    }>();
+    // Cap the history so a long session can't balloon the request.
+    const msgs = (Array.isArray(messages) ? messages : [])
+      .filter(
+        (m): m is ChatMsg =>
+          !!m &&
+          (m.role === "user" || m.role === "assistant") &&
+          typeof m.content === "string",
+      )
+      .slice(-40);
+    if (msgs.length === 0) return c.json({ error: "no messages" }, 400);
+    try {
+      const reply = await callClaudeChat(
+        apiKey,
+        buildInterviewSystem(context ?? {}),
+        msgs,
+      );
+      return c.json({ reply });
     } catch (e) {
       return c.json({ error: (e as Error).message }, 502);
     }
