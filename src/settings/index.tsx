@@ -300,9 +300,13 @@ export function SettingsPage({
               </ActionBar>
             </>
           ) : (
-            <button disabled={shareBusy} onClick={generateLink}>
+            <Button
+              variant="secondary"
+              disabled={shareBusy}
+              onClick={generateLink}
+            >
               {t("settings.generateLink")}
-            </button>
+            </Button>
           )}
         </div>
         <div className="settings-field share-field">
@@ -321,9 +325,13 @@ export function SettingsPage({
               </ActionBar>
             </>
           ) : (
-            <button disabled={calendarBusy} onClick={generateCalendarLink}>
+            <Button
+              variant="secondary"
+              disabled={calendarBusy}
+              onClick={generateCalendarLink}
+            >
               {t("settings.generateLink")}
-            </button>
+            </Button>
           )}
         </div>
           </>
@@ -334,7 +342,9 @@ export function SettingsPage({
               <span>
                 {t("account.signedInAs", { email: session.user.email })}
               </span>
-              <button onClick={() => signOut()}>{t("account.signOut")}</button>
+              <Button variant="secondary" onClick={() => signOut()}>
+                {t("account.signOut")}
+              </Button>
             </div>
             <ChangePassword />
             <TwoFactorSettings />

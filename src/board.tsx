@@ -28,6 +28,7 @@ import {
   today,
 } from "./format";
 import { Dialog } from "./ui";
+import { rowActivate } from "./hooks";
 import { ApplicationDetailModal } from "./detail";
 import { ActionBar, Button, CardMenu, FilterTab } from "./components";
 
@@ -70,7 +71,7 @@ function BoardCard({
         onOpenDetail={onOpenDetail}
         onArchive={onArchive}
       />
-      <div className="bcard-body" onClick={onOpenDetail}>
+      <div className="bcard-body" {...rowActivate(onOpenDetail)}>
         <strong>
           {a.title}
           {a.fit_score ? (

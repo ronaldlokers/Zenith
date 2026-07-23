@@ -92,7 +92,12 @@ export function MockInterview({
 
   return (
     <div className="mock-interview">
-      <div className="mock-transcript" ref={transcriptRef}>
+      <div
+        className="mock-transcript"
+        ref={transcriptRef}
+        aria-live="polite"
+        aria-busy={busy}
+      >
         {visible.map((m, i) => (
           <div key={i} className={`mock-msg mock-${m.role}`}>
             {m.content}

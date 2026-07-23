@@ -44,7 +44,18 @@ export function CardMenu({
       {mode && (
         <>
           <div className="zui-cardmenu-backdrop" onClick={close} />
-          <div className="zui-cardmenu-pop" role="menu">
+          <div
+            className="zui-cardmenu-pop"
+            role="menu"
+            onKeyDown={(e) => {
+              // Escape closes the menu, matching the app-wide Dialog convention
+              // (a11y review, #447).
+              if (e.key === "Escape") {
+                e.stopPropagation();
+                close();
+              }
+            }}
+          >
             {mode === "root" && (
               <>
                 <button type="button" role="menuitem" onClick={() => setMode("move")}>

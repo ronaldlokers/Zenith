@@ -204,9 +204,14 @@ export function FeedSettings({
           <li key={r.id}>
             <input
               defaultValue={r.label}
+              aria-label={t("feedSettings.roleNameLabel")}
               onBlur={(e) => renameRole(r, e.target.value)}
             />
-            <button className="danger" onClick={() => removeRole(r)}>
+            <button
+              className="danger"
+              aria-label={t("feedSettings.removeRole")}
+              onClick={() => removeRole(r)}
+            >
               <RemoveIcon />
             </button>
           </li>
@@ -318,7 +323,11 @@ export function FeedSettings({
             <span>
               {b.source === "greenhouse" ? "Greenhouse" : "Ashby"}: {b.slug}
             </span>
-            <button className="danger" onClick={() => removeAtsBoard(b.id)}>
+            <button
+              className="danger"
+              aria-label={t("feedSettings.removeBoard")}
+              onClick={() => removeAtsBoard(b.id)}
+            >
               <RemoveIcon />
             </button>
           </li>
@@ -574,12 +583,14 @@ export function FeedTab({
           <SegmentedControl role="group" aria-label={t("feed.sortLabel")}>
             <button
               className={sortBy === "newest" ? "active" : ""}
+              aria-pressed={sortBy === "newest"}
               onClick={() => setSortBy("newest")}
             >
               {t("feed.sortNewest")}
             </button>
             <button
               className={sortBy === "match" ? "active" : ""}
+              aria-pressed={sortBy === "match"}
               onClick={() => setSortBy("match")}
             >
               {t("feed.sortMatch")}
@@ -593,6 +604,7 @@ export function FeedTab({
               <button
                 key={n}
                 className={minFit === n ? "active" : ""}
+                aria-pressed={minFit === n}
                 onClick={() => setMinFit(n)}
               >
                 {n === 0 ? t("feed.fitAny") : `${n}+`}

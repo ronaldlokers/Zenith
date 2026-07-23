@@ -27,7 +27,9 @@
   --surface-sunken: #faf9f5;
   --ink: #14173a;
   --muted: #5c5f76;
-  --faint: #8f8d84;
+  /* Darkened to clear WCAG AA (4.5:1) as real copy on both --surface and --bg;
+     the old #8f8d84 measured ~3.0–3.3:1 (a11y review, #447). */
+  --faint: #6f6c7a;
   --danger-text: #ffffff;
   --border: #e7e4db;
   --line: #efece4;

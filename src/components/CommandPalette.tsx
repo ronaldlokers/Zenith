@@ -141,7 +141,11 @@ export function CommandPalette({
           }}
           onKeyDown={onKeyDown}
         />
-        {q && (
+        {/* Render whenever there are items — including on open, where `items`
+            holds the default actions — so the combobox's aria-controls /
+            aria-activedescendant references resolve and the palette works as
+            a launcher, not only a search box (a11y review, #447). */}
+        {items.length > 0 && (
           <div className="zui-palette-results" id="palette-listbox" role="listbox">
             {items.map((item, i) => {
               const showHeader = i === 0 || items[i - 1].group !== item.group;
@@ -165,10 +169,12 @@ export function CommandPalette({
                 </Fragment>
               );
             })}
-            {!items.length && (
-              <p className="muted small">{t("palette.noResults")}</p>
-            )}
           </div>
+        )}
+        {q && !items.length && (
+          <p className="muted small zui-palette-empty">
+            {t("palette.noResults")}
+          </p>
         )}
     </Dialog>
   );

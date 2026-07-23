@@ -315,6 +315,7 @@
   "coverLetter": {
     "title": "Motivatiebrief",
     "generateDraft": "Concept genereren",
+    "generating": "Genereren…",
     "placeholder": "Schrijf of genereer een concept-motivatiebrief voor deze sollicitatie…",
     "theCompany": "jullie bedrijf",
     "summaryPlaceholder": "[voeg een professionele samenvatting toe aan je CV-profiel om dit concept te verbeteren]",
@@ -407,6 +408,7 @@
   },
   "cv": {
     "downloadPdf": "PDF downloaden",
+    "removeLanguage": "Taal verwijderen",
     "tailorTitle": "Afstemmen op een vacature (AI)",
     "tailorHint": "Plak een vacaturetekst; suggesties herschrijven je samenvatting en elke functie om de meest relevante ervaring te benadrukken — met je eigen Anthropic-sleutel. Er wordt niets verzonnen.",
     "tailorPlaceholder": "Plak de vacaturetekst…",
@@ -502,6 +504,9 @@
     "searchKeywords": "Zoekwoorden per rol",
     "keywordPlaceholder": "+ zoekwoord",
     "removeKeyword": "Verwijderen",
+    "roleNameLabel": "Naam functietype",
+    "removeRole": "Functietype verwijderen",
+    "removeBoard": "Bord verwijderen",
     "blocklist": "Geblokkeerde bedrijven",
     "blocklistPlaceholder": "+ bedrijfsnaam…",
     "atsBoards": "Vacatureborden van bedrijven",

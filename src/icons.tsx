@@ -260,6 +260,30 @@ export function RemoveIcon() {
   );
 }
 
+// Inline "edit" pencil for the detail page's edit-in-place controls (#447) —
+// replaces a raw ✎ emoji with the app's line-art house style (24×24 grid,
+// currentColor, strokeWidth 2).
+export function EditIcon() {
+  return (
+    <svg
+      className="inline-edit-icon"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 20h4L18 10l-4-4L4 16v4z"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M13 7l4 4" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // The Ascent brand mark: a Night squircle with the three-rung ascent path
 // rising to a gold peak-star. Fixed brand fills (not currentColor) so it
 // matches favicon.svg / the PWA icons exactly. Square; pairs with the "Zenith"
