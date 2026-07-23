@@ -303,4 +303,40 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
       .run();
     return c.body(null, 204);
   });
+
+  // --- CV versions (#474): named JSON snapshots of the CV builder state ---
+  app.get("/api/cv-versions", async (c) => {
+    const { results } = await c.env.DB.prepare(
+      "SELECT * FROM cv_versions WHERE user_id = ? ORDER BY created_at DESC, id DESC",
+    )
+      .bind(c.get("userId"))
+      .all();
+    return c.json(results);
+  });
+
+  app.post("/api/cv-versions", async (c) => {
+    const body = await c.req.json();
+    const name = (body.name ?? "").trim();
+    if (!name) return c.json({ error: "name is required" }, 400);
+    // snapshot is stored as an opaque JSON string produced by the client.
+    const snapshot =
+      typeof body.snapshot === "string"
+        ? body.snapshot
+        : JSON.stringify(body.snapshot ?? {});
+    const result = await c.env.DB.prepare(
+      "INSERT INTO cv_versions (user_id, name, snapshot) VALUES (?, ?, ?) RETURNING *",
+    )
+      .bind(c.get("userId"), name, snapshot)
+      .first();
+    return c.json(result, 201);
+  });
+
+  app.delete("/api/cv-versions/:id", async (c) => {
+    await c.env.DB.prepare(
+      "DELETE FROM cv_versions WHERE id = ? AND user_id = ?",
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
+  });
 }

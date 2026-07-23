@@ -286,6 +286,20 @@ export interface UserGoal {
   created_at: string;
 }
 
+export interface CvVersion {
+  id: number;
+  name: string;
+  snapshot: string; // JSON string of { profile, workExperience, education, languages }
+  created_at: string;
+}
+
+export interface CvSnapshotData {
+  profile: Profile;
+  workExperience: WorkExperience[];
+  education: Education[];
+  languages: Language[];
+}
+
 export interface Tag {
   id: number;
   name: string;

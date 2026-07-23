@@ -10,6 +10,7 @@ import type { Education, Language, Profile, WorkExperience } from "./types";
 import { getCvLanguage } from "./format";
 import { TailorPanel } from "./cv/tailor";
 import { CvPreview } from "./cv/preview";
+import { CvVersions } from "./cv/versions";
 import {
   EducationSection,
   LanguagesSection,
@@ -195,6 +196,18 @@ export function CVTab({
               <span className="side-co">{languages.length}</span>
             </li>
           </SideList>
+          <h3 className="side-h cv-versions-h">{t("cvVersions.title")}</h3>
+          <CvVersions
+            current={{
+              profile,
+              workExperience: workExp,
+              education,
+              languages,
+            }}
+            template={template}
+            onError={onError}
+            notify={notify}
+          />
           <h3 className="side-h cv-preview-h">{t("cv.livePreview")}</h3>
           <div className="cv-preview-frame" aria-label={t("cv.livePreview")}>
             <CvPreview
