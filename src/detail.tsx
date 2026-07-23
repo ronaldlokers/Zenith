@@ -15,6 +15,7 @@ import {
   Button,
   Chip,
   CoverLetterSection,
+  AiKeyGate,
   Documents,
   FieldLabel,
   InterviewPrepSection,
@@ -613,22 +614,36 @@ export function ApplicationDetailModal({
             <h3 className="detail-sub">{t("prep.title")}</h3>
             <InterviewPrepSection applicationId={a.id} onError={onError} />
 
+            <p
+              className={`ai-grounding ${
+                a.job_description ? "ai-grounding-ready" : "ai-grounding-missing"
+              }`}
+            >
+              {a.job_description
+                ? t("ai.groundedReady")
+                : t("ai.groundedMissing")}
+            </p>
+
             <h3 className="detail-sub">{t("mockInterview.title")}</h3>
-            <MockInterview
-              title={a.title}
-              company={a.company_name ?? null}
-              jobDescription={a.job_description}
-              onError={onError}
-            />
+            <AiKeyGate>
+              <MockInterview
+                title={a.title}
+                company={a.company_name ?? null}
+                jobDescription={a.job_description}
+                onError={onError}
+              />
+            </AiKeyGate>
 
             <h3 className="detail-sub">{t("negotiation.title")}</h3>
-            <NegotiationRoleplay
-              title={a.title}
-              company={a.company_name ?? null}
-              salaryExpectation={a.salary_range}
-              jobDescription={a.job_description}
-              onError={onError}
-            />
+            <AiKeyGate>
+              <NegotiationRoleplay
+                title={a.title}
+                company={a.company_name ?? null}
+                salaryExpectation={a.salary_range}
+                jobDescription={a.job_description}
+                onError={onError}
+              />
+            </AiKeyGate>
 
             <h3 className="detail-sub">{t("coverLetter.title")}</h3>
             <CoverLetterSection

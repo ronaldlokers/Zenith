@@ -8,7 +8,7 @@ import { api } from "./api";
 import { LoadingSkeleton } from "./ui";
 import { useSubmitGuard } from "./hooks";
 import { EmptyCvIcon, RemoveIcon } from "./icons";
-import { ActionBar, Button, Chip, CvItem, EmptyState, SideList } from "./components";
+import { ActionBar, AiKeyGate, Button, Chip, CvItem, EmptyState, SideList } from "./components";
 import type {
   Education,
   Language,
@@ -307,6 +307,7 @@ function TailorPanel({
     <section className="cv-tailor">
       <h3>{t("cv.tailorTitle")}</h3>
       <p className="muted small">{t("cv.tailorHint")}</p>
+      <AiKeyGate>
       <textarea
         className="cv-tailor-input"
         rows={4}
@@ -377,6 +378,7 @@ function TailorPanel({
           })}
         </div>
       )}
+      </AiKeyGate>
     </section>
   );
 }
