@@ -175,6 +175,11 @@
     "themeLight": "Light",
     "themeDark": "Dark"
   },
+  "admin": {
+    "title": "Admin",
+    "subtitle": "Manage users, invites, and maintenance tools.",
+    "navLabel": "Admin"
+  },
   "feed": {
     "pulledFrom": "Pulled from your configured job boards (Greenhouse, Ashby) and Adzuna every 6 hours.",
     "settings": "Settings",

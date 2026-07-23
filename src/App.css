@@ -3417,6 +3417,25 @@ summary.bcol-head::after {
 
 /* Settings as a routed page with a section nav (#314) — replaces the
    14-section modal. */
+/* Dedicated admin area (#457) — a card grid of the admin tools, lifted out of
+   Settings. */
+.admin-page {
+  max-width: 72rem;
+  margin: var(--space-3) auto 0;
+}
+.admin-page-title {
+  margin: 0;
+}
+.admin-page-sub {
+  margin: var(--space-1) 0 var(--space-4);
+}
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
 .settings-page {
   display: grid;
   grid-template-columns: 170px 1fr;

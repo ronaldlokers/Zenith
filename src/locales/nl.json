@@ -175,6 +175,11 @@
     "themeLight": "Licht",
     "themeDark": "Donker"
   },
+  "admin": {
+    "title": "Beheer",
+    "subtitle": "Beheer gebruikers, uitnodigingen en onderhoudstools.",
+    "navLabel": "Beheer"
+  },
   "feed": {
     "pulledFrom": "Opgehaald uit je ingestelde vacaturesites (Greenhouse, Ashby) en Adzuna, elke 6 uur.",
     "settings": "Instellingen",
