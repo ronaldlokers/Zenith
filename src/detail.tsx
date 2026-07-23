@@ -17,7 +17,6 @@ import {
   CoverLetterSection,
   AiKeyGate,
   Documents,
-  FieldLabel,
   InterviewPrepSection,
   JdKeywordMatch,
   MockInterview,
@@ -211,13 +210,51 @@ export function ApplicationDetailModal({
         aria-label={a.title}
       >
         <div className="detail-head">
-          <div>
+          <div className="detail-head-main">
             <h2>{a.title}</h2>
-            <span className="muted small">
+            <span className="detail-co muted small">
               {a.company_name ?? "—"}
               {a.contact_name ? ` · ${a.contact_name}` : ""}
+              {safeHref(a.url) && (
+                <>
+                  {" · "}
+                  <a
+                    href={safeHref(a.url)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="detail-posting-link"
+                  >
+                    {t("detail.jobPostingLink")}
+                  </a>
+                </>
+              )}
             </span>
           </div>
+          {!editing && (
+            <div className="detail-head-right">
+              <select
+                className={`status-pill stage-${a.status}`}
+                value={a.status}
+                aria-label={t("detail.status")}
+                onChange={(e) => onStatus(a.id, e.target.value as Status)}
+              >
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`stages.${s}`)}
+                  </option>
+                ))}
+              </select>
+              <StarRating
+                value={a.fit_score ?? null}
+                aria-label={t("detail.fitScore")}
+                disabled={patchBusy}
+                starLabel={(n) => t("detail.fitSetAria", { n })}
+                onChange={(next) =>
+                  inlinePatch(api.patchApplication(a.id, { fit_score: next }))
+                }
+              />
+            </div>
+          )}
           {!asPane && (
             <Button variant="close" onClick={onClose} aria-label={t("common.close")}>
               ×
@@ -253,66 +290,56 @@ export function ApplicationDetailModal({
           <div className="detail-cols">
           <div className="detail-primary">
             <div className="detail-fields">
-              <div>
-                <FieldLabel>{t("detail.status")}</FieldLabel>
-                <select
-                  className={`status stage-${a.status}`}
-                  value={a.status}
-                  onChange={(e) => onStatus(a.id, e.target.value as Status)}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {t(`stages.${s}`)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <FieldLabel>{t("detail.role")}</FieldLabel>
-                <span className="muted small">
+              {/* Core facts as one aligned definition list (#463) — replaces
+                  the scattered label/bare-line mix. Status + fit + job posting
+                  now live in the header. */}
+              <dl className="detail-defs">
+                <dt>{t("detail.role")}</dt>
+                <dd>
                   {roleTypes.find((r) => r.slug === a.role_type)?.label ??
                     a.role_type}
-                </span>
-              </div>
-              <div>
-                <FieldLabel id={`fit-label-${a.id}`}>
-                  {t("detail.fitScore")}
-                </FieldLabel>
-                <StarRating
-                  value={a.fit_score ?? null}
-                  aria-labelledby={`fit-label-${a.id}`}
-                  disabled={patchBusy}
-                  starLabel={(n) => t("detail.fitSetAria", { n })}
-                  onChange={(next) =>
-                    inlinePatch(api.patchApplication(a.id, { fit_score: next }))
-                  }
-                />
-              </div>
-              {safeHref(a.url) && (
-                <a href={safeHref(a.url)} target="_blank" rel="noreferrer" className="small">
-                  {t("detail.jobPostingLink")}
-                </a>
-              )}
-              {a.source && <span className="muted small">{t("detail.viaSource", { source: a.source })}</span>}
+                </dd>
+                {a.source && (
+                  <>
+                    <dt>{t("forms.source")}</dt>
+                    <dd>{t("detail.viaSource", { source: a.source })}</dd>
+                  </>
+                )}
+                {a.referred_by_name && (
+                  <>
+                    <dt>{t("referral.referredBy")}</dt>
+                    <dd>{a.referred_by_name}</dd>
+                  </>
+                )}
+                {a.deadline_at && (
+                  <>
+                    <dt>{t("detail.deadline")}</dt>
+                    <dd
+                      className={
+                        isDeadlinePast(a) || isDeadlineSoon(a) ? "warn-text" : ""
+                      }
+                    >
+                      {formatDate(a.deadline_at)}
+                    </dd>
+                  </>
+                )}
+                {a.applied_at && (
+                  <>
+                    <dt>{t("forms.appliedOn")}</dt>
+                    <dd>{formatDate(a.applied_at)}</dd>
+                  </>
+                )}
+                {a.salary_range && (
+                  <>
+                    <dt>{t("forms.salaryRange")}</dt>
+                    <dd>{a.salary_range}</dd>
+                  </>
+                )}
+              </dl>
               {a.posting_status === "maybe_stale" && (
                 <span className="muted small warn-text">
                   {t("posting.staleHint")}
                 </span>
-              )}
-              {a.referred_by_name && (
-                <span className="muted small">
-                  {t("referral.referredBy")}: {a.referred_by_name}
-                </span>
-              )}
-              {a.deadline_at && (
-                <span
-                  className={`small${isDeadlinePast(a) ? " warn-text" : isDeadlineSoon(a) ? " warn-text" : ""}`}
-                >
-                  {t("detail.deadline")}: {formatDate(a.deadline_at)}
-                </span>
-              )}
-              {a.salary_range && (
-                <span className="muted small">{a.salary_range}</span>
               )}
               {a.status === "offer" && totalComp(a) != null && (
                 <span className="muted small" title={totalCompBreakdown(a)}>
@@ -378,11 +405,6 @@ export function ApplicationDetailModal({
                     {t("offer.copyDraft")}
                   </button>
                 </div>
-              )}
-              {a.applied_at && (
-                <span className="muted small">
-                  {t("detail.appliedDate", { date: formatDate(a.applied_at) })}
-                </span>
               )}
               {inlineField === "followup" ? (
                 <form
