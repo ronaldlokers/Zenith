@@ -255,5 +255,16 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
     return c.json(result, 201);
   });
 
+  // Contact basics for the extension's application autofill (#478). Only the
+  // fields an application form asks for — never the summary, and never comp.
+  api.get("/profile", async (c) => {
+    const p = await c.env.DB.prepare(
+      "SELECT name, email, phone, location, linkedin, github, portfolio FROM profile WHERE user_id = ?",
+    )
+      .bind(c.get("apiUserId"))
+      .first();
+    return c.json(p ?? {});
+  });
+
   app.route("/api/v1", api);
 }

@@ -18,11 +18,24 @@ company (from the page's `JobPosting` structured data, then Open Graph, then the
 tab title) and the URL — tweak if needed and hit **Save to pipeline**. It lands
 as an `interested` application, tagged `source: extension`.
 
+## Autofill an application form
+
+On an ATS application page, open the popup and hit **Autofill this application
+form**. It pulls your contact basics from Zenith (`GET /api/v1/profile`) and
+fills matching fields — first/last/full name, email, phone, LinkedIn, GitHub,
+portfolio, city — matched by each field's name, id, placeholder, `aria-label`,
+`autocomplete`, and label text. It only touches empty fields and never fills
+passwords, file inputs, or checkboxes; you review and submit yourself.
+
+Heuristic by nature — coverage varies by ATS. It reports how many fields it
+filled.
+
 ## How it saves
 
 `POST {baseUrl}/api/v1/applications` with `Authorization: Bearer <key>` and a
 JSON body of `{ title, company, url, source }`. The company name is
-find-or-created. No compensation data is sent or accepted on this endpoint.
+find-or-created. No compensation data is sent or accepted. Autofill reads
+`GET {baseUrl}/api/v1/profile` (contact fields only — no summary, no comp).
 
 ## Notes
 
