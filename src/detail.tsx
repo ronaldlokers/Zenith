@@ -6,6 +6,7 @@
 // git blame for this file. Only ApplicationDetailModal is public; the rest
 // are its internals.
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import {
@@ -77,6 +78,7 @@ export function ApplicationDetailModal({
   asPane?: boolean;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const dialogRef = useFocusTrap<HTMLDivElement>(!asPane);
   const [editing, setEditing] = useState(false);
   const [inlineField, setInlineField] = useState<null | "followup" | "notes">(
@@ -508,6 +510,19 @@ export function ApplicationDetailModal({
                   </summary>
                   <p className="notes">{a.job_description}</p>
                 </details>
+              )}
+              {a.job_description && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() =>
+                    navigate("/cv", {
+                      state: { tailorJd: a.job_description },
+                    })
+                  }
+                >
+                  {t("detail.tailorForJob")}
+                </button>
               )}
             </div>
 

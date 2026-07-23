@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { api } from "./api";
 import { LoadingSkeleton } from "./ui";
 import { useSubmitGuard } from "./hooks";
@@ -24,6 +25,8 @@ export function CVTab({
   notify: (message: string, undo?: () => void) => void;
 }) {
   const { t, i18n } = useTranslation();
+  const tailorJd = (useLocation().state as { tailorJd?: string } | null)
+    ?.tailorJd;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [workExp, setWorkExp] = useState<WorkExperience[] | null>(null);
   const [education, setEducation] = useState<Education[] | null>(null);
@@ -143,6 +146,7 @@ export function CVTab({
             onApplied={load}
             onError={onError}
             notify={notify}
+            initialJd={tailorJd}
           />
           <ProfileSection
             profile={profile}
@@ -217,15 +221,19 @@ function TailorPanel({
   onApplied,
   onError,
   notify,
+  initialJd,
 }: {
   profile: Profile;
   workExp: WorkExperience[];
   onApplied: () => Promise<unknown> | void;
   onError: (message: string | null) => void;
   notify: (message: string) => void;
+  initialJd?: string;
 }) {
   const { t } = useTranslation();
-  const [jd, setJd] = useState("");
+  // Seeded from an application's stored job description when arriving via
+  // "Tailor CV for this job" (react-router navigation state).
+  const [jd, setJd] = useState(initialJd ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
@@ -272,6 +280,29 @@ function TailorPanel({
     }
   };
 
+  const applyAll = async () => {
+    if (!result) return;
+    try {
+      if (result.summary) await api.updateProfile({ summary: result.summary });
+      for (const ex of result.experiences) {
+        const item = workExp.find((w) => w.id === ex.id);
+        if (item) {
+          await api.update("work-experience", ex.id, {
+            ...item,
+            description: ex.description,
+          });
+        }
+      }
+      setApplied(
+        new Set(["summary", ...result.experiences.map((e) => `exp-${e.id}`)]),
+      );
+      notify(t("cv.tailorApplied"));
+      await onApplied();
+    } catch (e) {
+      onError((e as Error).message);
+    }
+  };
+
   return (
     <section className="cv-tailor">
       <h3>{t("cv.tailorTitle")}</h3>
@@ -294,6 +325,15 @@ function TailorPanel({
       </button>
       {result && (
         <div className="cv-tailor-results">
+          {(result.summary || result.experiences.length > 0) && (
+            <button
+              type="button"
+              className="cv-tailor-apply-all"
+              onClick={applyAll}
+            >
+              {t("cv.tailorApplyAll")}
+            </button>
+          )}
           {result.summary && (
             <div className="cv-tailor-item">
               <span className="cv-tailor-label">{t("cv.tailorSummary")}</span>
