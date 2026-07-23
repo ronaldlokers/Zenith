@@ -13,7 +13,10 @@ import type {
   FeedCursor,
   FeedItem,
   RoleTypeDef,
+  Skill,
+  WorkExperience,
 } from "./types";
+import { skillMatchCount } from "./skill-match";
 import { Button, Chip, EmptyState, Toolbar } from "./components";
 
 export function FeedSettings({
@@ -361,6 +364,25 @@ export function FeedTab({
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[] | null>(null);
+  // Loaded once for the feed "fit" badges: the user's skills + which are
+  // backed by their work experience (same inputs as the JD keyword match).
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [cvSkillNames, setCvSkillNames] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    Promise.all([
+      api.list<Skill>("skills"),
+      api.list<WorkExperience>("work-experience"),
+    ])
+      .then(([allSkills, workExp]) => {
+        setSkills(allSkills);
+        setCvSkillNames(
+          new Set(
+            workExp.flatMap((w) => w.skills.map((s) => s.name.toLowerCase())),
+          ),
+        );
+      })
+      .catch(() => {});
+  }, []);
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -550,6 +572,11 @@ export function FeedTab({
                   roleTypes.find((r) => r.slug === item.role_type)?.label ??
                   item.role_type
                 }
+                matched={
+                  item.description
+                    ? skillMatchCount(item.description, skills, cvSkillNames)
+                    : null
+                }
                 focused={i === focusedIndex}
                 adding={addingIds.has(item.id)}
                 onAdd={() => addToPipeline(item)}
@@ -642,6 +669,7 @@ function FeedCard({
   onAdd,
   onDismiss,
   onSelect,
+  matched,
 }: {
   item: FeedItem;
   roleLabel: string;
@@ -650,6 +678,7 @@ function FeedCard({
   onAdd: () => void;
   onDismiss: () => void;
   onSelect: () => void;
+  matched: number | null;
 }) {
   const { t } = useTranslation();
   const [dragX, setDragX] = useState(0);
@@ -696,6 +725,11 @@ function FeedCard({
           {" · "}
           {t("feed.viaSource", { source: item.source })}
         </span>
+        {matched != null && matched > 0 && (
+          <span className="feed-match" title={t("feed.skillsMatchHint")}>
+            {t("feed.skillsMatch", { count: matched })}
+          </span>
+        )}
         {safeHref(item.url) && (
           <a
             href={safeHref(item.url)}
