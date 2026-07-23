@@ -659,6 +659,22 @@ export function FeedTab({
                 {focusedRole}
                 {focusedItem.salary_text ? ` · ${focusedItem.salary_text}` : ""}
               </p>
+              {focusedItem.match_skills.length > 0 && (
+                <div className="feed-detail-fit">
+                  <span className="feed-detail-fit-h">
+                    {t("feed.whyItFits", {
+                      count: focusedItem.match_skills.length,
+                    })}
+                  </span>
+                  <div className="keyword-chips">
+                    {focusedItem.match_skills.map((name) => (
+                      <Chip key={name} matched>
+                        {name}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              )}
               {safeHref(focusedItem.url) && (
                 <a
                   href={safeHref(focusedItem.url)}

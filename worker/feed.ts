@@ -113,12 +113,12 @@ export function stripHtml(html: string): string {
 // Done here so the feed list can return a small integer instead of shipping
 // every item's full ≤8000-char description just for the client to count.
 // Mirrors src/skill-match.ts's word-boundary rule.
-function countSkillMatches(jd: string, skillNames: string[]): number {
+function matchedSkills(jd: string, skillNames: string[]): string[] {
   const lower = jd.toLowerCase();
   return skillNames.filter((name) => {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     return new RegExp(`\\b${escaped}\\b`, "i").test(lower);
-  }).length;
+  });
 }
 
 export async function fetchAdzuna(
@@ -402,10 +402,12 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     const skillNames = skillRows.map((r) => r.name);
     const items = results.map((row) => {
       const { description, ...rest } = row;
-      return {
-        ...rest,
-        match_count: description ? countSkillMatches(description, skillNames) : 0,
-      };
+      // Return the matched skill NAMES (not just the count) so the feed can
+      // explain *why* an item fits — the "reasons" behind the score (#471).
+      const match_skills = description
+        ? matchedSkills(description, skillNames)
+        : [];
+      return { ...rest, match_skills, match_count: match_skills.length };
     });
     return c.json({ items, nextCursor });
   });
