@@ -1554,6 +1554,17 @@ button.danger {
   color: var(--muted);
 }
 
+/* "Not yet researched" indicator (design review) — a quiet hollow dot in place
+   of the repeated "not researched" text on every company row. */
+.research-todo {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--faint);
+  vertical-align: middle;
+}
+
 .due-line.today {
   color: var(--accent);
   font-weight: 600;

@@ -179,9 +179,17 @@ export function CompaniesTab({
             <div className="l2">
               <span className="co">{c.website ?? ""}</span>
               <span className="due">
-                {c.researched_at
-                  ? t("company.researchedAgo", { age: ageDays(c.researched_at) })
-                  : t("company.notResearched")}
+                {c.researched_at ? (
+                  t("company.researchedAgo", { age: ageDays(c.researched_at) })
+                ) : (
+                  // A quiet to-do dot instead of "not researched" on every row
+                  // (design review) — same signal, far less repetition.
+                  <span
+                    className="research-todo"
+                    title={t("company.notResearched")}
+                    aria-label={t("company.notResearched")}
+                  />
+                )}
               </span>
             </div>
           </Row>

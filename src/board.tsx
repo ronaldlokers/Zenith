@@ -18,6 +18,7 @@ import type {
 import { ArchiveIcon, FilterIcon, SearchIcon } from "./icons";
 import type { BoardSort, Urgency } from "./format";
 import {
+  ageDays,
   isDead,
   isOverdue,
   keyShortcutsEnabled,
@@ -59,7 +60,7 @@ function BoardCard({
   const actionable = urgency === "overdue" || urgency === "today";
   return (
     <article
-      className={`bcard u-${urgency ?? "calm"}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}`}
+      className={`bcard stage-${a.status} u-${urgency ?? "calm"}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}`}
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
@@ -93,7 +94,13 @@ function BoardCard({
           </span>
         ) : urgency === "stale" || urgency === "quiet" ? (
           <span className={`bbadge u-${urgency}`}>{t(`attention.${urgency}`)}</span>
-        ) : null}
+        ) : (
+          // Freshness at a glance (design review) — so every card carries a
+          // bottom metadata line, not just the actionable ones.
+          <span className="bmeta">
+            {t("board.updatedAge", { age: ageDays(a.updated_at) })}
+          </span>
+        )}
       </div>
     </article>
   );
