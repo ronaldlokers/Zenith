@@ -278,6 +278,15 @@
     "goCv": "Go to CV",
     "goSettings": "Go to settings"
   },
+  "goals": {
+    "weeklyGoal": "Weekly goal",
+    "weeklyGoalLabel": "Weekly application goal",
+    "searchStartLabel": "Search started",
+    "streak_one": "{{count}}-week streak",
+    "streak_other": "{{count}}-week streak",
+    "searchWeek_one": "Week {{count}} of your search",
+    "searchWeek_other": "Week {{count}} of your search"
+  },
   "templates": {
     "outreachHeading": "Outreach",
     "compose": "Compose from a template",

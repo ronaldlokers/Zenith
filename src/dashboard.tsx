@@ -1,9 +1,9 @@
 // Dashboard view extracted from App.tsx (#285 split) — the home tab: KPI
 // cards, weekly momentum, Next-Up action list, recent activity, and the
 // "all the numbers" analytics drawer (StatsTab).
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Application, Stats } from "./types";
+import type { Application, Stats, UserGoal } from "./types";
 import { api } from "./api";
 import {
   FUNNEL_STAGES,
@@ -15,10 +15,12 @@ import {
   computePipelineMomentum,
   computeWeeklyMomentum,
   formatDate,
+  goalStreak,
   isDead,
   isDue,
   isOverdue,
   medianTimeToOffer,
+  searchWeekNumber,
   totalComp,
 } from "./format";
 import { StatsTab } from "./stats-view";
@@ -50,6 +52,10 @@ export function DashboardTab({
 }) {
   const { t } = useTranslation();
   const [showActivity, setShowActivity] = useState(false);
+  const [goal, setGoal] = useState<UserGoal | null>(null);
+  useEffect(() => {
+    api.goals().then(setGoal).catch(() => {});
+  }, []);
   if (!stats) return <LoadingSkeleton />;
   const history = stats.history;
   const open = applications.filter((a) => !isDead(a.status));
@@ -77,6 +83,59 @@ export function DashboardTab({
 
   const fmtComp = (n: number) =>
     `~${liveOffers[0]?.salary_currency ?? "€"} ${Math.round(n).toLocaleString()}`;
+
+  // Weekly-goal card (#473). This-week count is the last (in-progress) bucket;
+  // the streak counts only completed weeks that met the target.
+  const goalTarget = goal?.weekly_app_goal ?? 0;
+  const thisWeek = mom.weeks[mom.weeks.length - 1]?.count ?? 0;
+  const streak = goalStreak(
+    mom.weeks.slice(0, -1).map((w) => w.count),
+    goalTarget,
+  );
+  const earliestApp = stats.applications.reduce<string | null>((min, a) => {
+    const d = a.applied_at ?? a.created_at;
+    return d && (!min || d < min) ? d : min;
+  }, null);
+  const searchStart = goal?.search_started_at ?? earliestApp;
+  const searchWeek = searchWeekNumber(searchStart, Date.now());
+  const goalPct =
+    goalTarget > 0 ? Math.min(100, Math.round((thisWeek / goalTarget) * 100)) : 0;
+
+  const goalCard = goal && goalTarget > 0 && (
+    <div className="dash-goal">
+      <div className="dash-goal-head">
+        <span className="dash-goal-eyebrow">{t("goals.weeklyGoal")}</span>
+        <span className="dash-goal-figure">
+          <span className="dash-goal-n">{thisWeek}</span>
+          <span className="dash-goal-target">/ {goalTarget}</span>
+        </span>
+      </div>
+      <div
+        className="dash-goal-bar"
+        role="progressbar"
+        aria-valuenow={thisWeek}
+        aria-valuemin={0}
+        aria-valuemax={goalTarget}
+      >
+        <i
+          className={thisWeek >= goalTarget ? "met" : ""}
+          style={{ width: `${goalPct}%` }}
+        />
+      </div>
+      <div className="dash-goal-meta">
+        {streak > 0 && (
+          <span className="dash-goal-streak">
+            {t("goals.streak", { count: streak })}
+          </span>
+        )}
+        {searchWeek != null && (
+          <span className="muted">
+            {t("goals.searchWeek", { count: searchWeek })}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 
   const kpis = (
     <div className="dash-kpis">
@@ -227,6 +286,7 @@ export function DashboardTab({
   return (
     <section className="dash">
       {kpis}
+      {goalCard}
       {band}
       {hasActions ? (
         <div className="dash-cols">

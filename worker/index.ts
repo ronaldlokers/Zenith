@@ -6,6 +6,7 @@ import { registerRoleTypeRoutes } from "./role-types.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { registerOutreachRoutes } from "./outreach.js";
+import { registerGoalRoutes } from "./goals.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
 import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
@@ -897,6 +898,7 @@ const EXPORT_TABLES = [
   "languages",
   "interview_prep_items",
   "outreach_templates",
+  "user_goals",
   "role_types",
   "feed_sources",
   "feed_role_keywords",
@@ -1530,6 +1532,7 @@ registerFeedRoutes(app);
 registerRoleTypeRoutes(app);
 registerCvRoutes(app);
 registerOutreachRoutes(app);
+registerGoalRoutes(app);
 registerNotificationRoutes(app);
 registerAiRoutes(app);
 registerCalendarRoutes(app);

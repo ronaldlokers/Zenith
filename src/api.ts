@@ -271,6 +271,15 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  goals: () => request<import("./types").UserGoal>("/api/goals"),
+  setGoals: (data: {
+    weekly_app_goal: number;
+    search_started_at: string | null;
+  }) =>
+    request<import("./types").UserGoal>("/api/goals", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
   skills: () => request<import("./types").Skill[]>("/api/skills"),
   addWorkExperienceSkill: (workExperienceId: number, name: string) =>
     request<import("./types").Skill>(

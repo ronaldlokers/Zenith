@@ -278,6 +278,15 @@
     "goCv": "Ga naar cv",
     "goSettings": "Ga naar instellingen"
   },
+  "goals": {
+    "weeklyGoal": "Weekdoel",
+    "weeklyGoalLabel": "Wekelijks sollicitatiedoel",
+    "searchStartLabel": "Zoektocht gestart",
+    "streak_one": "Reeks van {{count}} week",
+    "streak_other": "Reeks van {{count}} weken",
+    "searchWeek_one": "Week {{count}} van je zoektocht",
+    "searchWeek_other": "Week {{count}} van je zoektocht"
+  },
   "templates": {
     "outreachHeading": "Contact opnemen",
     "compose": "Opstellen vanuit sjabloon",
