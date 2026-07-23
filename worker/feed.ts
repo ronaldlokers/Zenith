@@ -121,40 +121,43 @@ function countSkillMatches(jd: string, skillNames: string[]): number {
   }).length;
 }
 
-async function fetchAdzuna(
+export async function fetchAdzuna(
   env: Env,
   keywords: RoleKeywords,
   country: string | null,
 ): Promise<FeedCandidate[]> {
   if (!env.ADZUNA_APP_ID || !env.ADZUNA_APP_KEY) return [];
-  const out: FeedCandidate[] = [];
   const countryCode = (country || "nl").toLowerCase();
-  for (const [role, kws] of Object.entries(keywords)) {
-    if (kws.length === 0) continue;
-    const query = kws[0];
-    const url =
-      `https://api.adzuna.com/v1/api/jobs/${countryCode}/search/1` +
-      `?app_id=${env.ADZUNA_APP_ID}&app_key=${env.ADZUNA_APP_KEY}` +
-      `&results_per_page=10&what=${encodeURIComponent(query)}&content-type=application/json`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const data = (await res.json()) as {
-        results?: Array<{
-          id: string;
-          title: string;
-          company?: { display_name?: string };
-          location?: { display_name?: string };
-          redirect_url?: string;
-          salary_min?: number;
-          salary_max?: number;
-          created?: string;
-          description?: string;
-        }>;
-      };
-      for (const job of data.results ?? []) {
-        out.push({
-          source: "adzuna",
+  // Fetch every role's keyword query concurrently (#449) — the old sequential
+  // loop made latency scale linearly with the number of configured roles.
+  const perRole = await Promise.all(
+    Object.entries(keywords).map(async ([role, kws]): Promise<
+      FeedCandidate[]
+    > => {
+      if (kws.length === 0) return [];
+      const query = kws[0];
+      const url =
+        `https://api.adzuna.com/v1/api/jobs/${countryCode}/search/1` +
+        `?app_id=${env.ADZUNA_APP_ID}&app_key=${env.ADZUNA_APP_KEY}` +
+        `&results_per_page=10&what=${encodeURIComponent(query)}&content-type=application/json`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        const data = (await res.json()) as {
+          results?: Array<{
+            id: string;
+            title: string;
+            company?: { display_name?: string };
+            location?: { display_name?: string };
+            redirect_url?: string;
+            salary_min?: number;
+            salary_max?: number;
+            created?: string;
+            description?: string;
+          }>;
+        };
+        return (data.results ?? []).map((job) => ({
+          source: "adzuna" as const,
           external_id: job.id,
           title: job.title,
           company: job.company?.display_name ?? null,
@@ -168,13 +171,14 @@ async function fetchAdzuna(
           posted_at: job.created ?? null,
           // Adzuna returns only a truncated ~200-char snippet.
           description: job.description ?? null,
-        });
+        }));
+      } catch {
+        // best effort per source
+        return [];
       }
-    } catch {
-      // best effort per source
-    }
-  }
-  return out;
+    }),
+  );
+  return perRole.flat();
 }
 
 // Direct ATS sourcing (#219) — Greenhouse and Ashby both publish free,
@@ -183,7 +187,7 @@ async function fetchAdzuna(
 // wants everything on it, not a role-guessed subset (role_type still
 // gets tagged, best-effort, for consistency with the rest of the feed
 // UI, but a miss doesn't drop the listing the way it does for HN).
-async function fetchGreenhouse(
+export async function fetchGreenhouse(
   slug: string,
   keywords: RoleKeywords,
 ): Promise<FeedCandidate[]> {
@@ -221,7 +225,7 @@ async function fetchGreenhouse(
   }
 }
 
-async function fetchAshby(
+export async function fetchAshby(
   slug: string,
   keywords: RoleKeywords,
 ): Promise<FeedCandidate[]> {

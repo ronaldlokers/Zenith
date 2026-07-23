@@ -424,7 +424,10 @@ app.post("/api/saved-views", async (c) => {
   )
     .bind(c.get("userId"), name, JSON.stringify(body.filters))
     .first<{ id: number; name: string; filters: string; created_at: string }>();
-  return c.json({ ...row!, filters: JSON.parse(row!.filters) }, 201);
+  // RETURNING can be null on an unexpected write failure; a clean 500 beats a
+  // "Cannot read properties of null" further down (#449).
+  if (!row) return c.json({ error: "could not create saved view" }, 500);
+  return c.json({ ...row, filters: JSON.parse(row.filters) }, 201);
 });
 
 app.delete("/api/saved-views/:id", async (c) => {
@@ -462,6 +465,9 @@ app.post("/api/applications/:id/tags", async (c) => {
       .bind(userId, name)
       .first<{ id: number; name: string }>();
   }
+  // RETURNING can be null on an unexpected write failure — bail cleanly
+  // instead of dereferencing null with tag!.id below (#449).
+  if (!tag) return c.json({ error: "could not create tag" }, 500);
   const { next_order } =
     (await c.env.DB.prepare(
       `SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order
@@ -473,7 +479,7 @@ app.post("/api/applications/:id/tags", async (c) => {
     `INSERT INTO application_tags (application_id, tag_id, user_id, sort_order)
      VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING`,
   )
-    .bind(c.req.param("id"), tag!.id, userId, next_order)
+    .bind(c.req.param("id"), tag.id, userId, next_order)
     .run();
   return c.json(tag, 201);
 });
