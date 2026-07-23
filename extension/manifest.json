@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Zenith — Save Job",
+  "version": "0.1.0",
+  "description": "Save the job posting in the current tab to your Zenith pipeline in one click.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Save to Zenith"
+  },
+  "options_page": "options.html"
+}
