@@ -11,10 +11,16 @@ export interface StarRatingProps {
   value: number | null;
   /** Number of stars. */
   max?: number;
-  /** Caller persists the new value (or `null` to clear it). */
-  onChange: (next: number | null) => void;
+  /** Caller persists the new value (or `null` to clear it). Not needed when
+   *  `readOnly`. */
+  onChange?: (next: number | null) => void;
   disabled?: boolean;
+  /** Non-interactive display (board/dashboard/detail fit score, #455) — shows
+   *  all `max` stars filled to `value`, so it reads consistently everywhere
+   *  instead of the old bare "N glyphs" spans. */
+  readOnly?: boolean;
   "aria-labelledby"?: string;
+  "aria-label"?: string;
   /** aria-label for star n; defaults to the star's number. */
   starLabel?: (n: number) => string;
 }
@@ -24,9 +30,33 @@ export function StarRating({
   max = 5,
   onChange,
   disabled = false,
+  readOnly = false,
   "aria-labelledby": ariaLabelledBy,
+  "aria-label": ariaLabel,
   starLabel,
 }: StarRatingProps) {
+  const stars = Array.from({ length: max }, (_, i) => i + 1);
+
+  if (readOnly) {
+    return (
+      <span
+        className="zui-starrating zui-starrating--readonly"
+        role="img"
+        aria-label={ariaLabel ?? `${value ?? 0} of ${max}`}
+      >
+        {stars.map((n) => (
+          <span
+            key={n}
+            aria-hidden="true"
+            className={`zui-star${(value ?? 0) >= n ? " zui-star--on" : ""}`}
+          >
+            ★
+          </span>
+        ))}
+      </span>
+    );
+  }
+
   const handleKey = (e: KeyboardEvent<HTMLSpanElement>) => {
     // Arrow/Home/End move the rating like a real radiogroup — mirrors the
     // fit-score keyboard behaviour in detail.tsx (#346).
@@ -40,10 +70,8 @@ export function StarRating({
     else if (e.key === "End") next = max;
     else return;
     e.preventDefault();
-    if (next !== value && !disabled) onChange(next);
+    if (next !== value && !disabled) onChange?.(next);
   };
-
-  const stars = Array.from({ length: max }, (_, i) => i + 1);
 
   return (
     <span
@@ -67,7 +95,7 @@ export function StarRating({
             disabled={disabled}
             className={`zui-star${(value ?? 0) >= n ? " zui-star--on" : ""}`}
             aria-label={starLabel?.(n) ?? String(n)}
-            onClick={() => onChange(value === n ? null : n)}
+            onClick={() => onChange?.(value === n ? null : n)}
           >
             ★
           </button>

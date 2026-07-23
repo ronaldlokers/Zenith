@@ -30,7 +30,7 @@ import {
 import { Dialog } from "./ui";
 import { rowActivate } from "./hooks";
 import { ApplicationDetailModal } from "./detail";
-import { ActionBar, Button, CardMenu, FilterTab } from "./components";
+import { ActionBar, Button, CardMenu, FilterTab, StarRating } from "./components";
 
 function BoardCard({
   a,
@@ -77,7 +77,7 @@ function BoardCard({
           {a.fit_score ? (
             <span className="fit-stars" title={`${a.fit_score}/5`}>
               {" "}
-              {"★".repeat(a.fit_score)}
+              <StarRating value={a.fit_score} readOnly />
             </span>
           ) : null}
         </strong>

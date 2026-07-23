@@ -24,7 +24,7 @@ import {
 } from "./format";
 import { StatsTab } from "./stats-view";
 import { ActivityTab } from "./calendar";
-import { Button, DashCard, MomentumBand, SideList, StatCard, StatLine } from "./components";
+import { Button, DashCard, MomentumBand, SideList, StarRating, StatCard, StatLine } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
@@ -354,7 +354,10 @@ function NextUpPanel({
               <span className="side-title">
                 {a.title}
                 {a.fit_score ? (
-                  <span className="fit-stars"> {"★".repeat(a.fit_score)}</span>
+                  <span className="fit-stars">
+                    {" "}
+                    <StarRating value={a.fit_score} readOnly />
+                  </span>
                 ) : null}
               </span>
               <span className="side-co">{a.company_name ?? "—"}</span>

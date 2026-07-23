@@ -48,4 +48,15 @@ describe("StarRating", () => {
       expect(radio).toBeDisabled();
     }
   });
+
+  test("readOnly renders a non-interactive img with all `max` stars", () => {
+    const { container } = render(<StarRating value={4} max={5} readOnly />);
+    // No radios/buttons in read-only mode.
+    expect(screen.queryAllByRole("radio")).toHaveLength(0);
+    const img = screen.getByRole("img", { name: "4 of 5" });
+    expect(img).toBeInTheDocument();
+    // All 5 stars render; 4 are "on".
+    expect(container.querySelectorAll(".zui-star")).toHaveLength(5);
+    expect(container.querySelectorAll(".zui-star--on")).toHaveLength(4);
+  });
 });
