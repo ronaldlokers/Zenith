@@ -91,6 +91,17 @@ export function useAppData(
     }
   }, []);
 
+  // Stats-only refresh (perf review, #446). A kanban drag optimistically
+  // updates the application locally, so the only thing it still needs from the
+  // server is the recomputed stats — refetching all five resources on every
+  // drag was the app's most frequent redundant network cost.
+  const refreshStats = useCallback(() => {
+    return api
+      .stats()
+      .then(setStatsData)
+      .catch((e) => setError((e as Error).message));
+  }, []);
+
   useEffect(() => {
     reload();
   }, [reload]);
@@ -131,12 +142,15 @@ export function useAppData(
     (id: number, status: Status) => {
       const prev = applications;
       const prevStatus = applications.find((a) => a.id === id)?.status;
+      // Optimistically stamp updated_at too so "Recently updated" ordering
+      // stays correct without a full reload (perf review, #446).
+      const now = new Date().toISOString();
       setApplications((apps) =>
-        apps.map((a) => (a.id === id ? { ...a, status } : a)),
+        apps.map((a) => (a.id === id ? { ...a, status, updated_at: now } : a)),
       );
       api
         .setStatus(id, status)
-        .then(reload)
+        .then(refreshStats)
         .then(() => {
           if (prevStatus == null || prevStatus === status) return;
           if (status === "offer") {
@@ -168,7 +182,7 @@ export function useAppData(
           setError((e as Error).message);
         });
     },
-    [applications, reload, notify, navigate, t],
+    [applications, reload, refreshStats, notify, navigate, t],
   );
 
   const visibleApps = applications.filter(

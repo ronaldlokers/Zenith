@@ -149,6 +149,10 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
     return c.text(buildIcs(events), 200, {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": 'inline; filename="zenith.ics"',
+      // Calendar clients poll on their own schedule (often hourly); a few
+      // minutes of staleness is fine for a subscribe feed and saves re-running
+      // the joined queries on every poll (perf review, #446).
+      "Cache-Control": "private, max-age=300",
     });
   });
 }

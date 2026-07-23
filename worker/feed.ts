@@ -108,6 +108,19 @@ export function stripHtml(html: string): string {
   return text.length > 8000 ? text.slice(0, 8000) : text;
 }
 
+// Feed "fit" count, computed server-side (perf review, #446): how many of the
+// user's CV-backed skills a job description mentions (word-boundary match).
+// Done here so the feed list can return a small integer instead of shipping
+// every item's full ≤8000-char description just for the client to count.
+// Mirrors src/skill-match.ts's word-boundary rule.
+function countSkillMatches(jd: string, skillNames: string[]): number {
+  const lower = jd.toLowerCase();
+  return skillNames.filter((name) => {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`\\b${escaped}\\b`, "i").test(lower);
+  }).length;
+}
+
 async function fetchAdzuna(
   env: Env,
   keywords: RoleKeywords,
@@ -364,14 +377,33 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
        LIMIT ?`,
     )
       .bind(...binds)
-      .all<{ id: number; posted_at: string | null }>();
+      .all<{ id: number; posted_at: string | null; description: string | null }>();
 
     // A full page means there may be more; anything short is the last page.
     const last = results.length === limit ? results[results.length - 1] : null;
     const nextCursor = last
       ? { k: last.posted_at ?? "", id: last.id }
       : null;
-    return c.json({ items: results, nextCursor });
+
+    // Compute the skill-fit count here and drop the full description from the
+    // payload (perf review, #446): the client only ever used it to count.
+    const { results: skillRows } = await c.env.DB.prepare(
+      `SELECT DISTINCT skills.name
+       FROM work_experience_skills wes
+       JOIN skills ON skills.id = wes.skill_id
+       WHERE wes.user_id = ?`,
+    )
+      .bind(userId)
+      .all<{ name: string }>();
+    const skillNames = skillRows.map((r) => r.name);
+    const items = results.map((row) => {
+      const { description, ...rest } = row;
+      return {
+        ...rest,
+        match_count: description ? countSkillMatches(description, skillNames) : 0,
+      };
+    });
+    return c.json({ items, nextCursor });
   });
 
   app.get("/api/feed/ats-boards", async (c) => {
