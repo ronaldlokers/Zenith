@@ -2786,6 +2786,21 @@ summary.bcol-head::after {
   margin-top: 0.9rem;
 }
 
+.cv-tailor-apply-all {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.cv-tailor-apply-all:hover {
+  background: var(--hover);
+}
+
 .cv-tailor-item {
   border-top: 1px solid var(--border);
   padding-top: 0.7rem;
