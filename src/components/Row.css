@@ -7,8 +7,9 @@
    combo has higher specificity than the base `.card` rule, but the base
    `border` shorthand's top/right/bottom sides are untouched, so they're
    reproduced here alongside .row2's own border-left. background,
-   border-radius, box-shadow and overflow come from .card, unchanged by
-   .row2.
+   border-radius and overflow come from .card, unchanged by .row2. The
+   resting box-shadow was dropped in the refined refresh (#466) — rows are
+   flat tier-1 and only lift on hover.
 
    NOT reproduced: `.card:has(.card-main.clickable):hover` (App.css:1272) —
    row2 rows never contain a .card-main, so that rule never matches here. */
@@ -17,7 +18,6 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-1);
     overflow: hidden;
 
     /* App.css:1550 — neutral fallback for rows with no stage color (no
@@ -27,7 +27,10 @@
     padding: 0.55rem 0.8rem;
     cursor: pointer;
     min-height: 44px;
-    transition: border-left-color 0.18s ease, padding 0.15s ease, min-height 0.15s ease;
+    /* Refined refresh (#466): tier-1 flat rows — no resting shadow, so
+       elevation on hover reads as "interactive". */
+    transition: border-left-color 0.18s ease, box-shadow 0.15s ease,
+      padding 0.15s ease, min-height 0.15s ease;
   }
 
   /* App.css:1567 — callers keep the .l1/.l2 class names on their children. */
@@ -58,9 +61,10 @@
     margin-top: 0.2rem;
   }
 
-  /* App.css:4451 */
+  /* App.css:4451 — hover lifts the flat row (#466). */
   .zui-row:hover {
     background: var(--hover);
+    box-shadow: var(--shadow-1);
   }
 
   /* App.css:4461 */
