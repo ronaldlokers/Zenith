@@ -19,18 +19,22 @@ export interface StatCardProps
    * KPIs navigate on click and one (time-to-offer) is read-only.
    */
   onClick?: MouseEventHandler<HTMLButtonElement>;
+  /** Focal "hero" tile (elevation tier 3) — one per screen (#458). */
+  hero?: boolean;
 }
 
 export function StatCard({
   value,
   label,
   onClick,
+  hero = false,
   className,
   ...rest
 }: StatCardProps) {
   const classes = [
     "zui-statcard",
     onClick ? "zui-statcard--click" : null,
+    hero ? "zui-statcard--hero" : null,
     className,
   ]
     .filter(Boolean)
