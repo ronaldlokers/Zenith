@@ -12,10 +12,12 @@ export interface OnboardingChecklistProps {
   companyDone: boolean;
   jobDone: boolean;
   feedDone: boolean;
+  goalDone: boolean;
   onGoToProfile: () => void;
   onGoToCompanies: () => void;
   onAddJob: () => void;
   onGoToFeed: () => void;
+  onSetGoal: () => void;
   onDismiss: () => void;
   onLoadSample: () => void;
 }
@@ -25,10 +27,12 @@ export function OnboardingChecklist({
   companyDone,
   jobDone,
   feedDone,
+  goalDone,
   onGoToProfile,
   onGoToCompanies,
   onAddJob,
   onGoToFeed,
+  onSetGoal,
   onDismiss,
   onLoadSample,
 }: OnboardingChecklistProps) {
@@ -46,14 +50,19 @@ export function OnboardingChecklist({
         </button>
       </div>
       <ul>
+        {/* Job-first (#483): the fastest, most motivating first action —
+            paste-a-link — leads; the weekly goal seeds the momentum system. */}
+        <li className={jobDone ? "done" : ""}>
+          <button onClick={onAddJob}>{t("onboarding.firstJob")}</button>
+        </li>
+        <li className={goalDone ? "done" : ""}>
+          <button onClick={onSetGoal}>{t("onboarding.goal")}</button>
+        </li>
         <li className={profileDone ? "done" : ""}>
           <button onClick={onGoToProfile}>{t("onboarding.profile")}</button>
         </li>
         <li className={companyDone ? "done" : ""}>
           <button onClick={onGoToCompanies}>{t("onboarding.company")}</button>
-        </li>
-        <li className={jobDone ? "done" : ""}>
-          <button onClick={onAddJob}>{t("onboarding.firstJob")}</button>
         </li>
         <li className={feedDone ? "done" : ""}>
           <button onClick={onGoToFeed}>{t("onboarding.feed")}</button>

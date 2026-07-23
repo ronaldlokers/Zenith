@@ -21,10 +21,12 @@ export const Default: Story = {
         profileDone={false}
         companyDone={false}
         jobDone={false}
+        goalDone={false}
         feedDone={false}
         onGoToProfile={() => {}}
         onGoToCompanies={() => {}}
         onAddJob={() => {}}
+        onSetGoal={() => {}}
         onGoToFeed={() => {}}
         onDismiss={() => {}}
         onLoadSample={() => {}}
@@ -40,10 +42,12 @@ export const PartiallyComplete: Story = {
         profileDone={true}
         companyDone={true}
         jobDone={false}
+        goalDone={false}
         feedDone={false}
         onGoToProfile={() => {}}
         onGoToCompanies={() => {}}
         onAddJob={() => {}}
+        onSetGoal={() => {}}
         onGoToFeed={() => {}}
         onDismiss={() => {}}
         onLoadSample={() => {}}
