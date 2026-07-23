@@ -4343,7 +4343,7 @@ button:not(:disabled):active,
 .dash-fl { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .dash-fbar { height: 8px; border-radius: 5px; background: var(--track); overflow: hidden; }
 .dash-fbar > i { display: block; height: 100%; border-radius: 5px; background: var(--sc, var(--accent)); }
-.dash-fn-n { font-family: var(--serif); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; font-size: var(--text-body); }
+.dash-fn-n { font-family: var(--num-serif, var(--serif)); font-variant-numeric: tabular-nums; text-align: right; font-weight: 500; font-size: 1.05rem; }
 .dash-conv-line { margin-top: 0.5rem; }
 
 .dash-offers { list-style: none; margin: 0; padding: 0; }
@@ -4362,7 +4362,7 @@ button:not(:disabled):active,
 .dash-offers li:first-child .dash-orow { border-top: none; }
 .dash-orow:hover { background: var(--hover); }
 .dash-ot { font-weight: 560; font-size: 0.82rem; }
-.dash-ov { font-family: var(--serif); font-weight: 600; text-align: right; }
+.dash-ov { font-family: var(--num-serif, var(--serif)); font-weight: 500; text-align: right; }
 .dash-oc { font-size: 0.7rem; grid-column: 1 / -1; }
 
 /* .dash-stat moved to the owned StatLine component (src/components/StatLine.css). */
