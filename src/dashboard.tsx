@@ -1,38 +1,26 @@
-// Dashboard view extracted from App.tsx (#285 split) — the home tab: KPI
-// cards, weekly momentum, Next-Up action list, recent activity, and the
-// "all the numbers" analytics drawer (StatsTab).
+// Home tab (#480) — recast as "Today": an action-first screen answering
+// "what do I do now?" (overdue/due follow-ups + weekly momentum), with the
+// recent-activity glance. The analytics (KPIs, funnel, offers, stats drawer)
+// moved to the Insights tab (src/insights.tsx).
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Application, Stats, UserGoal } from "./types";
 import { api } from "./api";
 import {
-  FUNNEL_STAGES,
-  funnelConversions,
-  funnelReachCounts,
-  responseRate,
-} from "./stats";
-import {
-  computePipelineMomentum,
   computeWeeklyMomentum,
   formatDate,
   goalStreak,
   isDead,
   isDue,
   isOverdue,
-  medianTimeToOffer,
   searchWeekNumber,
-  totalComp,
 } from "./format";
-import { StatsTab } from "./stats-view";
-import { ActivityTab } from "./calendar";
-import { Button, DashCard, MomentumBand, SideList, StarRating, StatCard, StatLine } from "./components";
+import { Button, DashCard, SideList, StarRating } from "./components";
 import { LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 
 export function DashboardTab({
   applications,
-  fullApps,
-  onGoToJobs,
   onOpenJob,
   onError,
   onChanged,
@@ -41,8 +29,6 @@ export function DashboardTab({
   onOpenQuickAdd,
 }: {
   applications: Application[];
-  fullApps: Application[];
-  onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
   onError: (message: string | null) => void;
   onChanged: () => Promise<unknown> | void;
@@ -51,41 +37,27 @@ export function DashboardTab({
   onOpenQuickAdd: () => void;
 }) {
   const { t } = useTranslation();
-  const [showActivity, setShowActivity] = useState(false);
   const [goal, setGoal] = useState<UserGoal | null>(null);
   useEffect(() => {
     api.goals().then(setGoal).catch(() => {});
   }, []);
   if (!stats) return <LoadingSkeleton />;
   const history = stats.history;
-  const open = applications.filter((a) => !isDead(a.status));
+
+  // Things that need you today: overdue or due-today follow-ups on live apps.
+  const needToday = applications.filter(
+    (a) => !isDead(a.status) && (isOverdue(a) || isDue(a)),
+  );
   const upcoming = applications.filter(
     (a) => a.next_action_at && !isDead(a.status),
   );
   const hasActions = upcoming.length > 0;
-
-  const counts = funnelReachCounts(history);
-  const funnelMax = Math.max(1, counts[0] ?? 0);
-  const conv = funnelConversions(history);
-  const resp = responseRate(history);
-  const mom = computeWeeklyMomentum(stats.applications, history);
-  const weekMax = Math.max(1, ...mom.weeks.map((w) => w.count));
-  const pipe = computePipelineMomentum(history);
-  const t2o = medianTimeToOffer(history);
-  const liveOffers = applications.filter((a) => a.status === "offer");
-  const comps = liveOffers
-    .map((o) => totalComp(o))
-    .filter((x): x is number => x != null);
-  const topComp = comps.length ? Math.max(...comps) : null;
   const recent = [...applications]
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, 5);
 
-  const fmtComp = (n: number) =>
-    `~${liveOffers[0]?.salary_currency ?? "€"} ${Math.round(n).toLocaleString()}`;
-
-  // Weekly-goal card (#473). This-week count is the last (in-progress) bucket;
-  // the streak counts only completed weeks that met the target.
+  // Weekly-goal momentum (#473) — this week's count vs target, streak, week N.
+  const mom = computeWeeklyMomentum(stats.applications, history);
   const goalTarget = goal?.weekly_app_goal ?? 0;
   const thisWeek = mom.weeks[mom.weeks.length - 1]?.count ?? 0;
   const streak = goalStreak(
@@ -96,8 +68,10 @@ export function DashboardTab({
     const d = a.applied_at ?? a.created_at;
     return d && (!min || d < min) ? d : min;
   }, null);
-  const searchStart = goal?.search_started_at ?? earliestApp;
-  const searchWeek = searchWeekNumber(searchStart, Date.now());
+  const searchWeek = searchWeekNumber(
+    goal?.search_started_at ?? earliestApp,
+    Date.now(),
+  );
   const goalPct =
     goalTarget > 0 ? Math.min(100, Math.round((thisWeek / goalTarget) * 100)) : 0;
 
@@ -137,127 +111,6 @@ export function DashboardTab({
     </div>
   );
 
-  const kpis = (
-    <div className="dash-kpis">
-      <StatCard
-        value={open.length}
-        label={t("dashboard.kpiOpen")}
-        onClick={onGoToJobs}
-        hero
-      />
-      <StatCard
-        value={`${Math.round(resp.rate * 100)}%`}
-        label={t("dashboard.kpiResponse", {
-          responded: resp.responded,
-          applied: resp.applied,
-        })}
-        onClick={onGoToJobs}
-      />
-      <StatCard
-        value={liveOffers.length}
-        label={
-          <>
-            {t("dashboard.kpiOffers")}
-            {topComp != null ? ` · ${fmtComp(topComp)}` : ""}
-          </>
-        }
-        onClick={() => liveOffers[0] && onOpenJob(liveOffers[0].id)}
-      />
-      <StatCard
-        value={t2o != null ? `~${Math.round(t2o)}d` : "—"}
-        label={t("dashboard.kpiToOffer")}
-      />
-    </div>
-  );
-
-  const band = (
-    <MomentumBand
-      eyebrow={t("dashboard.momentumTitle")}
-      verdict={t(`stats.momentum.${pipe.verdict}`)}
-      detail={t("stats.momentumDetail", { recent: pipe.recent, prior: pipe.prior })}
-      bars={mom.weeks.map((w) => ({
-        heightPct: Math.max(4, (w.count / weekMax) * 100),
-        dim: w.count === 0,
-      }))}
-    />
-  );
-
-  const funnelCard = (
-    <DashCard
-      heading={t("dashboard.funnelConv")}
-      win={t("dashboard.winLiveAllTime")}
-      onClick={onGoToJobs}
-      key="funnel"
-    >
-      <div className="dash-funnel">
-        {FUNNEL_STAGES.map((st, i) => (
-          <div className={`dash-fn stage-${st}`} key={st}>
-            <span className="dash-fl">{t(`stages.${st}`)}</span>
-            <span className="dash-fbar">
-              <i style={{ width: `${(counts[i] / funnelMax) * 100}%` }} />
-            </span>
-            <span className="dash-fn-n">{counts[i]}</span>
-          </div>
-        ))}
-      </div>
-      <div className="muted small mono dash-conv-line">
-        {conv.map((c) => `${Math.round(c.rate * 100)}%`).join(" · ")}{" "}
-        {t("dashboard.stageToStage")}
-      </div>
-    </DashCard>
-  );
-
-  const offersCard = (
-    <DashCard heading={t("dashboard.offers")} win={t("dashboard.winOpen")} key="offers">
-      {liveOffers.length === 0 ? (
-        <p className="muted small" style={{ margin: 0 }}>
-          {t("dashboard.noOffers")}
-        </p>
-      ) : (
-        <ul className="dash-offers">
-          {liveOffers.slice(0, 3).map((o) => {
-            const tc = totalComp(o);
-            return (
-              <li key={o.id}>
-                <button
-                  type="button"
-                  className="dash-orow click"
-                  onClick={() => onOpenJob(o.id)}
-                >
-                  <span className="dash-ot">{o.title}</span>
-                  <span className="dash-ov">{tc != null ? fmtComp(tc) : "—"}</span>
-                  <span className="dash-oc muted">
-                    {o.company_name ?? "—"}
-                    {o.salary_range ? ` · ${o.salary_range}` : ""}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </DashCard>
-  );
-
-  const fortnightCard = (
-    <DashCard heading={t("dashboard.thisFortnight")} win={t("dashboard.win2wk")} key="fortnight">
-      <StatLine
-        label={t("dashboard.response")}
-        value={`${Math.round(resp.rate * 100)}%`}
-      />
-      <StatLine
-        label={t("dashboard.toOffer")}
-        value={t2o != null ? `~${Math.round(t2o)}d` : "—"}
-      />
-      <StatLine
-        label={t("dashboard.momentumTitle")}
-        value={t(`stats.momentum.${pipe.verdict}`)}
-      />
-    </DashCard>
-  );
-
-  const analytics = [funnelCard, offersCard, fortnightCard];
-
   const activityCard = (
     <DashCard heading={t("overview.recentlyUpdated")} key="activity">
       {recent.length === 0 ? (
@@ -284,57 +137,45 @@ export function DashboardTab({
   );
 
   return (
-    <section className="dash">
-      {kpis}
+    <section className="dash today">
+      <div className="today-hero">
+        {needToday.length > 0 ? (
+          <>
+            <span className="today-hero-n">{needToday.length}</span>
+            <span className="today-hero-lbl">
+              {t("today.needYou", { count: needToday.length })}
+            </span>
+          </>
+        ) : (
+          <span className="today-hero-lbl today-hero-clear">
+            {t("today.allClear")}
+          </span>
+        )}
+      </div>
+
       {goalCard}
-      {band}
+
       {hasActions ? (
-        <div className="dash-cols">
-          <div className="dash-col">
-            <DashCard lead>
-              <NextUpPanel
-                notify={notify}
-                applications={applications}
-                onChanged={onChanged}
-                onError={onError}
-              />
-            </DashCard>
-            {activityCard}
-          </div>
-          <div className="dash-col">{analytics}</div>
-        </div>
+        <DashCard lead>
+          <NextUpPanel
+            notify={notify}
+            applications={applications}
+            onChanged={onChanged}
+            onError={onError}
+          />
+        </DashCard>
       ) : (
-        <>
-          <div className="dash-caughtup">
-            <span className="dash-caughtup-tick">✓</span>
-            <span className="dash-caughtup-t">{t("dashboard.caughtUp")}</span>
-            <span className="sp" />
-            <Button variant="link"
-              onClick={onOpenQuickAdd}
-            >
-              {t("dashboard.addFollowUp")}
-            </Button>
-          </div>
-          <div className="dash-cols">
-            <div className="dash-col">{analytics}</div>
-            <div className="dash-col">{activityCard}</div>
-          </div>
-        </>
+        <div className="dash-caughtup">
+          <span className="dash-caughtup-tick">✓</span>
+          <span className="dash-caughtup-t">{t("dashboard.caughtUp")}</span>
+          <span className="sp" />
+          <Button variant="link" onClick={onOpenQuickAdd}>
+            {t("dashboard.addFollowUp")}
+          </Button>
+        </div>
       )}
 
-      <button
-        className="btn-secondary overview-activity-toggle"
-        onClick={() => setShowActivity((v) => !v)}
-        aria-expanded={showActivity}
-      >
-        {showActivity ? t("overview.hideActivity") : t("overview.showActivity")}
-      </button>
-      {showActivity && <ActivityTab onError={onError} onOpenJob={onOpenJob} />}
-
-      <details className="dash-details">
-        <summary>{t("dashboard.allNumbers")}</summary>
-        <StatsTab stats={stats} fullApps={fullApps} />
-      </details>
+      {activityCard}
     </section>
   );
 }

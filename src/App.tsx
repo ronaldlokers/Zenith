@@ -8,6 +8,7 @@ import {
   ErrorIcon,
   NavCalendarIcon,
   NavCvIcon,
+  NavInsightsIcon,
   NavFeedIcon,
   NavNetworkIcon,
   NavOverviewIcon,
@@ -17,6 +18,7 @@ import {
 import { ConfirmHost, LoadingSkeleton } from "./ui";
 import { type Tab, TAB_PATHS, parsePath } from "./routing";
 import { DashboardTab } from "./dashboard";
+import { InsightsTab } from "./insights";
 
 // Tab bodies are code-split (perf review, #446): only the active tab's chunk
 // loads, instead of shipping every tab in the initial bundle. Dashboard stays
@@ -151,6 +153,7 @@ export default function App() {
     { data: "calendar", to: "calendar", active: tab === "calendar", icon: <NavCalendarIcon />, label: t("tabs.calendar") },
     { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
     { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
+    { data: "insights", to: "insights", active: tab === "insights", icon: <NavInsightsIcon />, label: t("tabs.insights") },
     // Admin-only destination (#457) — the dedicated admin area, appended so it
     // shows in the rail and mobile tabs only for admins.
     ...(isAdmin
@@ -306,14 +309,22 @@ export default function App() {
             {tab === "overview" && (
               <DashboardTab
                 applications={visibleApps}
-                fullApps={applications}
-                onGoToJobs={() => setTab("board")}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}
                 onChanged={reload}
                 stats={statsData}
                 notify={notify}
                 onOpenQuickAdd={() => setShowQuickAdd(true)}
+              />
+            )}
+            {tab === "insights" && (
+              <InsightsTab
+                applications={visibleApps}
+                fullApps={applications}
+                onGoToJobs={() => setTab("board")}
+                onOpenJob={(id) => navigate(`/jobs/${id}`)}
+                onError={setError}
+                stats={statsData}
               />
             )}
             {routedJob && (
