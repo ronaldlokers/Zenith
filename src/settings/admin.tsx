@@ -5,7 +5,6 @@ import { api } from "../api";
 import { authClient, useSession } from "../auth-client";
 import { requestConfirm } from "../hooks";
 import { Badge, Button } from "../components";
-import { ResetDemoData } from "./data";
 
 // Admin user management (#285) — the recovery path for a locked-out user:
 // list users, reset a forgotten password to a new temporary one, reset a
@@ -197,7 +196,6 @@ export function AdminInvite() {
           {t("account.inviteSubmit")}
         </Button>
       </form>
-      <ResetDemoData />
     </div>
   );
 }

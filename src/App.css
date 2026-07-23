@@ -410,9 +410,24 @@
   margin-bottom: 0.8rem;
 }
 
+/* Each admin section is a resting tier-2 panel (#469) — the page laid them
+   out as a "card grid" but the cards were never actually styled. */
+.admin-invite {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 1.2rem 1.4rem;
+}
+
+/* Section heading becomes a mono eyebrow, matching Settings. */
 .admin-invite h3 {
-  font-size: var(--text-body);
-  margin: 0 0 0.6rem;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+  margin: 0 0 var(--space-3);
 }
 
 .admin-invite-success {
@@ -1122,7 +1137,9 @@
 }
 
 /* Admin user management (#285) */
-.admin-user {
+/* Needs to outspecify `.settings-list li` (which sets align-items: center) —
+   otherwise the stacked user rows render centre-aligned (#469). */
+.settings-list li.admin-user {
   flex-direction: column;
   align-items: stretch;
   gap: var(--space-2);
@@ -3591,17 +3608,22 @@ summary.bcol-head::after {
   max-width: 72rem;
   margin: var(--space-3) auto 0;
 }
+/* Refined refresh (#469): admin title takes the display voice (--serif). */
 .admin-page-title {
   margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.7rem;
+  letter-spacing: -0.01em;
 }
 .admin-page-sub {
   margin: var(--space-1) 0 var(--space-4);
 }
-.admin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: var(--space-4);
-  align-items: start;
+/* Admin reuses the Settings two-pane (.settings-page/.settings-nav); the
+   selected section renders one .admin-invite card in the content area. */
+.admin-content {
+  min-width: 0;
+  max-width: 40rem;
 }
 
 .settings-page {
