@@ -340,6 +340,23 @@
     "body": "I'm writing to apply for the {{title}} role at {{company}}. {{summary}}\n\nI'd welcome the chance to discuss how my background fits this role.",
     "signoff": "Best regards,\n{{name}}"
   },
+  "ats": {
+    "band": {
+      "strong": "Strong match",
+      "fair": "Fair match",
+      "weak": "Needs work"
+    },
+    "check": {
+      "summary": "Profile summary present",
+      "experience": "Every role has a description",
+      "quantified": "Achievements include numbers",
+      "contact": "Contact details complete",
+      "skillsLinked": "5+ skills linked to experience"
+    },
+    "coverage": "{{matched}} of {{total}} job keywords covered",
+    "noKeywords": "No known skills detected in this description",
+    "scoreAria": "ATS score {{score}} out of 100"
+  },
   "detail": {
     "timeline": "Timeline",
     "documents": "Documents",
@@ -362,7 +379,7 @@
     "possibleDuplicate": "You already have an open application at this company: “{{title}}”. Saving will add a separate one.",
     "archive": "Archive",
     "unarchive": "Unarchive",
-    "keywordMatch": "Keyword match",
+    "keywordMatch": "ATS check",
     "pasteJdPlaceholder": "Paste the job description to check it against your CV skills…",
     "keywordMatchCount": "Your CV mentions {{matched}} of {{total}} keywords found in this posting",
     "cheatSheet": {

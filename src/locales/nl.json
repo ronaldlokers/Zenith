@@ -340,6 +340,23 @@
     "body": "Hierbij solliciteer ik graag voor de functie {{title}} bij {{company}}. {{summary}}\n\nIk licht mijn achtergrond graag toe in een gesprek.",
     "signoff": "Met vriendelijke groet,\n{{name}}"
   },
+  "ats": {
+    "band": {
+      "strong": "Sterke match",
+      "fair": "Redelijke match",
+      "weak": "Kan beter"
+    },
+    "check": {
+      "summary": "Profielsamenvatting aanwezig",
+      "experience": "Elke functie heeft een omschrijving",
+      "quantified": "Resultaten bevatten cijfers",
+      "contact": "Contactgegevens compleet",
+      "skillsLinked": "5+ vaardigheden gekoppeld aan ervaring"
+    },
+    "coverage": "{{matched}} van {{total}} functiewoorden gedekt",
+    "noKeywords": "Geen bekende vaardigheden gevonden in deze omschrijving",
+    "scoreAria": "ATS-score {{score}} van 100"
+  },
   "detail": {
     "timeline": "Tijdlijn",
     "documents": "Documenten",
