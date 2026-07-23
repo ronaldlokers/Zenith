@@ -108,6 +108,9 @@ export interface FeedItem {
   fetched_at: string;
   status: "new" | "added" | "dismissed";
   board_slug: string | null;
+  // The job description, captured from the provider (Greenhouse/Ashby full,
+  // Adzuna snippet). Null for older rows fetched before capture existed.
+  description: string | null;
 }
 
 // Keyset cursor for paging the feed (#261): sort key (posted_at or "")

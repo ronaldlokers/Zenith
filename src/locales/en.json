@@ -182,7 +182,10 @@
     "viewPosting": "View posting ↗",
     "addToJobs": "Add to Jobs",
     "dismiss": "Dismiss",
-    "triageHint": "j / k move · a add · d dismiss"
+    "triageHint": "j / k move · a add · d dismiss",
+    "skillsMatch_one": "{{count}} matching skill",
+    "skillsMatch_other": "{{count}} matching skills",
+    "skillsMatchHint": "Skills from your CV mentioned in this posting"
   },
   "stats": {
     "momentumLabel": "Pipeline momentum",

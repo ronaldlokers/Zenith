@@ -1291,6 +1291,19 @@ button.danger {
 
 /* Mobile swipe-to-triage (#144) — background tint during the drag,
    before the swipe crosses the commit threshold. */
+/* Feed "fit" badge — count of the user's CV skills the posting mentions. */
+.feed-match {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 0.15rem;
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+  color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  border-radius: var(--radius-full);
+  padding: 0.05rem 0.5rem;
+}
+
 .feed-card {
   touch-action: pan-y;
   transition: background-color 0.1s ease;

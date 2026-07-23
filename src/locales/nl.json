@@ -182,7 +182,10 @@
     "viewPosting": "Bekijk vacature ↗",
     "addToJobs": "Toevoegen aan Jobs",
     "dismiss": "Negeren",
-    "triageHint": "j / k navigeren · a toevoegen · d negeren"
+    "triageHint": "j / k navigeren · a toevoegen · d negeren",
+    "skillsMatch_one": "{{count}} passende vaardigheid",
+    "skillsMatch_other": "{{count}} passende vaardigheden",
+    "skillsMatchHint": "Vaardigheden uit je cv die in deze vacature voorkomen"
   },
   "stats": {
     "momentumLabel": "Pipeline-momentum",
