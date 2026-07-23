@@ -279,6 +279,13 @@ export interface OutreachTemplate {
   created_at: string;
 }
 
+export interface UserGoal {
+  user_id: string;
+  weekly_app_goal: number;
+  search_started_at: string | null;
+  created_at: string;
+}
+
 export interface Tag {
   id: number;
   name: string;

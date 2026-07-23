@@ -100,6 +100,24 @@ export function SettingsPage({
     },
   );
   const [keyShortcuts, setKeyShortcuts] = useState(keyShortcutsEnabled);
+  const [weeklyGoal, setWeeklyGoal] = useState<number>(0);
+  const [searchStart, setSearchStart] = useState<string>("");
+  useEffect(() => {
+    api.goals().then((g) => {
+      setWeeklyGoal(g.weekly_app_goal);
+      setSearchStart(g.search_started_at ?? "");
+    });
+  }, []);
+  const saveGoals = (next: { weekly_app_goal?: number; search_started_at?: string | null }) =>
+    api
+      .setGoals({
+        weekly_app_goal: next.weekly_app_goal ?? weeklyGoal,
+        search_started_at:
+          next.search_started_at !== undefined
+            ? next.search_started_at
+            : searchStart || null,
+      })
+      .catch((e) => setApiError((e as Error).message));
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
   const [calendarToken, setCalendarToken] = useState<string | null>(null);
@@ -253,6 +271,31 @@ export function SettingsPage({
               </option>
             ))}
           </select>
+        </label>
+        <label className="settings-field">
+          <span>{t("goals.weeklyGoalLabel")}</span>
+          <input
+            type="number"
+            min={0}
+            max={50}
+            value={weeklyGoal}
+            onChange={(e) => {
+              const v = Math.max(0, Math.min(50, Number(e.target.value) || 0));
+              setWeeklyGoal(v);
+              void saveGoals({ weekly_app_goal: v });
+            }}
+          />
+        </label>
+        <label className="settings-field">
+          <span>{t("goals.searchStartLabel")}</span>
+          <input
+            type="date"
+            value={searchStart}
+            onChange={(e) => {
+              setSearchStart(e.target.value);
+              void saveGoals({ search_started_at: e.target.value || null });
+            }}
+          />
         </label>
         </div>
         <label className="settings-field settings-check">

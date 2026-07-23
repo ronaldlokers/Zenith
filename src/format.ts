@@ -364,6 +364,32 @@ export function computeWeeklyMomentum(
   return { weeks, streak, streakBroken };
 }
 
+// Consecutive weeks (most recent first) whose application count met the goal
+// (#473). Pure. Pass the COMPLETED weekly counts (exclude the in-progress
+// current week — the caller shows that as live progress). Zero target = no
+// goal set = no streak.
+export function goalStreak(weeklyCounts: number[], target: number): number {
+  if (target <= 0) return 0;
+  let streak = 0;
+  for (let i = weeklyCounts.length - 1; i >= 0; i--) {
+    if (weeklyCounts[i] >= target) streak++;
+    else break;
+  }
+  return streak;
+}
+
+// 1-based "week N of your search" from a start date (#473). `now` is injected
+// so it's unit-testable. Returns null when no start date is known.
+export function searchWeekNumber(
+  startDate: string | null | undefined,
+  now: number,
+): number | null {
+  if (!startDate) return null;
+  const start = parseSqlDate(startDate);
+  if (!start || Number.isNaN(start)) return null;
+  return Math.max(1, Math.floor((now - start) / (7 * 86400000)) + 1);
+}
+
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",

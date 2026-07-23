@@ -3640,6 +3640,75 @@ summary.bcol-head::after {
   max-width: 40rem;
 }
 
+/* Weekly-goal card (#473) — dashboard. Serif figure, gold progress, streak. */
+.dash-goal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.dash-goal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.dash-goal-eyebrow {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+.dash-goal-figure {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+.dash-goal-n {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.dash-goal-target {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  color: var(--faint);
+}
+.dash-goal-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--track, color-mix(in srgb, var(--muted) 18%, transparent));
+  overflow: hidden;
+}
+.dash-goal-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+.dash-goal-bar > i.met {
+  background: var(--success);
+}
+.dash-goal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  font-size: var(--text-meta);
+}
+.dash-goal-streak {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
 /* Outreach template composer (#472) — contact detail. */
 .outreach-composer {
   display: flex;
