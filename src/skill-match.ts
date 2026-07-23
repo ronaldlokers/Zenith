@@ -16,3 +16,20 @@ export function skillMatchCount(
     return new RegExp(`\\b${escaped}\\b`, "i").test(jdLower);
   }).length;
 }
+
+// Feed sort/filter derivation (#444), pure so it's unit-testable apart from the
+// component. `newest` keeps the API's chronological order; `match` sorts by fit
+// descending (stable — ties keep their incoming order). minFit>0 hides items
+// below the threshold. Never mutates the input array.
+export function sortFilterFeed<T extends { id: number }>(
+  items: T[],
+  matchOf: (item: T) => number,
+  sortBy: "newest" | "match",
+  minFit: number,
+): T[] {
+  let list = items;
+  if (minFit > 0) list = list.filter((i) => matchOf(i) >= minFit);
+  if (sortBy === "match")
+    list = [...list].sort((a, b) => matchOf(b) - matchOf(a));
+  return list;
+}

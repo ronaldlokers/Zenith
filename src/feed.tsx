@@ -1,6 +1,6 @@
 // Feed feature extracted from App.tsx (#285 split) — the ATS/job-board
 // feed tab, its swipe-triage cards, and the feed-sources settings section.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
@@ -16,8 +16,8 @@ import type {
   Skill,
   WorkExperience,
 } from "./types";
-import { skillMatchCount } from "./skill-match";
-import { Button, Chip, EmptyState, Toolbar } from "./components";
+import { skillMatchCount, sortFilterFeed } from "./skill-match";
+import { Button, Chip, EmptyState, SegmentedControl, Toolbar } from "./components";
 
 export function FeedSettings({
   roleTypes,
@@ -383,6 +383,34 @@ export function FeedTab({
       })
       .catch(() => {});
   }, []);
+  // Surface high-fit jobs: sort the flat chronological feed by CV skill match
+  // and optionally hide anything below a minimum. Match counts are memoised so
+  // they're computed once per item, not on every keyboard-nav re-render.
+  const [sortBy, setSortBy] = useState<"newest" | "match">("newest");
+  const [minFit, setMinFit] = useState(0);
+  const matchById = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const item of items ?? []) {
+      m.set(
+        item.id,
+        item.description
+          ? skillMatchCount(item.description, skills, cvSkillNames)
+          : 0,
+      );
+    }
+    return m;
+  }, [items, skills, cvSkillNames]);
+  const visibleItems = useMemo(
+    () =>
+      sortFilterFeed(
+        items ?? [],
+        (i) => matchById.get(i.id) ?? 0,
+        sortBy,
+        minFit,
+      ),
+    [items, matchById, sortBy, minFit],
+  );
+
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -482,13 +510,13 @@ export function FeedTab({
       );
   };
 
-  // Keep focus in range after add/dismiss shrinks the list (#261) —
-  // otherwise j/k could point past the end and land nowhere.
+  // Keep focus in range after add/dismiss (#261) or a sort/filter change
+  // shrinks the visible list — otherwise j/k could point past the end.
   useEffect(() => {
     setFocusedIndex((i) =>
-      Math.min(i, Math.max(0, (items?.length ?? 1) - 1)),
+      Math.min(i, Math.max(0, visibleItems.length - 1)),
     );
-  }, [items]);
+  }, [visibleItems]);
 
   // Desktop keyboard triage (#144) — mirrors the Jobs tab's j/k pattern
   // (#39): j/k move focus, a adds the focused item, d dismisses it. The
@@ -500,9 +528,19 @@ export function FeedTab({
   // ref lets the keydown listener subscribe once instead of tearing down and
   // re-adding on every focus move or item change, while still acting on
   // current values.
-  const triageRef = useRef({ items, focusedIndex, addToPipeline, dismiss });
+  const triageRef = useRef({
+    items: visibleItems,
+    focusedIndex,
+    addToPipeline,
+    dismiss,
+  });
   useEffect(() => {
-    triageRef.current = { items, focusedIndex, addToPipeline, dismiss };
+    triageRef.current = {
+      items: visibleItems,
+      focusedIndex,
+      addToPipeline,
+      dismiss,
+    };
   });
 
   useEffect(() => {
@@ -538,7 +576,7 @@ export function FeedTab({
   }, []);
 
   // The desktop triage pane mirrors the keyboard/click-selected list row.
-  const focusedItem = (items ?? [])[focusedIndex] ?? null;
+  const focusedItem = visibleItems[focusedIndex] ?? null;
   const focusedRole = focusedItem
     ? (roleTypes.find((r) => r.slug === focusedItem.role_type)?.label ??
       focusedItem.role_type)
@@ -562,9 +600,49 @@ export function FeedTab({
       {!failed && !items && <LoadingSkeleton />}
 
       {items && items.length > 0 && (
+        <div className="feed-controls">
+          <span className="feed-controls-label muted small">
+            {t("feed.sortLabel")}
+          </span>
+          <SegmentedControl role="group" aria-label={t("feed.sortLabel")}>
+            <button
+              className={sortBy === "newest" ? "active" : ""}
+              onClick={() => setSortBy("newest")}
+            >
+              {t("feed.sortNewest")}
+            </button>
+            <button
+              className={sortBy === "match" ? "active" : ""}
+              onClick={() => setSortBy("match")}
+            >
+              {t("feed.sortMatch")}
+            </button>
+          </SegmentedControl>
+          <span className="feed-controls-label muted small">
+            {t("feed.fitLabel")}
+          </span>
+          <SegmentedControl role="group" aria-label={t("feed.fitLabel")}>
+            {[0, 1, 2, 3].map((n) => (
+              <button
+                key={n}
+                className={minFit === n ? "active" : ""}
+                onClick={() => setMinFit(n)}
+              >
+                {n === 0 ? t("feed.fitAny") : `${n}+`}
+              </button>
+            ))}
+          </SegmentedControl>
+        </div>
+      )}
+
+      {items && items.length > 0 && visibleItems.length === 0 && (
+        <p className="muted small feed-nomatch">{t("feed.noFitMatch")}</p>
+      )}
+
+      {visibleItems.length > 0 && (
         <div className="feed-triage">
           <ul className="cards feed-list" ref={cardsRef}>
-            {items.map((item, i) => (
+            {visibleItems.map((item, i) => (
               <FeedCard
                 key={item.id}
                 item={item}
@@ -572,11 +650,7 @@ export function FeedTab({
                   roleTypes.find((r) => r.slug === item.role_type)?.label ??
                   item.role_type
                 }
-                matched={
-                  item.description
-                    ? skillMatchCount(item.description, skills, cvSkillNames)
-                    : null
-                }
+                matched={matchById.get(item.id) ?? null}
                 focused={i === focusedIndex}
                 adding={addingIds.has(item.id)}
                 onAdd={() => addToPipeline(item)}

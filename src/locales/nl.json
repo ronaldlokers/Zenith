@@ -185,7 +185,13 @@
     "triageHint": "j / k navigeren · a toevoegen · d negeren",
     "skillsMatch_one": "{{count}} passende vaardigheid",
     "skillsMatch_other": "{{count}} passende vaardigheden",
-    "skillsMatchHint": "Vaardigheden uit je cv die in deze vacature voorkomen"
+    "skillsMatchHint": "Vaardigheden uit je cv die in deze vacature voorkomen",
+    "sortLabel": "Sorteren",
+    "sortNewest": "Nieuwste",
+    "sortMatch": "Beste match",
+    "fitLabel": "Min. match",
+    "fitAny": "Alle",
+    "noFitMatch": "Geen vacatures voldoen aan dit matchfilter — verlaag het om meer te zien."
   },
   "stats": {
     "momentumLabel": "Pipeline-momentum",

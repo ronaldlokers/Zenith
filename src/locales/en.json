@@ -185,7 +185,13 @@
     "triageHint": "j / k move · a add · d dismiss",
     "skillsMatch_one": "{{count}} matching skill",
     "skillsMatch_other": "{{count}} matching skills",
-    "skillsMatchHint": "Skills from your CV mentioned in this posting"
+    "skillsMatchHint": "Skills from your CV mentioned in this posting",
+    "sortLabel": "Sort",
+    "sortNewest": "Newest",
+    "sortMatch": "Best match",
+    "fitLabel": "Min fit",
+    "fitAny": "Any",
+    "noFitMatch": "No jobs match this fit filter — lower it to see more."
   },
   "stats": {
     "momentumLabel": "Pipeline momentum",
