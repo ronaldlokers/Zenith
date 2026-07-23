@@ -70,6 +70,28 @@ function applicationValues(
   ];
 }
 
+// Cross-tenant reference guard (security review, #445). The DB foreign keys
+// on applications.company_id / contact_id / referred_by_contact_id and
+// contacts.company_id only check that the row EXISTS, not that it belongs to
+// the caller — so without this a user could attach another tenant's id and
+// read its name back through the list joins. Returns the first table whose
+// supplied id isn't owned by userId, or null when every ref is fine (or null).
+async function findForeignRef(
+  db: D1Database,
+  userId: string,
+  refs: { table: "companies" | "contacts"; id: unknown }[],
+): Promise<string | null> {
+  for (const { table, id } of refs) {
+    if (id == null) continue;
+    const owned = await db
+      .prepare(`SELECT 1 FROM ${table} WHERE id = ? AND user_id = ? LIMIT 1`)
+      .bind(id, userId)
+      .first();
+    if (!owned) return table;
+  }
+  return null;
+}
+
 // Records a pipeline status change once: the status_history row plus the
 // (non-blocking) webhook. Shared by PUT and PATCH so the two can't diverge.
 function recordStatusChange(
@@ -272,8 +294,13 @@ app.post("/api/companies/:id/research", async (c) => {
 
 app.get("/api/contacts", async (c) => {
   const { results } = await c.env.DB.prepare(
+    // The join is scoped by user_id too (not just contacts.company_id) so a
+    // stray cross-tenant company_id can never surface another user's name
+    // (security review, #445 — defence in depth behind the write-time check).
     `SELECT contacts.*, companies.name AS company_name
-     FROM contacts LEFT JOIN companies ON companies.id = contacts.company_id
+     FROM contacts
+     LEFT JOIN companies ON companies.id = contacts.company_id
+                        AND companies.user_id = contacts.user_id
      WHERE contacts.user_id = ?
      ORDER BY contacts.name`,
   )
@@ -285,6 +312,10 @@ app.get("/api/contacts", async (c) => {
 app.post("/api/contacts", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
+  const badRef = await findForeignRef(c.env.DB, c.get("userId"), [
+    { table: "companies", id: body.company_id },
+  ]);
+  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   const result = await c.env.DB.prepare(
     `INSERT INTO contacts (user_id, ${CONTACT_COLUMNS.join(", ")})
      VALUES (?, ${CONTACT_COLUMNS.map(() => "?").join(", ")}) RETURNING *`,
@@ -297,6 +328,10 @@ app.post("/api/contacts", async (c) => {
 app.put("/api/contacts/:id", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
+  const badRef = await findForeignRef(c.env.DB, c.get("userId"), [
+    { table: "companies", id: body.company_id },
+  ]);
+  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   const result = await c.env.DB.prepare(
     `UPDATE contacts SET ${CONTACT_COLUMNS.map((col) => `${col} = ?`).join(", ")}
      WHERE id = ? AND user_id = ? RETURNING *`,
@@ -318,12 +353,18 @@ app.delete("/api/contacts/:id", async (c) => {
 
 app.get("/api/applications", async (c) => {
   const { results } = await c.env.DB.prepare(
+    // Every join is scoped by user_id too, so a cross-tenant company_id /
+    // contact_id can never surface another user's name (security review,
+    // #445 — defence in depth behind the write-time findForeignRef check).
     `SELECT applications.*, companies.name AS company_name, contacts.name AS contact_name,
             referrer.name AS referred_by_name
      FROM applications
      LEFT JOIN companies ON companies.id = applications.company_id
+                        AND companies.user_id = applications.user_id
      LEFT JOIN contacts ON contacts.id = applications.contact_id
+                       AND contacts.user_id = applications.user_id
      LEFT JOIN contacts AS referrer ON referrer.id = applications.referred_by_contact_id
+                                   AND referrer.user_id = applications.user_id
      WHERE applications.user_id = ?
      ORDER BY applications.updated_at DESC`,
   )
@@ -555,6 +596,12 @@ app.post("/api/applications", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const userId = c.get("userId");
+  const badRef = await findForeignRef(c.env.DB, userId, [
+    { table: "companies", id: body.company_id },
+    { table: "contacts", id: body.contact_id },
+    { table: "contacts", id: body.referred_by_contact_id },
+  ]);
+  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   const jobDescription = body.job_description ?? null;
   const cols = ["user_id", ...APP_COLUMNS];
   const result = await c.env.DB.prepare(
@@ -614,6 +661,12 @@ app.put("/api/applications/:id", async (c) => {
       job_description_captured_at: string | null;
     }>();
   if (!existing) return c.json({ error: "not found" }, 404);
+  const badRef = await findForeignRef(c.env.DB, userId, [
+    { table: "companies", id: body.company_id },
+    { table: "contacts", id: body.contact_id },
+    { table: "contacts", id: body.referred_by_contact_id },
+  ]);
+  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   // A snapshot is captured once, the first time job_description goes
   // from empty to non-empty — later edits to the text don't re-stamp
   // the capture date, since the point is recording what was applied to.

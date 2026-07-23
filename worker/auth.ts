@@ -18,6 +18,18 @@ function buildAuth(env: Env) {
     // Account creation is invite-only: the public sign-up route is blocked
     // in worker/index.ts before it reaches this handler. New accounts are
     // created by an existing admin via the admin plugin's create-user API.
+    //
+    // Rate limiting (security review, #445): Better Auth only auto-enables
+    // this when NODE_ENV === "production", which the Worker never sets — so
+    // without this, login and TOTP verification accepted unlimited attempts
+    // (brute force). Enable it explicitly. Storage must be "database" (the
+    // rateLimit table, migration 0046) because per-isolate memory can't
+    // throttle across the Workers fleet. Defaults apply the strict special
+    // rule of 3 attempts / 10s to the /sign-in* paths.
+    rateLimit: {
+      enabled: true,
+      storage: "database",
+    },
   });
 }
 
