@@ -213,6 +213,7 @@ export function DashboardTab({
               className={`stage-${a.status} clickable`}
               {...rowActivate(() => onOpenJob(a.id))}
             >
+              <span className="dash-spine" aria-hidden="true" />
               <span className="side-title">{a.title}</span>
               <span className="side-co">{a.company_name ?? "—"}</span>
               <span className="side-stage">{t(`stages.${a.status}`)}</span>
