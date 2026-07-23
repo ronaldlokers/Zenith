@@ -112,7 +112,10 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
         .bind(profile.user_id)
         .all<{ id: number; title: string; date: string; company_name: string | null }>(),
       c.env.DB.prepare(
-        `SELECT interactions.id, interactions.happened_at AS date, interactions.notes,
+        // Deliberately NOT selecting interactions.notes — raw interview notes
+        // (candid, often blunt) must never reach an ICS feed that a user might
+        // paste into a shared/work calendar (privacy review, #450).
+        `SELECT interactions.id, interactions.happened_at AS date,
                 applications.title, companies.name AS company_name
          FROM interactions
          LEFT JOIN applications ON applications.id = interactions.application_id
@@ -122,7 +125,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
            AND interactions.happened_at >= date('now')`,
       )
         .bind(profile.user_id)
-        .all<{ id: number; date: string; notes: string | null; title: string | null; company_name: string | null }>(),
+        .all<{ id: number; date: string; title: string | null; company_name: string | null }>(),
     ]);
 
     const events: IcsEvent[] = [
@@ -142,7 +145,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
         uid: `interview-${i.id}`,
         date: i.date,
         summary: `Interview: ${i.title ?? "Unknown"}`,
-        description: [i.company_name, i.notes].filter(Boolean).join(" — ") || undefined,
+        description: i.company_name ?? undefined,
       })),
     ];
 

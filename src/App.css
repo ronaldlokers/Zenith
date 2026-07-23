@@ -157,6 +157,26 @@
   margin-bottom: var(--space-4);
 }
 
+/* Privacy caution note (e.g. the calendar-feed warning, #450) — a subtle
+   amber tone, distinct from the muted hint and the red error style. */
+.settings-warning {
+  margin: 0;
+  color: var(--attention-ink, #8a5a00);
+  border-left: 3px solid var(--attention, #d9930a);
+  padding-left: 0.6rem;
+}
+@media (prefers-color-scheme: dark) {
+  .settings-warning {
+    color: #e6b45a;
+  }
+}
+:root[data-theme="dark"] .settings-warning {
+  color: #e6b45a;
+}
+:root[data-theme="light"] .settings-warning {
+  color: #8a5a00;
+}
+
 .settings-field select,
 .settings-field input {
   font-size: var(--text-body);
