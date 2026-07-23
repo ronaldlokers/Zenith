@@ -108,6 +108,69 @@ describe("webhooks", () => {
     });
     expect(res.status).toBe(400);
   });
+
+  it("creates an application from the extension (find-or-creates company)", async () => {
+    const key = await apiKey();
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: "Staff Engineer",
+        company: "Ext Co",
+        url: "https://boards.example/job/1",
+        source: "extension",
+      }),
+    });
+    expect(res.status).toBe(201);
+    const created = await res.json<{
+      id: number;
+      title: string;
+      company_id: number | null;
+      source: string;
+      status: string;
+    }>();
+    expect(created.title).toBe("Staff Engineer");
+    expect(created.company_id).not.toBeNull();
+    expect(created.source).toBe("extension");
+    expect(created.status).toBe("interested");
+
+    // A second save with the same company name reuses the company.
+    const res2 = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title: "Another Role", company: "Ext Co" }),
+    });
+    const created2 = await res2.json<{ company_id: number | null }>();
+    expect(created2.company_id).toBe(created.company_id);
+  });
+
+  it("rejects an extension save with no title", async () => {
+    const key = await apiKey();
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ company: "Nameless" }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects an extension save with no key", async () => {
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "x" }),
+    });
+    expect(res.status).toBe(401);
+  });
 });
 
 describe("ssrf + export guards (#346)", () => {

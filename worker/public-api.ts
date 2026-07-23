@@ -208,5 +208,52 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
     return c.json(result);
   });
 
+  // Create an application from a saved posting (#477) — the write path the
+  // browser extension uses. Deliberately narrow: title + optional company
+  // name (find-or-created), url and source only. No compensation is ever
+  // accepted here, keeping the key's comp-free contract intact.
+  api.post("/applications", async (c) => {
+    const body = await c.req.json<{
+      title?: string;
+      company?: string;
+      url?: string;
+      source?: string;
+    }>();
+    const title = (body.title ?? "").trim();
+    if (!title) return c.json({ error: "title is required" }, 400);
+    const userId = c.get("apiUserId");
+
+    let companyId: number | null = null;
+    const companyName = (body.company ?? "").trim();
+    if (companyName) {
+      const existing = await c.env.DB.prepare(
+        "SELECT id FROM companies WHERE user_id = ? AND name = ?",
+      )
+        .bind(userId, companyName)
+        .first<{ id: number }>();
+      companyId =
+        existing?.id ??
+        (
+          await c.env.DB.prepare(
+            "INSERT INTO companies (user_id, name) VALUES (?, ?) RETURNING id",
+          )
+            .bind(userId, companyName)
+            .first<{ id: number }>()
+        )?.id ??
+        null;
+    }
+
+    const url = (body.url ?? "").trim() || null;
+    const source = ((body.source ?? "extension") || "extension").slice(0, 60);
+    const result = await c.env.DB.prepare(
+      `INSERT INTO applications (user_id, company_id, title, role_type, url, source, status)
+       VALUES (?, ?, ?, 'other', ?, ?, 'interested')
+       RETURNING id, title, company_id, url, source, status, created_at`,
+    )
+      .bind(userId, companyId, title, url, source)
+      .first();
+    return c.json(result, 201);
+  });
+
   app.route("/api/v1", api);
 }

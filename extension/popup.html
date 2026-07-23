@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --ink: #1c1a28;
+        --muted: #63607a;
+        --border: #e4e0d5;
+        --surface: #fffdf8;
+        --accent: #a9781f;
+        --accent-text: #fff;
+        --success: #2f7d4f;
+        --danger: #b0453c;
+      }
+      body {
+        width: 320px;
+        margin: 0;
+        padding: 14px;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: var(--ink);
+        background: var(--surface);
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 12px;
+        letter-spacing: 0.02em;
+      }
+      label {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin: 10px 0 3px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+        font-size: 13px;
+        padding: 7px 8px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+      }
+      button {
+        margin-top: 14px;
+        width: 100%;
+        padding: 9px;
+        border: none;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      #status {
+        margin-top: 10px;
+        font-size: 12px;
+        min-height: 16px;
+      }
+      #status.ok {
+        color: var(--success);
+      }
+      #status.err {
+        color: var(--danger);
+      }
+      #setup {
+        display: none;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      #setup a,
+      .link {
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Save to Zenith</h1>
+    <div id="setup">
+      Set your Zenith URL and API key first.
+      <a id="open-options-setup" class="link">Open settings →</a>
+    </div>
+    <div id="form">
+      <label for="title">Job title</label>
+      <input id="title" type="text" />
+      <label for="company">Company</label>
+      <input id="company" type="text" />
+      <label for="url">URL</label>
+      <input id="url" type="text" />
+      <button id="save">Save to pipeline</button>
+      <div id="status"></div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
