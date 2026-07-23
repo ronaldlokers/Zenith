@@ -278,6 +278,15 @@
     "goCv": "Ga naar cv",
     "goSettings": "Ga naar instellingen"
   },
+  "cvVersions": {
+    "title": "Versies",
+    "namePlaceholder": "Versienaam (bijv. Backend-gericht)",
+    "save": "Huidige opslaan",
+    "saved": "CV-versie opgeslagen",
+    "empty": "Nog geen opgeslagen versies. Sla het huidige CV op om een variant te bewaren die je altijd kunt downloaden.",
+    "download": "Downloaden",
+    "corrupt": "Deze versie kon niet worden gelezen."
+  },
   "goals": {
     "weeklyGoal": "Weekdoel",
     "weeklyGoalLabel": "Wekelijks sollicitatiedoel",

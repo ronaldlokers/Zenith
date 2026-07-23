@@ -278,6 +278,15 @@
     "goCv": "Go to CV",
     "goSettings": "Go to settings"
   },
+  "cvVersions": {
+    "title": "Versions",
+    "namePlaceholder": "Version name (e.g. Backend-focused)",
+    "save": "Save current",
+    "saved": "CV version saved",
+    "empty": "No saved versions yet. Save the current CV to keep a variant you can download anytime.",
+    "download": "Download",
+    "corrupt": "This version couldn’t be read."
+  },
   "goals": {
     "weeklyGoal": "Weekly goal",
     "weeklyGoalLabel": "Weekly application goal",

@@ -3640,6 +3640,80 @@ summary.bcol-head::after {
   max-width: 40rem;
 }
 
+/* CV versions library (#474) — side panel. */
+.cv-versions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: var(--space-3);
+}
+.cv-versions-add {
+  display: flex;
+  gap: 0.4rem;
+}
+.cv-versions-add input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: var(--text-body);
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--ink);
+}
+.cv-versions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.cv-versions-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "name actions" "date actions";
+  align-items: center;
+  column-gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.cv-version-name {
+  grid-area: name;
+  font-weight: 600;
+  font-size: var(--text-body);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cv-version-date {
+  grid-area: date;
+}
+.cv-version-actions {
+  grid-area: actions;
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+.cv-version-actions button {
+  font-size: var(--text-meta);
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.cv-version-actions button.danger {
+  color: var(--danger);
+}
+.cv-versions-h {
+  margin-top: var(--space-3);
+}
+
 /* Weekly-goal card (#473) — dashboard. Serif figure, gold progress, streak. */
 .dash-goal {
   background: var(--surface);

@@ -896,6 +896,7 @@ const EXPORT_TABLES = [
   "work_experience_skills",
   "education",
   "languages",
+  "cv_versions",
   "interview_prep_items",
   "outreach_templates",
   "user_goals",
