@@ -178,7 +178,13 @@
   "admin": {
     "title": "Beheer",
     "subtitle": "Beheer gebruikers, uitnodigingen en onderhoudstools.",
-    "navLabel": "Beheer"
+    "navLabel": "Beheer",
+    "section": {
+      "users": "Gebruikers",
+      "invites": "Uitnodigingen",
+      "demo": "Demodata",
+      "notifications": "Notificaties"
+    }
   },
   "feed": {
     "pulledFrom": "Opgehaald uit je ingestelde vacaturesites (Greenhouse, Ashby) en Adzuna, elke 6 uur.",
