@@ -87,9 +87,10 @@ export function ApplicationDetailModal({
   // Which secondary-column section is shown. The detail page had grown to 7
   // stacked sections (IA review, #448) — a tab sub-nav shows one at a time,
   // mirroring the Settings section-nav, and keeps mobile off a long scroll.
-  const [secTab, setSecTab] = useState<
-    "prep" | "ai" | "cover" | "match" | "timeline" | "docs"
-  >("prep");
+  // Three intent groups (#479) instead of six peer tabs: Track (timeline +
+  // documents), Prep (interview prep + AI practice), Tailor (ATS + cover
+  // letter). Clusters the tools by the question you're actually asking.
+  const [secTab, setSecTab] = useState<"track" | "prep" | "tailor">("prep");
   const [inlineField, setInlineField] = useState<null | "followup" | "notes">(
     null,
   );
@@ -667,12 +668,9 @@ export function ApplicationDetailModal({
             >
               {(
                 [
-                  ["prep", t("prep.title")],
-                  ["ai", t("detail.aiPractice")],
-                  ["cover", t("coverLetter.title")],
-                  ["match", t("detail.keywordMatch")],
-                  ["timeline", t("detail.timeline")],
-                  ["docs", t("detail.documents")],
+                  ["track", t("detail.tabTrack")],
+                  ["prep", t("detail.tabPrep")],
+                  ["tailor", t("detail.tabTailor")],
                 ] as const
               ).map(([key, label]) => (
                 <button
@@ -696,12 +694,33 @@ export function ApplicationDetailModal({
               id={`detail-panel-${secTab}`}
               aria-labelledby={`detail-tab-${secTab}`}
             >
-              {secTab === "prep" && (
-                <InterviewPrepSection applicationId={a.id} onError={onError} />
+              {secTab === "track" && (
+                <>
+                  <h3 className="detail-sub detail-sub-first">
+                    {t("detail.timeline")}
+                  </h3>
+                  <Timeline
+                    resource="applications"
+                    targetId={a.id}
+                    onError={onError}
+                    onLogged={() => void onChanged()}
+                  />
+                  <h3 className="detail-sub">{t("detail.documents")}</h3>
+                  <Documents applicationId={a.id} onError={onError} />
+                </>
               )}
 
-              {secTab === "ai" && (
+              {secTab === "prep" && (
                 <>
+                  <h3 className="detail-sub detail-sub-first">
+                    {t("prep.title")}
+                  </h3>
+                  <InterviewPrepSection
+                    applicationId={a.id}
+                    onError={onError}
+                  />
+
+                  <h3 className="detail-sub">{t("detail.aiPractice")}</h3>
                   <p
                     className={`ai-grounding ${
                       a.job_description
@@ -737,33 +756,24 @@ export function ApplicationDetailModal({
                 </>
               )}
 
-              {secTab === "cover" && (
-                <CoverLetterSection
-                  application={a}
-                  onChanged={onChanged}
-                  onError={onError}
-                  notify={notify}
-                />
-              )}
+              {secTab === "tailor" && (
+                <>
+                  <h3 className="detail-sub detail-sub-first">
+                    {t("detail.keywordMatch")}
+                  </h3>
+                  <JdKeywordMatch
+                    onError={onError}
+                    initialText={a.job_description ?? undefined}
+                  />
 
-              {secTab === "match" && (
-                <JdKeywordMatch
-                  onError={onError}
-                  initialText={a.job_description ?? undefined}
-                />
-              )}
-
-              {secTab === "timeline" && (
-                <Timeline
-                  resource="applications"
-                  targetId={a.id}
-                  onError={onError}
-                  onLogged={() => void onChanged()}
-                />
-              )}
-
-              {secTab === "docs" && (
-                <Documents applicationId={a.id} onError={onError} />
+                  <h3 className="detail-sub">{t("coverLetter.title")}</h3>
+                  <CoverLetterSection
+                    application={a}
+                    onChanged={onChanged}
+                    onError={onError}
+                    notify={notify}
+                  />
+                </>
               )}
             </div>
           </div>
