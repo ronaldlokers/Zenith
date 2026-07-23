@@ -1317,6 +1317,24 @@ button.danger {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface));
 }
 
+/* Feed sort/filter controls (#444) — sit above the triage list; wrap on
+   narrow viewports so the two segmented groups stack cleanly. */
+.feed-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.feed-controls-label {
+  margin: 0;
+}
+
+.feed-nomatch {
+  margin: 0.5rem 0;
+}
+
 /* Feed triage (#386 #10) — desktop two-pane (list + a sticky detail of the
    focused item); below 900px the rows expand to full cards with inline
    actions + swipe. */
