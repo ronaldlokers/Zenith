@@ -1,4 +1,4 @@
-import { isForbiddenUrl } from "./url-guard.js";
+import { guardedFetch, isForbiddenUrl } from "./url-guard.js";
 
 // Consecutive delivery failures before a webhook is switched off (#346).
 const WEBHOOK_DISABLE_AFTER = 10;
@@ -107,7 +107,11 @@ export async function triggerWebhooks(
       // One delivery attempt; non-2xx counts as failure.
       const attempt = async () => {
         const signature = await hmacHex(hook.secret, body);
-        const res = await fetch(hook.url, {
+        // guardedFetch re-applies the SSRF policy on every redirect hop
+        // (security review, #445): a receiver that 3xx-redirects the delivery
+        // to an internal address is otherwise followed blindly. A blocked hop
+        // throws, which counts as a failed attempt below.
+        const { res } = await guardedFetch(hook.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

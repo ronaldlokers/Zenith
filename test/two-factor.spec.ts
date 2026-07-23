@@ -1,5 +1,5 @@
 import { env, SELF } from "cloudflare:test";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { hashPassword } from "better-auth/crypto";
 import { createOTP } from "@better-auth/utils/otp";
 import { base32 } from "@better-auth/utils/base32";
@@ -74,6 +74,15 @@ beforeAll(async () => {
   )
     .bind(hash, now, now)
     .run();
+});
+
+// Login rate limiting is now enabled (migration 0046 / worker/auth.ts) — the
+// /sign-in* special rule is 3 attempts / 10s. This flow legitimately signs in
+// several times, so clear the throttle between tests to keep it realistic
+// without tripping the limiter. (The limiter itself is covered in
+// rate-limit.spec.ts.)
+beforeEach(async () => {
+  await env.DB.exec("DELETE FROM \"rateLimit\"");
 });
 
 describe("two-factor sign-in flow", () => {
