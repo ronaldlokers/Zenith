@@ -278,6 +278,43 @@
     "goCv": "Ga naar cv",
     "goSettings": "Ga naar instellingen"
   },
+  "templates": {
+    "outreachHeading": "Contact opnemen",
+    "compose": "Opstellen vanuit sjabloon",
+    "choose": "Kies een sjabloon…",
+    "preview": "Berichtvoorbeeld",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd naar klembord",
+    "copyFailed": "Kon niet kopiëren — kopieer handmatig.",
+    "markContacted": "Markeer als benaderd",
+    "markedContacted": "Gemarkeerd als benaderd",
+    "manage": "Beheren",
+    "done": "Klaar",
+    "empty": "Nog geen sjablonen. Voeg een paar starters toe om te beginnen.",
+    "addStarters": "Startsjablonen toevoegen",
+    "add": "Sjabloon toevoegen",
+    "namePlaceholder": "Sjabloonnaam (bijv. Opvolging)",
+    "bodyPlaceholder": "Schrijf je bericht… gebruik de placeholders hieronder.",
+    "varsHint": "Placeholders:",
+    "starters": {
+      "followUp": {
+        "name": "Opvolging",
+        "body": "Hoi {{first_name}},\n\nNogmaals bedankt voor je tijd. Ik wilde even opvolgen en mijn interesse in kansen bij {{company}} herhalen — ik deel graag wat nuttig is.\n\nGroet,\n{{my_name}}"
+      },
+      "thankYou": {
+        "name": "Bedankje",
+        "body": "Hoi {{first_name}},\n\nBedankt voor het gesprek vandaag — ik vond het leuk om meer over het team bij {{company}} te horen, het versterkte mijn enthousiasme voor de rol.\n\nGroet,\n{{my_name}}"
+      },
+      "referral": {
+        "name": "Referral-verzoek",
+        "body": "Hoi {{first_name}},\n\nIk oriënteer me op rollen bij {{company}} en jouw naam kwam voorbij. Zou je openstaan voor een kort gesprek, of me naar de juiste persoon kunnen verwijzen? Dat zou ik erg waarderen.\n\nBedankt,\n{{my_name}}"
+      },
+      "intro": {
+        "name": "Kennismaking",
+        "body": "Hoi {{first_name}},\n\nIk kwam je werk bij {{company}} tegen en zou graag connecten. Ik verken momenteel kansen in dit vakgebied en leer graag van mensen die het goed doen.\n\nGroet,\n{{my_name}}"
+      }
+    }
+  },
   "outreach": {
     "status": "Outreach-status",
     "lastContacted": "Laatst benaderd",

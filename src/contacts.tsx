@@ -6,6 +6,7 @@ import { api } from "./api";
 import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { Timeline } from "./timeline";
+import { OutreachComposer } from "./outreach-composer";
 import { EmptyPeopleIcon } from "./icons";
 import { ActionBar, Button, EmptyState, FieldLabel, Row, SegmentedControl, Toolbar } from "./components";
 import {
@@ -443,6 +444,14 @@ function ContactDetailModal({
                 {t("common.delete")}
               </Button>
             </ActionBar>
+
+            <h3 className="detail-sub">{t("templates.outreachHeading")}</h3>
+            <OutreachComposer
+              contact={c}
+              onError={onError}
+              onChanged={onChanged}
+              notify={notify}
+            />
 
             <h3 className="detail-sub">{t("detail.timeline")}</h3>
             <Timeline resource="contacts" targetId={c.id} onError={onError} />

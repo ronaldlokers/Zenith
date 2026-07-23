@@ -278,6 +278,43 @@
     "goCv": "Go to CV",
     "goSettings": "Go to settings"
   },
+  "templates": {
+    "outreachHeading": "Outreach",
+    "compose": "Compose from a template",
+    "choose": "Choose a template…",
+    "preview": "Message preview",
+    "copy": "Copy",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Couldn’t copy — copy it manually.",
+    "markContacted": "Mark contacted",
+    "markedContacted": "Marked as contacted",
+    "manage": "Manage",
+    "done": "Done",
+    "empty": "No templates yet. Add a few starters to get going.",
+    "addStarters": "Add starter templates",
+    "add": "Add template",
+    "namePlaceholder": "Template name (e.g. Follow-up)",
+    "bodyPlaceholder": "Write your message… use the placeholders below.",
+    "varsHint": "Placeholders:",
+    "starters": {
+      "followUp": {
+        "name": "Follow-up",
+        "body": "Hi {{first_name}},\n\nThanks again for your time. I wanted to follow up and reiterate my interest in opportunities at {{company}} — happy to share anything that would help.\n\nBest,\n{{my_name}}"
+      },
+      "thankYou": {
+        "name": "Thank-you",
+        "body": "Hi {{first_name}},\n\nThank you for the conversation today — I really enjoyed learning more about the team at {{company}}, and it reinforced my enthusiasm for the role.\n\nBest,\n{{my_name}}"
+      },
+      "referral": {
+        "name": "Referral ask",
+        "body": "Hi {{first_name}},\n\nI’m exploring roles at {{company}} and your name came up. Would you be open to a quick chat, or to pointing me toward the right person? I’d really appreciate it.\n\nThanks,\n{{my_name}}"
+      },
+      "intro": {
+        "name": "Intro / networking",
+        "body": "Hi {{first_name}},\n\nI came across your work at {{company}} and would love to connect. I’m currently exploring opportunities in the space and always keen to learn from people doing it well.\n\nBest,\n{{my_name}}"
+      }
+    }
+  },
   "outreach": {
     "status": "Outreach status",
     "lastContacted": "Last contacted",
