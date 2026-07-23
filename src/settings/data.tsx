@@ -75,6 +75,30 @@ export function SampleDataSettings({
   );
 }
 
+// Data export / portability (#485) — moved into Settings → Data (it used to
+// hide in the Insights stats drawer, leaving this tab blank for anyone with
+// real data). Download everything as JSON, or a resource as CSV.
+export function DataExport() {
+  const { t } = useTranslation();
+  const csvResources = ["applications", "companies", "contacts", "interactions"];
+  return (
+    <div className="data-export">
+      <h3>{t("stats.exportData")}</h3>
+      <p className="muted small">{t("settings.exportHint")}</p>
+      <p className="export-links">
+        <a href="/api/export" download>
+          {t("stats.exportAllJson")}
+        </a>
+        {csvResources.map((res) => (
+          <a key={res} href={`/api/export/${res}.csv`} download>
+            {res} (CSV)
+          </a>
+        ))}
+      </p>
+    </div>
+  );
+}
+
 export function ResetDemoData() {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);

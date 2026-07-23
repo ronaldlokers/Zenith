@@ -17,7 +17,7 @@ import { useLocation } from "react-router-dom";
 import { ActionBar, Button } from "../components";
 import { FeedSettings } from "../feed";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
-import { SampleDataSettings } from "./data";
+import { DataExport, SampleDataSettings } from "./data";
 import { PublicApiSettings } from "./api";
 import { PushSettings } from "./notifications";
 
@@ -403,6 +403,7 @@ export function SettingsPage({
         )}
         {section === "data" && session && (
           <div className="account-section">
+            <DataExport />
             <SampleDataSettings onError={setApiError} />
           </div>
         )}
