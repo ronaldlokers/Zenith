@@ -207,20 +207,20 @@ export function DashboardTab({
           {t("overview.noActivity")}
         </p>
       ) : (
-        <SideList className="dash-recent">
+        <ul className="dash-recent">
           {recent.map((a) => (
             <li
               key={a.id}
               className={`stage-${a.status} clickable`}
               {...rowActivate(() => onOpenJob(a.id))}
             >
-              <span className="side-date">{ageDays(a.updated_at)}</span>
               <span className="side-title">{a.title}</span>
               <span className="side-co">{a.company_name ?? "—"}</span>
               <span className="side-stage">{t(`stages.${a.status}`)}</span>
+              <span className="side-date">{ageDays(a.updated_at)}</span>
             </li>
           ))}
-        </SideList>
+        </ul>
       )}
     </DashCard>
   );
@@ -351,6 +351,11 @@ function NextUpPanel({
                 className={`side-date${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
               >
                 {formatDate(a.next_action_at!)}
+                {isOverdue(a)
+                  ? ` · ${t("urgency.overdue")}`
+                  : isDue(a)
+                    ? ` · ${t("urgency.today")}`
+                    : ""}
               </span>
               <span className="side-title">
                 {a.title}

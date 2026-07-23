@@ -3249,6 +3249,52 @@ summary.bcol-head::after {
   color: var(--sc, var(--muted));
 }
 
+/* "Recently updated" as denser tier-1 rows (design review, #459): a 2-line
+   grid — title + stage label on top, company + faint freshness below — with a
+   stage-colour spine and hairline dividers, instead of the taller stacked
+   SideList rows. A bespoke <ul> (not .zui-sidelist) so the app-layer layout
+   isn't overridden by the component layer's flex-column row recipe. */
+.dash-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dash-recent li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "title stage"
+    "co    date";
+  column-gap: 0.75rem;
+  align-items: baseline;
+  border-left: 3px solid var(--sc, var(--border));
+  border-top: 1px solid var(--border);
+  padding: 0.5rem 0.3rem 0.5rem 0.7rem;
+}
+.dash-recent li:first-child {
+  border-top: none;
+}
+.dash-recent li.clickable {
+  cursor: pointer;
+}
+.dash-recent li.clickable:hover {
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+}
+.dash-recent .side-title {
+  grid-area: title;
+}
+.dash-recent .side-co {
+  grid-area: co;
+}
+.dash-recent .side-stage {
+  grid-area: stage;
+  justify-self: end;
+}
+.dash-recent .side-date {
+  grid-area: date;
+  justify-self: end;
+}
+
 /* Overview home screen (#128) */
 .overview {
   display: flex;
