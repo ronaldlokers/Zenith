@@ -17,7 +17,6 @@ import { useLocation } from "react-router-dom";
 import { ActionBar, Button } from "../components";
 import { FeedSettings } from "../feed";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
-import { AdminUsers, AdminInvite, TestPush } from "./admin";
 import { SampleDataSettings } from "./data";
 import { PublicApiSettings } from "./api";
 import { PushSettings } from "./notifications";
@@ -53,8 +52,7 @@ type SettingsSection =
   | "feed"
   | "sharing"
   | "integrations"
-  | "data"
-  | "admin";
+  | "data";
 
 const SETTINGS_SECTIONS: SettingsSection[] = [
   "general",
@@ -63,7 +61,6 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   "sharing",
   "integrations",
   "data",
-  "admin",
 ];
 
 export function SettingsPage({
@@ -187,7 +184,6 @@ export function SettingsPage({
     "feed",
     "sharing",
     ...(session ? (["integrations", "data"] as const) : []),
-    ...(session?.user.role === "admin" ? (["admin"] as const) : []),
   ];
 
   return (
@@ -365,13 +361,6 @@ export function SettingsPage({
         {section === "data" && session && (
           <div className="account-section">
             <SampleDataSettings onError={setApiError} />
-          </div>
-        )}
-        {section === "admin" && session?.user.role === "admin" && (
-          <div className="account-section">
-            <AdminUsers onError={setApiError} />
-            <AdminInvite />
-            <TestPush onError={setApiError} />
           </div>
         )}
       </div>

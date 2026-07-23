@@ -181,6 +181,33 @@ export function SettingsIcon() {
   );
 }
 
+// Admin (shield) — nav glyph for the admin-only area (#457), same 24x24
+// currentColor / strokeWidth 2 house style.
+export function AdminIcon() {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 3l7 3v5c0 4.2-2.9 7.4-7 8.5C7.9 18.4 5 15.2 5 11V6l7-3z"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 11.5l2 2 4-4"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // Filter (funnel) + Archive (lidded box) glyphs for the board bar chips
 // (#346) — same 24x24 currentColor / strokeWidth 2 style as the nav set.
 export function FilterIcon() {

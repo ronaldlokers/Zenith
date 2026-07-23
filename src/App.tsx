@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { type Profile } from "./types";
 import {
+  AdminIcon,
   ErrorIcon,
   NavCalendarIcon,
   NavCvIcon,
@@ -43,6 +44,9 @@ const ApplicationDetailModal = lazy(() =>
 const PipelineTab = lazy(() =>
   import("./board").then((m) => ({ default: m.PipelineTab })),
 );
+const AdminPage = lazy(() =>
+  import("./admin").then((m) => ({ default: m.AdminPage })),
+);
 import { useSession } from "./auth-client";
 import { CommandPalette, OnboardingChecklist, QuickAddDialog } from "./components";
 import { useAppData, useToasts } from "./app-data";
@@ -63,6 +67,7 @@ export default function App() {
   const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
   const { data: session } = useSession();
   const sessionUser = session?.user;
+  const isAdmin = sessionUser?.role === "admin";
   const userInitials = sessionUser?.name
     ? sessionUser.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
     : (sessionUser?.email?.[0]?.toUpperCase() ?? "?");
@@ -121,6 +126,12 @@ export default function App() {
     setOnboardingDismissed(true);
   };
 
+  // Guard the admin route (#457): a non-admin who lands on /admin (typed URL,
+  // stale link) is sent home. Wait for the session to resolve before deciding.
+  useEffect(() => {
+    if (tab === "admin" && sessionUser && !isAdmin) navigate("/");
+  }, [tab, sessionUser, isAdmin, navigate]);
+
   // /jobs/:id and /board/:id render a routed detail page (#314) instead
   // of the old pane/overlay duality — one presentation for every entry
   // point, back-button friendly.
@@ -140,6 +151,11 @@ export default function App() {
     { data: "calendar", to: "calendar", active: tab === "calendar", icon: <NavCalendarIcon />, label: t("tabs.calendar") },
     { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
     { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
+    // Admin-only destination (#457) — the dedicated admin area, appended so it
+    // shows in the rail and mobile tabs only for admins.
+    ...(isAdmin
+      ? [{ data: "admin" as const, to: "admin" as const, active: tab === "admin", icon: <AdminIcon />, label: t("admin.navLabel") }]
+      : []),
   ];
   const pageTitle =
     tab === "settings"
@@ -429,6 +445,7 @@ export default function App() {
               />
             )}
             {tab === "cv" && <CVTab onError={setError} notify={notify} />}
+            {tab === "admin" && isAdmin && <AdminPage onError={setError} />}
             {tab === "settings" && (
               <SettingsPage
                 roleTypes={roleTypes}

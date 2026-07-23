@@ -12,7 +12,8 @@ export type Tab =
   | "companies"
   | "contacts"
   | "cv"
-  | "settings";
+  | "settings"
+  | "admin";
 
 // URL routing (#73) — a small manual History-API layer via
 // react-router's useLocation/useNavigate rather than a full <Routes>
@@ -30,6 +31,7 @@ export const TAB_PATHS: Record<Tab, string> = {
   contacts: "/people",
   cv: "/cv",
   settings: "/settings",
+  admin: "/admin",
 };
 
 export const PATH_TABS: Record<string, Tab> = {
@@ -44,6 +46,7 @@ export const PATH_TABS: Record<string, Tab> = {
   people: "contacts",
   cv: "cv",
   settings: "settings",
+  admin: "admin",
 };
 
 export function parsePath(pathname: string): { tab: Tab; id: number | null } {
