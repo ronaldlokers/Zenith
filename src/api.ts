@@ -74,6 +74,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ context, messages }),
     }),
+  // One turn of a salary-negotiation roleplay; the caller holds the transcript.
+  negotiation: (
+    context: {
+      title?: string;
+      company?: string;
+      salaryExpectation?: string;
+      jobDescription?: string;
+    },
+    messages: { role: "user" | "assistant"; content: string }[],
+  ) =>
+    request<{ reply: string }>("/api/ai/negotiation", {
+      method: "POST",
+      body: JSON.stringify({ context, messages }),
+    }),
   updateFollowUp: (
     id: number,
     fields: { next_action?: string | null; next_action_at: string | null },

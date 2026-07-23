@@ -291,6 +291,15 @@
     "send": "Send",
     "restart": "Restart"
   },
+  "negotiation": {
+    "title": "Salary negotiation (AI)",
+    "hint": "Rehearse the offer conversation with an AI hiring manager, using your own Anthropic key. It makes an offer, pushes back, and coaches you on each move.",
+    "start": "Start negotiation",
+    "thinking": "Thinking…",
+    "answerPlaceholder": "Type your reply…",
+    "send": "Send",
+    "restart": "Restart"
+  },
   "coverLetter": {
     "title": "Cover letter",
     "generateDraft": "Generate draft",

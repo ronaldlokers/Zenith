@@ -226,6 +226,28 @@ function buildInterviewSystem(ctx: InterviewContext): string {
   }`;
 }
 
+interface NegotiationContext {
+  title?: string;
+  company?: string;
+  salaryExpectation?: string;
+  jobDescription?: string;
+}
+
+function buildNegotiationSystem(ctx: NegotiationContext): string {
+  const role = ctx.title
+    ? `${ctx.title}${ctx.company ? ` at ${ctx.company}` : ""}`
+    : "the role";
+  return `You are a hiring manager roleplaying a realistic salary and offer negotiation with a candidate for ${role}. Play the counterpart: make a plausible opening offer, push back reasonably on asks, but stay open to a fair deal. Keep each turn short and conversational (no bullet lists). After each candidate message, respond in character. When the candidate handles a move well or poorly, you may add ONE short line of out-of-character coaching prefixed with "Coach:". Do not settle instantly — make them practise the back-and-forth.${
+    ctx.salaryExpectation
+      ? `\n\nThe candidate is targeting: ${ctx.salaryExpectation}.`
+      : ""
+  }${
+    ctx.jobDescription
+      ? `\n\nJOB DESCRIPTION:\n${ctx.jobDescription.slice(0, 4000)}`
+      : ""
+  }`;
+}
+
 async function callClaudeChat(
   apiKey: string,
   system: string,
@@ -368,6 +390,41 @@ export function registerAiRoutes(app: Hono<AppEnv>) {
       const reply = await callClaudeChat(
         apiKey,
         buildInterviewSystem(context ?? {}),
+        msgs,
+      );
+      return c.json({ reply });
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 502);
+    }
+  });
+
+  // One turn of a salary-negotiation roleplay: same stateless multi-turn shape
+  // as the mock interview, with the model playing the hiring manager.
+  app.post("/api/ai/negotiation", async (c) => {
+    const apiKey = await getUserAnthropicKey(c.env, c.get("userId"));
+    if (!apiKey) {
+      return c.json(
+        { error: "add your Anthropic API key in Account settings first" },
+        400,
+      );
+    }
+    const { context, messages } = await c.req.json<{
+      context?: NegotiationContext;
+      messages?: ChatMsg[];
+    }>();
+    const msgs = (Array.isArray(messages) ? messages : [])
+      .filter(
+        (m): m is ChatMsg =>
+          !!m &&
+          (m.role === "user" || m.role === "assistant") &&
+          typeof m.content === "string",
+      )
+      .slice(-40);
+    if (msgs.length === 0) return c.json({ error: "no messages" }, 400);
+    try {
+      const reply = await callClaudeChat(
+        apiKey,
+        buildNegotiationSystem(context ?? {}),
         msgs,
       );
       return c.json({ reply });
