@@ -11,6 +11,7 @@ import { getCvLanguage } from "./format";
 import { TailorPanel } from "./cv/tailor";
 import { CvPreview } from "./cv/preview";
 import { CvVersions } from "./cv/versions";
+import { LinkedInOptimizer } from "./cv/linkedin";
 import {
   EducationSection,
   LanguagesSection,
@@ -155,6 +156,7 @@ export function CVTab({
             onError={onError}
             notify={notify}
           />
+          <LinkedInOptimizer onError={onError} notify={notify} />
           <WorkExperienceSection
             items={workExp}
             onChanged={load}

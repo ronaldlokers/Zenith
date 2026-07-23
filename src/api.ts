@@ -65,6 +65,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ jobDescription }),
     }),
+  linkedinReview: (input: { headline: string; about: string }) =>
+    request<{ headline: string; about: string; tips: string[] }>(
+      "/api/ai/linkedin-review",
+      { method: "POST", body: JSON.stringify(input) },
+    ),
   // One turn of a mock interview; the caller holds the transcript.
   mockInterview: (
     context: { title?: string; company?: string; jobDescription?: string },

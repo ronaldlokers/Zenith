@@ -208,6 +208,72 @@ ${JSON.stringify(
   };
 }
 
+// --- LinkedIn profile optimizer (#476): paste-in headline + About, get a
+// stronger version grounded in the CV. No live LinkedIn integration. ---
+
+interface LinkedinResult {
+  headline: string;
+  about: string;
+  tips: string[];
+}
+
+async function callClaudeLinkedin(
+  apiKey: string,
+  headline: string,
+  about: string,
+  summary: string,
+  roles: RoleRow[],
+): Promise<LinkedinResult> {
+  const prompt = `You are a LinkedIn profile coach. Improve the person's headline and About section so recruiters searching for their skills find and shortlist them. Rules: stay strictly truthful — only rephrase, sharpen and re-prioritise what is already provided or in their CV; never invent employers, titles, dates, technologies, metrics, or achievements. The headline must be at most 220 characters. The About should be first-person, scannable, and keyword-rich. Return ONLY a JSON object, no prose and no markdown fences, in exactly this shape:
+{"headline": "<improved headline>", "about": "<improved about>", "tips": ["<tip>", "<tip>"]}
+Give 2 to 4 concrete tips.
+
+CURRENT HEADLINE:
+${headline || "(none)"}
+
+CURRENT ABOUT:
+${about || "(none)"}
+
+CV SUMMARY (for grounding):
+${summary || "(none)"}
+
+ROLES (JSON, for grounding):
+${JSON.stringify(
+  roles.map((r) => ({ title: r.title, company: r.company })),
+)}`;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5",
+      max_tokens: 1536,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(
+      res.status === 401
+        ? "your Anthropic key was rejected"
+        : "the AI request failed",
+    );
+  }
+  const data = await res.json<{ content: { type: string; text?: string }[] }>();
+  const text = data.content?.find((b) => b.type === "text")?.text ?? "";
+  const parsed = extractJson(text) as Partial<LinkedinResult>;
+  return {
+    headline: typeof parsed.headline === "string" ? parsed.headline : "",
+    about: typeof parsed.about === "string" ? parsed.about : "",
+    tips: Array.isArray(parsed.tips)
+      ? parsed.tips.filter((tip): tip is string => typeof tip === "string")
+      : [],
+  };
+}
+
 // --- Mock interview (stateless multi-turn: the client holds the transcript
 // and sends it back each turn) ---
 
@@ -360,6 +426,49 @@ export function registerAiRoutes(app: Hono<AppEnv>) {
       const result = await callClaudeTailor(
         apiKey,
         jobDescription,
+        profile?.summary ?? "",
+        roles,
+      );
+      return c.json(result);
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 502);
+    }
+  });
+
+  // LinkedIn optimizer (#476): paste in the current headline + About and get a
+  // stronger, CV-grounded rewrite plus tips. Suggestions only — nothing is
+  // written to LinkedIn.
+  app.post("/api/ai/linkedin-review", async (c) => {
+    const userId = c.get("userId");
+    const apiKey = await getUserAnthropicKey(c.env, userId);
+    if (!apiKey) {
+      return c.json(
+        { error: "add your Anthropic API key in Account settings first" },
+        400,
+      );
+    }
+    const { headline, about } = await c.req.json<{
+      headline?: string;
+      about?: string;
+    }>();
+    if ((headline ?? "").trim().length + (about ?? "").trim().length < 15) {
+      return c.json({ error: "paste your headline or About first" }, 400);
+    }
+    const profile = await c.env.DB.prepare(
+      "SELECT summary FROM profile WHERE user_id = ?",
+    )
+      .bind(userId)
+      .first<{ summary: string | null }>();
+    const { results: roles } = await c.env.DB.prepare(
+      "SELECT id, company, title, description FROM work_experience WHERE user_id = ? ORDER BY sort_order, id",
+    )
+      .bind(userId)
+      .all<RoleRow>();
+    try {
+      const result = await callClaudeLinkedin(
+        apiKey,
+        (headline ?? "").trim(),
+        (about ?? "").trim(),
         profile?.summary ?? "",
         roles,
       );

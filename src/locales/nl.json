@@ -278,6 +278,22 @@
     "goCv": "Ga naar cv",
     "goSettings": "Ga naar instellingen"
   },
+  "linkedin": {
+    "title": "LinkedIn-optimalisatie",
+    "hint": "Plak je huidige LinkedIn-headline en About-sectie — suggesties herschrijven ze scherper en beter vindbaar, gebaseerd op je CV. Gebruikt je eigen Anthropic-sleutel.",
+    "headline": "Headline",
+    "headlinePlaceholder": "Je huidige LinkedIn-headline",
+    "about": "Over",
+    "aboutPlaceholder": "Je huidige LinkedIn About-sectie",
+    "optimize": "Optimaliseren",
+    "working": "Bezig…",
+    "suggestedHeadline": "Voorgestelde headline",
+    "suggestedAbout": "Voorgestelde About",
+    "tips": "Tips",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd naar klembord",
+    "copyFailed": "Kon niet kopiëren — kopieer handmatig."
+  },
   "salary": {
     "research": "Salarisonderzoek",
     "levels": "Levels.fyi ↗",
