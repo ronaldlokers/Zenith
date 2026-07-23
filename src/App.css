@@ -835,9 +835,57 @@
   margin-bottom: var(--space-3);
 }
 
+.detail-head-main {
+  min-width: 0;
+}
+
+/* Refined refresh (#463): the title takes the display voice (--serif = Geist,
+   the app's display face — NOT a literal serif). */
 .detail-head h2 {
   margin: 0 0 0.15rem;
-  font-size: var(--text-heading);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.55rem;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+/* Company · contact · job-posting link, directly under the title. */
+.detail-co {
+  display: block;
+}
+.detail-posting-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+.detail-posting-link:hover {
+  text-decoration: underline;
+}
+
+/* Status pill + fit stars, right-aligned in the header band. */
+.detail-head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* Stage-coloured status pill (a <select>, so no leading dot). --sc comes from
+   the .stage-{status} class; the accessibility-locked stage hue carries it. */
+.status-pill {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-weight: 600;
+  letter-spacing: var(--track-chrome);
+  text-transform: uppercase;
+  border: none;
+  border-radius: 100px;
+  padding: 0.3rem 0.7rem;
+  color: var(--sc);
+  background: color-mix(in srgb, var(--sc) 12%, transparent);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 /* .modal-close is now the Button "close" variant (src/components/Button.css). */
@@ -849,6 +897,25 @@
   gap: 0.4rem;
   padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--border);
+}
+
+/* Core facts as one aligned label:value grid (#463) — replaces the old
+   scattered label/bare-line mix. */
+.detail-defs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 0.9rem;
+  align-items: baseline;
+  margin: 0;
+  width: 100%;
+}
+.detail-defs dt {
+  color: var(--faint);
+  font-size: var(--text-meta);
+}
+.detail-defs dd {
+  margin: 0;
+  font-size: var(--text-meta);
 }
 
 /* Small caption above an otherwise-bare value in a detail modal —
@@ -4076,6 +4143,7 @@ summary.bcol-head::after {
 }
 .detail-panel {
   min-width: 0;
+  max-width: 34rem;
 }
 .detail-panel > .detail-sub:first-child {
   margin-top: 0;
