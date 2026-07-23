@@ -321,19 +321,6 @@ export function StatsTab({
         )}
       </div>
 
-      <h2 className="stat-h">{t("stats.exportData")}</h2>
-      <p className="export-links">
-        <a href="/api/export" download>
-          {t("stats.exportAllJson")}
-        </a>
-        {["applications", "companies", "contacts", "interactions"].map(
-          (res) => (
-            <a key={res} href={`/api/export/${res}.csv`} download>
-              {res} (CSV)
-            </a>
-          ),
-        )}
-      </p>
       </div>
       </div>
     </section>

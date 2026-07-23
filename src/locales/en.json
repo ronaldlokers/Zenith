@@ -184,7 +184,8 @@
     },
     "keyShortcuts": "Single-key shortcuts (n, /)",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs."
   },
   "admin": {
     "title": "Admin",
