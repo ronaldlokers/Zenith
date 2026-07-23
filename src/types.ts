@@ -271,6 +271,14 @@ export interface Skill {
   name: string;
 }
 
+export interface OutreachTemplate {
+  id: number;
+  name: string;
+  body: string;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface Tag {
   id: number;
   name: string;

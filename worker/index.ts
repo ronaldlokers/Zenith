@@ -5,6 +5,7 @@ import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
+import { registerOutreachRoutes } from "./outreach.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
 import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
@@ -895,6 +896,7 @@ const EXPORT_TABLES = [
   "education",
   "languages",
   "interview_prep_items",
+  "outreach_templates",
   "role_types",
   "feed_sources",
   "feed_role_keywords",
@@ -1527,6 +1529,7 @@ app.delete("/api/documents/:id", async (c) => {
 registerFeedRoutes(app);
 registerRoleTypeRoutes(app);
 registerCvRoutes(app);
+registerOutreachRoutes(app);
 registerNotificationRoutes(app);
 registerAiRoutes(app);
 registerCalendarRoutes(app);
