@@ -19,4 +19,106 @@
     margin-top: var(--space-2);
     font-size: var(--text-body);
   }
+
+  /* ATS report (#470) — band-coloured score ring, keyword chips, and a
+     content checklist. Bands reuse the app's semantic hues. */
+  .ats-report {
+    margin-top: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .ats-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+  .ats-ring {
+    --band: var(--muted);
+    position: relative;
+    flex-shrink: 0;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(
+      var(--band) calc(var(--pct, 0) * 1%),
+      color-mix(in srgb, var(--band) 16%, transparent) 0
+    );
+  }
+  .ats-ring::before {
+    content: "";
+    position: absolute;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    background: var(--surface);
+  }
+  .ats-ring-n {
+    position: relative;
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--band);
+  }
+  .ats-ring[data-band="strong"] {
+    --band: var(--success);
+  }
+  .ats-ring[data-band="fair"] {
+    --band: var(--accent-ink);
+  }
+  .ats-ring[data-band="weak"] {
+    --band: var(--danger);
+  }
+  .ats-head-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  .ats-verdict {
+    font-size: var(--text-body);
+  }
+  .ats-verdict.band-strong {
+    color: var(--success);
+  }
+  .ats-verdict.band-fair {
+    color: var(--accent-ink);
+  }
+  .ats-verdict.band-weak {
+    color: var(--danger);
+  }
+
+  .ats-checks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .ats-checks li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-meta);
+    color: var(--muted);
+  }
+  .ats-check-mark {
+    flex-shrink: 0;
+    width: 1.1rem;
+    text-align: center;
+    font-weight: 700;
+  }
+  .ats-checks li.ok .ats-check-mark {
+    color: var(--success);
+  }
+  .ats-checks li.no {
+    color: var(--faint);
+  }
+  .ats-checks li.no .ats-check-mark {
+    color: var(--faint);
+  }
 }
