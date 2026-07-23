@@ -113,6 +113,9 @@ export interface FeedItem {
   // not shipped in the feed list — it's carried into job_description only when
   // the item is added to the pipeline.
   match_count: number;
+  // The matched skill names behind match_count (#471) — the "why it fits"
+  // reasons shown in the feed detail pane.
+  match_skills: string[];
 }
 
 // Keyset cursor for paging the feed (#261): sort key (posted_at or "")

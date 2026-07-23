@@ -198,6 +198,8 @@
     "triageHint": "j / k navigeren · a toevoegen · d negeren",
     "skillsMatch_one": "{{count}} passende vaardigheid",
     "skillsMatch_other": "{{count}} passende vaardigheden",
+    "whyItFits_one": "Komt overeen met 1 van je vaardigheden",
+    "whyItFits_other": "Komt overeen met {{count}} van je vaardigheden",
     "skillsMatchHint": "Vaardigheden uit je cv die in deze vacature voorkomen",
     "sortLabel": "Sorteren",
     "sortNewest": "Nieuwste",

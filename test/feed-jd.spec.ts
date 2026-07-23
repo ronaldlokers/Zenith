@@ -67,13 +67,19 @@ describe("feed job-description capture", () => {
 
     const res = await authedFetch(`${BASE}/api/feed`);
     const { items } = await res.json<{
-      items: { external_id: string; match_count: number; description?: unknown }[];
+      items: {
+        external_id: string;
+        match_count: number;
+        match_skills: string[];
+        description?: unknown;
+      }[];
     }>();
     const item = items.find((i) => i.external_id === "ext-jd-match");
     expect(item).toBeDefined();
-    // "Kubernetes" is CV-backed and mentioned → 1; the payload carries only the
-    // count, not the full description.
+    // "Kubernetes" is CV-backed and mentioned → 1; the payload carries the
+    // matched skill names (#471) and count, not the full description.
     expect(item!.match_count).toBe(1);
+    expect(item!.match_skills).toEqual(["Kubernetes"]);
     expect(item!.description).toBeUndefined();
   });
 });

@@ -198,6 +198,8 @@
     "triageHint": "j / k move · a add · d dismiss",
     "skillsMatch_one": "{{count}} matching skill",
     "skillsMatch_other": "{{count}} matching skills",
+    "whyItFits_one": "Matches 1 of your skills",
+    "whyItFits_other": "Matches {{count}} of your skills",
     "skillsMatchHint": "Skills from your CV mentioned in this posting",
     "sortLabel": "Sort",
     "sortNewest": "Newest",

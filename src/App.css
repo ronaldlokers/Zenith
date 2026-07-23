@@ -1553,6 +1553,20 @@ button.danger {
   .feed-detail-co {
     margin: 0.1rem 0 0;
   }
+  /* "Why it fits" — the matched-skill reasons behind the fit count (#471). */
+  .feed-detail-fit {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .feed-detail-fit-h {
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    color: var(--success);
+  }
   .feed-detail-actions {
     display: flex;
     gap: 0.5rem;
