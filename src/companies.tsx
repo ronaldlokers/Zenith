@@ -174,24 +174,30 @@ export function CompaniesTab({
                   </Badge>
                 ) : null}
               </strong>
+              {/* A quiet to-do dot instead of "not researched" on every row
+                  (design review); moved up into l1 so un-researched rows with
+                  no website collapse to a single line (#466). */}
+              {!c.researched_at && (
+                <span
+                  className="research-todo"
+                  title={t("company.notResearched")}
+                  aria-label={t("company.notResearched")}
+                />
+              )}
               <span className="co">{c.location ?? ""}</span>
             </div>
-            <div className="l2">
-              <span className="co">{c.website ?? ""}</span>
-              <span className="due">
-                {c.researched_at ? (
-                  t("company.researchedAgo", { age: ageDays(c.researched_at) })
-                ) : (
-                  // A quiet to-do dot instead of "not researched" on every row
-                  // (design review) — same signal, far less repetition.
-                  <span
-                    className="research-todo"
-                    title={t("company.notResearched")}
-                    aria-label={t("company.notResearched")}
-                  />
+            {(c.website || c.researched_at) && (
+              <div className="l2">
+                {c.website && <span className="co">{c.website}</span>}
+                {c.researched_at && (
+                  <span className="due">
+                    {t("company.researchedAgo", {
+                      age: ageDays(c.researched_at),
+                    })}
+                  </span>
                 )}
-              </span>
-            </div>
+              </div>
+            )}
           </Row>
           );
         })}
