@@ -221,7 +221,6 @@
     "noFitMatch": "Geen vacatures voldoen aan dit matchfilter — verlaag het om meer te zien."
   },
   "stats": {
-    "momentumLabel": "Pipeline-momentum",
     "momentum": {
       "up": "Versnelt",
       "down": "Vertraagt",
@@ -229,15 +228,6 @@
       "none": "Geen recente activiteit"
     },
     "momentumDetail": "{{recent}} stap-vooruitgangen in de afgelopen 2 weken vs {{prior}} in de 2 weken daarvoor",
-    "appsPerWeek": "Sollicitaties per week",
-    "pipelineFunnel": "Pipeline-funnel — vacatures die elke fase bereikten",
-    "avgTimeInStage": "Gemiddelde tijd per fase",
-    "timeToOffer_one": "Typische tijd tot aanbod: {{count}} dag, gebaseerd op {{n}} van je aanbiedingen",
-    "timeToOffer_other": "Typische tijd tot aanbod: {{count}} dagen, gebaseerd op {{n}} van je aanbiedingen",
-    "noHistory": "Nog geen geschiedenis.",
-    "ghostRate": "Ghost-percentage per bron",
-    "unknownSource": "Onbekend",
-    "compare": "Vergelijk interviews & aanbiedingen",
     "downloadOfferComparison": "Download aanbiedingsvergelijking (PDF)",
     "offerComparisonHeading": "Aanbiedingsvergelijking",
     "offerComparisonBreakdown": "Opbouw",
@@ -264,21 +254,7 @@
       "showAll_other": "Toon alles ({{count}})",
       "showLess": "Toon minder"
     },
-    "weekOfTitle": "Week van {{label}}: {{count}}",
-    "reachedTitle": "{{count}} bereikten {{stage}}",
-    "ghostedPercent": "{{pct}}% geghost",
-    "noApplications": "Nog geen sollicitaties.",
-    "colRole": "Rol",
-    "colCompany": "Bedrijf",
-    "colStage": "Fase",
-    "colComp": "Beloning",
-    "colNotes": "Notities",
-    "exportAllJson": "Alles (JSON)",
-    "responseRate": "{{responded}} van {{applied}} sollicitaties kwamen voorbij “gesolliciteerd” — {{pct}}% responspercentage",
-    "conversion": "Conversie per fase",
-    "avgLabel": "gem.",
-    "medianLabel": "mediaan",
-    "compareEmpty": "Nog niets in de interview- of aanbodfase. Voeg min/max/valuta toe op het bewerkformulier zodra het zover is."
+    "exportAllJson": "Alles (JSON)"
   },
   "palette": {
     "title": "Ga naar…",
@@ -891,8 +867,7 @@
     "response": "Respons",
     "toOffer": "Tot aanbod",
     "caughtUp": "Alles bijgewerkt — geen follow-ups open",
-    "addFollowUp": "+ follow-up toevoegen",
-    "allNumbers": "Alle cijfers"
+    "addFollowUp": "+ follow-up toevoegen"
   },
   "urgency": {
     "overdue": "te laat",

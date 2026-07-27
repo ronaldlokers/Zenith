@@ -221,7 +221,6 @@
     "noFitMatch": "No jobs match this fit filter — lower it to see more."
   },
   "stats": {
-    "momentumLabel": "Pipeline momentum",
     "momentum": {
       "up": "Speeding up",
       "down": "Slowing down",
@@ -229,15 +228,6 @@
       "none": "No recent activity"
     },
     "momentumDetail": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that",
-    "appsPerWeek": "Applications per week",
-    "pipelineFunnel": "Pipeline funnel — applications that reached each stage",
-    "avgTimeInStage": "Average time in stage",
-    "timeToOffer_one": "Typical time to offer: {{count}} day, based on {{n}} of your offers",
-    "timeToOffer_other": "Typical time to offer: {{count}} days, based on {{n}} of your offers",
-    "noHistory": "No history yet.",
-    "ghostRate": "Ghost rate by source",
-    "unknownSource": "Unknown",
-    "compare": "Compare interviews & offers",
     "downloadOfferComparison": "Download offer comparison (PDF)",
     "offerComparisonHeading": "Offer comparison",
     "offerComparisonBreakdown": "Breakdown",
@@ -264,21 +254,7 @@
       "showAll_other": "Show all ({{count}})",
       "showLess": "Show less"
     },
-    "weekOfTitle": "Week of {{label}}: {{count}}",
-    "reachedTitle": "{{count}} reached {{stage}}",
-    "ghostedPercent": "{{pct}}% ghosted",
-    "noApplications": "No applications yet.",
-    "colRole": "Role",
-    "colCompany": "Company",
-    "colStage": "Stage",
-    "colComp": "Comp",
-    "colNotes": "Notes",
-    "exportAllJson": "Everything (JSON)",
-    "responseRate": "{{responded}} of {{applied}} applications advanced past “applied” — {{pct}}% response rate",
-    "conversion": "Stage-to-stage conversion",
-    "avgLabel": "avg",
-    "medianLabel": "median",
-    "compareEmpty": "Nothing at interview or offer stage yet. Add min/max/currency on a job's edit form once it gets there."
+    "exportAllJson": "Everything (JSON)"
   },
   "palette": {
     "title": "Jump to…",
@@ -891,8 +867,7 @@
     "response": "Response",
     "toOffer": "To offer",
     "caughtUp": "All caught up — no follow-ups due",
-    "addFollowUp": "+ add a follow-up",
-    "allNumbers": "All the numbers"
+    "addFollowUp": "+ add a follow-up"
   },
   "urgency": {
     "overdue": "overdue",

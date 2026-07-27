@@ -516,53 +516,6 @@
   cursor: pointer;
 }
 
-/* Weekly bar histogram — Stats tab's "Applications per week" (#143 only
-   replaced the Jobs-tab per-stage histogram with a ring below; this one
-   is a trend over time, not a distribution, so it kept its bars and
-   still needs these base rules). */
-.histo {
-  padding: 0.25rem 0 0.6rem;
-}
-
-.histo .hrow {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.28rem;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-}
-
-.histo .lbl {
-  width: 5.4rem;
-  text-transform: none;
-  color: var(--sc, var(--muted));
-}
-
-.histo .htrack {
-  flex: 1;
-  height: 8px;
-  background: var(--track);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.histo .hfill {
-  height: 100%;
-  background: var(--sc, var(--accent));
-  border-radius: 2px;
-}
-
-.histo .n {
-  width: 1.4rem;
-  text-align: right;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Radial pipeline ring (#143) — replaces the old Jobs-tab stage histogram */
 .ring-chart {
   display: flex;
@@ -1916,46 +1869,8 @@ select.status {
   }
 }
 
-/* Stats */
-.stats {
-  margin-top: var(--space-3);
-}
-
 /* .onboarding moved into the owned OnboardingChecklist component — see
    src/components/OnboardingChecklist.css (.zui-onboarding*). */
-
-.momentum {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.9rem 1rem;
-  margin-bottom: 1.2rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.momentum-label {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--faint);
-}
-
-.momentum-value {
-  font-size: var(--text-display);
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.momentum-up .momentum-value {
-  color: var(--st-offer);
-}
-
-.momentum-down .momentum-value {
-  color: var(--danger);
-}
 
 /* Momentum streak tracker (#145) */
 .streak {
@@ -2155,149 +2070,6 @@ select.status {
   font-size: var(--text-meta);
   color: var(--faint);
   white-space: nowrap;
-}
-
-.stat-h {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  color: var(--muted);
-  margin: 1.4rem 0 0.5rem;
-  font-weight: 600;
-}
-
-.stat-h:first-child {
-  margin-top: 0.4rem;
-}
-
-.stat-callout {
-  margin: 0;
-  padding: 0.5rem 0.7rem;
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  font-size: var(--text-body);
-  color: var(--muted);
-}
-
-.accent-fill {
-  background: var(--accent);
-}
-
-.stat-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.stat-list li {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  font-size: var(--text-body);
-}
-
-.stat-list li:last-child {
-  border-bottom: 0;
-}
-
-.stat-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--sc);
-  align-self: center;
-}
-
-/* Stage-spectrum legend (#279) */
-.stage-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  margin: 0 0 var(--space-3);
-}
-
-.stage-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-}
-
-.stage-legend-item .stat-dot {
-  width: 7px;
-  height: 7px;
-}
-
-.stage-name {
-  color: var(--sc);
-  font-weight: 600;
-}
-
-.stat-val {
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: var(--text-meta);
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-}
-
-.compare-wrap {
-  overflow-x: auto;
-}
-
-.compare-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-body);
-}
-
-.compare-table th {
-  text-align: left;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-  padding: 0.3rem 0.6rem 0.4rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  white-space: nowrap;
-}
-
-.compare-table td {
-  padding: 0.5rem 0.6rem 0.5rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  vertical-align: top;
-}
-
-.compare-table tr.stage-interview td:first-child,
-.compare-table tr.stage-offer td:first-child {
-  border-left: 3px solid var(--sc);
-  padding-left: var(--space-2);
-}
-
-.compare-comp {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  text-align: right;
-}
-
-.compare-table th:nth-child(4),
-.compare-table th:nth-child(5) {
-  text-align: right;
-}
-
-.compare-notes {
-  color: var(--muted);
-  max-width: 22rem;
 }
 
 .export-links {
@@ -2710,13 +2482,11 @@ select.status {
 
 @media (prefers-color-scheme: dark) {
   /* Stage-color dots lose edge definition against the dark surface (#119) */
-  :root:not([data-theme="light"]) .bcol-head::before,
-  :root:not([data-theme="light"]) .stat-dot {
+  :root:not([data-theme="light"]) .bcol-head::before {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
   }
 }
-:root[data-theme="dark"] .bcol-head::before,
-:root[data-theme="dark"] .stat-dot {
+:root[data-theme="dark"] .bcol-head::before {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
@@ -3864,12 +3634,15 @@ summary.bcol-head::after {
   margin: 0.35rem 0 0.9rem;
 }
 
-/* Calendar folded into Insights (#481) — section heading. */
+/* Calendar folded into Insights (#481) — section heading. Mono eyebrow to
+   match the funnel/offers card headings, so Insights uses one heading voice
+   throughout (#486). */
 .insights-cal-h {
-  font-family: var(--serif);
-  font-weight: 600;
-  font-size: 1.3rem;
-  letter-spacing: -0.01em;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
   margin: var(--space-5) 0 var(--space-3);
 }
 
@@ -4416,7 +4189,6 @@ summary.bcol-head::after {
   .app:has(.board-swimlanes),
   .app:has(.cv-layout),
   .app:has(.settings-page),
-  .app:has(.stats),
   .app:has(.company-grid),
   .app:has(.dash),
     .app:has(.calendar-view),
@@ -4447,7 +4219,6 @@ summary.bcol-head::after {
   }
 
   .app:has(.cv-layout) .content,
-  .app:has(.stats) .content,
     .app:has(.calendar-view) .content,
 .app:has(.feed-triage) .content {
     max-width: 1100px;
@@ -4457,34 +4228,6 @@ summary.bcol-head::after {
   .app:has(.company-grid) .content,
   .app:has(.job-page) .content {
     max-width: 1000px;
-  }
-}
-
-/* Stats as a dashboard grid (#314) — 13 stacked sections become grouped
-   blocks in two columns on desktop; the offer-compare table + exports
-   span both. Motivation widgets moved to Overview. */
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  column-gap: 2.5rem;
-  align-items: start;
-}
-
-.stat-block {
-  min-width: 0;
-}
-
-@media (min-width: 1000px) {
-  .app:has(.stats) > main {
-    max-width: 1100px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .stat-block-wide {
-    grid-column: 1 / -1;
   }
 }
 
@@ -4983,19 +4726,9 @@ button:not(:disabled):active,
 .dash-caughtup-t { font-size: 0.85rem; font-weight: 540; }
 .dash-caughtup .sp { flex: 1; }
 
-.dash-details { margin-top: 0.4rem; }
-.dash-details > summary {
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 0.6rem 0;
-  border-top: 1px solid var(--border);
-  list-style-position: inside;
-}
-.dash-details[open] > summary { color: var(--ink); }
+/* Offer-comparison PDF sits under the offers list on the Insights card
+   (#486) — it moved here when the "all the numbers" drawer was retired. */
+.dash-offers-pdf { margin-top: var(--space-2); }
 
 @media (max-width: 600px) {
   .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
