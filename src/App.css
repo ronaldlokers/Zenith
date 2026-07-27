@@ -143,8 +143,8 @@
    .settings-btn trigger and .btn-secondary "mark all read" button stay
    here — both are shared with other buttons elsewhere in the app. */
 
-/* Refined refresh (#465): section title takes the display voice (--serif =
-   Geist) over a hairline, matching the detail header band. */
+/* Refined refresh (#465): section title takes the display voice (--serif, the display
+   voice) over a hairline, matching the detail header band. */
 .settings-modal h2 {
   margin: 0 0 1.1rem;
   padding-bottom: 0.85rem;
@@ -169,8 +169,13 @@
 .settings-warning {
   margin: 0;
   color: var(--attention-ink, #8a5a00);
-  border-left: 3px solid var(--attention, #d9930a);
-  padding-left: 0.6rem;
+  background: color-mix(
+    in srgb,
+    var(--attention, #d9930a) var(--stage-tint),
+    var(--surface)
+  );
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6rem;
 }
 @media (prefers-color-scheme: dark) {
   .settings-warning {
@@ -826,7 +831,7 @@
   min-width: 0;
 }
 
-/* Refined refresh (#463): the title takes the display voice (--serif = Geist,
+/* Refined refresh (#463): the title takes the display voice (--serif,
    the app's display face — NOT a literal serif). */
 .detail-head h2 {
   margin: 0 0 0.15rem;
@@ -1550,7 +1555,7 @@ button.danger {
     letter-spacing: var(--track-chrome);
     color: var(--muted);
   }
-  /* Focused-item title takes the display voice (--serif = Geist, #468). */
+  /* Focused-item title takes the display voice (--serif, #468). */
   .feed-detail h3 {
     margin: 0.1rem 0 0;
     font-family: var(--serif);
@@ -2048,10 +2053,11 @@ select.status {
   gap: 0.4rem;
 }
 
+/* The 3px --faint bar carried no state at all, so it went (#494) rather
+   than being converted to a wash. */
 .agenda-item {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--faint);
   border-radius: var(--radius-md);
   padding: 0.55rem 0.75rem;
   font-size: var(--text-body);
@@ -2091,7 +2097,6 @@ select.status {
   gap: 0.6rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--faint);
   border-radius: var(--radius-md);
   padding: 0.55rem 0.75rem;
   font-size: var(--text-body);
@@ -2557,7 +2562,7 @@ summary.bcol-head::after {
   transform: rotate(90deg);
 }
 
-/* Column count is a display figure (--serif = Geist), matching the dashboard
+/* Column count is a display figure (--serif), matching the dashboard
    KPIs and the detail title (#464). */
 .bcol-head .n {
   margin-left: auto;
@@ -2570,12 +2575,18 @@ summary.bcol-head::after {
   font-variant-numeric: tabular-nums;
 }
 
-/* Tier-1 flat surface (#464): hairline + stage spine, NO resting shadow.
-   Elevation is reserved for hover/drag, so it reads as "interactive". */
+/* Tier-1 flat surface (#464): hairline + stage field, NO resting shadow.
+   Elevation is reserved for hover/drag, so it reads as "interactive".
+   The 3px stage spine became a wash across the card (#494) — inside a
+   single-stage column the tint reads as the column's temperature rather
+   than as five bars stacked down the left edge. */
 .bcard {
-  background: var(--surface);
+  background: color-mix(
+    in srgb,
+    var(--sc, var(--surface)) var(--stage-tint),
+    var(--surface)
+  );
   border: 1px solid var(--border);
-  border-left: 3px solid var(--sc);
   border-radius: var(--radius-md);
   padding: 0.6rem 0.75rem;
   margin-bottom: 0.55rem;
@@ -2872,7 +2883,7 @@ summary.bcol-head::after {
   font-size: 0.82rem;
   margin: 0.2rem 0 0.4rem;
   padding-left: 0.6rem;
-  border-left: 3px solid var(--border);
+  border-left: 1px solid var(--border);
 }
 
 .ai-grounding-ready {
@@ -3582,10 +3593,17 @@ summary.bcol-head::after {
 }
 .today-quiet-list li {
   display: grid;
-  grid-template-columns: 3px 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   column-gap: 0.6rem;
-  padding: 0.4rem 0.15rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  /* Gone quiet has its own hue by design — it must never read as a stage. */
+  background: color-mix(
+    in srgb,
+    var(--heat-quiet) var(--stage-tint),
+    var(--surface)
+  );
 }
 .today-quiet-open {
   display: flex;
@@ -3802,7 +3820,7 @@ summary.bcol-head::after {
 .today-nextup {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-1);
   padding: 0.85rem 0.95rem;
@@ -3836,16 +3854,19 @@ summary.bcol-head::after {
   flex-direction: column;
   gap: 0.15rem;
 }
+/* Stage arrives as a wash on the row itself (#494), so there is no spine
+   column to reserve and no spine element to lay out. */
 .today-rows li {
   display: grid;
-  grid-template-columns: 3px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   column-gap: 0.6rem;
-}
-.today-rows .dash-spine {
-  align-self: stretch;
-  background: var(--sc, var(--border));
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
+  background: color-mix(
+    in srgb,
+    var(--sc, var(--surface)) var(--stage-tint),
+    var(--surface)
+  );
 }
 .today-row-open {
   display: grid;

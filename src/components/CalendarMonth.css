@@ -20,7 +20,7 @@
       margin-bottom: var(--space-3);
     }
     /* Refined refresh (#467): month title takes the display voice
-       (--serif = Geist), matching the other page titles. */
+       (--serif), matching the other page titles. */
     .zui-cal-month-head h3 {
       margin: 0 0.4rem 0 0;
       font-family: var(--serif);
@@ -125,8 +125,9 @@
       width: 100%;
       text-align: left;
       border: none;
-      border-left: 2px solid var(--k);
-      background: color-mix(in srgb, var(--k) 12%, transparent);
+      /* Already a tinted field; the 2px edge on top of it was the last
+         side-bar in the component layer (#494). */
+      background: color-mix(in srgb, var(--k) var(--stage-tint), transparent);
       border-radius: 3px;
       padding: 1px 5px;
       font-size: var(--text-chrome);
