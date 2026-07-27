@@ -132,6 +132,11 @@
   --st-offer-ink: #8a6410;
   --st-dead-ink: #5c584f;
 
+  /* Semantic text tones (#498). --success is a fill; as text it measured
+     3.92:1 on white, so anything that says "this went well" in words takes
+     --success-ink instead. */
+  --success-ink: #357a5b;
+
   /* Caution amber (#497) — the privacy/warning note. Was five literals in
      App.css, one of which (#e6b45a) happened to equal the old dark offer hue
      and silently went stale when the stage palette moved. */
@@ -240,10 +245,9 @@
     --st-offer-ink: #efc17b;
     --st-dead-ink: #b3ada0;
 
+    --success-ink: #6cc9a1;
     --attention: #d9930a;
     --attention-ink: #f0c070;
-    --attention: #d9930a;
-  --attention-ink: #f0c070;
   --heat-quiet: #e0a54a;
     --heat-quiet-text: #f0c070;
     --ev-touch: #9c82cf;
@@ -305,6 +309,7 @@
   --st-offer-ink: #efc17b;
   --st-dead-ink: #b3ada0;
 
+  --success-ink: #6cc9a1;
   --attention: #d9930a;
   --attention-ink: #f0c070;
   --heat-quiet: #e0a54a;
