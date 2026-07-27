@@ -154,11 +154,11 @@
   "typographyMeta": {
    "display": {
     "displayName": "Display",
-    "purpose": "Geist 600 at 2.125rem \u2014 hero figures, the sign-in wordmark scale, the largest moments. --serif is a stable token name that resolves to Geist; there is no serif in this brand."
+    "purpose": "Atkinson 600 at 2.125rem \u2014 hero figures, the sign-in wordmark scale, the largest moments. --serif is a stable token name that resolves to Atkinson Hyperlegible Next; there is no serif in this brand."
    },
    "headline": {
     "displayName": "Headline",
-    "purpose": "Section and settings headings, the focused feed item's title. Geist 600 with -0.01em."
+    "purpose": "Section and settings headings, the focused feed item's title. Atkinson 600 with -0.01em."
    },
    "title": {
     "displayName": "Title",
@@ -170,11 +170,15 @@
    },
    "label": {
     "displayName": "Label (mono)",
-    "purpose": "Geist Mono uppercase at 0.06em \u2014 stage names, lane labels, meta rows, counts. Never a sentence."
+    "purpose": "Atkinson Hyperlegible Mono uppercase at 0.06em \u2014 stage names, lane labels, meta rows, counts. Never a sentence."
    },
    "chrome": {
     "displayName": "Chrome (mono)",
-    "purpose": "Geist Mono uppercase at 0.12em, 0.64rem \u2014 eyebrows, tab labels, filter tabs, sources, keyboard hints. The smallest type in the system."
+    "purpose": "Atkinson Hyperlegible Mono uppercase at 0.12em, 0.64rem \u2014 eyebrows, tab labels, filter tabs, sources, keyboard hints. The smallest type in the system."
+   },
+   "monoAxis": {
+    "displayName": "Mono weight axis",
+    "purpose": "Atkinson Hyperlegible Mono ships 400-500 only. Requesting 600 or 700 makes the browser synthesise the weight, which smears outlines instead of thickening them. Chrome tops out at 500."
    }
   },
   "shadows": [
@@ -293,7 +297,7 @@
    "refersTo": "button-primary",
    "description": "The single brass action. One per view; no border at all, and no line-height override.",
    "html": "<button class=\"ds-btn ds-btn-primary\">Add application</button>",
-   "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Geist, system-ui, sans-serif); border-radius: var(--radius-md, 10px); cursor: pointer; white-space: nowrap; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-primary { background: var(--accent, #d6a441); color: var(--accent-text, #14173a); border: none; font-weight: 650; padding: 0.55rem 0.9rem; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--accent, #d6a441) 85%, black); } .ds-btn-primary:active { filter: brightness(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+   "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Atkinson Hyperlegible Next, system-ui, sans-serif); border-radius: var(--radius-md, 10px); cursor: pointer; white-space: nowrap; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-primary { background: var(--accent, #d6a441); color: var(--accent-text, #14173a); border: none; font-weight: 650; padding: 0.55rem 0.9rem; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--accent, #d6a441) 85%, black); } .ds-btn-primary:active { filter: brightness(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
   },
   {
    "name": "Secondary Button",
@@ -301,7 +305,7 @@
    "refersTo": "button-secondary",
    "description": "The neutral control. Hairline border, 34px minimum, no font-weight of its own.",
    "html": "<button class=\"ds-btn ds-btn-secondary\">Cancel</button>",
-   "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Geist, system-ui, sans-serif); background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); color: var(--ink, #14173a); min-height: 34px; padding: 0.4rem 0.8rem; font-size: var(--text-body, 0.875rem); border-radius: var(--radius-md, 10px); cursor: pointer; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-secondary:hover { background: var(--bg, #f4f2ec); } .ds-btn-secondary:active { filter: brightness(0.97); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
+   "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Atkinson Hyperlegible Next, system-ui, sans-serif); background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); color: var(--ink, #14173a); min-height: 34px; padding: 0.4rem 0.8rem; font-size: var(--text-body, 0.875rem); border-radius: var(--radius-md, 10px); cursor: pointer; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-secondary:hover { background: var(--bg, #f4f2ec); } .ds-btn-secondary:active { filter: brightness(0.97); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
   },
   {
    "name": "Text Input",
@@ -309,7 +313,7 @@
    "refersTo": "input",
    "description": "One metric recipe. The fill is context-dependent by design \u2014 Bone inside a white panel, white on the page ground.",
    "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Senior Platform Engineer\" />",
-   "css": ".ds-input { font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); padding: 0.4rem 0.6rem; border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); background: var(--bg, #f4f2ec); color: var(--ink, #14173a); width: 100%; } .ds-input::placeholder { color: var(--faint, #6f6c7a); } .ds-input:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
+   "css": ".ds-input { font-family: var(--sans, Atkinson Hyperlegible Next, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); padding: 0.4rem 0.6rem; border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); background: var(--bg, #f4f2ec); color: var(--ink, #14173a); width: 100%; } .ds-input::placeholder { color: var(--faint, #6f6c7a); } .ds-input:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
   },
   {
    "name": "Pipeline Row",
@@ -325,7 +329,7 @@
    "refersTo": "stat-card-hero",
    "description": "Tier 3 on a content screen \u2014 the one focal KPI. Brass tint, brass top edge, brass-cast shadow, 2.7rem figure. One per screen.",
    "html": "<div class=\"ds-stat-hero\"><span class=\"ds-stat-value\">18</span><span class=\"ds-stat-label\">Active applications</span></div>",
-   "css": ".ds-stat-hero { position: relative; overflow: hidden; text-align: left; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.8rem 0.9rem; border-radius: var(--radius-md, 10px); background: linear-gradient(180deg, var(--surface, #fff), color-mix(in srgb, var(--accent, #d6a441) 7%, var(--surface, #fff))); border: 1px solid color-mix(in srgb, var(--accent, #d6a441) 40%, var(--border, #e7e4db)); box-shadow: 0 1px 2px rgba(20,23,58,0.05), 0 10px 26px -6px color-mix(in srgb, var(--accent, #d6a441) 40%, transparent); } .ds-stat-hero::before { content: \"\"; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--accent, #d6a441), color-mix(in srgb, var(--accent, #d6a441) 55%, #fff)); } .ds-stat-value { font-family: var(--serif, Geist, system-ui, sans-serif); font-size: 2.7rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink, #14173a); } .ds-stat-label { font-size: 0.74rem; font-weight: 600; color: var(--accent-ink, #a9803a); }"
+   "css": ".ds-stat-hero { position: relative; overflow: hidden; text-align: left; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.8rem 0.9rem; border-radius: var(--radius-md, 10px); background: linear-gradient(180deg, var(--surface, #fff), color-mix(in srgb, var(--accent, #d6a441) 7%, var(--surface, #fff))); border: 1px solid color-mix(in srgb, var(--accent, #d6a441) 40%, var(--border, #e7e4db)); box-shadow: 0 1px 2px rgba(20,23,58,0.05), 0 10px 26px -6px color-mix(in srgb, var(--accent, #d6a441) 40%, transparent); } .ds-stat-hero::before { content: \"\"; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--accent, #d6a441), color-mix(in srgb, var(--accent, #d6a441) 55%, #fff)); } .ds-stat-value { font-family: var(--serif, Atkinson Hyperlegible Next, system-ui, sans-serif); font-size: 2.7rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink, #14173a); } .ds-stat-label { font-size: 0.74rem; font-weight: 600; color: var(--accent-ink, #a9803a); }"
   },
   {
    "name": "Rail Nav Item",
@@ -333,7 +337,7 @@
    "refersTo": "nav-item",
    "description": "Desktop rail item on the always-Night ground. Active is brass on a 16% brass wash; tones come from --rail-*, never from --ink/--muted.",
    "html": "<nav class=\"ds-rail\"><button class=\"ds-rail-item\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\"/></svg>Pipeline</button><button class=\"ds-rail-item ds-rail-item-on\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><path d=\"M7 15l4-5 3 3 5-7\"/></svg>Insights</button></nav>",
-   "css": ".ds-rail { --rail-text: #f4f2ec; --rail-muted: #b9b8cc; display: flex; flex-direction: column; gap: 2px; padding: 12px; background: var(--night, #14173a); border-radius: var(--radius-md, 10px); } .ds-rail-item { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 12px; border: none; background: none; border-radius: var(--radius-md, 10px); font-family: var(--sans, Geist, system-ui, sans-serif); font-size: 14px; text-align: left; color: var(--rail-muted); cursor: pointer; } .ds-rail-item svg { width: 18px; height: 18px; flex: 0 0 auto; } .ds-rail-item:hover { background: rgba(255,255,255,0.06); color: var(--rail-text); } .ds-rail-item-on { background: rgba(214,164,65,0.16); color: var(--accent, #d6a441); } .ds-rail-item:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
+   "css": ".ds-rail { --rail-text: #f4f2ec; --rail-muted: #b9b8cc; display: flex; flex-direction: column; gap: 2px; padding: 12px; background: var(--night, #14173a); border-radius: var(--radius-md, 10px); } .ds-rail-item { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 12px; border: none; background: none; border-radius: var(--radius-md, 10px); font-family: var(--sans, Atkinson Hyperlegible Next, system-ui, sans-serif); font-size: 14px; text-align: left; color: var(--rail-muted); cursor: pointer; } .ds-rail-item svg { width: 18px; height: 18px; flex: 0 0 auto; } .ds-rail-item:hover { background: rgba(255,255,255,0.06); color: var(--rail-text); } .ds-rail-item-on { background: rgba(214,164,65,0.16); color: var(--accent, #d6a441); } .ds-rail-item:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
   },
   {
    "name": "Filter Tab",
@@ -349,7 +353,7 @@
    "refersTo": "chip",
    "description": "Removable token. Asymmetric padding leaves room for the trailing borderless remove button; the matched variant tints 15% brass.",
    "html": "<div style=\"display:flex;gap:0.4rem\"><span class=\"ds-chip\">Kubernetes<button aria-label=\"Remove\">\u00d7</button></span><span class=\"ds-chip ds-chip-matched\">TypeScript<button aria-label=\"Remove\">\u00d7</button></span></div>",
-   "css": ".ds-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--bg, #f4f2ec); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-full, 999px); padding: 0.2rem 0.3rem 0.2rem 0.6rem; font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-meta, 0.75rem); color: var(--ink, #14173a); } .ds-chip button { border: none; background: none; color: var(--muted, #5c5f76); cursor: pointer; font-size: var(--text-title, 0.95rem); line-height: 1; padding: 0 0.2rem; } .ds-chip button:hover { color: var(--ink, #14173a); } .ds-chip-matched { background: color-mix(in srgb, var(--accent, #d6a441) 15%, var(--bg, #f4f2ec)); border-color: var(--accent, #d6a441); color: var(--accent-ink, #a9803a); }"
+   "css": ".ds-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--bg, #f4f2ec); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-full, 999px); padding: 0.2rem 0.3rem 0.2rem 0.6rem; font-family: var(--sans, Atkinson Hyperlegible Next, system-ui, sans-serif); font-size: var(--text-meta, 0.75rem); color: var(--ink, #14173a); } .ds-chip button { border: none; background: none; color: var(--muted, #5c5f76); cursor: pointer; font-size: var(--text-title, 0.95rem); line-height: 1; padding: 0 0.2rem; } .ds-chip button:hover { color: var(--ink, #14173a); } .ds-chip-matched { background: color-mix(in srgb, var(--accent, #d6a441) 15%, var(--bg, #f4f2ec)); border-color: var(--accent, #d6a441); color: var(--accent-ink, #a9803a); }"
   },
   {
    "name": "Badge",
@@ -365,17 +369,17 @@
    "refersTo": "card",
    "description": "Tier 2 panel with a mono eyebrow head. The lead variant takes a 3px brass left spine; clickable variants rise 2px to shadow-2.",
    "html": "<div class=\"ds-card ds-card-lead\"><div class=\"ds-card-head\">Next up<span class=\"ds-card-win\">3 due</span></div><div class=\"ds-card-body\">Follow up with Northwind \u2014 6 days since the screening call.</div></div>",
-   "css": ".ds-card { background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); box-shadow: 0 1px 2px rgba(20,23,58,0.04), 0 2px 10px -3px rgba(20,23,58,0.1); padding: 0.85rem 0.95rem; text-align: left; display: block; width: 100%; color: var(--ink, #14173a); } .ds-card-lead { border-left: 3px solid var(--accent, #d6a441); } .ds-card-head { font-family: var(--mono, ui-monospace, monospace); font-size: 0.6rem; letter-spacing: var(--track-eyebrow, 0.12em); text-transform: uppercase; color: var(--faint, #6f6c7a); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.55rem; } .ds-card-win { margin-left: auto; color: var(--accent-ink, #a9803a); background: var(--accent-soft, rgba(214,164,65,0.14)); border-radius: 999px; padding: 0.05rem 0.4rem; font-size: 0.54rem; letter-spacing: 0.04em; } .ds-card-body { font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); line-height: 1.5; }"
+   "css": ".ds-card { background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); box-shadow: 0 1px 2px rgba(20,23,58,0.04), 0 2px 10px -3px rgba(20,23,58,0.1); padding: 0.85rem 0.95rem; text-align: left; display: block; width: 100%; color: var(--ink, #14173a); } .ds-card-lead { border-left: 3px solid var(--accent, #d6a441); } .ds-card-head { font-family: var(--mono, ui-monospace, monospace); font-size: 0.6rem; letter-spacing: var(--track-eyebrow, 0.12em); text-transform: uppercase; color: var(--faint, #6f6c7a); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.55rem; } .ds-card-win { margin-left: auto; color: var(--accent-ink, #a9803a); background: var(--accent-soft, rgba(214,164,65,0.14)); border-radius: 999px; padding: 0.05rem 0.4rem; font-size: 0.54rem; letter-spacing: 0.04em; } .ds-card-body { font-family: var(--sans, Atkinson Hyperlegible Next, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); line-height: 1.5; }"
   }
  ],
  "narrative": {
   "northStar": "The Night Ascent",
-  "overview": "Two halves, and the name says both. The ground is always Night \u2014 the desktop rail and the sign-in stage are Ink Indigo in every theme, never re-tinted, because they are chrome, not content. Against that constant, everything that moves climbs: the five pipeline stages rise slate \u2192 lapis \u2192 iris \u2192 fuchsia \u2192 brass, and the single interaction accent is the brass at the top of that climb. A user reading a board is reading altitude.\n\nThe character is warm and instrumental. The precision is real \u2014 hairline 1px borders, a 10px control corner, uppercase Geist Mono chrome at 0.64rem with 0.12em tracking, tabular figures that don't jitter as numbers change. But the canvas is Bone (#f4f2ec), not white, the cards round at 14px, and the accent is a struck brass rather than a saturated primary. The result should read as a well-made instrument on a warm desk, not a terminal and not a SaaS dashboard.\n\nDensity is calm-dense. A heavy user holds around fifty applications, so nothing here is a data grid: rows are 44px minimum, lists breathe at 0.6rem gaps, and the app column is a single 720px measure until the rail appears at 900px. Colour is spent almost nowhere \u2014 the brass is the only voice raised, and the stage hues are locked to pipeline state and never used decoratively.",
+  "overview": "Two halves, and the name says both. The ground is always Night \u2014 the desktop rail and the sign-in stage are Ink Indigo in every theme, never re-tinted, because they are chrome, not content. Against that constant, everything that moves climbs: the five pipeline stages rise slate \u2192 lapis \u2192 iris \u2192 fuchsia \u2192 brass, and the single interaction accent is the brass at the top of that climb. A user reading a board is reading altitude.\n\nThe character is warm and instrumental. The precision is real \u2014 hairline 1px borders, a 10px control corner, uppercase Atkinson Hyperlegible Mono chrome at 0.64rem with 0.12em tracking, tabular figures that don't jitter as numbers change. But the canvas is Bone (#f4f2ec), not white, the cards round at 14px, and the accent is a struck brass rather than a saturated primary. The result should read as a well-made instrument on a warm desk, not a terminal and not a SaaS dashboard.\n\nDensity is calm-dense. A heavy user holds around fifty applications, so nothing here is a data grid: rows are 44px minimum, lists breathe at 0.6rem gaps, and the app column is a single 720px measure until the rail appears at 900px. Colour is spent almost nowhere \u2014 the brass is the only voice raised, and the stage hues are locked to pipeline state and never used decoratively.",
   "keyCharacteristics": [
    "Ink Indigo chrome that never changes with the theme; Bone or night-sky content beneath it.",
    "One accent (Struck Brass) for every interactive meaning: primary action, link, focus ring, selection, offer.",
    "Five accessibility-locked stage hues that rise in both hue and lightness, reserved for pipeline state.",
-   "Geist everywhere, Geist Mono strictly as chrome; figures set in Geist 600 with tabular numerals.",
+   "Atkinson Hyperlegible everywhere, Atkinson Hyperlegible Mono strictly as chrome; figures set in Atkinson 600 with tabular numerals.",
    "Three elevation tiers, hover adds exactly one step.",
    "1px hairlines and a 10px / 14px / pill corner vocabulary."
   ],
@@ -402,12 +406,12 @@
    },
    {
     "name": "The Mono-Is-Chrome Rule",
-    "body": "Geist Mono never sets a sentence. It marks structural furniture \u2014 eyebrows, tab and stage labels, sources, keys, counts \u2014 and it is always uppercase with --track-chrome (0.06em) or --track-eyebrow (0.12em). Prose in mono is a defect.",
+    "body": "Atkinson Hyperlegible Mono never sets a sentence. It marks structural furniture \u2014 eyebrows, tab and stage labels, sources, keys, counts \u2014 and it is always uppercase with --track-chrome (0.06em) or --track-eyebrow (0.12em). Prose in mono is a defect.",
     "section": "typography"
    },
    {
     "name": "The Figures-Speak Rule",
-    "body": "Numbers a user reads as a result \u2014 KPI values, funnel counts, stat figures \u2014 are set in the display voice: Geist 600, font-variant-numeric: tabular-nums, tight tracking. Mono keeps only the small inline values inside stat lines. Tabular numerals are mandatory anywhere a figure updates in place, so digits don't dance.",
+    "body": "Numbers a user reads as a result \u2014 KPI values, funnel counts, stat figures \u2014 are set in the display voice: Atkinson 600, font-variant-numeric: tabular-nums, tight tracking. Mono keeps only the small inline values inside stat lines. Tabular numerals are mandatory anywhere a figure updates in place, so digits don't dance.",
     "section": "typography"
    },
    {
@@ -459,7 +463,7 @@
   "dos": [
    "Do spend Struck Brass on interaction only \u2014 primary action, link, focus ring, selection, the one hero figure. If a screen has brass in more than a few places, something non-interactive stole it.",
    "Do read stage colour through --sc, set by a .stage-* ancestor. Never hardcode a stage hex in a rule.",
-   "Do set every figure a user reads as a result in Geist 600 with font-variant-numeric: tabular-nums.",
+   "Do set every figure a user reads as a result in Atkinson 600 with font-variant-numeric: tabular-nums.",
    "Do give any new animation a @media (prefers-reduced-motion: reduce) escape in the same block, and keep it at or under 250ms.",
    "Do put new CSS in App.css bands 1\u20133, never after the control-normalization layer at band 4 \u2014 that layer exists to collapse per-context variants and must stay last.",
    "Do make a new owned component's CSS fully self-describing inside @layer components, reproducing the App.css recipe it replaces rather than depending on it. Verify a swap is pixel-identical with the screenshot baseline plus compare -metric AE = 0; eyeballing misses sub-pixel shifts.",

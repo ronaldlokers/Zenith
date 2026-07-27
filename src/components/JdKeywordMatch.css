@@ -58,7 +58,7 @@
   .ats-ring-n {
     position: relative;
     font-family: var(--serif);
-    font-size: 1.25rem;
+    font-size: var(--text-figure-md);
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--band);

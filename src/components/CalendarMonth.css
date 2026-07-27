@@ -116,7 +116,7 @@
     .zui-cal-day.today .zui-cal-daynum {
       background: var(--accent);
       color: var(--accent-text);
-      font-weight: 700;
+      font-weight: 500;
     }
 
     .zui-cal-chip {

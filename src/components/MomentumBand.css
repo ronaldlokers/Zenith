@@ -18,7 +18,7 @@
   /* App.css:4436 */
   .zui-momentumband-eyebrow {
     font-family: var(--mono);
-    font-size: 0.6rem;
+    font-size: var(--text-chrome);
     letter-spacing: var(--track-eyebrow);
     text-transform: uppercase;
     color: var(--faint);
