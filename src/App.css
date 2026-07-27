@@ -168,25 +168,14 @@
    amber tone, distinct from the muted hint and the red error style. */
 .settings-warning {
   margin: 0;
-  color: var(--attention-ink, #8a5a00);
+  color: var(--attention-ink);
   background: color-mix(
     in srgb,
-    var(--attention, #d9930a) var(--stage-tint),
+    var(--attention) var(--stage-tint),
     var(--surface)
   );
   border-radius: var(--radius-sm);
   padding: 0.5rem 0.6rem;
-}
-@media (prefers-color-scheme: dark) {
-  .settings-warning {
-    color: #e6b45a;
-  }
-}
-:root[data-theme="dark"] .settings-warning {
-  color: #e6b45a;
-}
-:root[data-theme="light"] .settings-warning {
-  color: #8a5a00;
 }
 
 .settings-field select,
