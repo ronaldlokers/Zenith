@@ -364,19 +364,9 @@ export function computeWeeklyMomentum(
   return { weeks, streak, streakBroken };
 }
 
-// Consecutive weeks (most recent first) whose application count met the goal
-// (#473). Pure. Pass the COMPLETED weekly counts (exclude the in-progress
-// current week — the caller shows that as live progress). Zero target = no
-// goal set = no streak.
-export function goalStreak(weeklyCounts: number[], target: number): number {
-  if (target <= 0) return 0;
-  let streak = 0;
-  for (let i = weeklyCounts.length - 1; i >= 0; i--) {
-    if (weeklyCounts[i] >= target) streak++;
-    else break;
-  }
-  return streak;
-}
+// goalStreak removed with the Today quota card (#492) — its only caller was
+// the weekly-goal block, and a streak beside a zero week congratulated the
+// worst week of a search. The goal itself still lives in Settings.
 
 // 1-based "week N of your search" from a start date (#473). `now` is injected
 // so it's unit-testable. Returns null when no start date is known.
