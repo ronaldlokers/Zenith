@@ -129,7 +129,13 @@
          side-bar in the component layer (#494). */
       background: color-mix(in srgb, var(--k) var(--stage-tint), transparent);
       border-radius: 3px;
-      padding: 1px 5px;
+      /* 24px is WCAG 2.5.8's minimum target, not the app's 34px control
+         height (#499): a month cell can hold three of these, and 34px each
+         would push the grid past a viewport. */
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      padding: 2px 5px;
       font-size: var(--text-chrome);
       line-height: 1.45;
       color: var(--ink);

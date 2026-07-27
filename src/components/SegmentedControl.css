@@ -36,6 +36,14 @@
     border-radius: var(--radius-full);
     padding: 0.3rem 0.9rem;
     font-size: var(--text-body);
+    /* The documented control height (#499); 40px on a phone. */
+    min-height: 34px;
+  }
+
+  @media (max-width: 600px) {
+    .zui-segmented button {
+      min-height: 40px;
+    }
   }
 
   /* App.css:2951 — callers keep className="active" on the selected button. */

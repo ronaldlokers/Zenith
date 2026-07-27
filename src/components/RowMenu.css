@@ -12,16 +12,24 @@
     background: var(--surface);
     color: var(--muted);
     cursor: pointer;
-    /* 32px square: the minimum comfortable touch target on a phone, where
-       this menu replaces four cramped buttons. */
-    width: 2rem;
-    height: 2rem;
+    /* 34px square at rail widths, 40px on a phone (#499): the comment used to
+       claim 32px was "the minimum comfortable touch target", which is below
+       both the documented control height and WCAG 2.5.8. */
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
     line-height: 1;
     border-radius: var(--radius-sm);
+  }
+
+  @media (max-width: 600px) {
+    .zui-rowmenu-btn {
+      width: 40px;
+      height: 40px;
+    }
   }
 
   .zui-rowmenu-btn:hover {

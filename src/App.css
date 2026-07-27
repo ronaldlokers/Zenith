@@ -123,6 +123,9 @@
   display: none;
 }
 
+/* 34px square, the documented control height (#499). These were 1.7rem —
+   27px — which is the smallest target in the app and sits in the top bar
+   where a thumb reaches most often. */
 .settings-btn {
   display: flex;
   align-items: center;
@@ -131,9 +134,19 @@
   background: var(--surface);
   color: var(--muted);
   border-radius: var(--radius-sm);
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 34px;
+  height: 34px;
   cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .settings-btn,
+  .cmdk {
+    min-height: 40px;
+  }
+  .settings-btn {
+    width: 40px;
+  }
 }
 
 /* .notification-bell/.notification-dot/.notification-backdrop/
@@ -4893,6 +4906,39 @@ button:not(:disabled):active,
   .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-band { grid-template-columns: 1fr; }
   .dash-spark { height: 34px; }
+}
+
+/* Touch-target floor (#499). These controls were hand-rolled before the
+   control-normalization layer existed and sat between 15px and 31px tall —
+   under the documented 34px, and under WCAG 2.5.8. Height only; their fills
+   and type are untouched. */
+.subnav button,
+.board-bar .search,
+.board-bar-btn,
+.board-bar select,
+.board-sort select,
+.keyword-chips input,
+.settings-list li > button {
+  min-height: 34px;
+}
+/* An icon-only destructive control needs width as well as height. */
+.settings-list li > button {
+  min-width: 34px;
+}
+
+@media (max-width: 600px) {
+  .subnav button,
+  .board-bar .search,
+  .board-bar-btn,
+  .board-bar select,
+  .board-sort select,
+  .keyword-chips input,
+  .settings-list li > button {
+    min-height: 40px;
+  }
+  .settings-list li > button {
+    min-width: 40px;
+  }
 }
 
 /* Pipeline redesign (#346) — slim bar, urgency cards, ⋯ menu, header
