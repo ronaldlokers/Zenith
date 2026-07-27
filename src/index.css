@@ -338,6 +338,11 @@
 body {
   margin: 0;
   font-family: var(--sans);
+  /* The ramp's body step, declared (#502). Without it the UA's 16px was a
+     seventh, undeclared size that any element without an explicit rule fell
+     through to — 2px larger than --text-body, and on /cv it made the entry
+     lists render larger than the heading above them. */
+  font-size: var(--text-body);
   background: var(--bg);
   color: var(--ink);
   line-height: 1.5;

@@ -164,7 +164,7 @@
   border-bottom: 1px solid var(--border);
   font-family: var(--serif);
   font-weight: 600;
-  font-size: 1.5rem;
+  font-size: var(--text-heading);
   letter-spacing: -0.01em;
 }
 
@@ -252,7 +252,7 @@
 
 .login-wordmark {
   font-family: var(--serif);
-  font-size: 1.5rem;
+  font-size: var(--text-heading);
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink);
@@ -857,7 +857,7 @@
   margin: 0 0 0.15rem;
   font-family: var(--serif);
   font-weight: 600;
-  font-size: 1.55rem;
+  font-size: var(--text-heading);
   line-height: 1.12;
   letter-spacing: -0.01em;
 }
@@ -1583,7 +1583,7 @@ button.danger {
     margin: 0.1rem 0 0;
     font-family: var(--serif);
     font-weight: 600;
-    font-size: 1.45rem;
+    font-size: var(--text-heading);
     letter-spacing: -0.01em;
     line-height: 1.15;
   }
@@ -2903,7 +2903,7 @@ summary.bcol-head::after {
 }
 
 .ai-grounding {
-  font-size: 0.82rem;
+  font-size: var(--text-body);
   margin: 0.2rem 0 0.4rem;
   padding-left: 0.6rem;
   border-left: 1px solid var(--border);
@@ -3397,7 +3397,7 @@ summary.bcol-head::after {
   margin: 0;
   font-family: var(--serif);
   font-weight: 600;
-  font-size: 1.7rem;
+  font-size: var(--text-heading);
   letter-spacing: -0.01em;
 }
 .admin-page-sub {
@@ -3687,13 +3687,14 @@ summary.bcol-head::after {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+/* A sentence, so it takes the body voice (#502). It was mono, uppercase and
+   tracked at 0.64rem — chrome dress on prose, which DESIGN.md's
+   Mono-Is-Chrome Rule calls a defect, on the most-read line of the home
+   screen. */
 .today-date {
   margin: 0;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--faint);
+  font-size: var(--text-meta);
+  color: var(--muted);
 }
 
 /* The hero is the screen's one tier-3 element (StatCard hero), stretched to
@@ -4171,7 +4172,7 @@ summary.bcol-head::after {
   .side-brand span {
     font-family: var(--serif);
     font-weight: 600;
-    font-size: 20px;
+    font-size: var(--text-heading);
     letter-spacing: -0.02em;
     color: var(--rail-text);
   }
@@ -4338,7 +4339,7 @@ summary.bcol-head::after {
     margin: 0;
     font-family: var(--serif);
     font-weight: 600;
-    font-size: 21px;
+    font-size: var(--text-heading);
     letter-spacing: -0.01em;
     color: var(--ink);
   }
@@ -4880,7 +4881,7 @@ button:not(:disabled):active,
 }
 .dash-offers li:first-child .dash-orow { border-top: none; }
 .dash-orow:hover { background: var(--hover); }
-.dash-ot { font-weight: 560; font-size: 0.82rem; }
+.dash-ot { font-weight: 560; font-size: var(--text-body); }
 .dash-ov { font-family: var(--serif); font-weight: 600; text-align: right; }
 .dash-oc { font-size: var(--text-meta); grid-column: 1 / -1; }
 
@@ -5127,7 +5128,7 @@ button:not(:disabled):active,
 /* archived modal */
 .archived-modal { max-width: 30rem; }
 .archived-head { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.7rem; }
-.archived-head h2 { margin: 0; font-size: 1.05rem; }
+.archived-head h2 { margin: 0; font-size: var(--text-title); }
 .archived-list { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow-y: auto; }
 .archived-list li { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0; border-top: 1px solid var(--border); }
 .archived-list li:first-child { border-top: none; }
