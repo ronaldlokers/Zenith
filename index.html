@@ -9,6 +9,12 @@
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1130" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Zenith</title>
+    <!-- The faces are discovered only after index.css parses, so first paint
+         lands before they are even requested and the swap reflows every figure
+         behind it: the fallback sets digits 14% narrower than Atkinson, and the
+         largest type in the app is numbers (#501). -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/atkinson-next-latin.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/atkinson-mono-latin.woff2" />
   </head>
   <body>
     <div id="root"></div>

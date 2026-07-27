@@ -199,7 +199,7 @@ components:
 
 Two halves, and the name says both. The **ground is always Night** — the desktop rail and the sign-in stage are Ink Indigo in every theme, never re-tinted, because they are chrome, not content. Against that constant, everything that *moves* climbs: the five pipeline stages rise slate → lapis → iris → fuchsia → brass, and the single interaction accent is the brass at the top of that climb. A user reading a board is reading altitude.
 
-The character is **warm and instrumental**. The precision is real — hairline 1px borders, a 10px control corner, uppercase Geist Mono chrome at 0.64rem with 0.12em tracking, tabular figures that don't jitter as numbers change. But the canvas is Bone (#f4f2ec), not white, the cards round at 14px, and the accent is a struck brass rather than a saturated primary. The result should read as a well-made instrument on a warm desk, not a terminal and not a SaaS dashboard.
+The character is **warm and instrumental**. The precision is real — hairline 1px borders, a 10px control corner, uppercase Atkinson Mono chrome at 0.64rem with 0.12em tracking, tabular figures that don't jitter as numbers change. But the canvas is Bone (#f4f2ec), not white, the cards round at 14px, and the accent is a struck brass rather than a saturated primary. The result should read as a well-made instrument on a warm desk, not a terminal and not a SaaS dashboard.
 
 Density is **calm-dense**. A heavy user holds around fifty applications, so nothing here is a data grid: rows are 44px minimum, lists breathe at 0.6rem gaps, and the app column is a single 720px measure until the rail appears at 900px. Colour is spent almost nowhere — the brass is the only voice raised, and the stage hues are locked to pipeline state and never used decoratively.
 
@@ -268,26 +268,30 @@ Separation is on the blue↔orange axis, the one axis every dichromacy preserves
 
 ## Typography
 
-**Display Font:** Geist 600 (`--serif`, with `-apple-system`, `BlinkMacSystemFont`, `system-ui` fallbacks)
-**Body Font:** Geist 400 (`--sans`, same stack)
-**Label/Mono Font:** Geist Mono (`--mono`, with `ui-monospace`, `SF Mono`, `Consolas`)
+**Display Font:** Atkinson Hyperlegible Next 600 (`--serif`, with `-apple-system`, `BlinkMacSystemFont`, `system-ui` fallbacks)
+**Body Font:** Atkinson Hyperlegible Next 400 (`--sans`, same stack)
+**Label/Mono Font:** Atkinson Hyperlegible Mono (`--mono`, with `ui-monospace`, `SF Mono`, `Consolas`)
 
-**Character:** One family in two registers plus a machine register. `--serif` is a stable token name that resolves to **Geist**, not to any serif — there is no serif anywhere in this brand, and the name is kept only because renaming it would churn every call site. Geist at 600 with negative tracking is the display voice; Geist at 400 is every word a human reads; Geist Mono, always uppercase and always tracked, is chrome.
+Self-hosted variable woff2, latin + latin-ext per family. The Mono axis ships **400–500 only** — ask for 600 or 700 and the browser synthesises it, which smears the outlines rather than thickening them. Chrome tops out at 500.
+
+**Character:** One family in two registers plus a machine register. `--serif` and `--sans` resolve to the *same* family: the display voice is weight 600 plus negative tracking, nothing more. The face was chosen for a reason no other satisfies here — the stage palette is contrast-locked for accessibility, and the Braille Institute drew these letterforms to be told apart. It ships a slashed zero by default with no stylistic alternate, so every figure in the product carries one.
 
 ### Hierarchy
 
-- **Display** (Geist 600, `2.125rem`, line-height 1, `-0.02em`): the biggest moments — the modal close glyph scale, the sign-in wordmark family, hero figures.
-- **Headline** (Geist 600, `1.375rem`, ~1.15, `-0.01em`): section and settings headings, the focused feed item's title (1.45rem), the settings-modal `h2` at 1.5rem over a hairline.
-- **Title** (Geist 600, `0.95rem`, `-0.01em`): row primaries, card titles, the top-bar wordmark.
-- **Body** (Geist 400, `0.875rem`, 1.5): all copy, every form control, every button label. Body line-height 1.5 is inherited by buttons through `button { font: inherit }` — primary buttons size their box off it, so do not override it.
-- **Label** (Geist Mono, `0.75rem`, `0.06em`, uppercase): stage names, lane labels, meta rows, counts.
-- **Chrome** (Geist Mono, `0.64rem`, `0.12em`, uppercase): eyebrows, tab labels, filter tabs, source lines, keyboard hints. The smallest type in the system; never used for a sentence.
+- **Display** (Atkinson 600, `2.125rem`, line-height 1, `-0.02em`): the biggest moments — the modal close glyph scale, the sign-in wordmark family, hero figures.
+- **Headline** (Atkinson 600, `1.375rem`, ~1.15, `-0.01em`): section and settings headings, the focused feed item's title (1.45rem), the settings-modal `h2` at 1.5rem over a hairline.
+- **Title** (Atkinson 600, `0.95rem`, `-0.01em`): row primaries, card titles, the top-bar wordmark.
+- **Body** (Atkinson 400, `0.875rem`, 1.5): all copy, every form control, every button label. Body line-height 1.5 is inherited by buttons through `button { font: inherit }` — primary buttons size their box off it, so do not override it.
+- **Label** (Atkinson Hyperlegible Mono, `0.75rem`, `0.06em`, uppercase): stage names, lane labels, meta rows, counts.
+- **Chrome** (Atkinson Hyperlegible Mono, `0.64rem`, `0.12em`, uppercase): eyebrows, tab labels, filter tabs, source lines, keyboard hints. The smallest type in the system; never used for a sentence.
 
 ### Named Rules
 
-**The Mono-Is-Chrome Rule.** Geist Mono never sets a sentence. It marks structural furniture — eyebrows, tab and stage labels, sources, keys, counts — and it is always uppercase with `--track-chrome` (0.06em) or `--track-eyebrow` (0.12em). Prose in mono is a defect.
+**The Mono-Is-Chrome Rule.** Atkinson Mono never sets a sentence. It marks structural furniture — eyebrows, tab and stage labels, sources, keys, counts — and it is always uppercase with `--track-chrome` (0.06em) or `--track-eyebrow` (0.12em). Prose in mono is a defect.
 
-**The Figures-Speak Rule.** Numbers a user reads as a result — KPI values, funnel counts, stat figures — are set in the display voice: Geist 600, `font-variant-numeric: tabular-nums`, tight tracking. Mono keeps only the small inline values inside stat lines. Tabular numerals are mandatory anywhere a figure updates in place, so digits don't dance.
+**The Figure-Token Rule.** Figures use `--text-figure-xl` (hero), `--text-figure-lg` (stat) or `--text-figure-md` (inline score). `--text-display` is for glyphs, not numbers.
+
+**The Figures-Speak Rule.** Numbers a user reads as a result — KPI values, funnel counts, stat figures — are set in the display voice: Atkinson 600, `font-variant-numeric: tabular-nums`, tight tracking. Mono keeps only the small inline values inside stat lines. Tabular numerals are mandatory anywhere a figure updates in place, so digits don't dance.
 
 **The Negative-Tracking Rule.** Display and title sizes carry `-0.01em` to `-0.02em`; body carries `normal`; mono carries positive tracking. Tracking direction is how the three registers stay distinguishable at a glance.
 
@@ -392,7 +396,7 @@ The `.zui-row` band is the most repeated object in the product: white, 1px hairl
 
 ### Navigation
 
-- **Desktop rail (≥900px):** 210px, Ink Indigo, sticky full height. Brand at 20px Geist 600. Items are 14px, `9px 12px`, 10px corners, 18px icons, `--rail-muted` at rest; hover lifts to `rgba(255,255,255,.06)` with `--rail-text`; **active is brass on a 16% brass wash**. The account block pins to the foot above a `rgba(255,255,255,.08)` rule.
+- **Desktop rail (≥900px):** 210px, Ink Indigo, sticky full height. Brand at 20px Atkinson 600. Items are 14px, `9px 12px`, 10px corners, 18px icons, `--rail-muted` at rest; hover lifts to `rgba(255,255,255,.06)` with `--rail-text`; **active is brass on a 16% brass wash**. The account block pins to the foot above a `rgba(255,255,255,.08)` rule.
 - **Tablet strip (600–900px):** the same tabs as bordered mono pills — 10px corners, `--text-chrome`, uppercase, `--track-eyebrow`, muted; active turns brass with a brass border and weight 700.
 - **Mobile bar (≤600px):** fixed to the bottom with `env(safe-area-inset-bottom)` padding and a `--vv-bottom-offset` hook for the visual viewport. Borders and fills drop entirely; each tab becomes an equal-width icon-over-label column at `0.6rem`, sized so eight tabs fit a 320px phone without scrolling or clipping.
 
@@ -406,7 +410,7 @@ Short and functional. Micro-transitions run **120–180ms ease**; nothing in the
 
 ### The brand mark
 
-A Night squircle (44px at rx 14 on a 48 viewBox) holding three rungs that rise and narrow — periwinkle `#6f78c4`, violet `#8f7bd0`, brass `#d6a441` — topped by a brass four-point star. Fills are **fixed brand hex, never `currentColor`**, so the in-app `<Logo>` matches `favicon.svg` and the PWA icons exactly. It pairs with the "Zenith" wordmark in Geist 600 at `-0.02em`.
+A Night squircle (44px at rx 14 on a 48 viewBox) holding three rungs that rise and narrow — periwinkle `#6f78c4`, violet `#8f7bd0`, brass `#d6a441` — topped by a brass four-point star. Fills are **fixed brand hex, never `currentColor`**, so the in-app `<Logo>` matches `favicon.svg` and the PWA icons exactly. It pairs with the "Zenith" wordmark in Atkinson 600 at `-0.02em`.
 
 ## Do's and Don'ts
 
@@ -414,7 +418,7 @@ A Night squircle (44px at rx 14 on a 48 viewBox) holding three rungs that rise a
 
 - **Do** spend Struck Brass on interaction only — primary action, link, focus ring, selection, the one hero figure. If a screen has brass in more than a few places, something non-interactive stole it.
 - **Do** read stage colour through `--sc`, set by a `.stage-*` ancestor. Never hardcode a stage hex in a rule.
-- **Do** set every figure a user reads as a result in Geist 600 with `font-variant-numeric: tabular-nums`.
+- **Do** set every figure a user reads as a result in Atkinson 600 with `font-variant-numeric: tabular-nums`.
 - **Do** give any new animation a `@media (prefers-reduced-motion: reduce)` escape in the same block, and keep it at or under 250ms.
 - **Do** put new CSS in App.css bands 1–3, never after the control-normalization layer at band 4 — that layer exists to collapse per-context variants and must stay last.
 - **Do** make a new owned component's CSS fully self-describing inside `@layer components`, reproducing the App.css recipe it replaces rather than depending on it. Verify a swap is pixel-identical with the screenshot baseline plus `compare -metric AE` = 0; eyeballing misses sub-pixel shifts.

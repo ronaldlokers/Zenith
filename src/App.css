@@ -78,7 +78,7 @@
   background: var(--bg);
   color: var(--muted);
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--text-meta);
   cursor: pointer;
 }
 
@@ -96,7 +96,7 @@
   display: none;
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-chrome);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -175,6 +175,19 @@
   font-size: var(--text-body);
   color: var(--muted);
   margin-bottom: var(--space-4);
+}
+
+/* Settings descriptions had no measure at all, so they ran the full card
+   width — up to 104ch, nearly 40% past the readable band (#501). Scoped to
+   the settings surface and to prose elements only: the controls, lists and
+   inputs keep the full width, and .muted/.small elsewhere are untouched. */
+.settings-content p.muted,
+.settings-content p.small,
+.settings-content li.muted,
+.settings-content .ai-feature-list,
+.settings-content .api-endpoints li,
+.settings-warning {
+  max-width: 62ch;
 }
 
 /* Privacy caution note (e.g. the calendar-feed warning, #450) — a subtle
@@ -621,7 +634,8 @@
 .tabs button.active {
   color: var(--accent);
   border-color: var(--accent);
-  font-weight: 700;
+  /* 500 is the top of the mono axis; 700 was synthesised (#501). */
+  font-weight: 500;
 }
 
 /* The bottom-nav glyphs only show on the mobile bar; the desktop sidebar
@@ -986,6 +1000,9 @@
 .detail-sub {
   font-family: var(--mono);
   font-size: var(--text-chrome);
+  /* Mono ships 400-500 only; an unset weight here inherits the UA heading
+     bold and the browser synthesises it, smearing the outlines (#501). */
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--muted);
@@ -2573,7 +2590,7 @@ summary.bcol-head::after {
 .bcol-head .n {
   margin-left: auto;
   font-family: var(--serif);
-  font-size: 1.4rem;
+  font-size: var(--text-heading);
   line-height: 1;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -3184,6 +3201,9 @@ summary.bcol-head::after {
 .side-h {
   font-family: var(--mono);
   font-size: var(--text-chrome);
+  /* Mono ships 400-500 only; an unset weight here inherits the UA heading
+     bold and the browser synthesises it, smearing the outlines (#501). */
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--muted);
@@ -3230,40 +3250,8 @@ summary.bcol-head::after {
    progress, and closed the page on a ghosting. Its replacement, "moved this
    week", shares the .today-rows recipe with Next Up (Today home band below). */
 
-/* Overview home screen (#128) */
-.overview {
-  display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
-}
-
-.overview-headline {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: var(--space-5) 0 var(--space-2);
-}
-
-.overview-number {
-  font-size: 3rem;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.overview-label {
-  margin-top: 0.35rem;
-  color: var(--muted);
-  font-size: var(--text-title);
-}
-
-.overview-sub {
-  margin-top: var(--space-2);
-  font-size: var(--text-meta);
-  color: var(--accent);
-  font-family: var(--mono);
-}
+/* The pre-#480 overview headline block was deleted (#501): .overview-number,
+   .overview-headline and .overview-label had zero call sites in any tsx. */
 
 .overview .jobs-side {
   display: block;
@@ -3666,6 +3654,9 @@ summary.bcol-head::after {
 .insights-cal-h {
   font-family: var(--mono);
   font-size: var(--text-chrome);
+  /* Mono ships 400-500 only; an unset weight here inherits the UA heading
+     bold and the browser synthesises it, smearing the outlines (#501). */
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--muted);
@@ -4202,7 +4193,7 @@ summary.bcol-head::after {
     background: none;
     border-radius: var(--radius-md);
     font-family: inherit;
-    font-size: 14px;
+    font-size: var(--text-body);
     text-align: left;
     color: var(--rail-muted);
     cursor: pointer;
@@ -4260,7 +4251,7 @@ summary.bcol-head::after {
     flex-direction: column;
   }
   .side-user .u-name {
-    font-size: 13px;
+    font-size: var(--text-meta);
     font-weight: 600;
     color: var(--rail-text);
     white-space: nowrap;
@@ -4268,7 +4259,7 @@ summary.bcol-head::after {
     text-overflow: ellipsis;
   }
   .side-user .u-email {
-    font-size: 11px;
+    font-size: var(--text-chrome);
     color: var(--rail-faint);
     white-space: nowrap;
     overflow: hidden;
@@ -4868,7 +4859,7 @@ button:not(:disabled):active,
 
 .dash-funnel { display: flex; flex-direction: column; gap: 0.3rem; }
 .dash-fn { display: grid; grid-template-columns: 5.4rem 1fr 1.6rem; align-items: center; gap: 0.5rem; }
-.dash-fl { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.dash-fl { font-family: var(--mono); font-size: var(--text-chrome); letter-spacing: var(--track-chrome); text-transform: uppercase; color: var(--muted); }
 .dash-fbar { height: 8px; border-radius: 5px; background: var(--track); overflow: hidden; }
 .dash-fbar > i { display: block; height: 100%; border-radius: 5px; background: var(--sc, var(--accent)); }
 .dash-fn-n { font-family: var(--serif); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; font-size: var(--text-body); }
@@ -4891,7 +4882,7 @@ button:not(:disabled):active,
 .dash-orow:hover { background: var(--hover); }
 .dash-ot { font-weight: 560; font-size: 0.82rem; }
 .dash-ov { font-family: var(--serif); font-weight: 600; text-align: right; }
-.dash-oc { font-size: 0.7rem; grid-column: 1 / -1; }
+.dash-oc { font-size: var(--text-meta); grid-column: 1 / -1; }
 
 /* .dash-stat moved to the owned StatLine component (src/components/StatLine.css). */
 

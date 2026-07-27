@@ -38,7 +38,7 @@
      so stats read as the app's voice (refined refresh, #458). */
   .zui-statcard-value {
     font-family: var(--serif);
-    font-size: 2rem;
+    font-size: var(--text-figure-lg);
     font-weight: 600;
     line-height: 1;
     letter-spacing: -0.02em;
@@ -47,7 +47,7 @@
 
   /* App.css:4799 */
   .zui-statcard-label {
-    font-size: 0.74rem;
+    font-size: var(--text-meta);
     color: var(--muted);
   }
 
@@ -79,7 +79,7 @@
     );
   }
   .zui-statcard--hero .zui-statcard-value {
-    font-size: 2.7rem;
+    font-size: var(--text-figure-xl);
   }
   .zui-statcard--hero .zui-statcard-label {
     color: var(--accent-ink);
