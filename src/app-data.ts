@@ -159,13 +159,13 @@ export function useAppData(
             // entry path instead of leaving it to a status-order dance.
             notify(
               t("offer.recordPrompt"),
-              () => navigate(`/jobs/${id}`),
+              () => navigate(`/board/${id}`),
               t("toast.open"),
             );
           } else if (isDead(prevStatus) && !isDead(status)) {
             notify(
               t("toast.revived"),
-              () => navigate(`/jobs/${id}`),
+              () => navigate(`/board/${id}`),
               t("toast.setFollowUp"),
             );
           } else {

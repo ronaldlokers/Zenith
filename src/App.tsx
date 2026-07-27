@@ -15,7 +15,7 @@ import {
   RemoveIcon,
 } from "./icons";
 import { ConfirmHost, LoadingSkeleton } from "./ui";
-import { type Tab, TAB_PATHS, parsePath } from "./routing";
+import { type Tab, TAB_PATHS, canonicalPath, parsePath } from "./routing";
 import { DashboardTab } from "./dashboard";
 import { InsightsTab } from "./insights";
 
@@ -142,11 +142,20 @@ export default function App() {
     if (tab === "admin" && sessionUser && !isAdmin) navigate("/");
   }, [tab, sessionUser, isAdmin, navigate]);
 
-  // /jobs/:id and /board/:id render a routed detail page (#314) instead
-  // of the old pane/overlay duality — one presentation for every entry
-  // point, back-button friendly.
+  // Legacy URLs (/jobs/:id, /stats, …) still resolve, but the address bar is
+  // rewritten to the canonical route so bookmarks, share links and push
+  // notifications converge on one path per screen (#488). replace: true keeps
+  // the dead path out of the back stack.
+  useEffect(() => {
+    const canonical = canonicalPath(location.pathname);
+    if (canonical) navigate(canonical, { replace: true });
+  }, [location.pathname, navigate]);
+
+  // /board/:id renders a routed detail page (#314) instead of the old
+  // pane/overlay duality — one presentation for every entry point,
+  // back-button friendly.
   const routedJob =
-    (tab === "applications" || tab === "board") && detailIdFromUrl != null
+    tab === "board" && detailIdFromUrl != null
       ? visibleApps.find((a) => a.id === detailIdFromUrl) ?? null
       : null;
 
@@ -156,7 +165,7 @@ export default function App() {
   // scroll-into-view probe (tabsRef).
   const navItems: NavItem[] = [
     { data: "overview", to: "overview", active: tab === "overview", icon: <NavOverviewIcon />, label: t("tabs.overview") },
-    { data: "pipeline", to: "board", active: tab === "applications" || tab === "board", icon: <NavPipelineIcon />, label: t("tabs.pipeline") },
+    { data: "pipeline", to: "board", active: tab === "board", icon: <NavPipelineIcon />, label: t("tabs.pipeline") },
     { data: "feed", to: "feed", active: tab === "feed", icon: <NavFeedIcon />, label: t("tabs.feed") },
     { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
     { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
@@ -205,7 +214,7 @@ export default function App() {
             // Navigate on the optimistic append instead of blocking on the
             // five-endpoint reload — the page fills in as data lands.
             setApplications((prev) => [...prev, a]);
-            if (open) navigate(`/jobs/${a.id}`);
+            if (open) navigate(`/board/${a.id}`);
             void reload();
           }}
         />
@@ -217,7 +226,7 @@ export default function App() {
           contacts={visibleContacts}
           onClose={() => setShowPalette(false)}
           onJumpToApplication={(id) => {
-            navigate(`/jobs/${id}`);
+            navigate(`/board/${id}`);
             setShowPalette(false);
           }}
           onJumpToCompany={(id) => {
@@ -318,7 +327,7 @@ export default function App() {
             {tab === "overview" && (
               <DashboardTab
                 applications={visibleApps}
-                onOpenJob={(id) => navigate(`/jobs/${id}`)}
+                onOpenJob={(id) => navigate(`/board/${id}`)}
                 onError={setError}
                 onChanged={reload}
                 stats={statsData}
@@ -330,7 +339,7 @@ export default function App() {
               <InsightsTab
                 applications={visibleApps}
                 onGoToJobs={() => setTab("board")}
-                onOpenJob={(id) => navigate(`/jobs/${id}`)}
+                onOpenJob={(id) => navigate(`/board/${id}`)}
                 onError={setError}
                 onJump={(title) => {
                   setJumpQuery(title);
@@ -371,7 +380,7 @@ export default function App() {
                 />
               </section>
             )}
-            {(tab === "applications" || tab === "board") && !routedJob && (
+            {tab === "board" && !routedJob && (
               <PipelineTab
                 applications={visibleApps}
                 companies={visibleCompanies}
@@ -387,7 +396,7 @@ export default function App() {
                 history={statsData?.history ?? []}
                 lastInteractions={statsData?.interactions ?? []}
                 onOpenJob={(id: number | null) =>
-                  navigate(id ? `/jobs/${id}` : "/board")
+                  navigate(id ? `/board/${id}` : "/board")
                 }
                 onOpenQuickAdd={() => setShowQuickAdd(true)}
                 onOpenSampleData={() => navigate("/settings?s=data")}
@@ -400,7 +409,7 @@ export default function App() {
                 roleTypes={roleTypes}
                 onOpenSettings={() => navigate("/settings?s=feed")}
                 onChanged={reload}
-                onOpenJob={(id) => navigate(`/jobs/${id}`)}
+                onOpenJob={(id) => navigate(`/board/${id}`)}
               />
             )}
             {(tab === "companies" || tab === "contacts") && (

@@ -42,7 +42,7 @@ export async function generateNotifications(
     env,
     `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
      SELECT applications.user_id, 'due_followup', applications.title,
-            COALESCE(applications.next_action, ''), '/jobs/' || applications.id,
+            COALESCE(applications.next_action, ''), '/board/' || applications.id,
             'followup:' || applications.id || ':' || applications.next_action_at
      FROM applications
      WHERE applications.next_action_at IS NOT NULL
@@ -59,7 +59,7 @@ export async function generateNotifications(
     env,
     `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
      SELECT applications.user_id, 'stale_posting', applications.title,
-            NULL, '/jobs/' || applications.id, 'stale:' || applications.id
+            NULL, '/board/' || applications.id, 'stale:' || applications.id
      FROM applications
      WHERE applications.posting_status = 'maybe_stale'
      ON CONFLICT (user_id, dedup_key) DO NOTHING
