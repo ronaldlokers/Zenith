@@ -25,7 +25,7 @@
       margin: 0 0.4rem 0 0;
       font-family: var(--serif);
       font-weight: 600;
-      font-size: 1.5rem;
+      font-size: var(--text-heading);
       letter-spacing: -0.01em;
     }
     /* The nav buttons are `.btn-secondary .zui-cal-nav`. In App.css the old
