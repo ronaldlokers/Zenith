@@ -1033,25 +1033,22 @@
   padding: 0.4rem 0.2rem;
 }
 
-/* Inline follow-up actions in the Next Up panel (#285) */
+/* Inline follow-up actions in the Next Up panel (#285). Layout only: the
+   buttons carry .btn-secondary and take the normalized control recipe
+   (34px, 10px corner, --text-body) from the band below, instead of the
+   25px-tall bespoke pair they used to be — these are the primary actions on
+   the home screen and were its smallest controls (#492). */
 .nextup-actions {
   display: flex;
+  align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-1);
 }
 
-.nextup-actions button {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  border-radius: var(--radius-sm);
-  padding: 0.15rem 0.5rem;
-  font-size: var(--text-meta);
-  cursor: pointer;
-}
-
-.nextup-actions button:hover {
-  color: var(--ink);
+@media (max-width: 600px) {
+  .nextup-actions .btn-secondary,
+  .today-quiet-close {
+    min-height: 40px;
+  }
 }
 
 /* Sub-navigation toggle within a merged tab (Network = Companies/People, #285) */
@@ -3212,59 +3209,9 @@ summary.bcol-head::after {
   color: var(--sc, var(--muted));
 }
 
-/* "Recently updated" as denser tier-1 rows (design review, #459): a 2-line
-   grid — title + stage label on top, company + faint freshness below — with a
-   stage-colour spine and hairline dividers, instead of the taller stacked
-   SideList rows. A bespoke <ul> (not .zui-sidelist) so the app-layer layout
-   isn't overridden by the component layer's flex-column row recipe. */
-.dash-recent {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-.dash-recent li {
-  display: grid;
-  grid-template-columns: 3px 1fr auto;
-  /* Spine is its own column, stage spans both content rows so it sits
-     vertically centred beside the title + company block. The spine is
-     content-height (not a full-height border), so a gap opens between rows —
-     the "margin between items" from the mockup. */
-  grid-template-areas:
-    "spine title stage"
-    "spine co    stage";
-  column-gap: 0.6rem;
-  row-gap: 0.05rem;
-  align-items: center;
-  padding: 0.4rem 0.15rem;
-}
-.dash-recent li.clickable {
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-.dash-recent li.clickable:hover {
-  background: color-mix(in srgb, var(--muted) 8%, transparent);
-}
-.dash-recent .dash-spine {
-  grid-area: spine;
-  align-self: stretch;
-  background: var(--sc, var(--border));
-  border-radius: 2px;
-}
-.dash-recent .side-title {
-  grid-area: title;
-  line-height: 1.3;
-}
-.dash-recent .side-co {
-  grid-area: co;
-}
-.dash-recent .side-stage {
-  grid-area: stage;
-  justify-self: end;
-  align-self: center;
-}
+/* The "Recently updated" list retired (#492) — it reported edits rather than
+   progress, and closed the page on a ghosting. Its replacement, "moved this
+   week", shares the .today-rows recipe with Next Up (Today home band below). */
 
 /* Overview home screen (#128) */
 .overview {
@@ -3604,15 +3551,12 @@ summary.bcol-head::after {
   margin-top: var(--space-3);
 }
 
-/* Felt momentum (#484) — goal-met flag + gone-quiet close-out on Today. */
-.dash-goal-met {
-  color: var(--success);
-  font-weight: 600;
-}
+/* Felt momentum (#484) — gone-quiet close-out on Today. */
 .today-quiet {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  /* 10px: this is a card, and cards take the control corner (#492). */
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-1);
   padding: 0.9rem 1.1rem;
 }
@@ -3620,6 +3564,7 @@ summary.bcol-head::after {
   margin: 0;
   font-family: var(--mono);
   font-size: var(--text-chrome);
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: var(--track-eyebrow);
   color: var(--muted);
@@ -3646,27 +3591,36 @@ summary.bcol-head::after {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
   gap: 0.05rem;
   min-width: 0;
+  min-height: 44px;
   background: none;
   border: none;
-  padding: 0;
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.2rem;
   cursor: pointer;
   text-align: left;
 }
+.today-quiet-open:hover {
+  background: var(--hover);
+}
+/* The documented control metrics (#492): archiving on one tap deserves a
+   real target, not the 24px pill this used to be. */
 .today-quiet-close {
   flex-shrink: 0;
-  font-size: var(--text-meta);
-  padding: 0.3rem 0.6rem;
+  min-height: 34px;
+  font-size: var(--text-body);
+  padding: 0.4rem 0.8rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
 }
 .today-quiet-close:hover {
   color: var(--ink);
-  border-color: var(--border-strong);
+  background: var(--bg);
 }
 
 /* Quick-add paste-a-link row (#482) — URL input + Import button. */
@@ -3694,102 +3648,256 @@ summary.bcol-head::after {
   margin: var(--space-5) 0 var(--space-3);
 }
 
-/* Today home (#480) — action-first hero: a single honest count + label. */
+/* Today home (#480, rebuilt #492) — the blocks rank by how much they ask of
+   the user: page head, hero (the one number, and the handle into the work),
+   the ascent strip, Next Up, gone-quiet, this week's movement. The weekly
+   quota card was removed with the goal block: a target you can fail does not
+   belong on the screen that opens after a bad week. */
 .dash.today {
   max-width: 46rem;
+  gap: 0.9rem;
 }
-.today-hero {
+.today-head {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  margin: 0.2rem 0 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
 }
-.today-hero-n {
+/* The route's only <h1>: page structure starts here rather than at a stray
+   panel heading, and it carries the date the screen is named after. */
+.today-h1 {
+  margin: 0;
   font-family: var(--serif);
-  font-size: 2.6rem;
+  font-size: var(--text-heading);
   font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.today-hero-lbl {
-  font-size: var(--text-body);
-  color: var(--muted);
-}
-.today-hero-clear {
-  font-family: var(--serif);
-  font-size: 1.5rem;
-  color: var(--ink);
   letter-spacing: -0.01em;
 }
-
-/* Weekly-goal card (#473) — dashboard. Serif figure, gold progress, streak. */
-.dash-goal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-1);
-  padding: 0.85rem 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.dash-goal-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-.dash-goal-eyebrow {
+.today-date {
+  margin: 0;
   font-family: var(--mono);
   font-size: var(--text-chrome);
   text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  color: var(--muted);
-}
-.dash-goal-figure {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.3rem;
-}
-.dash-goal-n {
-  font-family: var(--serif);
-  font-size: 1.6rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-.dash-goal-target {
-  font-family: var(--serif);
-  font-size: 1.05rem;
+  letter-spacing: var(--track-chrome);
   color: var(--faint);
 }
-.dash-goal-bar {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--track, color-mix(in srgb, var(--muted) 18%, transparent));
-  overflow: hidden;
+
+/* The hero is the screen's one tier-3 element (StatCard hero), stretched to
+   the column. When it has a handle it renders as a button; the StatCard
+   component owns the tint, edge and lift. */
+.today-hero {
+  width: 100%;
 }
-.dash-goal-bar > i {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: var(--accent);
-  transition: width 0.25s ease;
+
+/* First run: no hero figure would be honest, so the screen asks for the
+   first application instead of congratulating an empty account. */
+.today-start {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
 }
-.dash-goal-bar > i.met {
-  background: var(--success);
-}
-.dash-goal-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem 0.9rem;
-  font-size: var(--text-meta);
-}
-.dash-goal-streak {
-  color: var(--accent-ink);
+.today-start-h {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: var(--text-heading);
   font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.today-start-hint {
+  margin: 0.35rem auto var(--space-4);
+  max-width: 34ch;
+  color: var(--muted);
+  font-size: var(--text-body);
+}
+.today-unplanned-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-body);
+}
+
+/* One column until the rail's content has room for two (#492) — which is
+   also what closes the dead canvas the 46rem cap used to leave at 1440. */
+.today-cols {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.today-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+@media (min-width: 1000px) {
+  .dash.today {
+    max-width: none;
+  }
+  .today-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+}
+
+/* The ascent strip — where the climb stands right now, at a glance. Segment
+   width is the stage's share of live applications; the count and the stage
+   name are text, so the hue is never the only thing carrying the rung. */
+.today-ascent {
+  display: flex;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.today-ascent li {
+  flex-basis: 0;
+  min-width: 3.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.today-ascent-bar {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--sc);
+}
+.today-ascent li.is-empty .today-ascent-bar {
+  background: var(--track);
+}
+.today-ascent-n {
+  font-family: var(--serif);
+  font-size: var(--text-title);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.today-ascent li.is-empty .today-ascent-n {
+  color: var(--faint);
+}
+.today-ascent-l {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-chrome);
+  color: var(--muted);
+}
+/* On a phone the label boxes are wider than the segments they sit under, so
+   adjacent stage names close up. Widen the gutter and drop the tracking
+   rather than truncating a stage name — the label is the colour-blind
+   fallback, so it has to stay whole. */
+@media (max-width: 600px) {
+  .today-ascent {
+    gap: 0.55rem;
+  }
+  .today-ascent-l {
+    letter-spacing: 0.01em;
+  }
+}
+
+/* Next Up — the work. The panel is a plain section, not a card inside a
+   card: nesting a surface in a surface is depth the three tiers can't say. */
+.today-nextup {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  padding: 0.85rem 0.95rem;
+}
+.today-nextup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.today-nextup-head .side-h {
+  margin: 0;
+  font-weight: 400;
+}
+.today-nextup .zui-segmented button {
+  font-size: var(--text-chrome);
+  padding: 0.25rem 0.7rem;
+}
+
+/* One row recipe for both lists on the screen (Next Up, moved this week):
+   a stage spine, one big activation target, and any actions beside it. The
+   <li> keeps its listitem semantics — the button carries the activation,
+   so a screen reader still counts the rows. */
+.today-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.today-rows li {
+  display: grid;
+  grid-template-columns: 3px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.6rem;
+}
+.today-rows .dash-spine {
+  align-self: stretch;
+  background: var(--sc, var(--border));
+  border-radius: var(--radius-full);
+}
+.today-row-open {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.6rem;
+  row-gap: 0.05rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4rem 0.2rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.today-row-open:hover {
+  background: var(--hover);
+}
+.today-row-open .side-date {
+  grid-column: 1;
+}
+.today-row-open .side-title {
+  grid-column: 1;
+  line-height: 1.3;
+  min-width: 0;
+}
+.today-row-open .side-co {
+  grid-column: 1;
+}
+/* The stage label sits beside the title block, not at the far edge of the
+   column: at rail widths a right-aligned label drifts ~500px from the title
+   it describes, and those are the two facts a scanner pairs. */
+.today-row-open .side-stage {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  justify-self: end;
+  align-self: center;
+  white-space: nowrap;
+}
+
+/* This week — volume as an observation, over the moves that actually
+   happened. Not a quota, and no streak: a zero week is told plainly. */
+.today-card-h {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
+}
+.today-moved-empty {
+  margin: 0;
 }
 
 /* Outreach template composer (#472) — contact detail. */
@@ -4759,20 +4867,8 @@ button:not(:disabled):active,
 
 /* .dash-stat moved to the owned StatLine component (src/components/StatLine.css). */
 
-.dash-caughtup {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--st-offer);
-  border-radius: var(--radius-md);
-  padding: 0.6rem 0.95rem;
-  box-shadow: var(--shadow-1);
-}
-.dash-caughtup-tick { color: var(--st-offer); font-weight: 700; }
-.dash-caughtup-t { font-size: 0.85rem; font-weight: 540; }
-.dash-caughtup .sp { flex: 1; }
+/* .dash-caughtup retired (#492): "all caught up" was one string covering
+   three different states, so the hero now names each of them itself. */
 
 /* Offer-comparison PDF sits under the offers list on the Insights card
    (#486) — it moved here when the "all the numbers" drawer was retired. */

@@ -15,12 +15,28 @@
   "today": {
     "needYou_one": "taak wacht op je vandaag",
     "needYou_other": "taken wachten op je vandaag",
-    "allClear": "Je bent helemaal bij vandaag",
     "quietTitle": "Stil geworden",
     "quietHint": "Geen reactie ligt aan hen, niet aan jou. Ruim ze op wanneer je er klaar voor bent.",
     "quietAge": "{{days}} dagen stil",
     "closeOut": "Afsluiten",
-    "closedOut": "Gearchiveerd — één ding minder"
+    "closedOut": "Gearchiveerd — één ding minder",
+    "title": "Vandaag",
+    "nothingTracked": "Nog niets bijgehouden",
+    "nothingTrackedHint": "Voeg de eerste vacature toe die je najaagt — alles op dit scherm groeit daaruit.",
+    "addFirst": "Voeg je eerste sollicitatie toe",
+    "scheduledNoneDue_one": "follow-up gepland, geen vandaag",
+    "scheduledNoneDue_other": "follow-ups gepland, geen vandaag",
+    "unplanned_one": "sollicitatie zonder vervolgstap",
+    "unplanned_other": "sollicitaties zonder vervolgstap",
+    "unplannedHint": "Stilte nekt een zoektocht. Geef ze allemaal een vervolgstap.",
+    "ascentLabel": "Lopende sollicitaties per fase",
+    "sentEyebrow": "Verstuurde sollicitaties",
+    "sent_one": "{{count}} verstuurd",
+    "sent_other": "{{count}} verstuurd",
+    "vsLastWeek": "{{count}} vorige week",
+    "moved": "Deze week verschoven",
+    "movedTo": "naar",
+    "noMoves": "Deze week is er niets van fase veranderd."
   },
   "header": {
     "settings": "Instellingen",
@@ -296,12 +312,9 @@
     "corrupt": "Deze versie kon niet worden gelezen."
   },
   "goals": {
-    "hit": "Doel gehaald ✓",
     "weeklyGoal": "Weekdoel",
     "weeklyGoalLabel": "Wekelijks sollicitatiedoel",
     "searchStartLabel": "Zoektocht gestart",
-    "streak_one": "Reeks van {{count}} week",
-    "streak_other": "Reeks van {{count}} weken",
     "searchWeek_one": "Week {{count}} van je zoektocht",
     "searchWeek_other": "Week {{count}} van je zoektocht"
   },
@@ -473,8 +486,14 @@
   "nextUp": {
     "title": "Binnenkort",
     "done": "Klaar",
-    "snooze": "3d uitstellen",
-    "doneToast": "Follow-up afgerond"
+    "doneToast": "Follow-up afgerond",
+    "segDue": "Open {{count}}",
+    "segUpcoming": "Binnenkort {{count}}",
+    "emptyDue": "Niets open vandaag.",
+    "snooze3d": "3 dagen uitstellen",
+    "snooze1w": "1 week uitstellen",
+    "snoozeToast": "Verzet naar {{date}}",
+    "actionsFor": "Acties voor {{title}}"
   },
   "company": {
     "contactMap": "Contacten",
@@ -772,9 +791,7 @@
     "openCount_other": "open sollicitaties",
     "interviewingCount_one": "{{count}} in gesprek of aanbod",
     "interviewingCount_other": "{{count}} in gesprek of aanbod",
-    "noActivity": "Nog niets — voeg je eerste vacature toe om te beginnen.",
     "viewAllJobs": "Bekijk de pipeline",
-    "recentlyUpdated": "Recent bijgewerkt",
     "showActivity": "Alle activiteit tonen",
     "hideActivity": "Activiteit verbergen"
   },
@@ -864,9 +881,7 @@
     "noOffers": "Nog geen open aanbiedingen.",
     "thisFortnight": "Deze twee weken",
     "response": "Respons",
-    "toOffer": "Tot aanbod",
-    "caughtUp": "Alles bijgewerkt — geen follow-ups open",
-    "addFollowUp": "+ follow-up toevoegen"
+    "toOffer": "Tot aanbod"
   },
   "urgency": {
     "overdue": "te laat",

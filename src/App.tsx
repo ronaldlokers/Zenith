@@ -328,6 +328,7 @@ export default function App() {
               <DashboardTab
                 applications={visibleApps}
                 onOpenJob={(id) => navigate(`/board/${id}`)}
+                onGoToJobs={() => setTab("board")}
                 onError={setError}
                 onChanged={reload}
                 stats={statsData}

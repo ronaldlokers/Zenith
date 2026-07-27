@@ -22,13 +22,9 @@
     border-left: 3px solid var(--accent);
   }
 
-  /* App.css:4761 — the lead card's NextUpPanel reuses .jobs-side (display:none
-     by default); it must show at every width inside the lead card, or the card
-     renders empty. Reproduced here because the swap drops the .dash-card-lead
-     class that the app rule keyed on. */
-  .zui-dashcard--lead .jobs-side {
-    display: block;
-  }
+  /* The `.zui-dashcard--lead .jobs-side` escape hatch is gone (#492): Next Up
+     no longer borrows the pipeline layout's side-panel class, so the lead card
+     stopped nesting a surface inside a surface. */
 
   /* App.css:4762 — only the clickable variant lifts on hover. */
   .zui-dashcard--click {

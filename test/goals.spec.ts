@@ -1,20 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { goalStreak, searchWeekNumber } from "../src/format";
+import { searchWeekNumber } from "../src/format";
 
-describe("goalStreak", () => {
-  it("counts consecutive met weeks from the most recent", () => {
-    // weeks oldest→newest; target 5
-    expect(goalStreak([2, 6, 5, 7], 5)).toBe(3);
-    expect(goalStreak([6, 2, 6, 7], 5)).toBe(2);
-    expect(goalStreak([6, 6, 6, 3], 5)).toBe(0); // most recent missed
-  });
-  it("is zero with no goal", () => {
-    expect(goalStreak([9, 9, 9], 0)).toBe(0);
-  });
-  it("handles an empty history", () => {
-    expect(goalStreak([], 5)).toBe(0);
-  });
-});
+// The goalStreak suite went with the function (#492): the streak only ever
+// fed the Today quota card, where it congratulated a zero week. The weekly
+// goal itself still lives in Settings; nothing computes a streak from it.
 
 describe("searchWeekNumber", () => {
   const now = Date.parse("2026-02-15T12:00:00");

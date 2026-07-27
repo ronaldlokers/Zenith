@@ -15,12 +15,28 @@
   "today": {
     "needYou_one": "thing needs you today",
     "needYou_other": "things need you today",
-    "allClear": "You're all caught up today",
     "quietTitle": "Gone quiet",
     "quietHint": "No reply is on them, not you. Clear these out when you're ready.",
     "quietAge": "quiet {{days}}d",
     "closeOut": "Close out",
-    "closedOut": "Archived — one less thing"
+    "closedOut": "Archived — one less thing",
+    "title": "Today",
+    "nothingTracked": "Nothing tracked yet",
+    "nothingTrackedHint": "Add the first role you're chasing — everything on this screen grows from it.",
+    "addFirst": "Add your first application",
+    "scheduledNoneDue_one": "follow-up scheduled, none due today",
+    "scheduledNoneDue_other": "follow-ups scheduled, none due today",
+    "unplanned_one": "application with nothing scheduled",
+    "unplanned_other": "applications with nothing scheduled",
+    "unplannedHint": "Silence is what kills a search. Give each one a next step.",
+    "ascentLabel": "Live applications by stage",
+    "sentEyebrow": "Applications sent",
+    "sent_one": "{{count}} sent",
+    "sent_other": "{{count}} sent",
+    "vsLastWeek": "{{count}} last week",
+    "moved": "Moved this week",
+    "movedTo": "to",
+    "noMoves": "Nothing changed stage this week."
   },
   "header": {
     "settings": "Settings",
@@ -296,12 +312,9 @@
     "corrupt": "This version couldn’t be read."
   },
   "goals": {
-    "hit": "Goal hit ✓",
     "weeklyGoal": "Weekly goal",
     "weeklyGoalLabel": "Weekly application goal",
     "searchStartLabel": "Search started",
-    "streak_one": "{{count}}-week streak",
-    "streak_other": "{{count}}-week streak",
     "searchWeek_one": "Week {{count}} of your search",
     "searchWeek_other": "Week {{count}} of your search"
   },
@@ -473,8 +486,14 @@
   "nextUp": {
     "title": "Next up",
     "done": "Done",
-    "snooze": "Snooze 3d",
-    "doneToast": "Follow-up completed"
+    "doneToast": "Follow-up completed",
+    "segDue": "Due {{count}}",
+    "segUpcoming": "Upcoming {{count}}",
+    "emptyDue": "Nothing due today.",
+    "snooze3d": "Snooze 3 days",
+    "snooze1w": "Snooze 1 week",
+    "snoozeToast": "Pushed to {{date}}",
+    "actionsFor": "Actions for {{title}}"
   },
   "company": {
     "contactMap": "Contacts",
@@ -772,9 +791,7 @@
     "openCount_other": "open applications",
     "interviewingCount_one": "{{count}} at interview or offer stage",
     "interviewingCount_other": "{{count}} at interview or offer stage",
-    "noActivity": "Nothing yet — add your first job to get started.",
     "viewAllJobs": "View the pipeline",
-    "recentlyUpdated": "Recently updated",
     "showActivity": "Show all activity",
     "hideActivity": "Hide activity"
   },
@@ -864,9 +881,7 @@
     "noOffers": "No live offers yet.",
     "thisFortnight": "This fortnight",
     "response": "Response",
-    "toOffer": "To offer",
-    "caughtUp": "All caught up — no follow-ups due",
-    "addFollowUp": "+ add a follow-up"
+    "toOffer": "To offer"
   },
   "urgency": {
     "overdue": "overdue",
