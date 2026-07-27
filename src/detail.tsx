@@ -27,6 +27,7 @@ import type {
   Application,
   Company,
   Contact,
+  Interaction,
   PrepItem,
   RoleTypeDef,
   Status,
@@ -111,6 +112,9 @@ export function ApplicationDetailModal({
       .finally(() => setPatchBusy(false));
   };
   const [newTag, setNewTag] = useState("");
+  // Bumped when the Track tab's timeline logs or deletes a touchpoint, so the
+  // summary in the facts column refetches instead of going stale.
+  const [activityKey, setActivityKey] = useState(0);
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
   const a = application;
 
@@ -659,6 +663,17 @@ export function ApplicationDetailModal({
                 {t("common.delete")}
               </Button>
             </ActionBar>
+
+            {/* The facts column ran out well above the fold while the tabbed
+                column kept going (#490). The last few touchpoints answer
+                "where does this stand?" without a tab switch; the full log
+                and the logger stay in Track. */}
+            <RecentTouchpoints
+              applicationId={a.id}
+              refreshKey={activityKey}
+              onError={onError}
+              onSeeAll={() => setSecTab("track")}
+            />
           </div>
           <div className="detail-secondary">
             <div
@@ -703,7 +718,10 @@ export function ApplicationDetailModal({
                     resource="applications"
                     targetId={a.id}
                     onError={onError}
-                    onLogged={() => void onChanged()}
+                    onItemsChanged={() => {
+                      setActivityKey((k) => k + 1);
+                      void onChanged();
+                    }}
                   />
                   <h3 className="detail-sub">{t("detail.documents")}</h3>
                   <Documents applicationId={a.id} onError={onError} />
@@ -791,3 +809,68 @@ export function ApplicationDetailModal({
   );
 }
 
+
+// Last few touchpoints, shown in the facts column under the actions (#490).
+// A read-only summary: logging and deleting stay in the Track tab's full
+// timeline, which owns the same interactions — `refreshKey` re-runs the fetch
+// when that timeline changes them.
+function RecentTouchpoints({
+  applicationId,
+  refreshKey,
+  onError,
+  onSeeAll,
+}: {
+  applicationId: number;
+  refreshKey: number;
+  onError: (message: string | null) => void;
+  onSeeAll: () => void;
+}) {
+  const { t } = useTranslation();
+  const [items, setItems] = useState<Interaction[] | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    api
+      .interactions("applications", applicationId)
+      .then((rows) => {
+        if (live) setItems(rows);
+      })
+      .catch((e) => onError((e as Error).message));
+    return () => {
+      live = false;
+    };
+  }, [applicationId, refreshKey, onError]);
+
+  if (!items) return null;
+  const recent = items.slice(0, 3);
+
+  return (
+    <div className="detail-recent">
+      <span className="detail-recent-h">{t("detail.recentActivity")}</span>
+      {recent.length === 0 ? (
+        <p className="muted small detail-recent-empty">
+          {t("detail.noTouchpoints")}
+        </p>
+      ) : (
+        <ul className="detail-recent-list">
+          {recent.map((it) => (
+            <li key={it.id}>
+              <span className="detail-recent-type">
+                {t(`interactionTypes.${it.type}`)}
+              </span>
+              <span className="detail-recent-date">
+                {formatDate(it.happened_at)}
+              </span>
+              {it.notes && (
+                <span className="detail-recent-note muted">{it.notes}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <button type="button" className="detail-recent-all" onClick={onSeeAll}>
+        {t("detail.seeFullTimeline")}
+      </button>
+    </div>
+  );
+}

@@ -15,12 +15,14 @@ export function Timeline({
   resource,
   targetId,
   onError,
-  onLogged,
+  onItemsChanged,
 }: {
   resource: "applications" | "contacts";
   targetId: number;
   onError: (message: string | null) => void;
-  onLogged?: () => void;
+  /** Fires after a touchpoint is logged or deleted, so a caller showing its
+      own summary of the same interactions can refresh it. */
+  onItemsChanged?: () => void;
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<Interaction[] | null>(null);
@@ -74,7 +76,7 @@ export function Timeline({
         setWentWell("");
         setToImprove("");
         setInterviewers("");
-        onLogged?.();
+        onItemsChanged?.();
         return load();
       })
       .catch((err) => onError((err as Error).message))
@@ -149,7 +151,10 @@ export function Timeline({
               onClick={() =>
                 api
                   .remove("interactions", it.id)
-                  .then(load)
+                  .then(() => {
+                    onItemsChanged?.();
+                    return load();
+                  })
                   .catch((e) => onError((e as Error).message))
               }
             >

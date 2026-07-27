@@ -469,7 +469,9 @@
     "addNote": "Add note",
     "fitSetAria": "Set fit to {{n}}",
     "editFollowUp": "Edit follow-up",
-    "editNotes": "Edit notes"
+    "editNotes": "Edit notes",
+    "recentActivity": "Recent activity",
+    "seeFullTimeline": "See the full timeline"
   },
   "nextUp": {
     "title": "Next up",

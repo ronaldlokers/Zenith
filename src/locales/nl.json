@@ -469,7 +469,9 @@
     "addNote": "Notitie toevoegen",
     "fitSetAria": "Fit op {{n}} zetten",
     "editFollowUp": "Follow-up bewerken",
-    "editNotes": "Notitie bewerken"
+    "editNotes": "Notitie bewerken",
+    "recentActivity": "Recente activiteit",
+    "seeFullTimeline": "Bekijk de volledige tijdlijn"
   },
   "nextUp": {
     "title": "Binnenkort",
