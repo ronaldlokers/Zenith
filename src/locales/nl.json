@@ -570,7 +570,8 @@
       "conversational": "Redelijk",
       "fluent": "Vloeiend",
       "native": "Moedertaal"
-    }
+    },
+    "itemMenu": "Acties voor {{title}}"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."

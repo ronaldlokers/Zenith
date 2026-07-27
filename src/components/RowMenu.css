@@ -1,0 +1,83 @@
+/* Complete, self-contained. Mirrors the app's ⋯ menu look (CardMenu.css /
+   App.css:4652) but positions itself relative to the row control it sits in
+   rather than an absolutely-positioned card corner. */
+@layer components {
+  .zui-rowmenu {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .zui-rowmenu-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    /* 32px square: the minimum comfortable touch target on a phone, where
+       this menu replaces four cramped buttons. */
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+  }
+
+  .zui-rowmenu-btn:hover {
+    color: var(--ink);
+    background: var(--hover);
+  }
+
+  .zui-rowmenu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+  }
+
+  .zui-rowmenu-pop {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    z-index: 41;
+    min-width: 11rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-2);
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .zui-rowmenu-pop > button {
+    text-align: left;
+    border: none;
+    background: none;
+    color: var(--ink);
+    padding: 0.4rem 0.55rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--text-body);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .zui-rowmenu-pop > button:hover {
+    background: var(--hover);
+  }
+
+  .zui-rowmenu-pop > button.danger {
+    color: var(--danger);
+  }
+
+  .zui-rowmenu-pop > button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .zui-rowmenu-pop > button:disabled:hover {
+    background: none;
+  }
+}

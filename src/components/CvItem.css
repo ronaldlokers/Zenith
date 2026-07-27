@@ -26,8 +26,10 @@
   }
 
   /* App.css:3647 — callers keep authoring raw <button>s inside
-     .cv-item-actions. */
-  .zui-cvitem .cv-item-actions button {
+     .cv-item-actions. Direct children only: a nested control that brings its
+     own styling (RowMenu's ⋯ trigger and its popup items) must not inherit
+     the row-button recipe. */
+  .zui-cvitem .cv-item-actions > button {
     border: 1px solid var(--border);
     background: var(--surface);
     border-radius: var(--radius-sm);
@@ -37,7 +39,7 @@
   }
 
   /* App.css:3656 */
-  .zui-cvitem .cv-item-actions button:disabled {
+  .zui-cvitem .cv-item-actions > button:disabled {
     opacity: 0.35;
     cursor: default;
   }
