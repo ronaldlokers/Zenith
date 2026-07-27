@@ -43,8 +43,6 @@
     "saving": "Saving…",
     "cancel": "Cancel",
     "saved": "Saved",
-    "research": "Research",
-    "researching": "Researching…",
     "log": "Log",
     "fetch": "Fetch",
     "fetching": "Fetching…",
@@ -436,7 +434,6 @@
     "noTouchpoints": "No touchpoints logged yet.",
     "status": "Status",
     "role": "Role",
-    "description": "Description",
     "notes": "Notes",
     "deadline": "Deadline",
     "fitScore": "Fit score",
@@ -480,10 +477,8 @@
     "doneToast": "Follow-up completed"
   },
   "company": {
-    "notResearched": "not researched",
     "contactMap": "Contacts",
-    "agencyBadge": "agency",
-    "researchedAgo": "researched {{age}} ago"
+    "agencyBadge": "agency"
   },
   "stages": {
     "interested": "Interested",
@@ -790,7 +785,6 @@
     "savedSettings": "Saved {{source}} settings",
     "feedFound": "Found {{inserted}} new of {{seen}} checked",
     "addedToJobs": "Added “{{title}}” to the pipeline",
-    "researched": "Researched {{name}}",
     "open": "Open",
     "statusChanged": "Moved to {{stage}}",
     "revived": "Back in an active stage",

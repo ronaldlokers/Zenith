@@ -78,10 +78,10 @@ export async function seedSampleData(
     .bind(userId)
     .run();
 
-  // --- Companies (#1, research #35) ---
+  // --- Companies (#1) ---
   const acme = await env.DB.prepare(
-    `INSERT INTO companies (user_id, name, website, location, description, logo_url, researched_at)
-     VALUES (?, 'Acme Cloud', 'https://acme.example', 'Amsterdam, NL', 'Cloud infrastructure platform for mid-market SaaS.', NULL, datetime('now'))
+    `INSERT INTO companies (user_id, name, website, location)
+     VALUES (?, 'Acme Cloud', 'https://acme.example', 'Amsterdam, NL')
      RETURNING id`,
   )
     .bind(userId)

@@ -181,10 +181,6 @@ export const api = {
   agenda: () => request<import("./types").AgendaEntry[]>("/api/agenda"),
   activity: () =>
     request<import("./types").ActivityEvent[]>("/api/activity"),
-  researchCompany: (id: number) =>
-    request<import("./types").Company>(`/api/companies/${id}/research`, {
-      method: "POST",
-    }),
   feed: (cursor?: import("./types").FeedCursor | null) => {
     const q = cursor
       ? `?cursorK=${encodeURIComponent(cursor.k)}&cursorId=${cursor.id}`

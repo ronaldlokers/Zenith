@@ -181,7 +181,6 @@ export function ApplicationDetailModal({
           title: a.title,
           companyName: company?.name ?? a.company_name ?? null,
           companyWebsite: company?.website ?? null,
-          companyDescription: company?.description ?? null,
           contactName: contact?.name ?? a.contact_name ?? null,
           contactRole: contact?.role ?? null,
           contactEmail: contact?.email ?? null,
