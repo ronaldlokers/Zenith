@@ -4,7 +4,7 @@
 // funnel/conversion, live offers, activity and the calendar. The old "all the
 // numbers" drawer is gone (#486) — it duplicated the cards above it and its
 // only unique piece, data export, now lives in Settings → Data (#485).
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Application, Stats } from "./types";
 import {
@@ -42,6 +42,20 @@ export function InsightsTab({
 }) {
   const { t } = useTranslation();
   const [showActivity, setShowActivity] = useState(false);
+  // The calendar only draws its month grid from 900px up; below that it falls
+  // back to a full agenda list, which on a phone buried the numbers under a
+  // scroll of every dated event. So on narrow screens it hides behind a
+  // toggle — same 900px breakpoint the grid itself uses (#487).
+  const [wide, setWide] = useState(
+    () => window.matchMedia("(min-width: 900px)").matches,
+  );
+  const [showCalendar, setShowCalendar] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 900px)");
+    const onChange = () => setWide(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
   if (!stats) return <LoadingSkeleton />;
   const history = stats.history;
   const open = applications.filter((a) => !isDead(a.status));
@@ -178,7 +192,7 @@ export function InsightsTab({
       </div>
 
       <button
-        className="btn-secondary overview-activity-toggle"
+        className="btn-secondary insights-toggle"
         onClick={() => setShowActivity((v) => !v)}
         aria-expanded={showActivity}
       >
@@ -188,8 +202,23 @@ export function InsightsTab({
 
       {/* Calendar folded in from its own tab (#481) — deadlines, interviews
           and applied dates in one place; the ICS feed stays in Settings. */}
-      <h3 className="insights-cal-h">{t("tabs.calendar")}</h3>
-      <CalendarTab onError={onError} onJump={onJump} />
+      {wide ? (
+        <>
+          <h3 className="insights-cal-h">{t("tabs.calendar")}</h3>
+          <CalendarTab onError={onError} onJump={onJump} />
+        </>
+      ) : (
+        <>
+          <button
+            className="btn-secondary insights-toggle"
+            onClick={() => setShowCalendar((v) => !v)}
+            aria-expanded={showCalendar}
+          >
+            {showCalendar ? t("calendar.hide") : t("calendar.show")}
+          </button>
+          {showCalendar && <CalendarTab onError={onError} onJump={onJump} />}
+        </>
+      )}
     </section>
   );
 }

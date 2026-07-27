@@ -812,7 +812,9 @@
     "today": "Vandaag",
     "eventCount": "{{count}} items",
     "moreEvents": "+{{count}} meer",
-    "upcoming": "Binnenkort"
+    "upcoming": "Binnenkort",
+    "show": "Toon agenda",
+    "hide": "Verberg agenda"
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"
