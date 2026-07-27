@@ -87,7 +87,9 @@
   --accent: #d6a441;
   --accent-text: #14173a;
   --accent-soft: var(--gold-soft);
-  --accent-ink: #a9803a;
+  /* 3.60:1 on white and 3.21:1 on Bone as text, despite the name (#496).
+     #836427 clears 4.5:1 on both. The FILL --accent is untouched. */
+  --accent-ink: #836427;
   --accent-on-ink: #e8c072;
 
   /* Semantic */
@@ -105,13 +107,30 @@
   --stage-tint: 8%;
   --stage-tint-hover: 14%;
 
-  /* The Ascent — pipeline stage palette (reserved for pipeline state) */
-  --st-interested: #5c6285;
-  --st-applied: #4a55a8;
-  --st-screening: #6a4aa8;
-  --st-interview: #8a3f9c;
+  /* The Ascent — pipeline stage palette (reserved for pipeline state).
+     Rebuilt in #496 as a temperature climb: cool slate, steel blue, teal,
+     terracotta, brass. The old set put four of five hues in the blue-violet
+     quadrant, where a deuteranope saw applied and screening at ΔE 1.0 — the
+     same colour. This set holds ΔE 12.0 at worst across normal vision and all
+     three dichromacies. Never edit these by eye: test-node/stage-palette.spec.ts
+     recomputes the separation matrix and fails CI below the floor.
+
+     Two tokens per stage, the same split the brand already uses for
+     --accent / --accent-ink: the FIELD colour carries identity (the row wash,
+     the dot, the funnel bar) and is free to be mid-chroma; the INK colour is
+     the same hue moved until it clears 4.5:1 as label text on both grounds. */
+  --st-interested: #6d7793;
+  --st-applied: #3c5a6e;
+  --st-screening: #388f7e;
+  --st-interview: #c17252;
   --st-offer: #8a6410;
   --st-dead: #6b675e;
+  --st-interested-ink: #626c87;
+  --st-applied-ink: #3c5a6e;
+  --st-screening-ink: #207b6b;
+  --st-interview-ink: #a25839;
+  --st-offer-ink: #8a6410;
+  --st-dead-ink: #5c584f;
 
   /* Response-time heat strip (#142) — a separate "gone quiet?" signal, its
      own color family so it never reads as a stage color. */
@@ -202,12 +221,18 @@
        9% keeps the field readable and holds muted above 4.5:1 (measured). */
     --stage-tint: 9%;
     --stage-tint-hover: 16%;
-    --st-interested: #aab0d4;
-    --st-applied: #8f9ae8;
-    --st-screening: #a98fe0;
-    --st-interview: #c98fd8;
-    --st-offer: #e6b45a;
+    --st-interested: #a4a8dd;
+    --st-applied: #6489a1;
+    --st-screening: #45b9ab;
+    --st-interview: #d1886f;
+    --st-offer: #efc17b;
     --st-dead: #b3ada0;
+    --st-interested-ink: #a4a8dd;
+    --st-applied-ink: #7398af;
+    --st-screening-ink: #45b9ab;
+    --st-interview-ink: #d1886f;
+    --st-offer-ink: #efc17b;
+    --st-dead-ink: #b3ada0;
 
     --heat-quiet: #e0a54a;
     --heat-quiet-text: #f0c070;
@@ -257,12 +282,18 @@
      keeps the field readable and holds muted above 4.5:1 (measured). */
   --stage-tint: 9%;
   --stage-tint-hover: 16%;
-  --st-interested: #aab0d4;
-  --st-applied: #8f9ae8;
-  --st-screening: #a98fe0;
-  --st-interview: #c98fd8;
-  --st-offer: #e6b45a;
+  --st-interested: #a4a8dd;
+  --st-applied: #6489a1;
+  --st-screening: #45b9ab;
+  --st-interview: #d1886f;
+  --st-offer: #efc17b;
   --st-dead: #b3ada0;
+  --st-interested-ink: #a4a8dd;
+  --st-applied-ink: #7398af;
+  --st-screening-ink: #45b9ab;
+  --st-interview-ink: #d1886f;
+  --st-offer-ink: #efc17b;
+  --st-dead-ink: #b3ada0;
 
   --heat-quiet: #e0a54a;
   --heat-quiet-text: #f0c070;
@@ -298,8 +329,11 @@ textarea {
 }
 
 /* Links carry the gold accent, not the UA blue (design review). */
+/* Links take the brass TEXT tone, not the fill (#496): raw --accent measured
+   2.27:1 on a light ground, which is unreadable for the one element the user
+   is meant to click. --accent-ink is the same brass at a readable tone. */
 a {
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: none;
 }
 a:hover {

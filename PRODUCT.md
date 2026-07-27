@@ -46,7 +46,7 @@ Durable constraints:
 
 - **No telemetry or analytics, ever.** No third-party trackers.
 - **Invite-only, no public sign-up.** No rate limits or quotas for now.
-- **The five stage hues are accessibility-locked** and never change.
+- **The five stage hues are locked by measured separation**, not by specific values: every pair stays distinguishable under normal vision and all three dichromacies, and every stage stays readable as label text. Enforced in CI.
 - **The public share page carries aggregate stats only** — never per-application detail, never compensation.
 - **Exactly three themes:** Automatic (follows OS), Light, Dark. No others.
 - **Strict en/nl key parity**; more locales planned, so every user-facing string is externalized.

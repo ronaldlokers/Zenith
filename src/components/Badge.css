@@ -17,7 +17,8 @@
     font-size: var(--text-chrome);
     text-transform: uppercase;
     letter-spacing: var(--track-chrome);
-    color: var(--accent);
+    /* The text tone, not the fill: raw --accent measures 2.27:1 on white. */
+    color: var(--accent-ink);
     border: 1px solid currentColor;
     border-radius: var(--radius-sm);
     padding: 0.08rem 0.4rem;
@@ -30,8 +31,9 @@
     color: var(--danger);
   }
 
-  /* App.css:1728 — --sc is the stage colour set by a .stage-* ancestor. */
+  /* --sc-ink is the text-safe tone of the stage colour, published by the
+     .stage-* ancestor alongside the field colour (#496). */
   .zui-badge--stage {
-    color: var(--sc);
+    color: var(--sc-ink, var(--sc));
   }
 }

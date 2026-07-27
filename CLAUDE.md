@@ -14,7 +14,7 @@ Personal job-hunt tracker. Invite-only, multi-user, ambition is a polished publi
 - **No telemetry / analytics.** Privacy is a feature. Don't add tracking.
 - **Responsive parity** — mobile is first-class, not an afterthought.
 - **Invite-only, no limits** — no sign-up form; no rate-limits/quotas for now.
-- **Stage colour palette is accessibility-locked** — never change the stage hues (interested/applied/screening/interview/offer).
+- **Stage colours are locked by property, not by value** — any five hues may ship provided every pair holds ΔE2000 ≥ 10 under normal vision and all three dichromacies, and each stage's `--sc-ink` clears 4.5:1 as label text on both grounds. `test-node/stage-palette.spec.ts` enforces it; don't hand-edit a stage token without running it. Stage hues stay reserved for pipeline state.
 - **Three themes:** Automatic (follows OS), Light, Dark (`data-theme` on the root; auto = no attribute). No other themes.
 
 ## Design: follow the mockup

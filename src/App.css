@@ -569,7 +569,7 @@
   /* Count sits right beside its label (#346) — flex:1 stranded the number
      at the container's far edge, reading as two unrelated columns. */
   text-transform: none;
-  color: var(--sc, var(--ink));
+  color: var(--sc-ink, var(--ink));
 }
 
 .ring-legend .n {
@@ -578,14 +578,18 @@
 }
 
 /* Stage color hooks */
-.stage-interested { --sc: var(--st-interested); }
-.stage-applied { --sc: var(--st-applied); }
-.stage-screening { --sc: var(--st-screening); }
-.stage-interview { --sc: var(--st-interview); }
-.stage-offer { --sc: var(--st-offer); }
+/* Each stage class publishes two custom properties (#496): --sc is the field
+   colour (washes, dots, bars) and --sc-ink is the same hue at a tone that
+   clears 4.5:1 as label text. Anything that renders the stage as TEXT reads
+   --sc-ink; anything that fills reads --sc. */
+.stage-interested { --sc: var(--st-interested); --sc-ink: var(--st-interested-ink); }
+.stage-applied { --sc: var(--st-applied); --sc-ink: var(--st-applied-ink); }
+.stage-screening { --sc: var(--st-screening); --sc-ink: var(--st-screening-ink); }
+.stage-interview { --sc: var(--st-interview); --sc-ink: var(--st-interview-ink); }
+.stage-offer { --sc: var(--st-offer); --sc-ink: var(--st-offer-ink); }
 .stage-rejected,
 .stage-withdrawn,
-.stage-ghosted { --sc: var(--st-dead); }
+.stage-ghosted { --sc: var(--st-dead); --sc-ink: var(--st-dead-ink); }
 
 .tabs {
   display: flex;
@@ -874,7 +878,7 @@
   border: none;
   border-radius: 100px;
   padding: 0.3rem 0.7rem;
-  color: var(--sc);
+  color: var(--sc-ink, var(--sc));
   background: color-mix(in srgb, var(--sc) 12%, transparent);
   cursor: pointer;
   transition: background-color 0.18s ease, color 0.18s ease;
@@ -1414,7 +1418,7 @@ button.danger {
 }
 
 .card-main a {
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: none;
   overflow-wrap: anywhere;
 }
@@ -1654,22 +1658,22 @@ button.danger {
 }
 
 .outreach-pill.awaiting_reply {
-  background: color-mix(in srgb, var(--st-applied) 16%, var(--surface));
-  color: var(--st-applied);
+  background: color-mix(in srgb, var(--st-applied) var(--stage-tint), var(--surface));
+  color: var(--st-applied-ink);
 }
 
 .outreach-pill.replied {
-  background: color-mix(in srgb, var(--st-offer) 16%, var(--surface));
-  color: var(--st-offer);
+  background: color-mix(in srgb, var(--st-offer) var(--stage-tint), var(--surface));
+  color: var(--st-offer-ink);
 }
 
 .outreach-pill.no_response {
-  background: color-mix(in srgb, var(--st-dead) 16%, var(--surface));
-  color: var(--st-dead);
+  background: color-mix(in srgb, var(--st-dead) var(--stage-tint), var(--surface));
+  color: var(--st-dead-ink);
 }
 
 .fit-stars {
-  color: var(--st-offer);
+  color: var(--st-offer-ink);
   font-size: var(--text-meta);
   letter-spacing: var(--track-chrome);
 }
@@ -1773,7 +1777,7 @@ select.status {
   border-radius: var(--radius-sm);
   padding: 0.32rem 0.45rem;
   background: color-mix(in srgb, var(--sc) 14%, transparent);
-  color: var(--sc);
+  color: var(--sc-ink, var(--sc));
   cursor: pointer;
   transition: background-color 0.18s ease, color 0.18s ease;
 }
@@ -1946,7 +1950,7 @@ select.status {
 
 .streak-milestone {
   background: color-mix(in srgb, var(--st-offer) 14%, var(--surface));
-  color: var(--st-offer);
+  color: var(--st-offer-ink);
 }
 
 .streak-broken {
@@ -1985,7 +1989,7 @@ select.status {
 }
 
 .weekly-goal.met .weekly-goal-label {
-  color: var(--st-offer);
+  color: var(--st-offer-ink);
   font-weight: 600;
 }
 
@@ -2130,7 +2134,7 @@ select.status {
 }
 
 .export-links a {
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: none;
   font-size: var(--text-body);
   border: 1px solid var(--border);
@@ -2876,7 +2880,7 @@ summary.bcol-head::after {
 /* AI usage surfacing (#443): key-gate prompt, per-app JD grounding badge,
    and the Account settings feature list. */
 .ai-key-gate a {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .ai-grounding {
@@ -3217,7 +3221,7 @@ summary.bcol-head::after {
   font-size: var(--text-chrome);
   text-transform: uppercase;
   letter-spacing: var(--track-chrome);
-  color: var(--sc, var(--muted));
+  color: var(--sc-ink, var(--muted));
 }
 
 /* The "Recently updated" list retired (#492) — it reported edits rather than
@@ -4148,7 +4152,8 @@ summary.bcol-head::after {
     --rail-ink: #e7e6f0;
     --rail-text: #f4f2ec;
     --rail-muted: #b9b8cc;
-    --rail-faint: #7d7c95;
+    /* 4.28:1 on the Night rail; #8b8fa8 clears 4.5 (#496). */
+    --rail-faint: #8b8fa8;
     display: flex;
     flex-direction: column;
     flex: 0 0 210px;
@@ -4486,7 +4491,7 @@ summary.bcol-head::after {
   font-size: var(--text-chrome);
   text-transform: uppercase;
   letter-spacing: var(--track-chrome);
-  color: var(--st-dead);
+  color: var(--st-dead-ink);
 }
 
 .closed-date {

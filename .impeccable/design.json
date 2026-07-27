@@ -1,390 +1,485 @@
 {
-  "schemaVersion": 2,
-  "generatedAt": "2026-07-27T00:00:00Z",
-  "title": "Design System: Zenith",
-  "extensions": {
-    "colorMeta": {
-      "gold": {
-        "role": "primary",
-        "displayName": "Struck Brass",
-        "canonical": "oklch(75.5% 0.116 82)",
-        "tonalRamp": [
-          "oklch(20% 0.045 82)",
-          "oklch(31% 0.062 82)",
-          "oklch(42% 0.082 82)",
-          "oklch(53% 0.098 82)",
-          "oklch(64% 0.110 82)",
-          "oklch(75.5% 0.116 82)",
-          "oklch(86% 0.086 82)",
-          "oklch(95% 0.040 82)"
-        ]
-      },
-      "night": {
-        "role": "secondary",
-        "displayName": "Ink Indigo",
-        "canonical": "oklch(22.5% 0.070 286)",
-        "tonalRamp": [
-          "oklch(15% 0.050 286)",
-          "oklch(22.5% 0.070 286)",
-          "oklch(31% 0.084 286)",
-          "oklch(42% 0.092 286)",
-          "oklch(53% 0.086 286)",
-          "oklch(66% 0.070 286)",
-          "oklch(80% 0.045 286)",
-          "oklch(94% 0.018 286)"
-        ]
-      },
-      "bg": {
-        "role": "neutral",
-        "displayName": "Bone Canvas",
-        "canonical": "oklch(95.6% 0.011 85)",
-        "tonalRamp": [
-          "oklch(18% 0.008 85)",
-          "oklch(30% 0.009 85)",
-          "oklch(42% 0.010 85)",
-          "oklch(54% 0.011 85)",
-          "oklch(66% 0.011 85)",
-          "oklch(78% 0.011 85)",
-          "oklch(88% 0.011 85)",
-          "oklch(95.6% 0.011 85)"
-        ]
-      },
-      "ink": {
-        "role": "neutral",
-        "displayName": "Ink Indigo (copy)",
-        "canonical": "oklch(22.5% 0.070 286)",
-        "tonalRamp": [
-          "oklch(15% 0.050 286)",
-          "oklch(22.5% 0.070 286)",
-          "oklch(34% 0.060 286)",
-          "oklch(45% 0.048 286)",
-          "oklch(57% 0.036 286)",
-          "oklch(69% 0.026 286)",
-          "oklch(82% 0.016 286)",
-          "oklch(94% 0.008 286)"
-        ]
-      },
-      "muted": {
-        "role": "neutral",
-        "displayName": "Slate Ink",
-        "canonical": "oklch(47.5% 0.036 285)"
-      },
-      "faint": {
-        "role": "neutral",
-        "displayName": "Faint Slate",
-        "canonical": "oklch(51% 0.030 300)"
-      },
-      "border": {
-        "role": "neutral",
-        "displayName": "Bone Border",
-        "canonical": "oklch(91.5% 0.011 85)"
-      },
-      "surface": {
-        "role": "neutral",
-        "displayName": "Card White",
-        "canonical": "oklch(100% 0 0)"
-      },
-      "st-interested": {
-        "role": "tertiary",
-        "displayName": "Graphite Blue",
-        "canonical": "oklch(46% 0.055 285)",
-        "tonalRamp": [
-          "oklch(15% 0.030 285)",
-          "oklch(26% 0.042 285)",
-          "oklch(36% 0.050 285)",
-          "oklch(46% 0.055 285)",
-          "oklch(57% 0.052 285)",
-          "oklch(69% 0.042 285)",
-          "oklch(82% 0.028 285)",
-          "oklch(95% 0.012 285)"
-        ]
-      },
-      "st-applied": {
-        "role": "tertiary",
-        "displayName": "Lapis",
-        "canonical": "oklch(44.5% 0.140 280)",
-        "tonalRamp": [
-          "oklch(15% 0.070 280)",
-          "oklch(25% 0.105 280)",
-          "oklch(35% 0.128 280)",
-          "oklch(44.5% 0.140 280)",
-          "oklch(56% 0.130 280)",
-          "oklch(68% 0.105 280)",
-          "oklch(82% 0.068 280)",
-          "oklch(95% 0.025 280)"
-        ]
-      },
-      "st-screening": {
-        "role": "tertiary",
-        "displayName": "Iris",
-        "canonical": "oklch(45% 0.158 300)",
-        "tonalRamp": [
-          "oklch(15% 0.078 300)",
-          "oklch(25% 0.118 300)",
-          "oklch(35% 0.144 300)",
-          "oklch(45% 0.158 300)",
-          "oklch(57% 0.145 300)",
-          "oklch(69% 0.118 300)",
-          "oklch(82% 0.075 300)",
-          "oklch(95% 0.028 300)"
-        ]
-      },
-      "st-interview": {
-        "role": "tertiary",
-        "displayName": "Fuchsia Ink",
-        "canonical": "oklch(46% 0.190 322)",
-        "tonalRamp": [
-          "oklch(15% 0.090 322)",
-          "oklch(26% 0.138 322)",
-          "oklch(36% 0.172 322)",
-          "oklch(46% 0.190 322)",
-          "oklch(58% 0.175 322)",
-          "oklch(70% 0.140 322)",
-          "oklch(83% 0.090 322)",
-          "oklch(95% 0.032 322)"
-        ]
-      },
-      "st-offer": {
-        "role": "tertiary",
-        "displayName": "Aged Brass",
-        "canonical": "oklch(50% 0.105 82)",
-        "tonalRamp": [
-          "oklch(18% 0.048 82)",
-          "oklch(28% 0.075 82)",
-          "oklch(39% 0.095 82)",
-          "oklch(50% 0.105 82)",
-          "oklch(62% 0.108 82)",
-          "oklch(74% 0.100 82)",
-          "oklch(86% 0.070 82)",
-          "oklch(95% 0.032 82)"
-        ]
-      },
-      "st-dead": {
-        "role": "tertiary",
-        "displayName": "Ash",
-        "canonical": "oklch(52% 0.016 85)"
-      },
-      "success": { "role": "semantic", "displayName": "Forest", "canonical": "oklch(58% 0.085 158)" },
-      "warning": { "role": "semantic", "displayName": "Amber Signal", "canonical": "oklch(66% 0.115 72)" },
-      "danger": { "role": "semantic", "displayName": "Brick", "canonical": "oklch(52% 0.135 27)" },
-      "info": { "role": "semantic", "displayName": "Slate Blue", "canonical": "oklch(52% 0.085 258)" },
-      "heat-quiet": {
-        "role": "semantic",
-        "displayName": "Quiet Amber",
-        "canonical": "oklch(66% 0.115 72)"
-      },
-      "ev-touch": {
-        "role": "semantic",
-        "displayName": "Touchpoint Violet",
-        "canonical": "oklch(52% 0.135 300)"
-      }
-    },
-    "typographyMeta": {
-      "display": {
-        "displayName": "Display",
-        "purpose": "Geist 600 at 2.125rem — hero figures, the sign-in wordmark scale, the largest moments. --serif is a stable token name that resolves to Geist; there is no serif in this brand."
-      },
-      "headline": {
-        "displayName": "Headline",
-        "purpose": "Section and settings headings, the focused feed item's title. Geist 600 with -0.01em."
-      },
-      "title": {
-        "displayName": "Title",
-        "purpose": "Row primaries, card titles, the top-bar wordmark."
-      },
-      "body": {
-        "displayName": "Body",
-        "purpose": "All copy, every form control, every button label. Line-height 1.5 is inherited by buttons and is load-bearing for their box height."
-      },
-      "label": {
-        "displayName": "Label (mono)",
-        "purpose": "Geist Mono uppercase at 0.06em — stage names, lane labels, meta rows, counts. Never a sentence."
-      },
-      "chrome": {
-        "displayName": "Chrome (mono)",
-        "purpose": "Geist Mono uppercase at 0.12em, 0.64rem — eyebrows, tab labels, filter tabs, sources, keyboard hints. The smallest type in the system."
-      }
-    },
-    "shadows": [
-      {
-        "name": "shadow-1",
-        "value": "0 1px 2px rgba(20, 23, 58, 0.04), 0 2px 10px -3px rgba(20, 23, 58, 0.1)",
-        "purpose": "Tier 2 at rest (cards, panels, KPI tiles) and the hover state of flat tier-1 rows. Indigo-tinted, not neutral black."
-      },
-      {
-        "name": "shadow-2",
-        "value": "0 4px 14px -3px rgba(20, 23, 58, 0.12), 0 16px 40px -10px rgba(20, 23, 58, 0.2)",
-        "purpose": "Overlays (modal, dropdown, command palette) and the hover state of tier 2."
-      },
-      {
-        "name": "shadow-1-dark",
-        "value": "0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 10px -3px rgba(0, 0, 0, 0.45)",
-        "purpose": "Dark-theme counterpart of shadow-1 — true black at higher opacity, because the ground is already dark."
-      },
-      {
-        "name": "shadow-2-dark",
-        "value": "0 6px 20px -4px rgba(0, 0, 0, 0.55), 0 18px 44px -10px rgba(0, 0, 0, 0.65)",
-        "purpose": "Dark-theme counterpart of shadow-2."
-      },
-      {
-        "name": "hero-cast",
-        "value": "0 1px 2px rgba(20, 23, 58, 0.05), 0 10px 26px -6px color-mix(in srgb, var(--accent) 40%, transparent)",
-        "purpose": "The single tier-3 focal KPI. The only coloured shadow in the system; one per screen."
-      },
-      {
-        "name": "signin-float",
-        "value": "0 24px 60px -20px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.2)",
-        "purpose": "The light sign-in card floating on the always-Night stage — a deeper throw than any in-app surface."
-      }
+ "schemaVersion": 2,
+ "generatedAt": "2026-07-27T00:00:00Z",
+ "title": "Design System: Zenith",
+ "extensions": {
+  "colorMeta": {
+   "gold": {
+    "role": "primary",
+    "displayName": "Struck Brass",
+    "canonical": "oklch(75.5% 0.116 82)",
+    "tonalRamp": [
+     "oklch(20% 0.045 82)",
+     "oklch(31% 0.062 82)",
+     "oklch(42% 0.082 82)",
+     "oklch(53% 0.098 82)",
+     "oklch(64% 0.110 82)",
+     "oklch(75.5% 0.116 82)",
+     "oklch(86% 0.086 82)",
+     "oklch(95% 0.040 82)"
     ],
-    "motion": [
-      { "name": "control", "value": "120ms ease", "purpose": "Button background / border-color / color, and the 2px hover lift on clickable cards." },
-      { "name": "surface", "value": "150ms ease", "purpose": "Row shadow and padding transitions, backdrop fade." },
-      { "name": "entrance", "value": "180ms ease-out", "purpose": "Toast rise (8px) and modal rise + scale(0.98)." },
-      { "name": "card-enter", "value": "150ms ease-out", "purpose": "Filtered rows mounting: 2px rise + fade." },
-      { "name": "skeleton-shimmer", "value": "1.4s ease-in-out infinite", "purpose": "Loading placeholder sweep; the only looping animation." },
-      { "name": "reduced-motion", "value": "animation: none", "purpose": "Every animation above is cancelled under prefers-reduced-motion: reduce. A new animation without this escape is a defect." }
-    ],
-    "breakpoints": [
-      { "name": "phone-narrow", "value": "560px" },
-      { "name": "phone", "value": "600px" },
-      { "name": "rail", "value": "900px" },
-      { "name": "side-panel", "value": "1000px" },
-      { "name": "wide", "value": "1100px" },
-      { "name": "board-max", "value": "1280px" },
-      { "name": "column-max", "value": "720px" }
+    "note": "Fill only. Brass as TEXT is --accent-ink #836427, which clears 4.5:1 on both light grounds."
+   },
+   "night": {
+    "role": "secondary",
+    "displayName": "Ink Indigo",
+    "canonical": "oklch(22.5% 0.070 286)",
+    "tonalRamp": [
+     "oklch(15% 0.050 286)",
+     "oklch(22.5% 0.070 286)",
+     "oklch(31% 0.084 286)",
+     "oklch(42% 0.092 286)",
+     "oklch(53% 0.086 286)",
+     "oklch(66% 0.070 286)",
+     "oklch(80% 0.045 286)",
+     "oklch(94% 0.018 286)"
     ]
+   },
+   "bg": {
+    "role": "neutral",
+    "displayName": "Bone Canvas",
+    "canonical": "oklch(95.6% 0.011 85)",
+    "tonalRamp": [
+     "oklch(18% 0.008 85)",
+     "oklch(30% 0.009 85)",
+     "oklch(42% 0.010 85)",
+     "oklch(54% 0.011 85)",
+     "oklch(66% 0.011 85)",
+     "oklch(78% 0.011 85)",
+     "oklch(88% 0.011 85)",
+     "oklch(95.6% 0.011 85)"
+    ]
+   },
+   "ink": {
+    "role": "neutral",
+    "displayName": "Ink Indigo (copy)",
+    "canonical": "oklch(22.5% 0.070 286)",
+    "tonalRamp": [
+     "oklch(15% 0.050 286)",
+     "oklch(22.5% 0.070 286)",
+     "oklch(34% 0.060 286)",
+     "oklch(45% 0.048 286)",
+     "oklch(57% 0.036 286)",
+     "oklch(69% 0.026 286)",
+     "oklch(82% 0.016 286)",
+     "oklch(94% 0.008 286)"
+    ]
+   },
+   "muted": {
+    "role": "neutral",
+    "displayName": "Slate Ink",
+    "canonical": "oklch(47.5% 0.036 285)"
+   },
+   "faint": {
+    "role": "neutral",
+    "displayName": "Faint Slate",
+    "canonical": "oklch(51% 0.030 300)"
+   },
+   "border": {
+    "role": "neutral",
+    "displayName": "Bone Border",
+    "canonical": "oklch(91.5% 0.011 85)"
+   },
+   "surface": {
+    "role": "neutral",
+    "displayName": "Card White",
+    "canonical": "oklch(100% 0 0)"
+   },
+   "st-interested": {
+    "role": "tertiary",
+    "displayName": "Cold Slate",
+    "canonical": "oklch(46% 0.055 285)",
+    "hex": "#6d7793"
+   },
+   "st-applied": {
+    "role": "tertiary",
+    "displayName": "Steel",
+    "canonical": "oklch(44.5% 0.140 280)",
+    "hex": "#3c5a6e"
+   },
+   "st-screening": {
+    "role": "tertiary",
+    "displayName": "Teal",
+    "canonical": "oklch(45% 0.158 300)",
+    "hex": "#388f7e"
+   },
+   "st-interview": {
+    "role": "tertiary",
+    "displayName": "Terracotta",
+    "canonical": "oklch(46% 0.190 322)",
+    "hex": "#c17252"
+   },
+   "st-offer": {
+    "role": "tertiary",
+    "displayName": "Aged Brass",
+    "canonical": "oklch(50% 0.105 82)",
+    "hex": "#8a6410"
+   },
+   "st-dead": {
+    "role": "tertiary",
+    "displayName": "Ash",
+    "canonical": "oklch(52% 0.016 85)"
+   },
+   "success": {
+    "role": "semantic",
+    "displayName": "Forest",
+    "canonical": "oklch(58% 0.085 158)"
+   },
+   "warning": {
+    "role": "semantic",
+    "displayName": "Amber Signal",
+    "canonical": "oklch(66% 0.115 72)"
+   },
+   "danger": {
+    "role": "semantic",
+    "displayName": "Brick",
+    "canonical": "oklch(52% 0.135 27)"
+   },
+   "info": {
+    "role": "semantic",
+    "displayName": "Slate Blue",
+    "canonical": "oklch(52% 0.085 258)"
+   },
+   "heat-quiet": {
+    "role": "semantic",
+    "displayName": "Quiet Amber",
+    "canonical": "oklch(66% 0.115 72)"
+   },
+   "ev-touch": {
+    "role": "semantic",
+    "displayName": "Touchpoint Violet",
+    "canonical": "oklch(52% 0.135 300)"
+   }
   },
-  "components": [
-    {
-      "name": "Primary Button",
-      "kind": "button",
-      "refersTo": "button-primary",
-      "description": "The single brass action. One per view; no border at all, and no line-height override.",
-      "html": "<button class=\"ds-btn ds-btn-primary\">Add application</button>",
-      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Geist, system-ui, sans-serif); border-radius: var(--radius-md, 10px); cursor: pointer; white-space: nowrap; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-primary { background: var(--accent, #d6a441); color: var(--accent-text, #14173a); border: none; font-weight: 650; padding: 0.55rem 0.9rem; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--accent, #d6a441) 85%, black); } .ds-btn-primary:active { filter: brightness(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
-    },
-    {
-      "name": "Secondary Button",
-      "kind": "button",
-      "refersTo": "button-secondary",
-      "description": "The neutral control. Hairline border, 34px minimum, no font-weight of its own.",
-      "html": "<button class=\"ds-btn ds-btn-secondary\">Cancel</button>",
-      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Geist, system-ui, sans-serif); background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); color: var(--ink, #14173a); min-height: 34px; padding: 0.4rem 0.8rem; font-size: var(--text-body, 0.875rem); border-radius: var(--radius-md, 10px); cursor: pointer; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-secondary:hover { background: var(--bg, #f4f2ec); } .ds-btn-secondary:active { filter: brightness(0.97); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
-    },
-    {
-      "name": "Text Input",
-      "kind": "input",
-      "refersTo": "input",
-      "description": "One metric recipe. The fill is context-dependent by design — Bone inside a white panel, white on the page ground.",
-      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Senior Platform Engineer\" />",
-      "css": ".ds-input { font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); padding: 0.4rem 0.6rem; border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); background: var(--bg, #f4f2ec); color: var(--ink, #14173a); width: 100%; } .ds-input::placeholder { color: var(--faint, #6f6c7a); } .ds-input:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
-    },
-    {
-      "name": "Pipeline Row",
-      "kind": "custom",
-      "refersTo": "row",
-      "description": "The signature object: a flat white band with a 3px stage-coloured spine on the leading edge. Flat at rest, lifts one tier on hover.",
-      "html": "<div class=\"ds-row\" style=\"--sc: #4a55a8\"><div class=\"ds-row-l1\"><strong>Senior Platform Engineer</strong><span class=\"ds-row-co\">Northwind</span></div><div class=\"ds-row-l2\"><span class=\"ds-row-stage\">Applied</span><span class=\"ds-row-meta\">6d in stage</span></div></div>",
-      "css": ".ds-row { background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); border-left: 3px solid var(--sc, var(--border, #e7e4db)); overflow: hidden; padding: 0.55rem 0.8rem; min-height: 44px; cursor: pointer; transition: border-left-color 0.18s ease, box-shadow 0.15s ease, padding 0.15s ease; } .ds-row:hover { background: color-mix(in srgb, var(--ink, #14173a) 6%, var(--surface, #fff)); box-shadow: 0 1px 2px rgba(20,23,58,0.04), 0 2px 10px -3px rgba(20,23,58,0.1); } .ds-row:active { filter: brightness(0.97); } .ds-row-l1 { display: flex; align-items: center; gap: 0.5rem; } .ds-row-l1 strong { font-size: var(--text-title, 0.95rem); } .ds-row-co { margin-left: auto; color: var(--muted, #5c5f76); font-size: var(--text-meta, 0.75rem); } .ds-row-l2 { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.2rem; } .ds-row-stage { font-family: var(--mono, ui-monospace, monospace); font-size: var(--text-chrome, 0.64rem); text-transform: uppercase; letter-spacing: var(--track-chrome, 0.06em); color: var(--sc, var(--muted, #5c5f76)); } .ds-row-meta { font-size: var(--text-meta, 0.75rem); color: var(--faint, #6f6c7a); }"
-    },
-    {
-      "name": "Hero Stat Tile",
-      "kind": "card",
-      "refersTo": "stat-card-hero",
-      "description": "Tier 3 on a content screen — the one focal KPI. Brass tint, brass top edge, brass-cast shadow, 2.7rem figure. One per screen.",
-      "html": "<div class=\"ds-stat-hero\"><span class=\"ds-stat-value\">18</span><span class=\"ds-stat-label\">Active applications</span></div>",
-      "css": ".ds-stat-hero { position: relative; overflow: hidden; text-align: left; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.8rem 0.9rem; border-radius: var(--radius-md, 10px); background: linear-gradient(180deg, var(--surface, #fff), color-mix(in srgb, var(--accent, #d6a441) 7%, var(--surface, #fff))); border: 1px solid color-mix(in srgb, var(--accent, #d6a441) 40%, var(--border, #e7e4db)); box-shadow: 0 1px 2px rgba(20,23,58,0.05), 0 10px 26px -6px color-mix(in srgb, var(--accent, #d6a441) 40%, transparent); } .ds-stat-hero::before { content: \"\"; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--accent, #d6a441), color-mix(in srgb, var(--accent, #d6a441) 55%, #fff)); } .ds-stat-value { font-family: var(--serif, Geist, system-ui, sans-serif); font-size: 2.7rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink, #14173a); } .ds-stat-label { font-size: 0.74rem; font-weight: 600; color: var(--accent-ink, #a9803a); }"
-    },
-    {
-      "name": "Rail Nav Item",
-      "kind": "nav",
-      "refersTo": "nav-item",
-      "description": "Desktop rail item on the always-Night ground. Active is brass on a 16% brass wash; tones come from --rail-*, never from --ink/--muted.",
-      "html": "<nav class=\"ds-rail\"><button class=\"ds-rail-item\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\"/></svg>Pipeline</button><button class=\"ds-rail-item ds-rail-item-on\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><path d=\"M7 15l4-5 3 3 5-7\"/></svg>Insights</button></nav>",
-      "css": ".ds-rail { --rail-text: #f4f2ec; --rail-muted: #b9b8cc; display: flex; flex-direction: column; gap: 2px; padding: 12px; background: var(--night, #14173a); border-radius: var(--radius-md, 10px); } .ds-rail-item { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 12px; border: none; background: none; border-radius: var(--radius-md, 10px); font-family: var(--sans, Geist, system-ui, sans-serif); font-size: 14px; text-align: left; color: var(--rail-muted); cursor: pointer; } .ds-rail-item svg { width: 18px; height: 18px; flex: 0 0 auto; } .ds-rail-item:hover { background: rgba(255,255,255,0.06); color: var(--rail-text); } .ds-rail-item-on { background: rgba(214,164,65,0.16); color: var(--accent, #d6a441); } .ds-rail-item:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
-    },
-    {
-      "name": "Filter Tab",
-      "kind": "chip",
-      "refersTo": "filter-tab",
-      "description": "Mono chrome pill for view switching. Active swaps to the 14% brass wash with a brass-ink label; counts use tabular numerals.",
-      "html": "<div style=\"display:flex;gap:0.4rem\"><button class=\"ds-filtertab ds-filtertab-on\">Active <span class=\"ds-filtertab-n\">18</span></button><button class=\"ds-filtertab\">Archived <span class=\"ds-filtertab-n\">42</span></button></div>",
-      "css": ".ds-filtertab { display: inline-flex; align-items: center; gap: 0.3rem; font-family: var(--mono, ui-monospace, monospace); font-size: var(--text-chrome, 0.64rem); text-transform: uppercase; letter-spacing: var(--track-eyebrow, 0.12em); padding: 0.22rem 0.6rem; border: none; border-radius: var(--radius-full, 999px); background: var(--track, #efece4); color: var(--muted, #5c5f76); cursor: pointer; } .ds-filtertab-n { color: var(--faint, #6f6c7a); font-variant-numeric: tabular-nums; } .ds-filtertab-on { background: var(--accent-soft, rgba(214,164,65,0.14)); color: var(--accent-ink, #a9803a); } .ds-filtertab-on .ds-filtertab-n { color: var(--accent-ink, #a9803a); } .ds-filtertab:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
-    },
-    {
-      "name": "Chip",
-      "kind": "chip",
-      "refersTo": "chip",
-      "description": "Removable token. Asymmetric padding leaves room for the trailing borderless remove button; the matched variant tints 15% brass.",
-      "html": "<div style=\"display:flex;gap:0.4rem\"><span class=\"ds-chip\">Kubernetes<button aria-label=\"Remove\">×</button></span><span class=\"ds-chip ds-chip-matched\">TypeScript<button aria-label=\"Remove\">×</button></span></div>",
-      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--bg, #f4f2ec); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-full, 999px); padding: 0.2rem 0.3rem 0.2rem 0.6rem; font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-meta, 0.75rem); color: var(--ink, #14173a); } .ds-chip button { border: none; background: none; color: var(--muted, #5c5f76); cursor: pointer; font-size: var(--text-title, 0.95rem); line-height: 1; padding: 0 0.2rem; } .ds-chip button:hover { color: var(--ink, #14173a); } .ds-chip-matched { background: color-mix(in srgb, var(--accent, #d6a441) 15%, var(--bg, #f4f2ec)); border-color: var(--accent, #d6a441); color: var(--accent-ink, #a9803a); }"
-    },
-    {
-      "name": "Badge",
-      "kind": "chip",
-      "refersTo": "badge",
-      "description": "Inline mono marker whose border is currentColor, so each variant only moves `color`. Brass by default, danger for warnings, --sc for stage.",
-      "html": "<span>Northwind <span class=\"ds-badge\">Agency</span> <span class=\"ds-badge ds-badge-warn\">Stale</span></span>",
-      "css": ".ds-badge { font-family: var(--mono, ui-monospace, monospace); font-size: var(--text-chrome, 0.64rem); text-transform: uppercase; letter-spacing: var(--track-chrome, 0.06em); color: var(--accent, #d6a441); border: 1px solid currentColor; border-radius: var(--radius-sm, 8px); padding: 0.08rem 0.4rem; margin-left: 0.4rem; vertical-align: middle; } .ds-badge-warn { color: var(--danger, #b0453c); }"
-    },
-    {
-      "name": "Dashboard Card",
-      "kind": "card",
-      "refersTo": "card",
-      "description": "Tier 2 panel with a mono eyebrow head. The lead variant takes a 3px brass left spine; clickable variants rise 2px to shadow-2.",
-      "html": "<div class=\"ds-card ds-card-lead\"><div class=\"ds-card-head\">Next up<span class=\"ds-card-win\">3 due</span></div><div class=\"ds-card-body\">Follow up with Northwind — 6 days since the screening call.</div></div>",
-      "css": ".ds-card { background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); box-shadow: 0 1px 2px rgba(20,23,58,0.04), 0 2px 10px -3px rgba(20,23,58,0.1); padding: 0.85rem 0.95rem; text-align: left; display: block; width: 100%; color: var(--ink, #14173a); } .ds-card-lead { border-left: 3px solid var(--accent, #d6a441); } .ds-card-head { font-family: var(--mono, ui-monospace, monospace); font-size: 0.6rem; letter-spacing: var(--track-eyebrow, 0.12em); text-transform: uppercase; color: var(--faint, #6f6c7a); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.55rem; } .ds-card-win { margin-left: auto; color: var(--accent-ink, #a9803a); background: var(--accent-soft, rgba(214,164,65,0.14)); border-radius: 999px; padding: 0.05rem 0.4rem; font-size: 0.54rem; letter-spacing: 0.04em; } .ds-card-body { font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); line-height: 1.5; }"
-    }
+  "typographyMeta": {
+   "display": {
+    "displayName": "Display",
+    "purpose": "Geist 600 at 2.125rem \u2014 hero figures, the sign-in wordmark scale, the largest moments. --serif is a stable token name that resolves to Geist; there is no serif in this brand."
+   },
+   "headline": {
+    "displayName": "Headline",
+    "purpose": "Section and settings headings, the focused feed item's title. Geist 600 with -0.01em."
+   },
+   "title": {
+    "displayName": "Title",
+    "purpose": "Row primaries, card titles, the top-bar wordmark."
+   },
+   "body": {
+    "displayName": "Body",
+    "purpose": "All copy, every form control, every button label. Line-height 1.5 is inherited by buttons and is load-bearing for their box height."
+   },
+   "label": {
+    "displayName": "Label (mono)",
+    "purpose": "Geist Mono uppercase at 0.06em \u2014 stage names, lane labels, meta rows, counts. Never a sentence."
+   },
+   "chrome": {
+    "displayName": "Chrome (mono)",
+    "purpose": "Geist Mono uppercase at 0.12em, 0.64rem \u2014 eyebrows, tab labels, filter tabs, sources, keyboard hints. The smallest type in the system."
+   }
+  },
+  "shadows": [
+   {
+    "name": "shadow-1",
+    "value": "0 1px 2px rgba(20, 23, 58, 0.04), 0 2px 10px -3px rgba(20, 23, 58, 0.1)",
+    "purpose": "Tier 2 at rest (cards, panels, KPI tiles) and the hover state of flat tier-1 rows. Indigo-tinted, not neutral black."
+   },
+   {
+    "name": "shadow-2",
+    "value": "0 4px 14px -3px rgba(20, 23, 58, 0.12), 0 16px 40px -10px rgba(20, 23, 58, 0.2)",
+    "purpose": "Overlays (modal, dropdown, command palette) and the hover state of tier 2."
+   },
+   {
+    "name": "shadow-1-dark",
+    "value": "0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 10px -3px rgba(0, 0, 0, 0.45)",
+    "purpose": "Dark-theme counterpart of shadow-1 \u2014 true black at higher opacity, because the ground is already dark."
+   },
+   {
+    "name": "shadow-2-dark",
+    "value": "0 6px 20px -4px rgba(0, 0, 0, 0.55), 0 18px 44px -10px rgba(0, 0, 0, 0.65)",
+    "purpose": "Dark-theme counterpart of shadow-2."
+   },
+   {
+    "name": "hero-cast",
+    "value": "0 1px 2px rgba(20, 23, 58, 0.05), 0 10px 26px -6px color-mix(in srgb, var(--accent) 40%, transparent)",
+    "purpose": "The single tier-3 focal KPI. The only coloured shadow in the system; one per screen."
+   },
+   {
+    "name": "signin-float",
+    "value": "0 24px 60px -20px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.2)",
+    "purpose": "The light sign-in card floating on the always-Night stage \u2014 a deeper throw than any in-app surface."
+   }
   ],
-  "narrative": {
-    "northStar": "The Night Ascent",
-    "overview": "Two halves, and the name says both. The ground is always Night — the desktop rail and the sign-in stage are Ink Indigo in every theme, never re-tinted, because they are chrome, not content. Against that constant, everything that moves climbs: the five pipeline stages rise slate → lapis → iris → fuchsia → brass, and the single interaction accent is the brass at the top of that climb. A user reading a board is reading altitude.\n\nThe character is warm and instrumental. The precision is real — hairline 1px borders, a 10px control corner, uppercase Geist Mono chrome at 0.64rem with 0.12em tracking, tabular figures that don't jitter as numbers change. But the canvas is Bone (#f4f2ec), not white, the cards round at 14px, and the accent is a struck brass rather than a saturated primary. The result should read as a well-made instrument on a warm desk, not a terminal and not a SaaS dashboard.\n\nDensity is calm-dense. A heavy user holds around fifty applications, so nothing here is a data grid: rows are 44px minimum, lists breathe at 0.6rem gaps, and the app column is a single 720px measure until the rail appears at 900px. Colour is spent almost nowhere — the brass is the only voice raised, and the stage hues are locked to pipeline state and never used decoratively.",
-    "keyCharacteristics": [
-      "Ink Indigo chrome that never changes with the theme; Bone or night-sky content beneath it.",
-      "One accent (Struck Brass) for every interactive meaning: primary action, link, focus ring, selection, offer.",
-      "Five accessibility-locked stage hues that rise in both hue and lightness, reserved for pipeline state.",
-      "Geist everywhere, Geist Mono strictly as chrome; figures set in Geist 600 with tabular numerals.",
-      "Three elevation tiers, hover adds exactly one step.",
-      "1px hairlines and a 10px / 14px / pill corner vocabulary."
-    ],
-    "rules": [
-      { "name": "The One Gold Rule", "body": "Struck Brass is the only accent. If something is interactive, selectable, focused, or the single most important number on the screen, it is brass; if it is none of those, it is ink, muted, or faint. Never introduce a second accent hue to distinguish two interactive things — distinguish them by weight, size, or position.", "section": "colors" },
-      { "name": "The Stage-Colour Reservation", "body": "The five ascent hues mean pipeline state and nothing else. Never use them as chart series colours, category tags, avatar fills, or decoration, and never redefine their values — they are contrast-locked as a set.", "section": "colors" },
-      { "name": "The Always-Night Rule", "body": "The rail and the sign-in stage are Ink Indigo in light theme and dark theme alike. Their text tones come from --rail-ink / --rail-text / --rail-muted / --rail-faint, declared once on .side. Never hardcode a rail hex, and never let --ink / --muted leak into rail descendants — those flip with the theme and the rail does not.", "section": "colors" },
-      { "name": "The Dark-Parity Rule", "body": "Explicit Dark and OS-dark share one palette, declared identically in the prefers-color-scheme block and the [data-theme=\"dark\"] block. A value added to one must be added to the other in the same commit, or the two themes silently diverge.", "section": "colors" },
-      { "name": "The Mono-Is-Chrome Rule", "body": "Geist Mono never sets a sentence. It marks structural furniture — eyebrows, tab and stage labels, sources, keys, counts — and it is always uppercase with --track-chrome (0.06em) or --track-eyebrow (0.12em). Prose in mono is a defect.", "section": "typography" },
-      { "name": "The Figures-Speak Rule", "body": "Numbers a user reads as a result — KPI values, funnel counts, stat figures — are set in the display voice: Geist 600, font-variant-numeric: tabular-nums, tight tracking. Mono keeps only the small inline values inside stat lines. Tabular numerals are mandatory anywhere a figure updates in place, so digits don't dance.", "section": "typography" },
-      { "name": "The Negative-Tracking Rule", "body": "Display and title sizes carry -0.01em to -0.02em; body carries normal; mono carries positive tracking. Tracking direction is how the three registers stay distinguishable at a glance.", "section": "typography" },
-      { "name": "The 720 Rule", "body": "Content is one 720px column until the rail exists. Do not introduce a second content column below 900px; on phones the answer to \"where does this go\" is further down, not beside.", "section": "layout" },
-      { "name": "The Internal-Scroll Rule", "body": "A stage column, not the page, absorbs a busy stage. Any new column-shaped surface gets max-height + overflow-y: auto on its list, with the head pinned.", "section": "layout" },
-      { "name": "The One-Step Rule", "body": "Hover moves a surface up exactly one tier and changes nothing else structural. Flat → shadow-1. shadow-1 → shadow-2 plus a 2px rise. Never skip a tier, and never introduce a third shadow value.", "section": "elevation" },
-      { "name": "The Single Hero Rule", "body": "At most one tier-3 focal element per screen. Two brass-tinted heroes cancel each other out and the eye lands nowhere — which is the exact failure the hero tile was introduced to fix.", "section": "elevation" },
-      { "name": "The Ten-Pixel Rule", "body": "If it is a control, it is 10px. If it is a container that holds controls, it is 14px. If it is a token you could imagine picking up, it is a pill. There is no fourth answer.", "section": "shapes" },
-      { "name": "The Hairline Rule", "body": "Structural separation is 1px --border. Any border thicker than 1px is carrying meaning (stage, lead, focus) and must be justified by state, not by emphasis.", "section": "shapes" }
-    ],
-    "dos": [
-      "Do spend Struck Brass on interaction only — primary action, link, focus ring, selection, the one hero figure. If a screen has brass in more than a few places, something non-interactive stole it.",
-      "Do read stage colour through --sc, set by a .stage-* ancestor. Never hardcode a stage hex in a rule.",
-      "Do set every figure a user reads as a result in Geist 600 with font-variant-numeric: tabular-nums.",
-      "Do give any new animation a @media (prefers-reduced-motion: reduce) escape in the same block, and keep it at or under 250ms.",
-      "Do put new CSS in App.css bands 1–3, never after the control-normalization layer at band 4 — that layer exists to collapse per-context variants and must stay last.",
-      "Do make a new owned component's CSS fully self-describing inside @layer components, reproducing the App.css recipe it replaces rather than depending on it. Verify a swap is pixel-identical with the screenshot baseline plus compare -metric AE = 0; eyeballing misses sub-pixel shifts.",
-      "Do add every new dark-theme value to both the prefers-color-scheme block and the [data-theme=\"dark\"] block.",
-      "Do draw icons as 24×24 line-art SVG, currentColor, strokeWidth 2."
-    ],
-    "donts": [
-      "Don't change a stage hue. The five are contrast-locked as a set; adjusting one breaks the pairwise separation the whole ascent depends on.",
-      "Don't add a second accent colour, or use a stage hue as a chart series, a category tag, or decoration.",
-      "Don't reach for the SaaS gradient-blob look — no purple-to-pink hero gradients, glow orbs, mesh backgrounds, or floating glass. The system's only gradients are the hero KPI tint, its 3px top edge, and the sign-in radial ground.",
-      "Don't use emoji anywhere in the UI, and don't introduce mascots or stock vector illustration.",
-      "Don't build dense enterprise-dashboard chrome: no data-grid density, no stacked toolbars, no ten-colour chart palettes. Fifty applications is the ceiling, not fifty thousand rows.",
-      "Don't let colour carry meaning alone. A stage hue always travels with a label or a position.",
-      "Don't hardcode a rail hex or let --ink / --muted reach a rail descendant — use --rail-ink / --rail-text / --rail-muted / --rail-faint.",
-      "Don't use --muted on empty-state icons; --empty-stroke exists because muted drops to about 1.6:1 at those icons' internal opacities on dark.",
-      "Don't lighten --faint — its current value is the one that clears 4.5:1 on both --surface and --bg.",
-      "Don't set line-height on a button. Buttons inherit the body's 1.5 through button { font: inherit }, and primary sizes its box off it; forcing 1 shortens every primary by roughly 7px and shifts the whole content column.",
-      "Don't invent a fourth corner radius or a third shadow value."
-    ]
+  "motion": [
+   {
+    "name": "control",
+    "value": "120ms ease",
+    "purpose": "Button background / border-color / color, and the 2px hover lift on clickable cards."
+   },
+   {
+    "name": "surface",
+    "value": "150ms ease",
+    "purpose": "Row shadow and padding transitions, backdrop fade."
+   },
+   {
+    "name": "entrance",
+    "value": "180ms ease-out",
+    "purpose": "Toast rise (8px) and modal rise + scale(0.98)."
+   },
+   {
+    "name": "card-enter",
+    "value": "150ms ease-out",
+    "purpose": "Filtered rows mounting: 2px rise + fade."
+   },
+   {
+    "name": "skeleton-shimmer",
+    "value": "1.4s ease-in-out infinite",
+    "purpose": "Loading placeholder sweep; the only looping animation."
+   },
+   {
+    "name": "reduced-motion",
+    "value": "animation: none",
+    "purpose": "Every animation above is cancelled under prefers-reduced-motion: reduce. A new animation without this escape is a defect."
+   }
+  ],
+  "breakpoints": [
+   {
+    "name": "phone-narrow",
+    "value": "560px"
+   },
+   {
+    "name": "phone",
+    "value": "600px"
+   },
+   {
+    "name": "rail",
+    "value": "900px"
+   },
+   {
+    "name": "side-panel",
+    "value": "1000px"
+   },
+   {
+    "name": "wide",
+    "value": "1100px"
+   },
+   {
+    "name": "board-max",
+    "value": "1280px"
+   },
+   {
+    "name": "column-max",
+    "value": "720px"
+   }
+  ],
+  "stagePalette": {
+   "rule": "Locked by property, not by value: every pair >= dE2000 10 under normal vision and all three dichromacies; every ink tone >= 4.5:1 as label text on both grounds.",
+   "enforcedBy": "test-node/stage-palette.spec.ts",
+   "worstPair": {
+    "light": 12.0,
+    "dark": 13.4
+   },
+   "previousWorstPair": {
+    "light": 1.0,
+    "dark": 1.4,
+    "note": "applied vs screening under deuteranopia"
+   },
+   "fieldVsInk": "--sc fills, --sc-ink is text. One token cannot do both without driving every hue toward near-black."
   }
+ },
+ "components": [
+  {
+   "name": "Primary Button",
+   "kind": "button",
+   "refersTo": "button-primary",
+   "description": "The single brass action. One per view; no border at all, and no line-height override.",
+   "html": "<button class=\"ds-btn ds-btn-primary\">Add application</button>",
+   "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Geist, system-ui, sans-serif); border-radius: var(--radius-md, 10px); cursor: pointer; white-space: nowrap; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-primary { background: var(--accent, #d6a441); color: var(--accent-text, #14173a); border: none; font-weight: 650; padding: 0.55rem 0.9rem; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--accent, #d6a441) 85%, black); } .ds-btn-primary:active { filter: brightness(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+  },
+  {
+   "name": "Secondary Button",
+   "kind": "button",
+   "refersTo": "button-secondary",
+   "description": "The neutral control. Hairline border, 34px minimum, no font-weight of its own.",
+   "html": "<button class=\"ds-btn ds-btn-secondary\">Cancel</button>",
+   "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; font-family: var(--sans, Geist, system-ui, sans-serif); background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); color: var(--ink, #14173a); min-height: 34px; padding: 0.4rem 0.8rem; font-size: var(--text-body, 0.875rem); border-radius: var(--radius-md, 10px); cursor: pointer; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-btn-secondary:hover { background: var(--bg, #f4f2ec); } .ds-btn-secondary:active { filter: brightness(0.97); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
+  },
+  {
+   "name": "Text Input",
+   "kind": "input",
+   "refersTo": "input",
+   "description": "One metric recipe. The fill is context-dependent by design \u2014 Bone inside a white panel, white on the page ground.",
+   "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Senior Platform Engineer\" />",
+   "css": ".ds-input { font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); padding: 0.4rem 0.6rem; border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); background: var(--bg, #f4f2ec); color: var(--ink, #14173a); width: 100%; } .ds-input::placeholder { color: var(--faint, #6f6c7a); } .ds-input:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
+  },
+  {
+   "name": "Pipeline Row",
+   "kind": "custom",
+   "refersTo": "row",
+   "description": "The signature object: a flat white band with a 3px stage-coloured spine on the leading edge. Flat at rest, lifts one tier on hover.",
+   "html": "<div class=\"ds-row\" style=\"--sc: #4a55a8\"><div class=\"ds-row-l1\"><strong>Senior Platform Engineer</strong><span class=\"ds-row-co\">Northwind</span></div><div class=\"ds-row-l2\"><span class=\"ds-row-stage\">Applied</span><span class=\"ds-row-meta\">6d in stage</span></div></div>",
+   "css": ".ds-row { background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); border-left: 3px solid var(--sc, var(--border, #e7e4db)); overflow: hidden; padding: 0.55rem 0.8rem; min-height: 44px; cursor: pointer; transition: border-left-color 0.18s ease, box-shadow 0.15s ease, padding 0.15s ease; } .ds-row:hover { background: color-mix(in srgb, var(--ink, #14173a) 6%, var(--surface, #fff)); box-shadow: 0 1px 2px rgba(20,23,58,0.04), 0 2px 10px -3px rgba(20,23,58,0.1); } .ds-row:active { filter: brightness(0.97); } .ds-row-l1 { display: flex; align-items: center; gap: 0.5rem; } .ds-row-l1 strong { font-size: var(--text-title, 0.95rem); } .ds-row-co { margin-left: auto; color: var(--muted, #5c5f76); font-size: var(--text-meta, 0.75rem); } .ds-row-l2 { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.2rem; } .ds-row-stage { font-family: var(--mono, ui-monospace, monospace); font-size: var(--text-chrome, 0.64rem); text-transform: uppercase; letter-spacing: var(--track-chrome, 0.06em); color: var(--sc, var(--muted, #5c5f76)); } .ds-row-meta { font-size: var(--text-meta, 0.75rem); color: var(--faint, #6f6c7a); }"
+  },
+  {
+   "name": "Hero Stat Tile",
+   "kind": "card",
+   "refersTo": "stat-card-hero",
+   "description": "Tier 3 on a content screen \u2014 the one focal KPI. Brass tint, brass top edge, brass-cast shadow, 2.7rem figure. One per screen.",
+   "html": "<div class=\"ds-stat-hero\"><span class=\"ds-stat-value\">18</span><span class=\"ds-stat-label\">Active applications</span></div>",
+   "css": ".ds-stat-hero { position: relative; overflow: hidden; text-align: left; display: flex; flex-direction: column; gap: 0.3rem; padding: 0.8rem 0.9rem; border-radius: var(--radius-md, 10px); background: linear-gradient(180deg, var(--surface, #fff), color-mix(in srgb, var(--accent, #d6a441) 7%, var(--surface, #fff))); border: 1px solid color-mix(in srgb, var(--accent, #d6a441) 40%, var(--border, #e7e4db)); box-shadow: 0 1px 2px rgba(20,23,58,0.05), 0 10px 26px -6px color-mix(in srgb, var(--accent, #d6a441) 40%, transparent); } .ds-stat-hero::before { content: \"\"; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--accent, #d6a441), color-mix(in srgb, var(--accent, #d6a441) 55%, #fff)); } .ds-stat-value { font-family: var(--serif, Geist, system-ui, sans-serif); font-size: 2.7rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink, #14173a); } .ds-stat-label { font-size: 0.74rem; font-weight: 600; color: var(--accent-ink, #a9803a); }"
+  },
+  {
+   "name": "Rail Nav Item",
+   "kind": "nav",
+   "refersTo": "nav-item",
+   "description": "Desktop rail item on the always-Night ground. Active is brass on a 16% brass wash; tones come from --rail-*, never from --ink/--muted.",
+   "html": "<nav class=\"ds-rail\"><button class=\"ds-rail-item\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\"/></svg>Pipeline</button><button class=\"ds-rail-item ds-rail-item-on\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><path d=\"M7 15l4-5 3 3 5-7\"/></svg>Insights</button></nav>",
+   "css": ".ds-rail { --rail-text: #f4f2ec; --rail-muted: #b9b8cc; display: flex; flex-direction: column; gap: 2px; padding: 12px; background: var(--night, #14173a); border-radius: var(--radius-md, 10px); } .ds-rail-item { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 12px; border: none; background: none; border-radius: var(--radius-md, 10px); font-family: var(--sans, Geist, system-ui, sans-serif); font-size: 14px; text-align: left; color: var(--rail-muted); cursor: pointer; } .ds-rail-item svg { width: 18px; height: 18px; flex: 0 0 auto; } .ds-rail-item:hover { background: rgba(255,255,255,0.06); color: var(--rail-text); } .ds-rail-item-on { background: rgba(214,164,65,0.16); color: var(--accent, #d6a441); } .ds-rail-item:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
+  },
+  {
+   "name": "Filter Tab",
+   "kind": "chip",
+   "refersTo": "filter-tab",
+   "description": "Mono chrome pill for view switching. Active swaps to the 14% brass wash with a brass-ink label; counts use tabular numerals.",
+   "html": "<div style=\"display:flex;gap:0.4rem\"><button class=\"ds-filtertab ds-filtertab-on\">Active <span class=\"ds-filtertab-n\">18</span></button><button class=\"ds-filtertab\">Archived <span class=\"ds-filtertab-n\">42</span></button></div>",
+   "css": ".ds-filtertab { display: inline-flex; align-items: center; gap: 0.3rem; font-family: var(--mono, ui-monospace, monospace); font-size: var(--text-chrome, 0.64rem); text-transform: uppercase; letter-spacing: var(--track-eyebrow, 0.12em); padding: 0.22rem 0.6rem; border: none; border-radius: var(--radius-full, 999px); background: var(--track, #efece4); color: var(--muted, #5c5f76); cursor: pointer; } .ds-filtertab-n { color: var(--faint, #6f6c7a); font-variant-numeric: tabular-nums; } .ds-filtertab-on { background: var(--accent-soft, rgba(214,164,65,0.14)); color: var(--accent-ink, #a9803a); } .ds-filtertab-on .ds-filtertab-n { color: var(--accent-ink, #a9803a); } .ds-filtertab:focus-visible { outline: 2px solid var(--accent, #d6a441); outline-offset: 2px; }"
+  },
+  {
+   "name": "Chip",
+   "kind": "chip",
+   "refersTo": "chip",
+   "description": "Removable token. Asymmetric padding leaves room for the trailing borderless remove button; the matched variant tints 15% brass.",
+   "html": "<div style=\"display:flex;gap:0.4rem\"><span class=\"ds-chip\">Kubernetes<button aria-label=\"Remove\">\u00d7</button></span><span class=\"ds-chip ds-chip-matched\">TypeScript<button aria-label=\"Remove\">\u00d7</button></span></div>",
+   "css": ".ds-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--bg, #f4f2ec); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-full, 999px); padding: 0.2rem 0.3rem 0.2rem 0.6rem; font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-meta, 0.75rem); color: var(--ink, #14173a); } .ds-chip button { border: none; background: none; color: var(--muted, #5c5f76); cursor: pointer; font-size: var(--text-title, 0.95rem); line-height: 1; padding: 0 0.2rem; } .ds-chip button:hover { color: var(--ink, #14173a); } .ds-chip-matched { background: color-mix(in srgb, var(--accent, #d6a441) 15%, var(--bg, #f4f2ec)); border-color: var(--accent, #d6a441); color: var(--accent-ink, #a9803a); }"
+  },
+  {
+   "name": "Badge",
+   "kind": "chip",
+   "refersTo": "badge",
+   "description": "Inline mono marker whose border is currentColor, so each variant only moves `color`. Brass by default, danger for warnings, --sc for stage.",
+   "html": "<span>Northwind <span class=\"ds-badge\">Agency</span> <span class=\"ds-badge ds-badge-warn\">Stale</span></span>",
+   "css": ".ds-badge { font-family: var(--mono, ui-monospace, monospace); font-size: var(--text-chrome, 0.64rem); text-transform: uppercase; letter-spacing: var(--track-chrome, 0.06em); color: var(--accent, #d6a441); border: 1px solid currentColor; border-radius: var(--radius-sm, 8px); padding: 0.08rem 0.4rem; margin-left: 0.4rem; vertical-align: middle; } .ds-badge-warn { color: var(--danger, #b0453c); }"
+  },
+  {
+   "name": "Dashboard Card",
+   "kind": "card",
+   "refersTo": "card",
+   "description": "Tier 2 panel with a mono eyebrow head. The lead variant takes a 3px brass left spine; clickable variants rise 2px to shadow-2.",
+   "html": "<div class=\"ds-card ds-card-lead\"><div class=\"ds-card-head\">Next up<span class=\"ds-card-win\">3 due</span></div><div class=\"ds-card-body\">Follow up with Northwind \u2014 6 days since the screening call.</div></div>",
+   "css": ".ds-card { background: var(--surface, #fff); border: 1px solid var(--border, #e7e4db); border-radius: var(--radius-md, 10px); box-shadow: 0 1px 2px rgba(20,23,58,0.04), 0 2px 10px -3px rgba(20,23,58,0.1); padding: 0.85rem 0.95rem; text-align: left; display: block; width: 100%; color: var(--ink, #14173a); } .ds-card-lead { border-left: 3px solid var(--accent, #d6a441); } .ds-card-head { font-family: var(--mono, ui-monospace, monospace); font-size: 0.6rem; letter-spacing: var(--track-eyebrow, 0.12em); text-transform: uppercase; color: var(--faint, #6f6c7a); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.55rem; } .ds-card-win { margin-left: auto; color: var(--accent-ink, #a9803a); background: var(--accent-soft, rgba(214,164,65,0.14)); border-radius: 999px; padding: 0.05rem 0.4rem; font-size: 0.54rem; letter-spacing: 0.04em; } .ds-card-body { font-family: var(--sans, Geist, system-ui, sans-serif); font-size: var(--text-body, 0.875rem); line-height: 1.5; }"
+  }
+ ],
+ "narrative": {
+  "northStar": "The Night Ascent",
+  "overview": "Two halves, and the name says both. The ground is always Night \u2014 the desktop rail and the sign-in stage are Ink Indigo in every theme, never re-tinted, because they are chrome, not content. Against that constant, everything that moves climbs: the five pipeline stages rise slate \u2192 lapis \u2192 iris \u2192 fuchsia \u2192 brass, and the single interaction accent is the brass at the top of that climb. A user reading a board is reading altitude.\n\nThe character is warm and instrumental. The precision is real \u2014 hairline 1px borders, a 10px control corner, uppercase Geist Mono chrome at 0.64rem with 0.12em tracking, tabular figures that don't jitter as numbers change. But the canvas is Bone (#f4f2ec), not white, the cards round at 14px, and the accent is a struck brass rather than a saturated primary. The result should read as a well-made instrument on a warm desk, not a terminal and not a SaaS dashboard.\n\nDensity is calm-dense. A heavy user holds around fifty applications, so nothing here is a data grid: rows are 44px minimum, lists breathe at 0.6rem gaps, and the app column is a single 720px measure until the rail appears at 900px. Colour is spent almost nowhere \u2014 the brass is the only voice raised, and the stage hues are locked to pipeline state and never used decoratively.",
+  "keyCharacteristics": [
+   "Ink Indigo chrome that never changes with the theme; Bone or night-sky content beneath it.",
+   "One accent (Struck Brass) for every interactive meaning: primary action, link, focus ring, selection, offer.",
+   "Five accessibility-locked stage hues that rise in both hue and lightness, reserved for pipeline state.",
+   "Geist everywhere, Geist Mono strictly as chrome; figures set in Geist 600 with tabular numerals.",
+   "Three elevation tiers, hover adds exactly one step.",
+   "1px hairlines and a 10px / 14px / pill corner vocabulary."
+  ],
+  "rules": [
+   {
+    "name": "The One Gold Rule",
+    "body": "Struck Brass is the only accent. If something is interactive, selectable, focused, or the single most important number on the screen, it is brass; if it is none of those, it is ink, muted, or faint. Never introduce a second accent hue to distinguish two interactive things \u2014 distinguish them by weight, size, or position.",
+    "section": "colors"
+   },
+   {
+    "name": "The Stage-Colour Reservation",
+    "body": "The five ascent hues mean pipeline state and nothing else. Never use them as chart series colours, category tags, avatar fills, or decoration.",
+    "section": "colors"
+   },
+   {
+    "name": "The Always-Night Rule",
+    "body": "The rail and the sign-in stage are Ink Indigo in light theme and dark theme alike. Their text tones come from --rail-ink / --rail-text / --rail-muted / --rail-faint, declared once on .side. Never hardcode a rail hex, and never let --ink / --muted leak into rail descendants \u2014 those flip with the theme and the rail does not.",
+    "section": "colors"
+   },
+   {
+    "name": "The Dark-Parity Rule",
+    "body": "Explicit Dark and OS-dark share one palette, declared identically in the prefers-color-scheme block and the [data-theme=\"dark\"] block. A value added to one must be added to the other in the same commit, or the two themes silently diverge.",
+    "section": "colors"
+   },
+   {
+    "name": "The Mono-Is-Chrome Rule",
+    "body": "Geist Mono never sets a sentence. It marks structural furniture \u2014 eyebrows, tab and stage labels, sources, keys, counts \u2014 and it is always uppercase with --track-chrome (0.06em) or --track-eyebrow (0.12em). Prose in mono is a defect.",
+    "section": "typography"
+   },
+   {
+    "name": "The Figures-Speak Rule",
+    "body": "Numbers a user reads as a result \u2014 KPI values, funnel counts, stat figures \u2014 are set in the display voice: Geist 600, font-variant-numeric: tabular-nums, tight tracking. Mono keeps only the small inline values inside stat lines. Tabular numerals are mandatory anywhere a figure updates in place, so digits don't dance.",
+    "section": "typography"
+   },
+   {
+    "name": "The Negative-Tracking Rule",
+    "body": "Display and title sizes carry -0.01em to -0.02em; body carries normal; mono carries positive tracking. Tracking direction is how the three registers stay distinguishable at a glance.",
+    "section": "typography"
+   },
+   {
+    "name": "The 720 Rule",
+    "body": "Content is one 720px column until the rail exists. Do not introduce a second content column below 900px; on phones the answer to \"where does this go\" is further down, not beside.",
+    "section": "layout"
+   },
+   {
+    "name": "The Internal-Scroll Rule",
+    "body": "A stage column, not the page, absorbs a busy stage. Any new column-shaped surface gets max-height + overflow-y: auto on its list, with the head pinned.",
+    "section": "layout"
+   },
+   {
+    "name": "The One-Step Rule",
+    "body": "Hover moves a surface up exactly one tier and changes nothing else structural. Flat \u2192 shadow-1. shadow-1 \u2192 shadow-2 plus a 2px rise. Never skip a tier, and never introduce a third shadow value.",
+    "section": "elevation"
+   },
+   {
+    "name": "The Single Hero Rule",
+    "body": "At most one tier-3 focal element per screen. Two brass-tinted heroes cancel each other out and the eye lands nowhere \u2014 which is the exact failure the hero tile was introduced to fix.",
+    "section": "elevation"
+   },
+   {
+    "name": "The Ten-Pixel Rule",
+    "body": "If it is a control, it is 10px. If it is a container that holds controls, it is 14px. If it is a token you could imagine picking up, it is a pill. There is no fourth answer.",
+    "section": "shapes"
+   },
+   {
+    "name": "The Hairline Rule",
+    "body": "Structural separation is 1px --border. Any border thicker than 1px is carrying meaning (stage, lead, focus) and must be justified by state, not by emphasis.",
+    "section": "shapes"
+   },
+   {
+    "name": "The Measured-Palette Rule",
+    "section": "colors",
+    "body": "What is locked is the property, not the hex: every pair at dE2000 >= 10 under normal vision and all three dichromacies, and every ink tone >= 4.5:1 as label text on both grounds. test-node/stage-palette.spec.ts recomputes it from index.css and fails CI below the floor."
+   },
+   {
+    "name": "The Field / Ink Split",
+    "section": "colors",
+    "body": "Every stage publishes --sc (field: washes, dots, bars) and --sc-ink (text). Anything that renders a stage as words reads --sc-ink. One token cannot do both jobs."
+   }
+  ],
+  "dos": [
+   "Do spend Struck Brass on interaction only \u2014 primary action, link, focus ring, selection, the one hero figure. If a screen has brass in more than a few places, something non-interactive stole it.",
+   "Do read stage colour through --sc, set by a .stage-* ancestor. Never hardcode a stage hex in a rule.",
+   "Do set every figure a user reads as a result in Geist 600 with font-variant-numeric: tabular-nums.",
+   "Do give any new animation a @media (prefers-reduced-motion: reduce) escape in the same block, and keep it at or under 250ms.",
+   "Do put new CSS in App.css bands 1\u20133, never after the control-normalization layer at band 4 \u2014 that layer exists to collapse per-context variants and must stay last.",
+   "Do make a new owned component's CSS fully self-describing inside @layer components, reproducing the App.css recipe it replaces rather than depending on it. Verify a swap is pixel-identical with the screenshot baseline plus compare -metric AE = 0; eyeballing misses sub-pixel shifts.",
+   "Do add every new dark-theme value to both the prefers-color-scheme block and the [data-theme=\"dark\"] block.",
+   "Do draw icons as 24\u00d724 line-art SVG, currentColor, strokeWidth 2."
+  ],
+  "donts": [
+   "Don't change a stage hue without re-running test-node/stage-palette.spec.ts.",
+   "Don't render a stage as text with --sc; that is the field colour, text takes --sc-ink.",
+   "Don't put a coloured border thicker than 1px on any side of a card, row, callout or alert. State goes in the fill.",
+   "Don't add a second accent colour, or use a stage hue as a chart series, a category tag, or decoration.",
+   "Don't reach for the SaaS gradient-blob look \u2014 no purple-to-pink hero gradients, glow orbs, mesh backgrounds, or floating glass. The system's only gradients are the hero KPI tint, its 3px top edge, and the sign-in radial ground.",
+   "Don't use emoji anywhere in the UI, and don't introduce mascots or stock vector illustration.",
+   "Don't build dense enterprise-dashboard chrome: no data-grid density, no stacked toolbars, no ten-colour chart palettes. Fifty applications is the ceiling, not fifty thousand rows.",
+   "Don't let colour carry meaning alone. A stage hue always travels with a label or a position.",
+   "Don't hardcode a rail hex or let --ink / --muted reach a rail descendant \u2014 use --rail-ink / --rail-text / --rail-muted / --rail-faint.",
+   "Don't use --muted on empty-state icons; --empty-stroke exists because muted drops to about 1.6:1 at those icons' internal opacities on dark.",
+   "Don't lighten --faint \u2014 its current value is the one that clears 4.5:1 on both --surface and --bg.",
+   "Don't set line-height on a button. Buttons inherit the body's 1.5 through button { font: inherit }, and primary sizes its box off it; forcing 1 shortens every primary by roughly 7px and shifts the whole content column.",
+   "Don't invent a fourth corner radius or a third shadow value."
+  ]
+ }
 }
