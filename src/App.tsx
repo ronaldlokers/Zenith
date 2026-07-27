@@ -329,7 +329,6 @@ export default function App() {
             {tab === "insights" && (
               <InsightsTab
                 applications={visibleApps}
-                fullApps={applications}
                 onGoToJobs={() => setTab("board")}
                 onOpenJob={(id) => navigate(`/jobs/${id}`)}
                 onError={setError}

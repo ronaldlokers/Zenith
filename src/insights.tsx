@@ -1,7 +1,9 @@
 // Insights tab (#480) — the analytics that used to sit on the dashboard home.
 // Moved off the daily "Today" screen so the home answers "what do I do now?"
 // while the numbers live here for when you want them. KPIs, weekly momentum,
-// funnel/conversion, live offers, and the full stats drawer.
+// funnel/conversion, live offers, activity and the calendar. The old "all the
+// numbers" drawer is gone (#486) — it duplicated the cards above it and its
+// only unique piece, data export, now lives in Settings → Data (#485).
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Application, Stats } from "./types";
@@ -14,18 +16,17 @@ import {
 import {
   computePipelineMomentum,
   computeWeeklyMomentum,
+  downloadOfferComparisonPdf,
   isDead,
   medianTimeToOffer,
   totalComp,
 } from "./format";
-import { StatsTab } from "./stats-view";
 import { ActivityTab, CalendarTab } from "./calendar";
 import { DashCard, MomentumBand, StatCard } from "./components";
 import { LoadingSkeleton } from "./ui";
 
 export function InsightsTab({
   applications,
-  fullApps,
   onGoToJobs,
   onOpenJob,
   onError,
@@ -33,7 +34,6 @@ export function InsightsTab({
   stats,
 }: {
   applications: Application[];
-  fullApps: Application[];
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
   onError: (message: string | null) => void;
@@ -138,6 +138,7 @@ export function InsightsTab({
               {t("dashboard.noOffers")}
             </p>
           ) : (
+            <>
             <ul className="dash-offers">
               {liveOffers.slice(0, 3).map((o) => {
                 const tc = totalComp(o);
@@ -161,6 +162,17 @@ export function InsightsTab({
                 );
               })}
             </ul>
+            {/* The side-by-side offer PDF used to live in the retired "all the
+                numbers" drawer (#486) — it is the one thing there that wasn't
+                already on this screen, so it moves onto the offers card. */}
+            <button
+              type="button"
+              className="btn-secondary dash-offers-pdf"
+              onClick={() => downloadOfferComparisonPdf(liveOffers, t)}
+            >
+              {t("stats.downloadOfferComparison")}
+            </button>
+            </>
           )}
         </DashCard>
       </div>
@@ -178,11 +190,6 @@ export function InsightsTab({
           and applied dates in one place; the ICS feed stays in Settings. */}
       <h3 className="insights-cal-h">{t("tabs.calendar")}</h3>
       <CalendarTab onError={onError} onJump={onJump} />
-
-      <details className="dash-details">
-        <summary>{t("dashboard.allNumbers")}</summary>
-        <StatsTab stats={stats} fullApps={fullApps} />
-      </details>
     </section>
   );
 }
