@@ -812,7 +812,9 @@
     "today": "Today",
     "eventCount": "{{count}} events",
     "moreEvents": "+{{count}} more",
-    "upcoming": "Upcoming"
+    "upcoming": "Upcoming",
+    "show": "Show calendar",
+    "hide": "Hide calendar"
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"
