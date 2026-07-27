@@ -4,11 +4,9 @@
 
 export type Tab =
   | "overview"
-  | "applications"
   | "board"
   | "feed"
   | "insights"
-  | "stats"
   | "companies"
   | "contacts"
   | "cv"
@@ -18,15 +16,13 @@ export type Tab =
 // URL routing (#73) — a small manual History-API layer via
 // react-router's useLocation/useNavigate rather than a full <Routes>
 // tree, since the app is a flat tab-switcher (no nested routes, no
-// route params beyond an optional record id). Only Jobs/Board deep
-// link to a specific record; other tabs are just /path.
+// route params beyond an optional record id). Only the pipeline deep
+// links to a specific record; other tabs are just /path.
 export const TAB_PATHS: Record<Tab, string> = {
   overview: "/",
-  applications: "/jobs",
   board: "/board",
   feed: "/feed",
   insights: "/insights",
-  stats: "/stats",
   companies: "/companies",
   contacts: "/people",
   cv: "/cv",
@@ -35,27 +31,52 @@ export const TAB_PATHS: Record<Tab, string> = {
 };
 
 export const PATH_TABS: Record<string, Tab> = {
-  jobs: "applications",
   board: "board",
   feed: "feed",
   insights: "insights",
-  // /activity folds into the Dashboard; /stats and /calendar now land on the
-  // Insights tab where the analytics + calendar moved (#480, #481).
-  activity: "overview",
-  stats: "insights",
-  calendar: "insights",
   companies: "companies",
   people: "contacts",
   cv: "cv",
   settings: "settings",
   admin: "admin",
+  // Legacy paths kept resolvable so old links still land somewhere sane;
+  // LEGACY_PATHS below rewrites the URL to the canonical one. /jobs was the
+  // pipeline's list-only route before the board absorbed it (#488);
+  // /activity folded into the Dashboard, /stats and /calendar into Insights
+  // (#480, #481).
+  jobs: "board",
+  activity: "overview",
+  stats: "insights",
+  calendar: "insights",
 };
 
+// Legacy path segment -> canonical path. A deep-linked record id is carried
+// over where the canonical route takes one (/jobs/12 -> /board/12).
+export const LEGACY_PATHS: Record<string, string> = {
+  jobs: "/board",
+  activity: "/",
+  stats: "/insights",
+  calendar: "/insights",
+};
+
+const PATH_RE = /^\/([a-z]+)(?:\/(\d+))?\/?$/;
+
 export function parsePath(pathname: string): { tab: Tab; id: number | null } {
-  const match = pathname.match(/^\/([a-z]+)(?:\/(\d+))?\/?$/);
+  const match = pathname.match(PATH_RE);
   const tab = (match && PATH_TABS[match[1]]) || "overview";
   const id = match && match[2] ? Number(match[2]) : null;
   return { tab, id };
+}
+
+// The canonical URL for a legacy path, or null when the path is already
+// canonical. Only /board takes an id, so ids on the other legacy paths are
+// dropped rather than carried onto a route that can't use them.
+export function canonicalPath(pathname: string): string | null {
+  const match = pathname.match(PATH_RE);
+  if (!match) return null;
+  const target = LEGACY_PATHS[match[1]];
+  if (!target) return null;
+  return match[2] && target === "/board" ? `${target}/${match[2]}` : target;
 }
 
 // Radial pipeline ring (#143) — replaces the Jobs-tab histogram with a

@@ -1568,8 +1568,8 @@ const TEST_PUSH_SAMPLES: Record<
   AppNotificationType,
   { title: string; body: string; url: string }
 > = {
-  due_followup: { title: "Follow-up due", body: "Senior Engineer · Acme", url: "/jobs/1" },
-  stale_posting: { title: "Posting may be gone", body: "Senior Engineer · Acme", url: "/jobs/1" },
+  due_followup: { title: "Follow-up due", body: "Senior Engineer · Acme", url: "/board/1" },
+  stale_posting: { title: "Posting may be gone", body: "Senior Engineer · Acme", url: "/board/1" },
   feed_match: { title: "3 new listing(s) in your Feed", body: "", url: "/feed" },
   due_contact: { title: "Ada Lovelace", body: "Recruiter", url: "/people/1" },
   weekly_digest: { title: "Your week on Zenith", body: "4 added · 2 advanced · 3 need a nudge", url: "/" },
@@ -1725,7 +1725,7 @@ app.delete("/api/account", async (c) => {
 
 app.notFound((c) => {
   // Genuine API misses stay JSON 404. Everything else that reached the
-  // Worker is a client-side route (/jobs, /board, /stats, …) with no
+  // Worker is a client-side route (/board, /feed, /insights, …) with no
   // matching asset — hand it to the SPA shell so react-router can render
   // it, instead of leaking the API's JSON 404 (#285). The assets binding
   // resolves the miss to index.html via not_found_handling.
