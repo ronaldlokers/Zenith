@@ -570,7 +570,8 @@
       "conversational": "Conversational",
       "fluent": "Fluent",
       "native": "Native"
-    }
+    },
+    "itemMenu": "Actions for {{title}}"
   },
   "posting": {
     "staleHint": "This posting may no longer be live — worth a quick check."

@@ -6,7 +6,14 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { useSubmitGuard } from "../hooks";
 import { EmptyCvIcon, RemoveIcon } from "../icons";
-import { ActionBar, Button, Chip, CvItem, EmptyState } from "../components";
+import {
+  ActionBar,
+  Button,
+  Chip,
+  CvItem,
+  EmptyState,
+  RowMenu,
+} from "../components";
 import type { Education, Language, Profile, WorkExperience } from "../types";
 import { formatMonthYear } from "../format";
 
@@ -287,33 +294,34 @@ export function WorkExperienceSection({
                     : formatMonthYear(w.end_month, w.end_year)}
                 </div>
               </div>
+              {/* Reorder + edit + delete fold into one ⋯ menu (#489): four
+                  controls on the row wrapped the entry title on a phone. */}
               <div className="cv-item-actions">
-                <button
-                  aria-label={t("cv.moveUp")}
-                  disabled={i === 0}
-                  onClick={() => move(i, -1)}
-                >
-                  ↑
-                </button>
-                <button
-                  aria-label={t("cv.moveDown")}
-                  disabled={i === items.length - 1}
-                  onClick={() => move(i, 1)}
-                >
-                  ↓
-                </button>
-                <button onClick={() => setEditing(w)}>{t("common.edit")}</button>
-                <button
-                  className="danger"
-                  onClick={() =>
-                    api
-                      .remove("work-experience", w.id)
-                      .then(onChanged)
-                      .catch((e) => onError((e as Error).message))
-                  }
-                >
-                  {t("common.delete")}
-                </button>
+                <RowMenu
+                  label={t("cv.itemMenu", { title: w.title })}
+                  items={[
+                    {
+                      label: t("cv.moveUp"),
+                      disabled: i === 0,
+                      onSelect: () => move(i, -1),
+                    },
+                    {
+                      label: t("cv.moveDown"),
+                      disabled: i === items.length - 1,
+                      onSelect: () => move(i, 1),
+                    },
+                    { label: t("common.edit"), onSelect: () => setEditing(w) },
+                    {
+                      label: t("common.delete"),
+                      danger: true,
+                      onSelect: () =>
+                        api
+                          .remove("work-experience", w.id)
+                          .then(onChanged)
+                          .catch((e) => onError((e as Error).message)),
+                    },
+                  ]}
+                />
               </div>
             </div>
             {w.description && <p className="notes">{w.description}</p>}
@@ -509,32 +517,31 @@ export function EducationSection({
                 </div>
               </div>
               <div className="cv-item-actions">
-                <button
-                  aria-label={t("cv.moveUp")}
-                  disabled={i === 0}
-                  onClick={() => move(i, -1)}
-                >
-                  ↑
-                </button>
-                <button
-                  aria-label={t("cv.moveDown")}
-                  disabled={i === items.length - 1}
-                  onClick={() => move(i, 1)}
-                >
-                  ↓
-                </button>
-                <button onClick={() => setEditing(ed)}>{t("common.edit")}</button>
-                <button
-                  className="danger"
-                  onClick={() =>
-                    api
-                      .remove("education", ed.id)
-                      .then(onChanged)
-                      .catch((e) => onError((e as Error).message))
-                  }
-                >
-                  {t("common.delete")}
-                </button>
+                <RowMenu
+                  label={t("cv.itemMenu", { title: ed.institution })}
+                  items={[
+                    {
+                      label: t("cv.moveUp"),
+                      disabled: i === 0,
+                      onSelect: () => move(i, -1),
+                    },
+                    {
+                      label: t("cv.moveDown"),
+                      disabled: i === items.length - 1,
+                      onSelect: () => move(i, 1),
+                    },
+                    { label: t("common.edit"), onSelect: () => setEditing(ed) },
+                    {
+                      label: t("common.delete"),
+                      danger: true,
+                      onSelect: () =>
+                        api
+                          .remove("education", ed.id)
+                          .then(onChanged)
+                          .catch((e) => onError((e as Error).message)),
+                    },
+                  ]}
+                />
               </div>
             </div>
             {editing !== "new" && editing?.id === ed.id && (
