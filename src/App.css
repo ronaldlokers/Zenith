@@ -1440,7 +1440,7 @@ button.danger {
 }
 
 .feed-card.swipe-add {
-  background: color-mix(in srgb, var(--st-offer) 18%, var(--surface));
+  background: color-mix(in srgb, var(--success) 18%, var(--surface));
 }
 
 .feed-card.swipe-dismiss {
@@ -1647,22 +1647,22 @@ button.danger {
 }
 
 .outreach-pill.awaiting_reply {
-  background: color-mix(in srgb, var(--st-applied) var(--stage-tint), var(--surface));
-  color: var(--st-applied-ink);
+  background: color-mix(in srgb, var(--attention) var(--stage-tint), var(--surface));
+  color: var(--attention-ink);
 }
 
 .outreach-pill.replied {
-  background: color-mix(in srgb, var(--st-offer) var(--stage-tint), var(--surface));
-  color: var(--st-offer-ink);
+  background: color-mix(in srgb, var(--success) var(--stage-tint), var(--surface));
+  color: var(--success-ink);
 }
 
 .outreach-pill.no_response {
-  background: color-mix(in srgb, var(--st-dead) var(--stage-tint), var(--surface));
-  color: var(--st-dead-ink);
+  background: var(--track);
+  color: var(--faint);
 }
 
 .fit-stars {
-  color: var(--st-offer-ink);
+  color: var(--muted);
   font-size: var(--text-meta);
   letter-spacing: var(--track-chrome);
 }
@@ -1938,8 +1938,8 @@ select.status {
 }
 
 .streak-milestone {
-  background: color-mix(in srgb, var(--st-offer) 14%, var(--surface));
-  color: var(--st-offer-ink);
+  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+  color: var(--success-ink);
 }
 
 .streak-broken {
@@ -1978,7 +1978,7 @@ select.status {
 }
 
 .weekly-goal.met .weekly-goal-label {
-  color: var(--st-offer-ink);
+  color: var(--success-ink);
   font-weight: 600;
 }
 
