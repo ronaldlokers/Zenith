@@ -229,7 +229,6 @@ export function DashboardTab({
                 <ul className="today-quiet-list">
                   {quiet.map((a) => (
                     <li key={a.id} className={`stage-${a.status}`}>
-                      <span className="dash-spine" aria-hidden="true" />
                       <button
                         className="today-quiet-open"
                         onClick={() => onOpenJob(a.id)}
@@ -397,7 +396,6 @@ function NextUpPanel({
         <ul className="today-rows" aria-label={t("nextUp.title")}>
           {rows.map((a) => (
             <li key={a.id} className={`stage-${a.status}`}>
-              <span className="dash-spine" aria-hidden="true" />
               <button
                 className="today-row-open"
                 onClick={() => onOpenJob(a.id)}
@@ -503,7 +501,6 @@ function ThisWeek({
           <ul className="today-rows today-moved" aria-label={t("today.moved")}>
             {moves.map(({ h, app }) => (
               <li key={h.application_id} className={`stage-${h.to_status}`}>
-                <span className="dash-spine" aria-hidden="true" />
                 <button
                   className="today-row-open"
                   onClick={() => onOpenJob(app.id)}

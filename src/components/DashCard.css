@@ -17,9 +17,11 @@
     width: 100%;
   }
 
-  /* App.css:4757 */
+  /* The lead card's 3px brass spine became a full hairline in the accent
+     (#494): still "this is the one that matters", at the 1px weight the
+     system reserves for structure, with no coloured bar on one edge. */
   .zui-dashcard--lead {
-    border-left: 3px solid var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
   }
 
   /* The `.zui-dashcard--lead .jobs-side` escape hatch is gone (#492): Next Up

@@ -1,7 +1,8 @@
 /* Complete, self-contained. Reproduces the App.css `.side-list` recipe
    (App.css:3411) so the list renders identically standalone in Storybook
    (which loads no App.css) and in the app. Callers keep the <li> markup and
-   any stage-* class on it for the --sc left border. */
+   any stage-* class on it; that class sets --sc, which the row now reads as
+   a tinted field rather than a coloured left edge (#494). */
 @layer components {
   .zui-sidelist {
     list-style: none;
@@ -12,14 +13,19 @@
     gap: 0.55rem;
   }
 
-  /* App.css:3420 — neutral fallback border for rows with no stage class
-     (e.g. CV completeness); var(--sc, var(--border)) reads --sc from a
-     stage-* ancestor when the caller's <li> has one. */
+  /* Rows with no stage class (e.g. CV completeness) fall back to --surface,
+     so they mix surface into surface and render untinted. The list has no
+     surface of its own, so the wash sits on --surface here. */
   .zui-sidelist li {
     display: flex;
     flex-direction: column;
     gap: 0.05rem;
-    border-left: 3px solid var(--sc, var(--border));
-    padding: 0.15rem 0 0.15rem 0.6rem;
+    background: color-mix(
+      in srgb,
+      var(--sc, var(--surface)) var(--stage-tint),
+      var(--surface)
+    );
+    border-radius: var(--radius-sm);
+    padding: 0.3rem 0.5rem;
   }
 }
