@@ -25,9 +25,6 @@ const mockCompanies: Company[] = [
     location: null,
     is_agency: 0,
     notes: null,
-    description: null,
-    logo_url: null,
-    researched_at: null,
     created_at: "2026-07-01T00:00:00.000Z",
   },
 ];

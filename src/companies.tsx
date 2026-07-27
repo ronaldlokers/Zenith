@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { EmptyCompaniesIcon } from "./icons";
 import { ActionBar, Badge, Button, EmptyState, FieldLabel, Row, SegmentedControl, Toolbar } from "./components";
-import { ageDays, isDead, safeHref } from "./format";
+import { isDead, safeHref } from "./format";
 import type { Application, Company, Contact, CrudTabProps } from "./types";
 
 export function CompaniesTab({
@@ -110,23 +110,11 @@ export function CompaniesTab({
           initial={editing === "new" ? null : editing}
           onCancel={() => setEditing(null)}
           onSubmit={(data) =>
-            run(async () => {
-              if (editing !== "new") {
-                return api.update("companies", editing.id, data);
-              }
-              const created = await api.create<Company>("companies", data);
-              // Auto-enrich (#475): if a website is present, kick off research
-              // in the background so the description + logo populate without a
-              // manual click. Best-effort — a second refresh lands when it
-              // finishes; failures are ignored (the manual button stays).
-              if (created?.website) {
-                api
-                  .researchCompany(created.id)
-                  .then(() => onChanged())
-                  .catch(() => {});
-              }
-              return created;
-            })
+            run(async () =>
+              editing !== "new"
+                ? api.update("companies", editing.id, data)
+                : api.create<Company>("companies", data),
+            )
           }
         />
       )}
@@ -139,13 +127,9 @@ export function CompaniesTab({
               className="company-tile"
               {...rowActivate(() => setDetailId(c.id))}
             >
-              {c.logo_url ? (
-                <img className="company-logo" src={c.logo_url} alt="" />
-              ) : (
-                <div className="company-logo company-logo-placeholder" aria-hidden="true">
-                  {c.name.slice(0, 1).toUpperCase()}
-                </div>
-              )}
+              <div className="company-logo company-logo-placeholder" aria-hidden="true">
+                {c.name.slice(0, 1).toUpperCase()}
+              </div>
               <span className="company-tile-name">
                 {c.name}
                 {c.is_agency ? <Badge>{t("company.agencyBadge")}</Badge> : null}
@@ -186,28 +170,11 @@ export function CompaniesTab({
                   </Badge>
                 ) : null}
               </strong>
-              {/* A quiet to-do dot instead of "not researched" on every row
-                  (design review); moved up into l1 so un-researched rows with
-                  no website collapse to a single line (#466). */}
-              {!c.researched_at && (
-                <span
-                  className="research-todo"
-                  title={t("company.notResearched")}
-                  aria-label={t("company.notResearched")}
-                />
-              )}
               <span className="co">{c.location ?? ""}</span>
             </div>
-            {(c.website || c.researched_at) && (
+            {c.website && (
               <div className="l2">
-                {c.website && <span className="co">{c.website}</span>}
-                {c.researched_at && (
-                  <span className="due">
-                    {t("company.researchedAgo", {
-                      age: ageDays(c.researched_at),
-                    })}
-                  </span>
-                )}
+                <span className="co">{c.website}</span>
               </div>
             )}
           </Row>
@@ -387,20 +354,7 @@ function CompanyDetailModal({
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
-  const [researching, setResearching] = useState(false);
   const c = company;
-
-  const research = () => {
-    setResearching(true);
-    api
-      .researchCompany(c.id)
-      .then(() => {
-        notify(t("toast.researched", { name: c.name }));
-        return onChanged();
-      })
-      .catch((e) => onError((e as Error).message))
-      .finally(() => setResearching(false));
-  };
 
   return (
     <Dialog label={c.name} onClose={onClose} className="detail-modal">
@@ -440,35 +394,17 @@ function CompanyDetailModal({
                   {c.website}
                 </a>
               )}
-              {c.description && (
-                <div>
-                  <FieldLabel>{t("detail.description")}</FieldLabel>
-                  <p className="notes">{c.description}</p>
-                </div>
-              )}
               {c.notes && (
                 <div>
                   <FieldLabel>{t("detail.notes")}</FieldLabel>
                   <p className="notes">{c.notes}</p>
                 </div>
               )}
-              {c.researched_at && (
-                <span className="age">
-                  researched {ageDays(c.researched_at)} ago
-                </span>
-              )}
             </div>
 
             <ContactRelationshipMap contacts={contacts} applications={applications} />
 
             <ActionBar variant="detail">
-              <Button
-                variant="secondary"
-                disabled={!c.website || researching}
-                onClick={research}
-              >
-                {researching ? t("common.researching") : t("common.research")}
-              </Button>
               <Button variant="secondary" onClick={() => setEditing(true)}>{t("common.edit")}</Button>
               <Button
                 variant="danger"

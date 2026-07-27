@@ -43,8 +43,6 @@
     "saving": "Opslaan…",
     "cancel": "Annuleren",
     "saved": "Opgeslagen",
-    "research": "Onderzoeken",
-    "researching": "Onderzoeken…",
     "log": "Log",
     "fetch": "Ophalen",
     "fetching": "Ophalen…",
@@ -436,7 +434,6 @@
     "noTouchpoints": "Nog geen contactmomenten gelogd.",
     "status": "Status",
     "role": "Rol",
-    "description": "Omschrijving",
     "notes": "Notities",
     "deadline": "Deadline",
     "fitScore": "Fit-score",
@@ -480,10 +477,8 @@
     "doneToast": "Follow-up afgerond"
   },
   "company": {
-    "notResearched": "niet onderzocht",
     "contactMap": "Contacten",
-    "agencyBadge": "bureau",
-    "researchedAgo": "onderzocht {{age}} geleden"
+    "agencyBadge": "bureau"
   },
   "stages": {
     "interested": "Interesse",
@@ -790,7 +785,6 @@
     "savedSettings": "{{source}}-instellingen opgeslagen",
     "feedFound": "{{inserted}} nieuw van {{seen}} gecontroleerd",
     "addedToJobs": "“{{title}}” toegevoegd aan de pipeline",
-    "researched": "{{name}} onderzocht",
     "open": "Openen",
     "statusChanged": "Verplaatst naar {{stage}}",
     "revived": "Terug in een actieve fase",

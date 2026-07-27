@@ -310,7 +310,6 @@ export interface InterviewCheatSheetData {
   title: string;
   companyName: string | null;
   companyWebsite: string | null;
-  companyDescription: string | null;
   contactName: string | null;
   contactRole: string | null;
   contactEmail: string | null;
@@ -321,7 +320,7 @@ export interface InterviewCheatSheetData {
 }
 
 // One-page interview cheat sheet (#137) — a print/PDF-friendly summary
-// distinct from the CV PDF: company research, contact, prep checklist,
+// distinct from the CV PDF: company, contact, prep checklist,
 // and past interactions in one place instead of switching between the
 // detail modal's sections mid-interview.
 export function generateInterviewCheatSheet(
@@ -390,11 +389,12 @@ export function generateInterviewCheatSheet(
   if (contactDetails) addParagraph(contactDetails, 10, 5);
   if (!contactLine && !contactDetails) addParagraph(labels.noNotes, 10, 5);
 
-  // --- Company research ---
+  // --- Company: the site plus whatever you noted on the application. The
+  // scraped description this section used to lead with went away with the
+  // company-research feature (#491). ---
   addSectionHeading(labels.companyResearch);
   if (data.companyWebsite) addParagraph(data.companyWebsite, 10, 5);
-  if (data.companyDescription) addParagraph(data.companyDescription, 10.5, 5);
-  if (!data.companyWebsite && !data.companyDescription) {
+  if (!data.companyWebsite && !data.notes) {
     addParagraph(labels.noNotes, 10, 5);
   }
   if (data.notes) {

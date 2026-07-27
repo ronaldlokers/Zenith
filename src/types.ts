@@ -174,9 +174,6 @@ export interface Company {
   location: string | null;
   is_agency: number;
   notes: string | null;
-  description: string | null;
-  logo_url: string | null;
-  researched_at: string | null;
   created_at: string;
 }
 

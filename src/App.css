@@ -1343,7 +1343,6 @@ button.danger {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  object-fit: contain;
   background: var(--bg);
   border: 1px solid var(--border);
   flex-shrink: 0;
@@ -1687,17 +1686,6 @@ button.danger {
 .due-line {
   font-size: var(--text-body);
   color: var(--muted);
-}
-
-/* "Not yet researched" indicator (design review) — a quiet hollow dot in place
-   of the repeated "not researched" text on every company row. */
-.research-todo {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1.5px solid var(--faint);
-  vertical-align: middle;
 }
 
 .due-line.today {
