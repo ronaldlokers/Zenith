@@ -17,54 +17,59 @@ colors:
   line: "#efece4"
   accent: "#d6a441"
   accent-text: "#14173a"
-  accent-ink: "#a9803a"
+  accent-ink: "#836427"
   accent-on-ink: "#e8c072"
   success: "#3f8f6b"
   warning: "#c98a2b"
   danger: "#b0453c"
   info: "#4a6ea3"
   scrim: "rgba(20, 23, 58, 0.45)"
-  st-interested: "#5c6285"
-  st-applied: "#4a55a8"
-  st-screening: "#6a4aa8"
-  st-interview: "#8a3f9c"
+  st-interested: "#6d7793"
+  st-applied: "#3c5a6e"
+  st-screening: "#388f7e"
+  st-interview: "#c17252"
   st-offer: "#8a6410"
+  st-interested-ink: "#626c87"
+  st-applied-ink: "#3c5a6e"
+  st-screening-ink: "#207b6b"
+  st-interview-ink: "#a25839"
+  st-offer-ink: "#8a6410"
   st-dead: "#6b675e"
   heat-quiet: "#c98a2b"
   ev-touch: "#7a5fb8"
 typography:
   display:
-    fontFamily: "Geist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
     fontSize: "2.125rem"
     fontWeight: 600
     lineHeight: 1
     letterSpacing: "-0.02em"
   headline:
-    fontFamily: "Geist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
     fontSize: "1.375rem"
     fontWeight: 600
     lineHeight: 1.15
     letterSpacing: "-0.01em"
   title:
-    fontFamily: "Geist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
     fontSize: "0.95rem"
     fontWeight: 600
     lineHeight: 1.5
     letterSpacing: "-0.01em"
   body:
-    fontFamily: "Geist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: "normal"
   label:
-    fontFamily: "Geist Mono, ui-monospace, SF Mono, Consolas, monospace"
+    fontFamily: "Atkinson Hyperlegible Mono, ui-monospace, SF Mono, Consolas, monospace"
     fontSize: "0.75rem"
     fontWeight: 400
     lineHeight: 1.4
     letterSpacing: "0.06em"
   chrome:
-    fontFamily: "Geist Mono, ui-monospace, SF Mono, Consolas, monospace"
+    fontFamily: "Atkinson Hyperlegible Mono, ui-monospace, SF Mono, Consolas, monospace"
     fontSize: "0.64rem"
     fontWeight: 400
     lineHeight: 1.4
@@ -201,8 +206,8 @@ Density is **calm-dense**. A heavy user holds around fifty applications, so noth
 **Key Characteristics:**
 - Ink Indigo chrome that never changes with the theme; Bone or night-sky content beneath it.
 - One accent (Struck Brass) for every interactive meaning: primary action, link, focus ring, selection, offer.
-- Five accessibility-locked stage hues that rise in both hue and lightness, reserved for pipeline state.
-- Geist everywhere, Geist Mono strictly as chrome; figures set in Geist 600 with tabular numerals.
+- Five stage hues that climb in temperature — slate, steel, teal, terracotta, brass — held apart by measurement, not by decree, and reserved for pipeline state.
+- Atkinson Hyperlegible everywhere, its Mono strictly as chrome; figures set at 600 with tabular numerals.
 - Three elevation tiers, hover adds exactly one step.
 - 1px hairlines and a 10px / 14px / pill corner vocabulary.
 
@@ -222,14 +227,16 @@ A warm-neutral canvas carrying one metal accent, over an indigo chrome ground, w
 
 ### Tertiary
 
-The Ascent — pipeline stage hues. **Reserved for pipeline state.** Each is exposed to descendants as `--sc` by a `.stage-*` ancestor, so rows, funnel bars, and dots read the current stage without hardcoding.
+The Ascent — pipeline stage hues, rebuilt as a **temperature climb** so the pipeline heats up as it advances. **Reserved for pipeline state.** Each stage publishes two tokens to descendants: `--sc` (the field) and `--sc-ink` (the text tone).
 
-- **Graphite Blue** (`st-interested`): interested — the lowest rung, deliberately desaturated so it reads as "not yet moving".
-- **Lapis** (`st-applied`): applied.
-- **Iris** (`st-screening`): screening.
-- **Fuchsia Ink** (`st-interview`): interview — the hottest hue, the highest-stakes live stage.
+- **Cold Slate** (`st-interested`): interested — the lowest rung, cool and low-chroma so it reads as "not yet moving".
+- **Steel** (`st-applied`): applied — a deep, sober blue; the search is under way.
+- **Teal** (`st-screening`): screening — the first genuinely warm-blooded stage, and the hue that finally separates the middle of the pipeline from its neighbours.
+- **Terracotta** (`st-interview`): interview — hot, high-stakes, and the first stage a colour-blind reader can name at a glance.
 - **Aged Brass** (`st-offer`): offer — the climb resolves into the brand accent.
 - **Ash** (`st-dead`): rejected, withdrawn, ghosted. Off the mountain; low chroma on purpose.
+
+Separation is on the blue↔orange axis, the one axis every dichromacy preserves. Worst pair across normal vision and all three dichromacies: **ΔE 12.0 light, 13.4 dark** — against ΔE 1.0 for the palette this replaced.
 
 ### Neutral
 
@@ -249,7 +256,11 @@ The Ascent — pipeline stage hues. **Reserved for pipeline state.** Each is exp
 
 **The One Gold Rule.** Struck Brass is the only accent. If something is interactive, selectable, focused, or the single most important number on the screen, it is brass; if it is none of those, it is ink, muted, or faint. Never introduce a second accent hue to distinguish two interactive things — distinguish them by weight, size, or position.
 
-**The Stage-Colour Reservation.** The five ascent hues mean pipeline state and nothing else. Never use them as chart series colours, category tags, avatar fills, or decoration, and never redefine their values — they are contrast-locked as a set.
+**The Stage-Colour Reservation.** The five ascent hues mean pipeline state and nothing else. Never use them as chart series colours, category tags, avatar fills, or decoration.
+
+**The Measured-Palette Rule.** What is locked is the *property*, not the hex. Any five hues may ship provided every pair stays at **ΔE2000 ≥ 10 under normal vision and all three dichromacies**, and every stage's ink tone clears **4.5:1 as label text on both grounds**. `test-node/stage-palette.spec.ts` recomputes this from `index.css` and fails CI below the floor. The previous set was frozen by hex and called accessible; measured, it put applied and screening at ΔE 1.0 under deuteranopia — the same colour to roughly 6% of men.
+
+**The Field / Ink Split.** Every stage publishes two tokens, exactly as the brand already does for `--accent` / `--accent-ink`: `--sc` is the **field** (washes, dots, funnel bars) and may be mid-chroma; `--sc-ink` is the **text** tone, the same hue moved until it is readable. Anything that renders a stage as words reads `--sc-ink`. One token cannot do both jobs — forcing it drives every hue toward near-black.
 
 **The Always-Night Rule.** The rail and the sign-in stage are Ink Indigo in light theme and dark theme alike. Their text tones come from `--rail-ink` / `--rail-text` / `--rail-muted` / `--rail-faint`, declared once on `.side`. Never hardcode a rail hex, and never let `--ink` / `--muted` leak into rail descendants — those flip with the theme and the rail does not.
 
@@ -302,7 +313,7 @@ The Ascent — pipeline stage hues. **Reserved for pipeline state.** Each is exp
 
 **Three structural tiers, and hover adds exactly one step.** Elevation encodes rank at rest; state adds a single step on top of that rank, never two.
 
-- **Tier 1 — flat.** List rows, lanes, chips, filter tabs, toolbars. No resting shadow at all; separation comes from a 1px hairline and the 3px stage-coloured left border. A tier-1 row lifts to `--shadow-1` on hover, which is exactly why hover reads as "interactive".
+- **Tier 1 — flat.** List rows, lanes, chips, filter tabs, toolbars. No resting shadow at all; separation comes from a 1px hairline and the stage's own tinted field. A tier-1 row lifts to `--shadow-1` on hover, which is exactly why hover reads as "interactive".
 - **Tier 2 — raised.** Cards, dashboard panels, KPI tiles, forms, the feed detail pane. `--shadow-1` at rest (a 1px contact shadow plus a soft 10px ambient). Clickable ones lift to `--shadow-2` with `translateY(-2px)` over 120ms.
 - **Tier 3 — focal.** Overlays (modals, dropdowns, the command palette) sit at `--shadow-2` permanently over a `--scrim` backdrop. On a content screen, tier 3 is instead the **hero KPI**: a brass-tinted vertical gradient, a 40%-brass border, a 3px brass top edge, and a brass-cast shadow. One per screen.
 
@@ -330,9 +341,9 @@ A three-step corner vocabulary and a hairline-only border language.
 - **8px (`--radius-sm`)** is the small-object corner: badges, the settings icon button, keyboard `kbd` chips, settings-field inputs.
 - **Pill (`--radius-full`, 999px)** belongs to anything that reads as a token: chips, filter tabs, the segmented control and its thumb, the win pill, and the 34px circular avatar.
 
-**Borders are always 1px and always `--border`**, except three deliberate signals: the **3px left border** that carries stage colour on a row (`--sc` with a neutral fallback), the **3px left border** in brass that marks the dashboard's lead card, and the **3px top edge** on the hero KPI. A thick border in this system means "this has a state", never "this is a box".
+**Borders are always 1px and always `--border`**, with one exception: the **3px top edge** on the hero KPI. The coloured left spine is gone from the system — a thick bar on one edge of a card is the most recognisable tell of generated UI, and it was carrying meaning that a field carries better.
 
-The recurring silhouette is a **left-marked horizontal band** — a flat white row, hairline-bordered, with a 3px coloured spine on the leading edge. It is the board card, the list row, the lead panel, and the settings warning, and it is the single most repeated shape in the product.
+The recurring silhouette is a **tinted horizontal band** — a hairline-bordered row washed in its stage hue at `--stage-tint`, with the uppercase stage label beside it. It is the board card, the list row, the gone-quiet row and the outreach pill, and it is the single most repeated shape in the product. Its state is in the fill, never in an edge.
 
 ### Named Rules
 
@@ -371,7 +382,7 @@ Components live in `src/components/` as self-contained TypeScript modules with t
 
 ### Rows (the signature component)
 
-The `.zui-row` band is the most repeated object in the product: white, 1px hairline, 10px corners, `overflow: hidden`, `min-height: 44px`, padding `0.55rem 0.8rem`, and a **3px stage-coloured left border** from `--sc` with `--border` as the neutral fallback for network rows that have no stage. Flat at rest; hover fills with `--hover` and lifts to `--shadow-1`; active dips 3% brightness. Line 1 is a flex row with a `--text-title` primary and a muted company pushed right by `margin-left: auto`; line 2 wraps meta at `0.4rem` gaps.
+The `.zui-row` band is the most repeated object in the product: white, 1px hairline, 10px corners, `overflow: hidden`, `min-height: 44px`, padding `0.55rem 0.8rem`, and a **stage-tinted fill** mixed from `--sc` at `--stage-tint`, falling back to `--surface` so network rows with no stage render untinted. Flat at rest; hover deepens the row's own wash to `--stage-tint-hover` and lifts to `--shadow-1`; active dips 3% brightness. Line 1 is a flex row with a `--text-title` primary and a muted company pushed right by `margin-left: auto`; line 2 wraps meta at `0.4rem` gaps.
 
 ### Chips
 
@@ -387,7 +398,7 @@ The `.zui-row` band is the most repeated object in the product: white, 1px hairl
 
 ### Stat tiles
 
-The KPI tile is white, 10px, `--shadow-1`, with the figure in Geist 600 at `2rem`, line-height 1, `-0.02em`, tabular numerals, over a `0.74rem` muted label. The **hero** variant is the system's one focal treatment: a vertical gradient into 7% brass, a 40%-brass border, a 3px brass top edge, a brass-cast shadow, a `2.7rem` figure, and an `--accent-ink` semibold label.
+The KPI tile is white, 10px, `--shadow-1`, with the figure in the display voice at 600 and `2rem`, line-height 1, `-0.02em`, tabular numerals, over a `0.74rem` muted label. The **hero** variant is the system's one focal treatment: a vertical gradient into 7% brass, a 40%-brass border, a 3px brass top edge, a brass-cast shadow, a `2.7rem` figure, and an `--accent-ink` semibold label.
 
 ### Motion
 
@@ -412,7 +423,8 @@ A Night squircle (44px at rx 14 on a 48 viewBox) holding three rungs that rise a
 
 ### Don't:
 
-- **Don't** change a stage hue. The five are contrast-locked as a set; adjusting one breaks the pairwise separation the whole ascent depends on.
+- **Don't** change a stage hue without re-running `test-node/stage-palette.spec.ts`. The set is held together by measured separation, not by the specific values; edit one by eye and the suite tells you which pair you just collapsed.
+- **Don't** render a stage as text with `--sc`. That is the field colour; text takes `--sc-ink`.
 - **Don't** add a second accent colour, or use a stage hue as a chart series, a category tag, or decoration.
 - **Don't** reach for the SaaS gradient-blob look — no purple-to-pink hero gradients, glow orbs, mesh backgrounds, or floating glass. The system's only gradients are the hero KPI tint, its 3px top edge, and the sign-in radial ground.
 - **Don't** use emoji anywhere in the UI, and don't introduce mascots or stock vector illustration.
@@ -422,4 +434,5 @@ A Night squircle (44px at rx 14 on a 48 viewBox) holding three rungs that rise a
 - **Don't** use `--muted` on empty-state icons; `--empty-stroke` exists because muted drops to about 1.6:1 at those icons' internal opacities on dark.
 - **Don't** lighten `--faint` — its current value is the one that clears 4.5:1 on both `--surface` and `--bg`.
 - **Don't** set `line-height` on a button. Buttons inherit the body's 1.5 through `button { font: inherit }`, and primary sizes its box off it; forcing 1 shortens every primary by roughly 7px and shifts the whole content column.
+- **Don't** put a coloured border thicker than 1px on any side of a card, row, callout or alert. State goes in the fill.
 - **Don't** invent a fourth corner radius or a third shadow value.
