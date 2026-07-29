@@ -28,9 +28,18 @@ const AUTH = process.env.AUTH_STATE ?? ".auth.json";
 // captures again under `<name>-<suffix>`. Local-state controls (detail's
 // section tabs, the segmented groups) are invisible to a URL-only capture,
 // and those are exactly what PR 4 rewrites.
+//
+// TRANSIENT SURFACES MUST BE CAPTURED TOO. A popover, menu or dialog that is
+// closed in every capture is invisible to the zero-diff bar, so a regression
+// inside one passes 36/36 while nothing has actually been checked. That is not
+// hypothetical: swapping the card- and row-menu items onto <Button> leaked
+// `justify-content: center` from Button.css into both popovers — every menu
+// item's label centred — and the bar reported 0 on all 36 because no capture
+// ever opened a menu. Any task that changes a surface only reachable by
+// interaction adds the interaction here first, then verifies.
 const VIEWS = [
   ["overview", "/", [{ suffix: "nextup-upcoming", click: ".today-nextup .zui-segmented button:nth-child(2)" }]],
-  ["board", "/board"],
+  ["board", "/board", [{ suffix: "cardmenu", click: ".zui-cardmenu-btn" }]],
   ["detail", `/board/${process.env.DETAIL_ID ?? "1"}`, [
     { suffix: "tab-track", click: "#detail-tab-track" },
     { suffix: "tab-tailor", click: "#detail-tab-tailor" },
@@ -39,7 +48,7 @@ const VIEWS = [
   ["insights", "/insights"],
   ["companies", "/companies", [{ suffix: "grid", click: ".zui-segmented button:nth-child(2)" }]],
   ["people", "/people", [{ suffix: "grid", click: ".zui-segmented button:nth-child(2)" }]],
-  ["cv", "/cv"],
+  ["cv", "/cv", [{ suffix: "rowmenu", click: ".zui-rowmenu-btn" }]],
   ["settings", "/settings"],
   ["settings-data", "/settings?s=data"],
   ["settings-feed", "/settings?s=feed"],
