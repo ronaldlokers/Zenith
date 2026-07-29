@@ -106,7 +106,21 @@ const freezeMotion = (page) =>
   });
 
 mkdirSync(OUT, { recursive: true });
-const browser = await chromium.launch();
+// Chromium re-rasterises only the tiles it considers damaged. This harness
+// drives twelve views through ONE reused page per viewport, so which tiles are
+// damaged when a given view paints depends on what that renderer painted
+// before — and the rounded-rect edges of form controls then rasterise from a
+// different starting state. The result was two stable variants of the same
+// page differing by one 8-bit level on a 2x112 strip: not drift, a coin flip
+// between two renderings, landing on roughly one run in three.
+//
+// Isolated by probe: a page loaded on its own is deterministic across eight
+// fresh browser processes; only the full sequence reproduces it. Disabling
+// partial raster fixes it (8/8 identical) and costs almost nothing visually
+// (AE 1.3 against the un-flagged render, where --disable-lcd-text would have
+// cost 3258). --disable-gpu does NOT fix it, so this is a raster-scheduling
+// effect rather than a GPU one.
+const browser = await chromium.launch({ args: ["--disable-partial-raster"] });
 for (const [vpName, viewport] of VIEWPORTS) {
   const context = await browser.newContext({ viewport, storageState: AUTH });
   const page = await context.newPage();
