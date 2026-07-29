@@ -3,6 +3,16 @@
 //
 // Template-built class names are invisible to this scan — `stage-${status}`,
 // `u-${urgency}` and `mock-${role}` all read as unreferenced and are all live.
+//
+// A block's selector is captured from only the source line bearing `{`
+// (`sel: lines[i].trim()`), so a multi-line comma-separated selector group
+// is invisible above that last line — a rule like `.form input,\n.settings-
+// field input,\n.tag-chip {` reports as fully dead ("cls" only ever sees
+// ".tag-chip") even when every other selector in the group is live. Deleting
+// that reported range deletes the shared declaration for the live selectors
+// too. Check every candidate for a preceding comma-terminated line before
+// deleting it.
+//
 // The DEAD list this produces is a candidate list, never a delete list.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
