@@ -145,8 +145,9 @@ export function Timeline({
               {it.notes ?? ""}
               {it.via_contact ? <Badge>{t("timeline.viaContact")}</Badge> : null}
             </span>
-            <button
-              className="tl-del danger"
+            <Button
+              variant="danger"
+              className="tl-del"
               aria-label={t("common.delete")}
               onClick={() =>
                 api
@@ -159,7 +160,7 @@ export function Timeline({
               }
             >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
         {items?.length === 0 && (

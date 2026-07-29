@@ -47,6 +47,7 @@ const AdminPage = lazy(() =>
 );
 import { useSession } from "./auth-client";
 import {
+  Button,
   CommandPalette,
   OnboardingChecklist,
   QuickAddDialog,
@@ -356,8 +357,9 @@ export default function App() {
             )}
             {routedJob && (
               <section className="job-page">
-                <button
-                  className="btn-secondary job-back"
+                <Button
+                  variant="secondary"
+                  className="job-back"
                   onClick={() => {
                     // Return to wherever the user came from — dashboard, feed,
                     // board — not always the pipeline (#448). location.key is
@@ -368,7 +370,7 @@ export default function App() {
                   }}
                 >
                   ← {t("common.back")}
-                </button>
+                </Button>
                 <ApplicationDetailModal
                   key={routedJob.id}
                   application={routedJob}
