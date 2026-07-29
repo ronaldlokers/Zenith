@@ -5,6 +5,7 @@ import i18n from "../i18n";
 import { formatDate, getCvLanguage } from "../format";
 import type { CvSnapshotData, CvVersion } from "../types";
 import { Button } from "../components";
+import "./cv.css";
 
 // Named CV versions (#474) — a personal library of resume variants. Saves a
 // JSON snapshot of the current builder state; each can be downloaded as a PDF
@@ -119,9 +120,13 @@ export function CvVersions({
                 <button onClick={() => download(v)}>
                   {t("cvVersions.download")}
                 </button>
-                <button className="danger" onClick={() => remove(v)}>
+                <Button
+                  variant="danger"
+                  className="zui-cv-version-remove"
+                  onClick={() => remove(v)}
+                >
                   {t("common.delete")}
-                </button>
+                </Button>
               </span>
             </li>
           ))}
