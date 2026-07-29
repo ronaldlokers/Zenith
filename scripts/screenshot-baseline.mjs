@@ -50,6 +50,8 @@ const VIEWS = [
   ["people", "/people", [{ suffix: "grid", click: ".zui-segmented button:nth-child(2)" }]],
   ["cv", "/cv", [{ suffix: "rowmenu", click: ".zui-rowmenu-btn" }]],
   ["settings", "/settings"],
+  ["settings-account", "/settings?s=account"],
+  ["settings-integrations", "/settings?s=integrations"],
   ["settings-data", "/settings?s=data"],
   ["settings-feed", "/settings?s=feed"],
   ["admin", "/admin"],
@@ -127,7 +129,11 @@ for (const [vpName, viewport] of VIEWPORTS) {
   for (const [name, route, interactions] of VIEWS) {
     await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
     // Fail loudly rather than capture a login page: the session expired.
-    if (await page.getByLabel(/password/i).count()) {
+    // A password *label* is the wrong signal — Settings > Account has its own
+    // "Password" field (the 2FA form), which false-positived this check the
+    // moment that view was added. `.login-stage` is Login.tsx's own wrapper
+    // and nothing else in the app renders it.
+    if (await page.locator(".login-stage").count()) {
       console.error(`Session expired — ${route} rendered the login page. Re-create ${AUTH}.`);
       process.exit(1);
     }
