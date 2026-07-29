@@ -79,8 +79,11 @@ if (!existsSync(AUTH)) {
 //
 // A flaky capture is worse than a missing one: it trains everyone reading the
 // diff to wave away non-zero results, which is exactly how a real regression
-// gets through. Park the pointer off-canvas before every screenshot so hover
-// is never part of what we capture.
+// gets through. Park the pointer at a fixed, deterministic spot before every
+// screenshot so hover state is never part of what we capture. (0, 0) is the
+// viewport's top-left corner, not off-canvas — a real element can sit there —
+// but it is the same corner on every run, and nothing in this app renders a
+// hover state worth capturing at that spot.
 const parkPointer = (page) => page.mouse.move(0, 0);
 
 mkdirSync(OUT, { recursive: true });
