@@ -60,6 +60,20 @@ if (!existsSync(AUTH)) {
   process.exit(1);
 }
 
+// Playwright's virtual pointer stays wherever it last clicked, and it carries
+// across page.goto — so after an interaction the NEXT view renders with
+// :hover applied to whatever sits under those coordinates. That made
+// board-desktop non-reproducible: the Next Up segment on /overview sits at
+// (797, 342), which lands on a board card, and whether its hover background
+// had painted by screenshot time varied per run. Two identical runs differed
+// by 6px; with the hover fully applied the difference is 302px.
+//
+// A flaky capture is worse than a missing one: it trains everyone reading the
+// diff to wave away non-zero results, which is exactly how a real regression
+// gets through. Park the pointer off-canvas before every screenshot so hover
+// is never part of what we capture.
+const parkPointer = (page) => page.mouse.move(0, 0);
+
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 for (const [vpName, viewport] of VIEWPORTS) {
@@ -72,6 +86,7 @@ for (const [vpName, viewport] of VIEWPORTS) {
       console.error(`Session expired — ${route} rendered the login page. Re-create ${AUTH}.`);
       process.exit(1);
     }
+    await parkPointer(page);
     await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
     console.log(`captured ${name}-${vpName}`);
     for (const { suffix, click } of interactions ?? []) {
@@ -83,6 +98,7 @@ for (const [vpName, viewport] of VIEWPORTS) {
         process.exit(1);
       }
       await target.click();
+      await parkPointer(page);
       await page.waitForTimeout(150);
       await page.screenshot({ path: `${OUT}/${name}-${suffix}-${vpName}.png`, fullPage: true });
       console.log(`captured ${name}-${suffix}-${vpName}`);
