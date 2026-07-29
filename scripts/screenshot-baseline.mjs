@@ -8,6 +8,10 @@
 // nothing. Create the state once with:
 //   npx playwright open --save-storage=.auth.json http://localhost:5173
 // log in in the window that opens, then close it.
+//
+// The detail view needs a real application id. Pass DETAIL_ID=<id> if the
+// seeded account's first application is not id 1; the run fails loudly if the
+// route renders nothing to interact with.
 import { chromium } from "playwright";
 import { existsSync, mkdirSync } from "node:fs";
 
@@ -16,19 +20,30 @@ const OUT = process.env.OUT_DIR ?? "baseline";
 const AUTH = process.env.AUTH_STATE ?? ".auth.json";
 
 // Routes come from TAB_PATHS in src/routing.ts. Keep them in sync.
-// /stats is deliberately absent: PATH_TABS maps it to "overview" (#346 folded
-// /stats and /activity into the Dashboard), so capturing it would duplicate
-// the overview shots and imply a view that no longer exists.
+// Legacy paths (/jobs, /stats, /activity, /calendar) are deliberately absent:
+// LEGACY_PATHS rewrites them to a canonical route, so capturing them would
+// duplicate another view's shots and imply views that no longer exist.
+//
+// A third element is an interaction list: each entry clicks a selector and
+// captures again under `<name>-<suffix>`. Local-state controls (detail's
+// section tabs, the segmented groups) are invisible to a URL-only capture,
+// and those are exactly what PR 4 rewrites.
 const VIEWS = [
-  ["overview", "/"],
-  ["jobs", "/jobs"],
+  ["overview", "/", [{ suffix: "nextup-upcoming", click: ".today-nextup .zui-segmented button:nth-child(2)" }]],
   ["board", "/board"],
-  ["feed", "/feed"],
-  ["calendar", "/calendar"],
-  ["companies", "/companies"],
-  ["people", "/people"],
+  ["detail", `/board/${process.env.DETAIL_ID ?? "1"}`, [
+    { suffix: "tab-track", click: "#detail-tab-track" },
+    { suffix: "tab-tailor", click: "#detail-tab-tailor" },
+  ]],
+  ["feed", "/feed", [{ suffix: "sort-match", click: ".feed-controls .zui-segmented button:nth-child(2)" }]],
+  ["insights", "/insights"],
+  ["companies", "/companies", [{ suffix: "grid", click: ".zui-segmented button:nth-child(2)" }]],
+  ["people", "/people", [{ suffix: "grid", click: ".zui-segmented button:nth-child(2)" }]],
   ["cv", "/cv"],
   ["settings", "/settings"],
+  ["settings-data", "/settings?s=data"],
+  ["settings-feed", "/settings?s=feed"],
+  ["admin", "/admin"],
 ];
 const VIEWPORTS = [
   ["desktop", { width: 1440, height: 900 }],
@@ -50,7 +65,7 @@ const browser = await chromium.launch();
 for (const [vpName, viewport] of VIEWPORTS) {
   const context = await browser.newContext({ viewport, storageState: AUTH });
   const page = await context.newPage();
-  for (const [name, route] of VIEWS) {
+  for (const [name, route, interactions] of VIEWS) {
     await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
     // Fail loudly rather than capture a login page: the session expired.
     if (await page.getByLabel(/password/i).count()) {
@@ -59,6 +74,20 @@ for (const [vpName, viewport] of VIEWPORTS) {
     }
     await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
     console.log(`captured ${name}-${vpName}`);
+    for (const { suffix, click } of interactions ?? []) {
+      const target = page.locator(click).first();
+      // A missing selector means the harness has drifted from the markup —
+      // silently skipping it would make the diff pass while covering nothing.
+      if (!(await target.count())) {
+        console.error(`Interaction selector not found on ${route}: ${click}`);
+        process.exit(1);
+      }
+      await target.click();
+      await page.waitForTimeout(150);
+      await page.screenshot({ path: `${OUT}/${name}-${suffix}-${vpName}.png`, fullPage: true });
+      console.log(`captured ${name}-${suffix}-${vpName}`);
+      await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
+    }
   }
   await context.close();
 }
