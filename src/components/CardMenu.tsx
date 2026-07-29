@@ -78,17 +78,16 @@ export function CardMenu({
                 >
                   {t("common.open")}
                 </button>
-                <button
-                  type="button"
+                <Button
                   role="menuitem"
-                  className="danger"
+                  variant="danger"
                   onClick={() => {
                     close();
                     onArchive();
                   }}
                 >
                   {t("detail.archive")}
-                </button>
+                </Button>
               </>
             )}
             {mode === "move" && (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "./Button";
 import "./RowMenu.css";
 
 // Generic "⋯" row overflow menu (#489) — the same affordance the board card
@@ -51,19 +52,18 @@ export function RowMenu({ label, items }: RowMenuProps) {
             }}
           >
             {items.map((item) => (
-              <button
+              <Button
                 key={item.label}
-                type="button"
                 role="menuitem"
+                variant={item.danger ? "danger" : "default"}
                 disabled={item.disabled}
-                className={item.danger ? "danger" : undefined}
                 onClick={() => {
                   close();
                   item.onSelect();
                 }}
               >
                 {item.label}
-              </button>
+              </Button>
             ))}
           </div>
         </>

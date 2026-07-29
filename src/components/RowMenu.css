@@ -76,7 +76,7 @@
     background: var(--hover);
   }
 
-  .zui-rowmenu-pop > button.danger {
+  .zui-rowmenu-pop > button.zui-btn--danger {
     color: var(--danger);
   }
 
