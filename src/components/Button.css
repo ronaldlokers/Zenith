@@ -268,23 +268,4 @@
     line-height: 1;
     flex-shrink: 0;
   }
-
-  /* timeline.tsx's delete control forwards the app's own `tl-del` alongside
-     variant="danger" (App.css:2051 — border/background/padding, none of it
-     the Recipe-B look). tl-del lives in @layer app, and app-styles.css orders
-     layers `reset, app, components` — later layers win a shared property
-     regardless of specificity, so nothing added to .tl-del in App.css can
-     ever claim background/border/padding/min-height back from
-     .zui-btn--danger; the override has to live in this layer instead.
-     (0,2,0) beats .zui-btn--danger's own (0,1,0) and .zui-btn--danger.zui-btn
-     --md's (0,2,0) ties on specificity but wins on source order, since this
-     rule comes later.) Restores the quiet borderless icon look tl-del had
-     before the swap — danger still owns the icon's colour via
-     .zui-btn--danger's unconditional `color`, which this rule doesn't touch. */
-  .zui-btn--danger.tl-del {
-    background: none;
-    border: none;
-    padding: 0 0.2rem;
-    min-height: 0;
-  }
 }

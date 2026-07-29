@@ -1,0 +1,37 @@
+/* Owns the timeline row's delete-icon control at this one call site, so
+   Button.css can stay call-site-agnostic. App.css's `.tl-del` (App.css:2051,
+   plus the shared `.tl-del, .view-del` colour rule at :4384) still governs
+   Documents.tsx's own tl-del/danger raw <button> (#285 split) unchanged —
+   this file only replaces the class Timeline's delete control renders, it
+   does not touch or remove any App.css rule.
+
+   `.tl-del` lives in @layer app; app-styles.css orders layers `reset, app,
+   components`, so a later-declared layer always wins a shared property
+   regardless of specificity — nothing added to `.tl-del` in App.css can ever
+   reclaim background/border/padding/min-height back from Button's danger
+   variant (verified: adding `min-height: 0` there left the capture diff
+   byte-identical). This class lives in @layer components instead, so it can
+   actually win that fight. */
+@layer components {
+  /* Three classes, (0,3,0) — chosen so this beats `.zui-btn--danger.zui-btn
+     --md`'s padding override (0,2,0) outright on specificity, not on which
+     file the bundler happens to load last. Nothing pins Button.css and
+     timeline.css's relative order within @layer components (Button.css is
+     reached via Button.tsx's import, this file via timeline.tsx's — the
+     module graph decides, and a reshuffle could flip it silently with no
+     test failing), so a same-specificity rule relying on source order would
+     be a latent regression. Colour is left alone: `.zui-btn--danger`'s
+     unconditional `color: var(--danger)` already reproduces the pre-swap
+     rendering — verified against the actual pre-swap DOM (temporarily
+     restored the raw `<button className="tl-del danger">` markup and read
+     getComputedStyle): color was rgb(176, 69, 60) (var(--danger)) both
+     before and after, because the app's bare `button.danger` (App.css:1241)
+     always out-specified `.tl-del`'s own muted colour, even before this
+     control was a Button. */
+  .zui-btn.zui-btn--danger.zui-tl-del {
+    background: none;
+    border: none;
+    padding: 0 0.2rem;
+    min-height: 0;
+  }
+}
