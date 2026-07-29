@@ -86,6 +86,25 @@ if (!existsSync(AUTH)) {
 // hover state worth capturing at that spot.
 const parkPointer = (page) => page.mouse.move(0, 0);
 
+// Parking the pointer is not enough on its own: moving off an element starts
+// its hover transition, and Button.css:44 runs background/border/colour over
+// 120ms. The 150ms settle below wins that race most of the time, which is the
+// worst possible outcome — board-cardmenu-desktop drifted by a fraction of a
+// pixel on roughly one run in three, and an intermittent non-zero diff is what
+// teaches a reader to dismiss non-zero diffs.
+//
+// Freeze motion instead of widening the wait, which would only make the race
+// rarer. This removes transitions and animations, never steady-state
+// appearance, and it applies to baseline and comparison runs alike.
+const freezeMotion = (page) =>
+  page.addStyleTag({
+    content: `*, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+      caret-color: transparent !important;
+    }`,
+  });
+
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 for (const [vpName, viewport] of VIEWPORTS) {
@@ -98,6 +117,7 @@ for (const [vpName, viewport] of VIEWPORTS) {
       console.error(`Session expired — ${route} rendered the login page. Re-create ${AUTH}.`);
       process.exit(1);
     }
+    await freezeMotion(page);
     await parkPointer(page);
     await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
     console.log(`captured ${name}-${vpName}`);
@@ -114,7 +134,10 @@ for (const [vpName, viewport] of VIEWPORTS) {
       await page.waitForTimeout(150);
       await page.screenshot({ path: `${OUT}/${name}-${suffix}-${vpName}.png`, fullPage: true });
       console.log(`captured ${name}-${suffix}-${vpName}`);
+      // addStyleTag does not survive a navigation — re-apply for the next
+      // interaction on this view.
       await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
+      await freezeMotion(page);
     }
   }
   await context.close();
