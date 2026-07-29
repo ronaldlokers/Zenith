@@ -32,9 +32,27 @@
      unclassed default state) — reverting it too would just mean
      re-declaring it per variant for no visible difference. Verified
      pixel-identical (compare -metric AE = 0) against the raw pre-swap
-     markup — enabled, disabled, danger and default — at both viewports. */
-  .zui-btn.zui-btn--danger.zui-settings-native,
-  .zui-btn.zui-btn--default.zui-settings-native {
+     markup — enabled, disabled, danger and default — at both viewports.
+
+     Specificity is (0,4,0), not the (0,3,0) three classes would give: both
+     `.zui-btn--danger:hover:not(:disabled)` and `.zui-btn--default:hover
+     :not(:disabled)` (Button.css) also compute to (0,3,0) — `:hover` and
+     `:not(:disabled)` each count as a class — which is an exact tie with
+     this rule on `background`, the one property both sides set. A tie
+     resolves by source order, i.e. by which file the bundler happens to
+     load last — exactly what the brief forbids. Confirmed empirically:
+     built a minimal two-rule test file and swapped which rule came last;
+     the winner flipped. `zui-settings-native` is repeated (a class doesn't
+     need to be a real state to count twice) to clear that tie outright,
+     the same trick used below for the other two override groups. Checked
+     every other pseudo-class rule in Button.css for a same-specificity
+     collision on a property this block touches: `.zui-btn:not(:disabled)
+     :active` (filter — not overridden here), `.zui-btn:focus-visible`
+     (outline/outline-offset — not overridden here) and `.zui-btn:disabled`
+     ((0,2,0), cursor/opacity — already beaten even at three classes) are
+     not contested. */
+  .zui-btn.zui-btn--danger.zui-settings-native.zui-settings-native,
+  .zui-btn.zui-btn--default.zui-settings-native.zui-settings-native {
     display: revert;
     align-items: revert;
     justify-content: revert;
@@ -66,10 +84,14 @@
      `.zui-btn--danger` min-height (34px) needs cancelling here and
      api.tsx's remove-webhook override below (a real direct child) does
      not. Verified pixel-identical against the raw markup at both
-     viewports; three-class selector deliberately, so this doesn't depend
-     on load order between this file and Button.css (see timeline.css for
-     the same reasoning). */
-  .zui-btn.zui-btn--danger.zui-admin-user-remove {
+     viewports. Specificity is (0,4,0) (the class is repeated) rather than
+     the (0,3,0) three classes would give, to beat `.zui-btn--danger:hover
+     :not(:disabled)` (Button.css, also (0,3,0)) outright on `background` —
+     otherwise it's a tie decided by load order between this file and
+     Button.css, which is exactly what the brief forbids (see
+     zui-settings-native above for the same reasoning, verified the same
+     way). */
+  .zui-btn.zui-btn--danger.zui-admin-user-remove.zui-admin-user-remove {
     background: none;
     border: none;
     border-radius: var(--radius-sm);
@@ -92,17 +114,26 @@
      components can never lose a property back to @layer app regardless of
      media query (see Button.css's own header comment) — so without restating
      it, the mobile 40px bump would get stuck at 34px on a phone. Verified
-     pixel-identical against the raw markup at both viewports. */
-  .zui-btn.zui-btn--danger.zui-webhook-remove {
+     pixel-identical against the raw markup at both viewports. Specificity
+     is (0,4,0) for the same reason as the two blocks above — ties
+     `.zui-btn--danger:hover:not(:disabled)` on `background` at (0,3,0)
+     otherwise. border-radius is restated as 0 even though Button's
+     unconditional `var(--radius-md)` is currently harmless here (nothing
+     is filled, so there's nothing for a radius to clip) — stated
+     explicitly so the recipe doesn't silently depend on background/border
+     staying "none" forever, and to match its sibling block above rather
+     than reading as an oversight. */
+  .zui-btn.zui-btn--danger.zui-webhook-remove.zui-webhook-remove {
     background: none;
     border: none;
+    border-radius: 0;
     padding: 0.2rem 0.4rem;
     font-size: 1rem;
     line-height: 1;
   }
 
   @media (max-width: 600px) {
-    .zui-btn.zui-btn--danger.zui-webhook-remove {
+    .zui-btn.zui-btn--danger.zui-webhook-remove.zui-webhook-remove {
       min-height: 40px;
     }
   }
