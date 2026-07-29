@@ -104,10 +104,25 @@ make a real regression and a deliberate change indistinguishable in the
 
 ### Baseline
 
-Capture the screenshot baseline with `scripts/screenshot-baseline.mjs` **before
-PR 1**, every view at desktop and mobile viewports, and diff every subsequent
-PR against that same baseline rather than against its predecessor. Render one
-variant per page load — stacked slots produce a spurious ~25k-pixel diff.
+**The harness has to be repaired before it is trusted.** Planning this work
+found `scripts/screenshot-baseline.mjs:22-32` listing routes that no longer
+match `src/routing.ts`: `/jobs` and `/calendar` are legacy paths that
+`LEGACY_PATHS` rewrites to `/board` and `/insights`, so two of its nine views
+capture duplicates — while `/insights`, `/admin` and the application detail
+view are never captured at all. Between them those three are the target of
+eight of the 38 control swaps and the source of two of the four components
+PR 4 builds. A bar that does not measure the views being changed is not a bar.
+
+Local-state controls compound it: detail's section tabs and all five segmented
+groups are `useState`, invisible to a URL-only capture, and they are exactly
+what PR 4 rewrites. The harness gains an interaction list — click a selector,
+capture again — and fails loudly on a selector that no longer matches rather
+than skipping it.
+
+Then capture the baseline **before PR 1**, every view at desktop and mobile
+viewports, and diff every subsequent PR against that same baseline rather than
+against its predecessor. Render one variant per page load — stacked slots
+produce a spurious ~25k-pixel diff.
 
 ---
 
