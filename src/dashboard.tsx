@@ -24,10 +24,10 @@ import {
   MomentumBand,
   RowMenu,
   SegmentedControl,
+  Skeleton,
   StarRating,
   StatCard,
 } from "./components";
-import { LoadingSkeleton } from "./ui";
 
 // The climb, low to high. Dead statuses are off the mountain and excluded.
 const ASCENT_STAGES = [
@@ -92,7 +92,7 @@ export function DashboardTab({
     [live],
   );
 
-  if (!stats) return <LoadingSkeleton />;
+  if (!stats) return <Skeleton />;
 
   const daysSince = (d: string) => Math.floor((Date.now() - parseSqlDate(d)) / DAY);
 

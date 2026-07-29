@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { api } from "./api";
-import { LoadingSkeleton } from "./ui";
-import { Button, SideList } from "./components";
+import { Button, SideList, Skeleton } from "./components";
 import type { Education, Language, Profile, WorkExperience } from "./types";
 import { getCvLanguage } from "./format";
 import { TailorPanel } from "./cv/tailor";
@@ -53,7 +52,7 @@ export function CVTab({
   }, [load]);
 
   if (!profile || !workExp || !education || !languages) {
-    return <LoadingSkeleton />;
+    return <Skeleton />;
   }
 
   // Live preview (#134, #386) — a styled HTML document that mirrors the two

@@ -4,10 +4,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
-import { LoadFailed, LoadingSkeleton } from "./ui";
 import { rowActivate } from "./hooks";
 import { EmptyActivityIcon, EmptyCalendarIcon } from "./icons";
-import { CalendarMonth, EmptyState } from "./components";
+import { CalendarMonth, EmptyState, LoadFailed, Skeleton } from "./components";
 import { formatDate, today } from "./format";
 import type { ActivityEvent, AgendaEntry } from "./types";
 
@@ -149,7 +148,7 @@ export function ActivityTab({
   }, [load]);
 
   if (failed && !events) return <LoadFailed onRetry={load} />;
-  if (!events) return <LoadingSkeleton />;
+  if (!events) return <Skeleton />;
 
   return (
     <section className="activity">

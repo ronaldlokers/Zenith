@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
-import { LoadFailed, LoadingSkeleton } from "./ui";
 import { requestConfirm } from "./hooks";
 import { EmptyFeedIcon, RemoveIcon } from "./icons";
 import { safeHref, formatDate } from "./format";
@@ -15,7 +14,15 @@ import type {
   RoleTypeDef,
 } from "./types";
 import { sortFilterFeed } from "./skill-match";
-import { Button, Chip, EmptyState, SegmentedControl, Toolbar } from "./components";
+import {
+  Button,
+  Chip,
+  EmptyState,
+  LoadFailed,
+  SegmentedControl,
+  Skeleton,
+  Toolbar,
+} from "./components";
 
 export function FeedSettings({
   roleTypes,
@@ -573,7 +580,7 @@ export function FeedTab({
       </Toolbar>
 
       {failed && !items && <LoadFailed onRetry={load} />}
-      {!failed && !items && <LoadingSkeleton />}
+      {!failed && !items && <Skeleton />}
 
       {items && items.length > 0 && (
         <div className="feed-controls">

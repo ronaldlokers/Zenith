@@ -1,19 +1,10 @@
-// Shared UI primitives extracted from App.tsx (#285 split) — skeleton,
-// load-failed, the Dialog + ConfirmHost modal stack, and the small hooks.
+// Shared UI primitives extracted from App.tsx (#285 split) — the Dialog +
+// ConfirmHost modal stack. The skeleton and load-failed states have since
+// become owned components (src/components/Skeleton, LoadFailed).
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionBar, Button } from "./components";
 import { setConfirmImpl, useFocusTrap } from "./hooks";
-
-export function LoadingSkeleton() {
-  return (
-    <div className="skeleton-list" aria-hidden="true">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="skeleton-card" />
-      ))}
-    </div>
-  );
-}
 
 // Shared dialog primitive (#314) — backdrop, focus trap, Escape, and
 // aria-modal in one place instead of re-implemented per modal.
@@ -48,23 +39,6 @@ export function Dialog({
       >
         {children}
       </div>
-    </div>
-  );
-}
-
-// Terminal error state for a tab whose data fetch failed (#261). Without
-// it, a failed load left the "Loading…" placeholder up forever while the
-// only signal was the easy-to-miss top banner.
-export function LoadFailed({ onRetry }: { onRetry?: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <div className="load-error" role="alert">
-      <p className="muted small">{t("common.loadError")}</p>
-      {onRetry && (
-        <button type="button" onClick={onRetry}>
-          {t("common.retry")}
-        </button>
-      )}
     </div>
   );
 }

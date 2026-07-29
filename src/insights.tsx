@@ -22,8 +22,7 @@ import {
   totalComp,
 } from "./format";
 import { ActivityTab, CalendarTab } from "./calendar";
-import { DashCard, MomentumBand, StatCard } from "./components";
-import { LoadingSkeleton } from "./ui";
+import { DashCard, MomentumBand, Skeleton, StatCard } from "./components";
 
 export function InsightsTab({
   applications,
@@ -56,7 +55,7 @@ export function InsightsTab({
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
-  if (!stats) return <LoadingSkeleton />;
+  if (!stats) return <Skeleton />;
   const history = stats.history;
   const open = applications.filter((a) => !isDead(a.status));
 

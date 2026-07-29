@@ -1875,12 +1875,9 @@ select.status {
   }
 }
 
-.skeleton-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.2rem 0;
-}
+/* The loading skeleton moved into the owned Skeleton component — see
+   src/components/Skeleton.css (.zui-skeleton*), which carries the shimmer
+   keyframes and the reduced-motion opt-out with it. */
 
 /* Keyboard focus ring for rows made operable via role="button" (#261).
    No border-radius here — it changed the element's shape on focus (#314);
@@ -1897,50 +1894,8 @@ select.status {
   padding: var(--space-4) 0 var(--space-1);
 }
 
-/* Terminal fetch-failure state (#261) */
-.load-error {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
-
-.load-error p {
-  margin: 0;
-}
-
-.skeleton-card {
-  height: 3.6rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: linear-gradient(
-    100deg,
-    var(--surface) 40%,
-    color-mix(in srgb, var(--ink) 8%, var(--surface)) 50%,
-    var(--surface) 60%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
-}
-
-@keyframes skeleton-shimmer {
-  from {
-    background-position: 100% 0;
-  }
-  to {
-    background-position: -100% 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skeleton-card {
-    animation: none;
-  }
-}
+/* The terminal fetch-failure state (#261) moved into the owned LoadFailed
+   component — see src/components/LoadFailed.css (.zui-loadfailed*). */
 
 /* .onboarding moved into the owned OnboardingChecklist component — see
    src/components/OnboardingChecklist.css (.zui-onboarding*). */

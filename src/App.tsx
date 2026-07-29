@@ -14,7 +14,7 @@ import {
   NavPipelineIcon,
   RemoveIcon,
 } from "./icons";
-import { ConfirmHost, LoadingSkeleton } from "./ui";
+import { ConfirmHost } from "./ui";
 import { type Tab, TAB_PATHS, canonicalPath, parsePath } from "./routing";
 import { DashboardTab } from "./dashboard";
 import { InsightsTab } from "./insights";
@@ -46,7 +46,12 @@ const AdminPage = lazy(() =>
   import("./admin").then((m) => ({ default: m.AdminPage })),
 );
 import { useSession } from "./auth-client";
-import { CommandPalette, OnboardingChecklist, QuickAddDialog } from "./components";
+import {
+  CommandPalette,
+  OnboardingChecklist,
+  QuickAddDialog,
+  Skeleton,
+} from "./components";
 import { useAppData, useToasts } from "./app-data";
 import {
   useGlobalShortcuts,
@@ -318,9 +323,9 @@ export default function App() {
 
       <main className="content">
         {loading ? (
-          <LoadingSkeleton />
+          <Skeleton />
         ) : (
-          <Suspense fallback={<LoadingSkeleton />}>
+          <Suspense fallback={<Skeleton />}>
             {tab === "overview" && showOnboarding && (
               <OnboardingChecklist {...onboardingProps} />
             )}
