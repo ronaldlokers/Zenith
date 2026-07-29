@@ -537,48 +537,6 @@
 }
 
 /* Radial pipeline ring (#143) — replaces the old Jobs-tab stage histogram */
-.ring-chart {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: 0.25rem 0 0.6rem;
-}
-
-.ring-total {
-  font-family: var(--mono);
-  font-size: var(--text-display);
-  font-weight: 700;
-  fill: var(--ink);
-}
-
-.ring-legend {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.22rem;
-  min-width: 0;
-}
-
-.ring-legend li {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-}
-
-.ring-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--sc, var(--accent));
-  flex-shrink: 0;
-}
 
 .ring-legend .lbl {
   /* Count sits right beside its label (#346) — flex:1 stranded the number
@@ -724,18 +682,6 @@
 
 /* .toolbar (container + its child control normalization) moved to the owned
    Toolbar component (src/components/Toolbar.css). */
-
-.help-btn {
-  width: 2.2rem;
-  height: 2.2rem;
-  flex-shrink: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-  font-family: var(--mono);
-}
 
 .btn-secondary {
   border: 1px solid var(--border);
@@ -1047,18 +993,6 @@
   gap: 0.4rem;
   flex-wrap: wrap;
   margin: 0 0 var(--space-3);
-}
-
-.show-archived {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-  padding: 0.4rem 0.2rem;
 }
 
 /* Inline follow-up actions in the Next Up panel (#285). Layout only: the
@@ -1421,25 +1355,8 @@ button.danger {
   line-height: 1.25;
 }
 
-.card-main {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
 .card-main.clickable {
   cursor: pointer;
-}
-
-.card-main strong {
-  font-size: var(--text-title);
-}
-
-.card-main a {
-  color: var(--accent-ink);
-  text-decoration: none;
-  overflow-wrap: anywhere;
 }
 
 .card-actions {
@@ -1697,17 +1614,6 @@ button.danger {
   letter-spacing: var(--track-chrome);
 }
 
-.tag-chip {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  letter-spacing: var(--track-chrome);
-  padding: 0.15rem 0.45rem;
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--muted);
-}
-
 .due-line {
   font-size: var(--text-body);
   color: var(--muted);
@@ -1802,34 +1708,6 @@ select.status {
 }
 
 /* Toast */
-/* Mobile quick-add FAB (#135) — reachable from any tab, sitting just
-   above the fixed bottom tab bar. Desktop already has "+ Add job" in
-   the Jobs toolbar, so this only needs to exist on narrow viewports. */
-.quick-add-fab {
-  display: none;
-}
-
-@media (max-width: 600px) {
-  .quick-add-fab {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    right: 1rem;
-    bottom: calc(4.6rem + var(--vv-bottom-offset, 0px) + env(safe-area-inset-bottom));
-    z-index: 20;
-    width: 3.2rem;
-    height: 3.2rem;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: 1.8rem;
-    line-height: 1;
-    box-shadow: var(--shadow-2);
-    cursor: pointer;
-  }
-}
 
 .toast-stack {
   position: fixed;
@@ -1912,35 +1790,6 @@ select.status {
   border: 1px solid var(--border);
 }
 
-.streak-label {
-  font-size: var(--text-body);
-  font-weight: 600;
-}
-
-.streak-active {
-  background: var(--surface);
-  color: var(--accent);
-}
-
-.streak-milestone {
-  background: color-mix(in srgb, var(--success) 14%, var(--surface));
-  color: var(--success-ink);
-}
-
-.streak-broken {
-  flex-direction: column;
-  align-items: flex-start;
-  background: var(--surface);
-}
-
-.streak-broken .streak-label {
-  color: var(--muted);
-}
-
-.streak-broken p {
-  margin: 0.3rem 0 0;
-}
-
 .weekly-goal {
   display: flex;
   align-items: center;
@@ -1956,32 +1805,9 @@ select.status {
   flex: 1;
 }
 
-.weekly-goal-label {
-  font-size: var(--text-body);
-  color: var(--muted);
-  white-space: nowrap;
-}
-
 .weekly-goal.met .weekly-goal-label {
   color: var(--success-ink);
   font-weight: 600;
-}
-
-.weekly-goal-btn {
-  white-space: nowrap;
-}
-
-.weekly-goal-edit {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.weekly-goal-edit input {
-  width: 3.5rem;
-  padding: 0.3rem 0.4rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
 }
 
 /* Agenda / calendar */
@@ -2402,80 +2228,20 @@ select.status {
 }
 
 /* Board grouped by company (#130) */
-.board-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--space-2);
-}
 
 /* .board-group-toggle moved to the owned SegmentedControl component
    (src/components/SegmentedControl.css). */
 
-.board-swimlanes {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  margin-top: var(--space-3);
-}
-
-.lane {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.lane-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: var(--mono);
-  font-size: var(--text-meta);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--border);
-}
-
 .lane-label .n {
   color: var(--faint);
-}
-
-.lane-stages {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.6rem;
-  padding: 0.7rem;
-}
-
-@media (min-width: 900px) {
-  .lane-stages {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-.lane-cell {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-height: 2rem;
 }
 
 /* Board's columns already fill the full grid width at >=900px, so
    there's no room for a side panel the way Jobs got one — the actual
    wasted space is vertical, below short columns. A summary strip
    below the grid uses that instead (#93). */
-.board-summary {
-  display: none;
-}
 
 @media (min-width: 900px) {
-  .board-summary {
-    display: block;
-    margin-top: var(--space-5);
-    max-width: 22rem;
-  }
 
   /* NextUpPanel's .jobs-side is display:none outside the >=1100px
      Jobs layout — override here since Board shows it at its own,
@@ -2737,9 +2503,6 @@ summary.bcol-head::after {
    desktop viewport (#74). Single column below 1100px, panel hidden
    entirely below that since it's desktop-space-usage, not core
    content. */
-.jobs-layout {
-  display: block;
-}
 
 .jobs-side {
   display: none;
@@ -3138,10 +2901,6 @@ summary.bcol-head::after {
     align-items: start;
   }
 
-  .jobs-main {
-    min-width: 0;
-  }
-
   .jobs-side {
     display: block;
     background: var(--surface);
@@ -3214,14 +2973,6 @@ summary.bcol-head::after {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 0.9rem 1rem;
-}
-
-.overview-recent li {
-  cursor: pointer;
-}
-
-.overview-cta {
-  align-self: center;
 }
 
 /* CV builder (#69) */
@@ -4369,127 +4120,18 @@ summary.bcol-head::after {
   }
 }
 
-/* Closed drawer under the board (#314) — collapsed archive of terminal
-   outcomes; compact list rows, not cards. */
-.closed-drawer {
-  margin-top: 1.2rem;
-  border-top: 1px solid var(--border);
-  padding-top: 0.6rem;
-}
-
-.closed-drawer summary {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  color: var(--muted);
-  cursor: pointer;
-  padding: 0.3rem 0;
-  list-style: none;
-}
-
-.closed-drawer summary::-webkit-details-marker {
-  display: none;
-}
-
-.closed-drawer summary::after {
-  content: " ▸";
-  color: var(--faint);
-}
-
-.closed-drawer[open] summary::after {
-  content: " ▾";
-}
-
-.closed-drawer ul {
-  list-style: none;
-  margin: 0.4rem 0 0;
-  padding: 0;
-}
-
-.closed-drawer li {
-  display: flex;
-  align-items: baseline;
-  gap: 0.8rem;
-  padding: 0.4rem 0.2rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  font-size: var(--text-body);
-  cursor: pointer;
-}
-
-.closed-drawer li:hover {
-  background: var(--hover);
-}
-
-.closed-title {
-  font-weight: 600;
-  min-width: 0;
-}
-
-.closed-co {
-  color: var(--muted);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.closed-status {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--st-dead-ink);
-}
-
-.closed-date {
-  font-family: var(--mono);
-  font-size: var(--text-meta);
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Mobile: pipeline filters + saved views behind one disclosure (#314). */
-.pipeline-filters-toggle {
-  display: none;
-}
 
 @media (max-width: 600px) {
-  .pipeline-filters-toggle {
-    display: inline-block;
-    margin-bottom: var(--space-3);
-  }
-
-  .pipeline-filters {
-    display: none;
-  }
 
   .pipeline-filters.open {
     display: block;
   }
 }
 
-/* Overview: work left, motivation right rail (#314). */
-.overview-cols {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem 2rem;
-  align-items: start;
-}
-
-.overview-main,
-.overview-side {
-  min-width: 0;
-}
-
 @media (min-width: 1000px) {
   .app:has(.overview) > main {
     max-width: 1000px;
-  }
-
-  .overview-cols {
-    grid-template-columns: 1.4fr 1fr;
   }
 }
 
@@ -4612,7 +4254,6 @@ button:not(:disabled):active,
 .bcard:active {
   filter: brightness(0.97);
 }
-
 
 .bcol.drag-over {
   background: color-mix(in srgb, var(--accent) 7%, transparent);
@@ -4780,11 +4421,6 @@ button:not(:disabled):active,
 }
 
 
-/* WinsJournal finally gets its own rhythm instead of riding on .tl-add. */
-.wins-journal {
-  margin: 0 0 1.2rem;
-}
-
 /* Merged Dashboard (#346) — Overview + Stats in one adaptive, modular grid.
    Cards click through; motivation widgets dropped. */
 .dash { display: flex; flex-direction: column; gap: 0.8rem; }
@@ -4852,7 +4488,6 @@ button:not(:disabled):active,
 @media (max-width: 600px) {
   .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-band { grid-template-columns: 1fr; }
-  .dash-spark { height: 34px; }
 }
 
 /* Touch-target floor (#499). These controls were hand-rolled before the
@@ -5172,4 +4807,3 @@ button:not(:disabled):active,
     padding: 0;
   }
 }
-
