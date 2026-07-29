@@ -6,6 +6,7 @@ import { requestConfirm } from "../hooks";
 import { RemoveIcon } from "../icons";
 import type { Webhook } from "../types";
 import { ActionBar, Button } from "../components";
+import "./settings.css";
 
 // Public API key + webhooks (#228) — the key is shown in full whenever
 // it exists (unlike a password) since it's meant to be copied into
@@ -138,9 +139,13 @@ export function PublicApiSettings({
                 </span>
               ) : null}
             </span>
-            <button className="danger" onClick={() => removeWebhook(w.id)}>
+            <Button
+              variant="danger"
+              className="zui-webhook-remove"
+              onClick={() => removeWebhook(w.id)}
+            >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

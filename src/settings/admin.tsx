@@ -5,6 +5,7 @@ import { api } from "../api";
 import { authClient, useSession } from "../auth-client";
 import { requestConfirm } from "../hooks";
 import { Badge, Button } from "../components";
+import "./settings.css";
 
 // Admin user management (#285) — the recovery path for a locked-out user:
 // list users, reset a forgotten password to a new temporary one, reset a
@@ -110,9 +111,13 @@ export function AdminUsers({
                     {t("account.reset2fa")}
                   </button>
                 ) : null}
-                <button className="danger" onClick={() => remove(u)}>
+                <Button
+                  variant="danger"
+                  className="zui-admin-user-remove"
+                  onClick={() => remove(u)}
+                >
                   {t("account.removeUser")}
-                </button>
+                </Button>
               </span>
             )}
           </li>
