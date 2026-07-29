@@ -1,0 +1,31 @@
+/* Complete, self-contained. Reproduces the App.css .load-error recipe
+   (App.css:1901) under the zui- names LoadFailed.tsx emits.
+
+   The caption carried the shared .muted/.small utilities (App.css:1656/1660)
+   rather than its own rule; those two declarations are folded in here so the
+   component owns its own typography.
+
+   The retry button is deliberately unstyled: it carries no class in the app
+   either, so it renders as a UA button with only the index.css
+   `font: inherit; color: inherit` reset applied. Reproduced as-is to keep the
+   extraction zero-diff — it is the one control in the app the #499
+   normalization pass never reached, and giving it a real recipe is a visible
+   change that belongs in its own commit. */
+@layer components {
+  .zui-loadfailed {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+
+  .zui-loadfailed-text {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-body);
+  }
+}

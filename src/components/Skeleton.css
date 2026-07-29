@@ -1,0 +1,41 @@
+/* Complete, self-contained. Reproduces the App.css loading-placeholder recipe
+   (.skeleton-list App.css:1878, .skeleton-card App.css:1916, its shimmer
+   keyframes and the reduced-motion opt-out) under the zui- names Skeleton.tsx
+   emits — moved verbatim, renamed only. */
+@layer components {
+  .zui-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.2rem 0;
+  }
+
+  .zui-skeleton-card {
+    height: 3.6rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: linear-gradient(
+      100deg,
+      var(--surface) 40%,
+      color-mix(in srgb, var(--ink) 8%, var(--surface)) 50%,
+      var(--surface) 60%
+    );
+    background-size: 200% 100%;
+    animation: zui-skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+
+  @keyframes zui-skeleton-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .zui-skeleton-card {
+      animation: none;
+    }
+  }
+}
