@@ -1,0 +1,16 @@
+{
+  // Scaffolded by `devcontainer-init`, which replaces the placeholder name
+  // below with the directory name. Starting point only — ports, mounts and
+  // extra features are per-project and belong in the copy, not here.
+  "name": "Zenith",
+  // Built from the Dockerfile beside this file rather than pulled as an
+  // image: the user, sudo, zsh and locale setup that devcontainer features
+  // used to provide has to happen somewhere, and those features refuse to
+  // run on Arch.
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "dev",
+  // Keeps the container user's UID in step with the host's, so files
+  // written in the workspace are not owned by the wrong id.
+  "updateRemoteUserUID": true,
+  "postCreateCommand": "bash .devcontainer/post-create.sh"
+}
