@@ -23,8 +23,10 @@
   }
 
   /* App.css:2939 base, App.css:4585 reshape (radius/padding/font-size win).
-     Callers keep authoring raw <button> children — not the Button
-     component. */
+     The segment button itself: normally rendered via SegmentedControl.Item,
+     which owns the active class and aria-pressed together. The container
+     still accepts raw <button> children as an escape hatch, but that is no
+     longer the expected path for a production call site. */
   .zui-segmented button {
     border: none;
     background: var(--surface);
@@ -46,7 +48,9 @@
     }
   }
 
-  /* App.css:2951 — callers keep className="active" on the selected button. */
+  /* App.css:2951 — SegmentedControl.Item sets className="active" on the
+     selected button; a caller authoring a raw child button must still do
+     this itself to opt into the escape hatch. */
   .zui-segmented button.active {
     background: var(--accent);
     color: var(--accent-text);

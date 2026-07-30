@@ -1,0 +1,43 @@
+/* Complete, self-contained. Reproduces the App.css .subnav recipe (App.css:
+   1007, the network subnav's pill tablist, #285) so it renders identically
+   standalone in Storybook (which loads no App.css) and in the app: a
+   bordered capsule whose active tab is a filled accent pill. */
+@layer components {
+  .zui-pilltabs {
+    display: inline-flex;
+    gap: 0.2rem;
+    margin: 0.25rem 0 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 0.2rem;
+    background: var(--surface);
+  }
+
+  .zui-pilltabs button {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    padding: 0.3rem 0.9rem;
+    border-radius: var(--radius-full);
+    font-size: var(--text-body);
+    cursor: pointer;
+  }
+
+  .zui-pilltabs button.active {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+
+  /* The documented control height (#499); 40px on a phone. Inherited from
+     App.css's band-5 group selector by the raw markup this replaces —
+     dropping it would fail WCAG 2.5.8 on mobile, silently. */
+  .zui-pilltabs button {
+    min-height: 34px;
+  }
+
+  @media (max-width: 600px) {
+    .zui-pilltabs button {
+      min-height: 40px;
+    }
+  }
+}

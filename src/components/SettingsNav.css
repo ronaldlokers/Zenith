@@ -1,0 +1,48 @@
+/* Complete, self-contained. Reproduces the App.css .settings-nav recipe
+   (App.css:3587), the vertical section rail of the Settings/Admin two-pane
+   layout, so it renders identically standalone in Storybook (which loads no
+   App.css) and in the app: a sticky column of buttons, the active one
+   tinted with an inset accent spine, collapsing to a horizontal static-
+   position wrapped row below 700px (responsive parity is a locked product
+   decision, so this media block is mandatory, not optional). */
+@layer components {
+  .zui-settingsnav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    position: sticky;
+    top: 4.5rem;
+  }
+
+  .zui-settingsnav button {
+    text-align: left;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: var(--text-body);
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+
+  .zui-settingsnav button:hover {
+    background: var(--hover);
+    color: var(--ink);
+  }
+
+  .zui-settingsnav button.active {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  @media (max-width: 700px) {
+    .zui-settingsnav {
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+    }
+  }
+}

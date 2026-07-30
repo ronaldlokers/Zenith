@@ -14,7 +14,7 @@ import {
 } from "../format";
 import type { RoleTypeDef } from "../types";
 import { useLocation } from "react-router-dom";
-import { ActionBar, Button } from "../components";
+import { ActionBar, Button, SettingsNav } from "../components";
 import { FeedSettings } from "../feed";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
 import { DataExport, SampleDataSettings } from "./data";
@@ -206,18 +206,12 @@ export function SettingsPage({
 
   return (
     <section className="settings-page">
-      <nav className="settings-nav" aria-label={t("settings.title")}>
-        {sections.map((s) => (
-          <button
-            key={s}
-            className={section === s ? "active" : ""}
-            aria-current={section === s ? "true" : undefined}
-            onClick={() => setSection(s)}
-          >
-            {t(`settings.section.${s}`)}
-          </button>
-        ))}
-      </nav>
+      <SettingsNav
+        sections={sections.map((s) => ({ key: s, label: t(`settings.section.${s}`) }))}
+        active={section}
+        onSelect={setSection}
+        aria-label={t("settings.title")}
+      />
       <div className="settings-content settings-modal">
         <h2>{t(`settings.section.${section}`)}</h2>
         {apiError && <p className="login-error">{apiError}</p>}

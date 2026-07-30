@@ -88,20 +88,18 @@ export function CompaniesTab({
           {t("toolbar.addCompany")}
         </Button>
         <SegmentedControl role="group" aria-label={t("companies.view")}>
-          <button
-            className={view === "list" ? "active" : ""}
-            aria-pressed={view === "list"}
+          <SegmentedControl.Item
+            active={view === "list"}
             onClick={() => setViewAndPersist("list")}
           >
             {t("companies.viewList")}
-          </button>
-          <button
-            className={view === "grid" ? "active" : ""}
-            aria-pressed={view === "grid"}
+          </SegmentedControl.Item>
+          <SegmentedControl.Item
+            active={view === "grid"}
             onClick={() => setViewAndPersist("grid")}
           >
             {t("companies.viewGrid")}
-          </button>
+          </SegmentedControl.Item>
         </SegmentedControl>
       </Toolbar>
 

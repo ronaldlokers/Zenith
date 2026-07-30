@@ -22,6 +22,7 @@ import {
   MockInterview,
   NegotiationRoleplay,
   StarRating,
+  TabBar,
 } from "./components";
 import type {
   Application,
@@ -671,32 +672,17 @@ export function ApplicationDetailModal({
             />
           </div>
           <div className="detail-secondary">
-            <div
-              className="detail-tabs"
-              role="tablist"
+            <TabBar
+              tabs={[
+                { key: "track", label: t("detail.tabTrack") },
+                { key: "prep", label: t("detail.tabPrep") },
+                { key: "tailor", label: t("detail.tabTailor") },
+              ]}
+              active={secTab}
+              onSelect={setSecTab}
+              idPrefix="detail"
               aria-label={t("detail.sections")}
-            >
-              {(
-                [
-                  ["track", t("detail.tabTrack")],
-                  ["prep", t("detail.tabPrep")],
-                  ["tailor", t("detail.tabTailor")],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  role="tab"
-                  id={`detail-tab-${key}`}
-                  aria-selected={secTab === key}
-                  aria-controls={`detail-panel-${key}`}
-                  className={secTab === key ? "active" : ""}
-                  onClick={() => setSecTab(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            />
 
             <div
               className="detail-panel"

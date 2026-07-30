@@ -1004,32 +1004,6 @@
   }
 }
 
-/* Sub-navigation toggle within a merged tab (Network = Companies/People, #285) */
-.subnav {
-  display: inline-flex;
-  gap: 0.2rem;
-  margin: 0.25rem 0 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  padding: 0.2rem;
-  background: var(--surface);
-}
-
-.subnav button {
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  padding: 0.3rem 0.9rem;
-  border-radius: var(--radius-full);
-  font-size: var(--text-body);
-  cursor: pointer;
-}
-
-.subnav button.active {
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
 /* API reference (#283) */
 .api-docs {
   margin-top: var(--space-4);
@@ -2965,8 +2939,9 @@ summary.bcol-head::after {
 .admin-page-sub {
   margin: var(--space-1) 0 var(--space-4);
 }
-/* Admin reuses the Settings two-pane (.settings-page/.settings-nav); the
-   selected section renders one .admin-invite card in the content area. */
+/* Admin reuses the Settings two-pane (.settings-page + the SettingsNav
+   component); the selected section renders one .admin-invite card in the
+   content area. */
 .admin-content {
   min-width: 0;
   max-width: 40rem;
@@ -3584,37 +3559,6 @@ summary.bcol-head::after {
   margin: var(--space-3) auto 0;
 }
 
-.settings-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  position: sticky;
-  top: 4.5rem;
-}
-
-.settings-nav button {
-  text-align: left;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font-size: var(--text-body);
-  padding: 0.4rem 0.6rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.settings-nav button:hover {
-  background: var(--hover);
-  color: var(--ink);
-}
-
-.settings-nav button.active {
-  background: var(--accent-soft);
-  color: var(--accent-ink);
-  font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--accent);
-}
-
 .settings-content {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3636,13 +3580,6 @@ summary.bcol-head::after {
 @media (max-width: 700px) {
   .settings-page {
     grid-template-columns: 1fr;
-  }
-
-  .settings-nav {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.3rem;
   }
 }
 
@@ -3986,39 +3923,6 @@ summary.bcol-head::after {
   min-width: 0;
 }
 
-/* Detail secondary-column tab sub-nav (#448) — one section shown at a time
-   instead of 7 stacked. Underline tabs; wrap on narrow viewports. */
-.detail-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.15rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1rem;
-}
-.detail-tabs button {
-  appearance: none;
-  border: none;
-  background: none;
-  padding: 0.45rem 0.7rem;
-  margin-bottom: -1px;
-  font-size: var(--text-meta);
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-}
-.detail-tabs button:hover {
-  color: var(--ink);
-}
-.detail-tabs button.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-.detail-tabs button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
 .detail-panel {
   min-width: 0;
   max-width: 34rem;
@@ -4326,7 +4230,6 @@ button:not(:disabled):active,
    control-normalization layer existed and sat between 15px and 31px tall —
    under the documented 34px, and under WCAG 2.5.8. Height only; their fills
    and type are untouched. */
-.subnav button,
 .board-bar .search,
 .board-bar-btn,
 .board-bar select,
@@ -4341,7 +4244,6 @@ button:not(:disabled):active,
 }
 
 @media (max-width: 600px) {
-  .subnav button,
   .board-bar .search,
   .board-bar-btn,
   .board-bar select,

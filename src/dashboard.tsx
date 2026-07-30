@@ -375,18 +375,18 @@ function NextUpPanel({
       <div className="today-nextup-head">
         <h2 className="side-h">{t("nextUp.title")}</h2>
         <SegmentedControl role="group" aria-label={t("nextUp.title")}>
-          <button
-            className={tab === "due" ? "active" : ""}
+          <SegmentedControl.Item
+            active={tab === "due"}
             onClick={() => onTab("due")}
           >
             {t("nextUp.segDue", { count: due.length })}
-          </button>
-          <button
-            className={tab === "upcoming" ? "active" : ""}
+          </SegmentedControl.Item>
+          <SegmentedControl.Item
+            active={tab === "upcoming"}
             onClick={() => onTab("upcoming")}
           >
             {t("nextUp.segUpcoming", { count: upcoming.length })}
-          </button>
+          </SegmentedControl.Item>
         </SegmentedControl>
       </div>
       {rows.length === 0 ? (
