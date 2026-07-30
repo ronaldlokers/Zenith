@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
+import { Button } from "./Button";
 
 // Salary-negotiation roleplay (BYO Claude key): a stateless multi-turn practice
 // loop. The component holds the transcript and sends it back each turn via
@@ -131,14 +132,9 @@ export function NegotiationRoleplay({
           <button type="submit" disabled={busy || !input.trim()}>
             {t("negotiation.send")}
           </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            disabled={busy}
-            onClick={reset}
-          >
+          <Button variant="secondary" disabled={busy} onClick={reset}>
             {t("negotiation.restart")}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

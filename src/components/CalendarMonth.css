@@ -28,13 +28,12 @@
       font-size: var(--text-heading);
       letter-spacing: -0.01em;
     }
-    /* The nav buttons are `.btn-secondary .zui-cal-nav`. In App.css the old
-       `.cal-nav` padding was inert — the later `.btn-secondary` Recipe-B rule
-       (same layer) won it at 0.4/0.8 by source order. Now that this rule lives
-       in @layer components it would OUTRANK .btn-secondary (layer > source
-       order) and shrink the buttons, so its padding is deliberately omitted;
-       .btn-secondary supplies it, exactly as before. Only line-height (which
-       .btn-secondary never set) was ever effective here. */
+    /* The nav/today buttons are <Button variant="secondary">, so
+       Button.css's `.zui-btn--secondary.zui-btn--md` supplies padding
+       (0.4/0.8) directly — App.css's `.btn-secondary` no longer matches
+       these elements at all (the raw class is gone) and never did anything
+       this rule needs to reproduce. Only line-height, which Button.css
+       deliberately never sets, is genuinely this component's own. */
     .zui-cal-nav {
       line-height: 1;
     }

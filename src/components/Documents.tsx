@@ -5,12 +5,16 @@ import type { Document } from "../types";
 import { RemoveIcon } from "../icons";
 import { requestConfirm } from "../hooks";
 import { buildCvSnapshotFile, cvSnapshotLabel } from "../cv-snapshot";
+import { Button } from "./Button";
 import "./Documents.css";
 
 // Extracted verbatim from detail.tsx (the application detail's document
 // list: upload form + list of uploaded files with delete) as part of the
-// #285 App.tsx/detail.tsx split — self-contained except .tl-del/.tl-empty,
-// shared with Timeline (src/timeline.tsx) and kept as-is. Documents.css
+// #285 App.tsx/detail.tsx split — self-contained. The delete control is
+// <Button variant="danger" className="tl-del">, the same shared class
+// Timeline (src/timeline.tsx) also renders on its own Button — each
+// component restates the layer-priority override in its own stylesheet, see
+// Documents.css. .tl-empty stays App.css, unrelated to the button. Documents.css
 // reproduces the App.css .docs*/.upload-btn/.doc-label/.doc-size recipe
 // under the .zui-docs* names this component emits.
 function formatSize(bytes: number): string {
@@ -108,8 +112,9 @@ export function Documents({ applicationId, onError }: DocumentsProps) {
             </a>
             {d.label && <span className="zui-doc-label">{d.label}</span>}
             <span className="zui-doc-size">{formatSize(d.size)}</span>
-            <button
-              className="tl-del danger"
+            <Button
+              variant="danger"
+              className="tl-del"
               aria-label={t("common.delete")}
               onClick={async () => {
                 if (
@@ -124,7 +129,7 @@ export function Documents({ applicationId, onError }: DocumentsProps) {
               }}
             >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
         {items?.length === 0 && <li className="tl-empty">{t("detail.noFiles")}</li>}

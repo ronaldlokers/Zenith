@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import type { PrepItem } from "../types";
 import { RemoveIcon } from "../icons";
+import { Button } from "./Button";
 import "./InterviewPrepSection.css";
 
 // Extracted verbatim from detail.tsx (the application detail's interview
@@ -134,13 +135,14 @@ export function InterviewPrepSection({
               >
                 ↓
               </button>
-              <button
-                className="danger"
+              <Button
+                variant="danger"
+                className="zui-prep-del"
                 onClick={() => removeItem(item.id)}
                 aria-label={t("common.delete")}
               >
                 <RemoveIcon />
-              </button>
+              </Button>
             </span>
           </li>
         ))}

@@ -81,4 +81,32 @@
     color: var(--ink);
     font-size: var(--text-body);
   }
+
+  /* The delete action is <Button variant="danger" className="zui-prep-del">.
+     `.zui-prep-checklist li button` above sets background/border/color
+     unconditionally at (0,1,2), same layer, which beats `.zui-btn--danger`'s
+     (0,1,0) outright on the class digit tie broken by element count — so
+     this component's existing "muted at rest, danger on hover" treatment
+     survives the swap untouched (it already beat the raw `.danger` class
+     the same way, pre-swap: `.danger` was never what painted this icon
+     red). That local rule also sets font-size, which `.zui-btn--md:not(
+     .zui-btn--primary)` (0,2,0) DOES win back — two classes beats one class
+     regardless of element count — flipping it to var(--text-body); harmless
+     here since the child is a fixed-size SVG icon, not text.
+
+     Padding and min-height are different: nothing here or in App.css ever
+     declared them for this button, so the pre-swap box relied on the plain
+     UA default, and Button.css sets both unconditionally — `.zui-btn--danger
+     .zui-btn--md` padding (0,2,0) and `.zui-btn--danger` min-height (0,1,0)
+     — which would pad and grow this icon button past the up/down arrows
+     beside it. `revert-layer` reproduces the pre-swap UA default exactly: it
+     discards @layer components' contribution to these two properties for
+     this element (Button.css included) and falls through to whatever a
+     lower layer would give — nothing, so the UA default, same as before.
+     Three classes, (0,3,0), so this beats `.zui-btn--danger.zui-btn--md`'s
+     (0,2,0) padding on specificity, not on load order. */
+  .zui-btn.zui-btn--danger.zui-prep-del {
+    padding: revert-layer;
+    min-height: revert-layer;
+  }
 }

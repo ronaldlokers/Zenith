@@ -1,9 +1,10 @@
 /* Reproduces the App.css notification bell recipe (App.css:139-224, plus
    the .notification-list li:hover rule that lived in the shared hover-state
    list at App.css:4073-4079) under the .zui-notification-* names
-   NotificationBell.tsx emits — moved verbatim, renamed only. The
-   .settings-btn trigger and .btn-secondary "mark all read" button stay in
-   App.css — both are shared with other buttons elsewhere in the app. */
+   NotificationBell.tsx emits — moved verbatim, renamed only. The "mark all
+   read" button is <Button variant="secondary">, so the shared recipe lives
+   in Button.css rather than being copied here or borrowed from App.css. The
+   .settings-btn trigger keeps only what is specific to the bell. */
 @layer components {
   .zui-notification-bell {
     position: relative;
