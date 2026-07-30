@@ -4,11 +4,15 @@ import "./PillTabs.css";
 // active tab is a filled accent pill, as against TabBar's underline.
 //
 // This is the same SHAPE as SegmentedControl — same border, same radius-full,
-// same filled-accent active state — and differs only in voice: body text here,
-// mono uppercase there. That difference is type-ramp drift, not a decision, and
-// PR 5 of the Wave 2 plan resolves whether these two components merge. Kept
-// separate here so the structural change and the visual one stay reviewable
-// apart.
+// same filled-accent active state. It used to differ in voice too — body text
+// here, mono uppercase there — but that was type-ramp drift, not a decision;
+// DESIGN.md's Mono-Is-Chrome Rule names tab labels as exactly the mono case,
+// and the voice now matches (#501 follow-up). What still keeps the two
+// components apart is structural, not typographic: the container's
+// `background`, `overflow`, `gap` and `margin`, and the button's own
+// resting `background` (transparent here, letting the container's fill show
+// through, vs opaque `--surface` there). Those differences are load-bearing —
+// don't re-open the merge question over them.
 //
 // PillTabs.css fully describes it rather than depending on App.css, which
 // Storybook never loads — including the band-5 touch-target minimum, which the
@@ -24,9 +28,14 @@ export interface PillTabsProps<K extends string> {
   onSelect: (key: K) => void;
   /**
    * Namespaces the tab/panel ids: `${idPrefix}-tab-${key}` / `-panel-`.
-   * Omit where the caller renders no tabpanel — the network view does not,
-   * and an aria-controls pointing at an id that does not exist is worse than
-   * no association at all.
+   * Omit where the caller renders no tabpanel — the network view does not —
+   * so this component skips aria-controls rather than point it at nothing.
+   * That's this component's own choice, not a family rule: TabBar's call
+   * site (src/detail.tsx) renders only the active tab's panel yet still
+   * emits aria-controls for all three tabs, so two of them point at ids that
+   * don't exist on every render. Both are faithful copies of the markup they
+   * replaced, so neither is a regression — just don't take TabBar's aria-
+   * controls wiring as a pattern to extend.
    */
   idPrefix?: string;
   "aria-label": string;
