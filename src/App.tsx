@@ -50,6 +50,7 @@ import {
   Button,
   CommandPalette,
   OnboardingChecklist,
+  PillTabs,
   QuickAddDialog,
   Skeleton,
 } from "./components";
@@ -421,28 +422,15 @@ export default function App() {
               />
             )}
             {(tab === "companies" || tab === "contacts") && (
-              <div
-                className="subnav"
-                role="tablist"
+              <PillTabs
+                tabs={[
+                  { key: "companies", label: t("tabs.companies") },
+                  { key: "contacts", label: t("tabs.people") },
+                ]}
+                active={tab}
+                onSelect={(k) => setTab(k as "companies" | "contacts")}
                 aria-label={t("tabs.network")}
-              >
-                <button
-                  role="tab"
-                  aria-selected={tab === "companies"}
-                  className={tab === "companies" ? "active" : ""}
-                  onClick={() => setTab("companies")}
-                >
-                  {t("tabs.companies")}
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={tab === "contacts"}
-                  className={tab === "contacts" ? "active" : ""}
-                  onClick={() => setTab("contacts")}
-                >
-                  {t("tabs.people")}
-                </button>
-              </div>
+              />
             )}
             {tab === "companies" && (
               <CompaniesTab

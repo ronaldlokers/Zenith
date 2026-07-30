@@ -1004,32 +1004,6 @@
   }
 }
 
-/* Sub-navigation toggle within a merged tab (Network = Companies/People, #285) */
-.subnav {
-  display: inline-flex;
-  gap: 0.2rem;
-  margin: 0.25rem 0 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  padding: 0.2rem;
-  background: var(--surface);
-}
-
-.subnav button {
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  padding: 0.3rem 0.9rem;
-  border-radius: var(--radius-full);
-  font-size: var(--text-body);
-  cursor: pointer;
-}
-
-.subnav button.active {
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
 /* API reference (#283) */
 .api-docs {
   margin-top: var(--space-4);
@@ -4256,7 +4230,6 @@ button:not(:disabled):active,
    control-normalization layer existed and sat between 15px and 31px tall —
    under the documented 34px, and under WCAG 2.5.8. Height only; their fills
    and type are untouched. */
-.subnav button,
 .board-bar .search,
 .board-bar-btn,
 .board-bar select,
@@ -4271,7 +4244,6 @@ button:not(:disabled):active,
 }
 
 @media (max-width: 600px) {
-  .subnav button,
   .board-bar .search,
   .board-bar-btn,
   .board-bar select,

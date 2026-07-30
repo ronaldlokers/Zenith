@@ -34,6 +34,8 @@ export { TabBar } from "./TabBar";
 export type { TabBarProps, TabBarTab } from "./TabBar";
 export { SettingsNav } from "./SettingsNav";
 export type { SettingsNavProps, SettingsNavSection } from "./SettingsNav";
+export { PillTabs } from "./PillTabs";
+export type { PillTabsProps, PillTabsTab } from "./PillTabs";
 export { ActionBar } from "./ActionBar";
 export type { ActionBarProps } from "./ActionBar";
 export { Toolbar } from "./Toolbar";
