@@ -20,6 +20,9 @@
     padding: 0.3rem 0.9rem;
     border-radius: var(--radius-full);
     font-size: var(--text-body);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
     cursor: pointer;
   }
 

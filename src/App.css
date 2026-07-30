@@ -2588,7 +2588,7 @@ summary.bcol-head::after {
   line-height: 1.42;
   padding: 16px 18px;
   border-radius: 3px;
-  box-shadow: 0 1px 4px rgba(20, 23, 58, 0.12);
+  box-shadow: var(--shadow-1);
 }
 
 .cv-doc-name {
