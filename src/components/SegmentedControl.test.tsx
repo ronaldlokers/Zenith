@@ -57,3 +57,38 @@ describe("SegmentedControl", () => {
     expect(el).toHaveAttribute("title", "tip");
   });
 });
+
+describe("SegmentedControl.Item", () => {
+  // The whole reason the item exists: aria-pressed was set at three of the
+  // five call sites and forgotten at the fourth.
+  test("marks the active item with aria-pressed", () => {
+    render(
+      <SegmentedControl>
+        <SegmentedControl.Item active>List</SegmentedControl.Item>
+        <SegmentedControl.Item active={false}>Grid</SegmentedControl.Item>
+      </SegmentedControl>,
+    );
+    expect(screen.getByRole("button", { name: "List" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Grid" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("carries the active class the container styles", () => {
+    render(
+      <SegmentedControl>
+        <SegmentedControl.Item active>List</SegmentedControl.Item>
+      </SegmentedControl>,
+    );
+    expect(screen.getByRole("button", { name: "List" })).toHaveClass("active");
+  });
+
+  // Inside a <form> a bare <button> is an implicit submit; a view toggle
+  // never is.
+  test("is type=button", () => {
+    render(
+      <SegmentedControl>
+        <SegmentedControl.Item active={false}>Grid</SegmentedControl.Item>
+      </SegmentedControl>,
+    );
+    expect(screen.getByRole("button")).toHaveAttribute("type", "button");
+  });
+});

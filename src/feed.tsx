@@ -591,34 +591,31 @@ export function FeedTab({
             {t("feed.sortLabel")}
           </span>
           <SegmentedControl role="group" aria-label={t("feed.sortLabel")}>
-            <button
-              className={sortBy === "newest" ? "active" : ""}
-              aria-pressed={sortBy === "newest"}
+            <SegmentedControl.Item
+              active={sortBy === "newest"}
               onClick={() => setSortBy("newest")}
             >
               {t("feed.sortNewest")}
-            </button>
-            <button
-              className={sortBy === "match" ? "active" : ""}
-              aria-pressed={sortBy === "match"}
+            </SegmentedControl.Item>
+            <SegmentedControl.Item
+              active={sortBy === "match"}
               onClick={() => setSortBy("match")}
             >
               {t("feed.sortMatch")}
-            </button>
+            </SegmentedControl.Item>
           </SegmentedControl>
           <span className="feed-controls-label muted small">
             {t("feed.fitLabel")}
           </span>
           <SegmentedControl role="group" aria-label={t("feed.fitLabel")}>
             {[0, 1, 2, 3].map((n) => (
-              <button
+              <SegmentedControl.Item
                 key={n}
-                className={minFit === n ? "active" : ""}
-                aria-pressed={minFit === n}
+                active={minFit === n}
                 onClick={() => setMinFit(n)}
               >
                 {n === 0 ? t("feed.fitAny") : `${n}+`}
-              </button>
+              </SegmentedControl.Item>
             ))}
           </SegmentedControl>
         </div>
