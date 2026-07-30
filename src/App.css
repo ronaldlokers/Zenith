@@ -2965,8 +2965,9 @@ summary.bcol-head::after {
 .admin-page-sub {
   margin: var(--space-1) 0 var(--space-4);
 }
-/* Admin reuses the Settings two-pane (.settings-page/.settings-nav); the
-   selected section renders one .admin-invite card in the content area. */
+/* Admin reuses the Settings two-pane (.settings-page + the SettingsNav
+   component); the selected section renders one .admin-invite card in the
+   content area. */
 .admin-content {
   min-width: 0;
   max-width: 40rem;
@@ -3584,37 +3585,6 @@ summary.bcol-head::after {
   margin: var(--space-3) auto 0;
 }
 
-.settings-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  position: sticky;
-  top: 4.5rem;
-}
-
-.settings-nav button {
-  text-align: left;
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font-size: var(--text-body);
-  padding: 0.4rem 0.6rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.settings-nav button:hover {
-  background: var(--hover);
-  color: var(--ink);
-}
-
-.settings-nav button.active {
-  background: var(--accent-soft);
-  color: var(--accent-ink);
-  font-weight: 600;
-  box-shadow: inset 3px 0 0 var(--accent);
-}
-
 .settings-content {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3636,13 +3606,6 @@ summary.bcol-head::after {
 @media (max-width: 700px) {
   .settings-page {
     grid-template-columns: 1fr;
-  }
-
-  .settings-nav {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.3rem;
   }
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
+import { SettingsNav } from "./components";
 import { AdminUsers, AdminInvite, TestPush } from "./settings/admin";
 import { ResetDemoData } from "./settings/data";
 
@@ -42,18 +43,12 @@ export function AdminPage({
       <h1 className="admin-page-title">{t("admin.title")}</h1>
       <p className="admin-page-sub muted">{t("admin.subtitle")}</p>
       <div className="settings-page">
-        <nav className="settings-nav" aria-label={t("admin.navLabel")}>
-          {ADMIN_SECTIONS.map((s) => (
-            <button
-              key={s}
-              className={section === s ? "active" : ""}
-              aria-current={section === s ? "true" : undefined}
-              onClick={() => setSection(s)}
-            >
-              {t(`admin.section.${s}`)}
-            </button>
-          ))}
-        </nav>
+        <SettingsNav
+          sections={ADMIN_SECTIONS.map((s) => ({ key: s, label: t(`admin.section.${s}`) }))}
+          active={section}
+          onSelect={(k) => setSection(k as AdminSection)}
+          aria-label={t("admin.navLabel")}
+        />
         <div className="admin-content">
           {section === "users" && <AdminUsers onError={onError} />}
           {section === "invites" && <AdminInvite />}

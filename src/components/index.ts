@@ -32,6 +32,8 @@ export { SegmentedControl } from "./SegmentedControl";
 export type { SegmentedControlProps } from "./SegmentedControl";
 export { TabBar } from "./TabBar";
 export type { TabBarProps, TabBarTab } from "./TabBar";
+export { SettingsNav } from "./SettingsNav";
+export type { SettingsNavProps, SettingsNavSection } from "./SettingsNav";
 export { ActionBar } from "./ActionBar";
 export type { ActionBarProps } from "./ActionBar";
 export { Toolbar } from "./Toolbar";
