@@ -42,6 +42,9 @@ const VIEWS = [
     { suffix: "nextup-upcoming", click: ".today-nextup .zui-segmented button:nth-child(2)" },
     // The bell popover holds "mark all read", which no capture ever opened.
     { suffix: "bell", click: ".zui-notification-bell .settings-btn" },
+    // QuickAddDialog only opens from the top bar's + Add, so nothing captured
+    // it — its stylesheet was verified in Storybook alone.
+    { suffix: "quickadd", click: ".top-add" },
   ]],
   ["board", "/board", [{ suffix: "cardmenu", click: ".zui-cardmenu-btn" }]],
   ["detail", `/board/${process.env.DETAIL_ID ?? "1"}`, [
