@@ -30,6 +30,8 @@ export { FieldLabel } from "./FieldLabel";
 export type { FieldLabelProps } from "./FieldLabel";
 export { SegmentedControl } from "./SegmentedControl";
 export type { SegmentedControlProps } from "./SegmentedControl";
+export { TabBar } from "./TabBar";
+export type { TabBarProps, TabBarTab } from "./TabBar";
 export { ActionBar } from "./ActionBar";
 export type { ActionBarProps } from "./ActionBar";
 export { Toolbar } from "./Toolbar";
