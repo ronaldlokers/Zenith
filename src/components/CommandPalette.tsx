@@ -172,9 +172,7 @@ export function CommandPalette({
           </div>
         )}
         {q && !items.length && (
-          <p className="muted small zui-palette-empty">
-            {t("palette.noResults")}
-          </p>
+          <p className="muted small">{t("palette.noResults")}</p>
         )}
     </Dialog>
   );

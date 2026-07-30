@@ -81,3 +81,6 @@ scripts/.seed-admin.sql
 .impeccable/live/
 .impeccable/critique/
 .impeccable/hook.cache.json
+
+# scripts/storybook-shots.mjs comparison captures (sb-baseline/, sb-after/)
+sb-*/

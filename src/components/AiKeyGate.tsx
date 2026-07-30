@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAiStatus } from "../ai-status-context";
+import "./AiKeyGate.css";
 
 // Gates a BYO-key AI panel: renders its children only once a key is configured,
 // otherwise a compact prompt linking to Account settings — so the user learns
@@ -18,7 +19,7 @@ export function AiKeyGate({ children }: AiKeyGateProps) {
   if (configured) return <>{children}</>;
 
   return (
-    <p className="muted small ai-key-gate">
+    <p className="muted small zui-ai-key-gate">
       {t("ai.needKey")}{" "}
       <Link to="/settings?s=account">{t("ai.needKeyLink")}</Link>
     </p>

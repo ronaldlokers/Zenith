@@ -11,7 +11,11 @@ import "./JdKeywordMatch.css";
 // (#285 split): keyword coverage still drives it, now wrapped in a scored
 // report (band ring + content checks) via the pure atsReport helper.
 // JdKeywordMatch.css reproduces the App.css .jd-match-* recipe under the
-// .zui-jd-match-* names this component emits.
+// .zui-jd-match-* names this component emits. The matched-chips wrapper kept
+// the shared .keyword-chips class (App.css:2108, still used by feed.tsx,
+// detail.tsx and cv/sections.tsx) — caught by the self-containment test, so
+// it's restated here as .zui-jd-match-chips; the App.css original stays for
+// those other, not-yet-owned call sites.
 export interface JdKeywordMatchProps {
   onError: (message: string | null) => void;
   initialText?: string;
@@ -85,7 +89,7 @@ export function JdKeywordMatch({ onError, initialText }: JdKeywordMatchProps) {
           </div>
 
           {total > 0 && (
-            <div className="keyword-chips">
+            <div className="zui-jd-match-chips">
               {report.matched.map((name) => (
                 <Chip key={`m-${name}`} matched>
                   {name}

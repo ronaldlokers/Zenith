@@ -2,11 +2,12 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { Button } from "./Button";
+import "./AiTranscript.css";
 
 // Salary-negotiation roleplay (BYO Claude key): a stateless multi-turn practice
 // loop. The component holds the transcript and sends it back each turn via
 // /api/ai/negotiation; the worker plays the hiring manager under the user's key.
-// Reuses the .mock-* styles (same chat shape as the mock interview).
+// Reuses the AiTranscript.css shell (same chat shape as the mock interview).
 type ChatMsg = { role: "user" | "assistant"; content: string };
 
 // Hidden opening turn that primes the hiring manager to make the first offer.
@@ -81,11 +82,11 @@ export function NegotiationRoleplay({
 
   if (messages.length === 0) {
     return (
-      <div className="mock-interview">
+      <div className="zui-transcript">
         <p className="muted small">{t("negotiation.hint")}</p>
         <button
           type="button"
-          className="mock-start"
+          className="zui-transcript-start"
           disabled={busy}
           onClick={start}
         >
@@ -96,26 +97,29 @@ export function NegotiationRoleplay({
   }
 
   return (
-    <div className="mock-interview">
+    <div className="zui-transcript">
       <div
-        className="mock-transcript"
+        className="zui-transcript-log"
         ref={transcriptRef}
         aria-live="polite"
         aria-busy={busy}
       >
         {visible.map((m, i) => (
-          <div key={i} className={`mock-msg mock-${m.role}`}>
+          <div
+            key={i}
+            className={`zui-transcript-msg zui-transcript-msg--${m.role}`}
+          >
             {m.content}
           </div>
         ))}
         {busy && (
-          <div className="mock-msg mock-assistant muted">
+          <div className="zui-transcript-msg zui-transcript-msg--assistant muted">
             {t("negotiation.thinking")}
           </div>
         )}
       </div>
       <form
-        className="mock-answer"
+        className="zui-transcript-answer"
         onSubmit={(e) => {
           e.preventDefault();
           answer();
@@ -128,7 +132,7 @@ export function NegotiationRoleplay({
           onChange={(e) => setInput(e.target.value)}
           disabled={busy}
         />
-        <div className="mock-answer-actions">
+        <div className="zui-transcript-actions">
           <button type="submit" disabled={busy || !input.trim()}>
             {t("negotiation.send")}
           </button>

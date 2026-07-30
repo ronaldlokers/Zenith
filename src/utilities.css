@@ -1,0 +1,32 @@
+/* The three text primitives shared across components, extracted from App.css
+   so Storybook loads them too. A component that used .muted from App.css
+   rendered untinted in the catalog, which is the exact failure
+   self-containment exists to prevent — but restating .muted in each of the
+   nine components that use it would recreate the duplication Wave 2 removed.
+   These three are the whole exception: anything component-specific still
+   belongs in that component's own stylesheet.
+
+   Deliberately NOT layered here. app-styles.css and preview-styles.css each
+   import it into layer(app), so it stays where App.css put it in the cascade
+   and does not outrank component CSS. */
+
+/* Visually hidden but exposed to assistive tech (live regions etc., #285) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: var(--text-body);
+}

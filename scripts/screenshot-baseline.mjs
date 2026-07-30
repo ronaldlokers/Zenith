@@ -41,7 +41,10 @@ const VIEWS = [
   ["overview", "/", [
     { suffix: "nextup-upcoming", click: ".today-nextup .zui-segmented button:nth-child(2)" },
     // The bell popover holds "mark all read", which no capture ever opened.
-    { suffix: "bell", click: ".zui-notification-bell .settings-btn" },
+    { suffix: "bell", click: ".zui-notification-bell .zui-notification-trigger" },
+    // QuickAddDialog only opens from the top bar's + Add, so nothing captured
+    // it — its stylesheet was verified in Storybook alone.
+    { suffix: "quickadd", click: ".top-add" },
   ]],
   ["board", "/board", [{ suffix: "cardmenu", click: ".zui-cardmenu-btn" }]],
   ["detail", `/board/${process.env.DETAIL_ID ?? "1"}`, [
@@ -182,9 +185,16 @@ for (const [vpName, viewport] of VIEWPORTS) {
       // not express it.
       for (const selector of Array.isArray(click) ? click : [click]) {
         const target = page.locator(selector).first();
-        // A missing selector means the harness has drifted from the markup —
-        // silently skipping it would make the diff pass while covering nothing.
-        if (!(await target.count())) {
+        // Wait for it rather than testing presence immediately: a step in a
+        // sequence opens a surface the next step clicks, and on the mobile
+        // viewport the contact dialog's composer mounted after the fixed
+        // 120ms settle, so an instant count() failed the whole run
+        // intermittently. Still fails loudly on a real drift — a missing
+        // selector must stop the run, because silently skipping it would make
+        // the diff pass while covering nothing.
+        try {
+          await target.waitFor({ state: "visible", timeout: 5000 });
+        } catch {
           console.error(`Interaction selector not found on ${route}: ${selector}`);
           process.exit(1);
         }

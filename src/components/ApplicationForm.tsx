@@ -95,21 +95,21 @@ export function ApplicationForm({
 
   return (
     <form
-      className="form"
+      className="zui-appform"
       onSubmit={(e) => {
         e.preventDefault();
         submit(form);
       }}
     >
       {possibleDuplicate && (
-        <p className="error">
+        <p className="zui-appform-error">
           <ErrorIcon />
-          <span className="error-text">
+          <span className="zui-appform-error-text">
             {t("detail.possibleDuplicate", { title: possibleDuplicate.title })}
           </span>
         </p>
       )}
-      <div className="form-group">
+      <div className="zui-appform-group">
         <h4>{t("forms.basics")}</h4>
         <label>
           {t("forms.title")} *
@@ -192,7 +192,7 @@ export function ApplicationForm({
         </label>
       </div>
 
-      <div className="form-group">
+      <div className="zui-appform-group">
         <h4>{t("forms.postingCompensation")}</h4>
         <label>
           {t("forms.url")}
@@ -296,7 +296,7 @@ export function ApplicationForm({
       </div>
 
       {form.status === "offer" && (
-        <div className="form-group">
+        <div className="zui-appform-group">
           <h4>{t("offer.title")}</h4>
           <label>
             {t("offer.signingBonus")}
@@ -340,7 +340,7 @@ export function ApplicationForm({
               }
             />
           </label>
-          <label className="full">
+          <label className="zui-appform-full">
             {t("offer.benefitsNotes")}
             <textarea
               rows={2}
@@ -353,7 +353,7 @@ export function ApplicationForm({
         </div>
       )}
 
-      <div className="form-group">
+      <div className="zui-appform-group">
         <h4>{t("forms.followUp")}</h4>
         <label>
           {t("forms.nextAction")}
@@ -397,7 +397,7 @@ export function ApplicationForm({
             ))}
           </select>
         </label>
-        <label className="full">
+        <label className="zui-appform-full">
           {t("forms.notes")}
           <textarea
             rows={3}
@@ -405,7 +405,7 @@ export function ApplicationForm({
             onChange={(e) => set({ notes: e.target.value || null })}
           />
         </label>
-        <label className="full">
+        <label className="zui-appform-full">
           {t("detail.jobDescription")}
           {form.job_description_captured_at && (
             <span className="muted small">

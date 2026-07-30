@@ -1,0 +1,50 @@
+/* Reproduces the App.css .quickadd-* recipe (App.css:3202) and the slice of
+   the .settings-field form layer this dialog actually uses (App.css:172,
+   208, and the shared input/select metric recipe at App.css:4250) — not the
+   whole family: settings-field is a form-layout recipe, not a shared
+   primitive, so .settings-check and friends stay in App.css for the surfaces
+   that use them. The two input/select rules are copied in source order so
+   the second still overrides the first's font-size/padding/border-radius,
+   exactly as it does in App.css. */
+@layer components {
+  .zui-quickadd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: var(--text-body);
+    color: var(--muted);
+    margin-bottom: var(--space-4);
+  }
+
+  .zui-quickadd-field select,
+  .zui-quickadd-field input {
+    font-size: var(--text-body);
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .zui-quickadd-field input,
+  .zui-quickadd-field select {
+    font-size: var(--text-body);
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-md);
+  }
+
+  /* Quick-add paste-a-link row (#482) — URL input + Import button. */
+  .zui-quickadd-import-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .zui-quickadd-import-row input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .zui-quickadd-hint {
+    margin: 0.35rem 0 0.9rem;
+  }
+}

@@ -11,12 +11,15 @@ import "./NotificationBell.css";
 
 // Extracted verbatim from chrome.tsx (the header notifications bell: a
 // button with an unread dot that opens a backdrop + panel listing
-// notifications) as part of the #285 App.tsx/chrome.tsx split —
-// self-contained, except the trigger button keeps the shared `.settings-btn`
-// class (App.css), also used by the top-bar settings button. The "mark all
-// read" button is <Button variant="secondary">. NotificationBell.css
-// reproduces the App.css .notification-* recipe under the
-// .zui-notification-* names this component emits.
+// notifications) as part of the #285 App.tsx/chrome.tsx split. The trigger
+// button used to keep the shared `.settings-btn` class (App.css), also used
+// by the top-bar settings button (src/shell.tsx) — caught by the
+// self-containment test, so it's renamed zui-notification-trigger here and
+// restated in NotificationBell.css; App.css's .settings-btn stays for
+// shell.tsx's own, not-yet-owned button. The "mark all read" button is
+// <Button variant="secondary">. NotificationBell.css reproduces the App.css
+// .notification-* recipe under the .zui-notification-* names this component
+// emits.
 //
 // In-app notification center (#213) — due/overdue follow-ups, stale
 // postings, and new Feed matches, generated server-side on the existing 6h
@@ -59,7 +62,7 @@ export function NotificationBell() {
   return (
     <span className="zui-notification-bell">
       <button
-        className="settings-btn"
+        className="zui-notification-trigger"
         onClick={() => setOpen((v) => !v)}
         title={t("header.notifications")}
         aria-label={
@@ -101,7 +104,7 @@ export function NotificationBell() {
               {(notifications ?? []).map((n) => (
                 <li
                   key={n.id}
-                  className={n.read_at ? "read" : "unread"}
+                  className={n.read_at ? undefined : "unread"}
                   {...rowActivate(() => openNotification(n))}
                 >
                   <span className="zui-notification-title">{n.title}</span>
