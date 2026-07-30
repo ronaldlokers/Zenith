@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { Button } from "./Button";
+import "./AiTranscript.css";
 
 // AI mock interview (BYO Claude key): a stateless multi-turn practice loop. The
 // component holds the transcript and sends it back each turn via
@@ -77,11 +78,11 @@ export function MockInterview({
 
   if (messages.length === 0) {
     return (
-      <div className="mock-interview">
+      <div className="zui-transcript">
         <p className="muted small">{t("mockInterview.hint")}</p>
         <button
           type="button"
-          className="mock-start"
+          className="zui-transcript-start"
           disabled={busy}
           onClick={start}
         >
@@ -92,26 +93,29 @@ export function MockInterview({
   }
 
   return (
-    <div className="mock-interview">
+    <div className="zui-transcript">
       <div
-        className="mock-transcript"
+        className="zui-transcript-log"
         ref={transcriptRef}
         aria-live="polite"
         aria-busy={busy}
       >
         {visible.map((m, i) => (
-          <div key={i} className={`mock-msg mock-${m.role}`}>
+          <div
+            key={i}
+            className={`zui-transcript-msg zui-transcript-msg--${m.role}`}
+          >
             {m.content}
           </div>
         ))}
         {busy && (
-          <div className="mock-msg mock-assistant muted">
+          <div className="zui-transcript-msg zui-transcript-msg--assistant muted">
             {t("mockInterview.thinking")}
           </div>
         )}
       </div>
       <form
-        className="mock-answer"
+        className="zui-transcript-answer"
         onSubmit={(e) => {
           e.preventDefault();
           answer();
@@ -124,7 +128,7 @@ export function MockInterview({
           onChange={(e) => setInput(e.target.value)}
           disabled={busy}
         />
-        <div className="mock-answer-actions">
+        <div className="zui-transcript-actions">
           <button type="submit" disabled={busy || !input.trim()}>
             {t("mockInterview.send")}
           </button>

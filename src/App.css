@@ -2559,13 +2559,6 @@ summary.bcol-head::after {
   margin: 0.35rem 0 0.5rem;
 }
 
-/* AI mock interview chat (BYO Claude key). */
-.mock-interview {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
 /* AI usage surfacing (#443): key-gate prompt, per-app JD grounding badge,
    and the Account settings feature list. */
 .ai-key-gate a {
@@ -2594,91 +2587,6 @@ summary.bcol-head::after {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-}
-
-.mock-start {
-  align-self: flex-start;
-  background: var(--accent);
-  color: var(--accent-text);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 0.9rem;
-  font-weight: 650;
-  cursor: pointer;
-}
-
-.mock-start:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.mock-transcript {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 22rem;
-  overflow-y: auto;
-  padding: 0.15rem;
-}
-
-.mock-msg {
-  max-width: 88%;
-  padding: 0.5rem 0.7rem;
-  border-radius: var(--radius-md);
-  font-size: var(--text-body);
-  white-space: pre-wrap;
-  line-height: 1.4;
-}
-
-.mock-assistant {
-  align-self: flex-start;
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
-  color: var(--ink);
-}
-
-.mock-user {
-  align-self: flex-end;
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
-  color: var(--ink);
-}
-
-.mock-answer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.mock-answer textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  font: inherit;
-  font-size: var(--text-body);
-  resize: vertical;
-}
-
-.mock-answer-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.mock-answer-actions button:first-child {
-  background: var(--accent);
-  color: var(--accent-text);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 0.45rem 0.9rem;
-  font-weight: 650;
-  cursor: pointer;
-}
-
-.mock-answer-actions button:first-child:disabled {
-  opacity: 0.6;
-  cursor: default;
 }
 
 /* Live PDF preview (#134) */

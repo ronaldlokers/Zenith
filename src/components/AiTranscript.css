@@ -1,0 +1,101 @@
+/* Shared shell for MockInterview and NegotiationRoleplay — not a component
+   of its own, but a stylesheet: both render the identical chat shape (a
+   start prompt, a scrolling transcript, an answer form) with only the copy
+   and API call differing, so they share one recipe rather than duplicating
+   it in two files. Reproduces the App.css .mock-* recipe (App.css:2562)
+   under the zui- names both components emit. */
+@layer components {
+  .zui-transcript {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .zui-transcript-start {
+    align-self: flex-start;
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.9rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .zui-transcript-start:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .zui-transcript-log {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 22rem;
+    overflow-y: auto;
+    padding: 0.15rem;
+  }
+
+  .zui-transcript-msg {
+    max-width: 88%;
+    padding: 0.5rem 0.7rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-body);
+    white-space: pre-wrap;
+    line-height: 1.4;
+  }
+
+  .zui-transcript-msg--assistant {
+    align-self: flex-start;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    color: var(--ink);
+  }
+
+  .zui-transcript-msg--user {
+    align-self: flex-end;
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+    color: var(--ink);
+  }
+
+  .zui-transcript-answer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .zui-transcript-answer textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font: inherit;
+    font-size: var(--text-body);
+    resize: vertical;
+  }
+
+  .zui-transcript-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  /* Targets a raw <button>: Task 9 left the transcript's primary submit
+     unwrapped (it is the primary submit, not a secondary), so this selects
+     it by position rather than by class. */
+  .zui-transcript-actions button:first-child {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.45rem 0.9rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .zui-transcript-actions button:first-child:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
