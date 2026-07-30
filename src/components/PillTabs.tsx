@@ -9,10 +9,13 @@ import "./PillTabs.css";
 // DESIGN.md's Mono-Is-Chrome Rule names tab labels as exactly the mono case,
 // and the voice now matches (#501 follow-up). What still keeps the two
 // components apart is structural, not typographic: the container's
-// `background`, `overflow`, `gap` and `margin`, and the button's own
-// resting `background` (transparent here, letting the container's fill show
-// through, vs opaque `--surface` there). Those differences are load-bearing —
-// don't re-open the merge question over them.
+// `background`, `overflow` and `gap`, and the button's own resting
+// `background` (transparent here, letting the container's fill show through,
+// vs opaque `--surface` there). Those differences are load-bearing — don't
+// re-open the merge question over them. `margin` also differs (this
+// component's `0.25rem 0 0.9rem` vs SegmentedControl's call sites), but that's
+// inherited call-site spacing from `.subnav`, not a design decision — a future
+// reader may legitimately move it to the call site.
 //
 // PillTabs.css fully describes it rather than depending on App.css, which
 // Storybook never loads — including the band-5 touch-target minimum, which the

@@ -27,9 +27,13 @@ dist-ssr
 storybook-static
 
 # screenshot baseline for component migration (local only, regenerated).
-# after*/ and control/ are throwaway OUT_DIR captures used to diff a swap
-# against the pre-swap render (compare -metric AE); never commit any of them.
+# baseline*/, after*/ and control/ are throwaway OUT_DIR captures used to diff
+# a swap against the pre-swap render (compare -metric AE); the harness takes
+# an arbitrary OUT_DIR, so the glob covers any baseline-prefixed capture
+# directory (e.g. baseline-pr5/), not just the literal baseline/ — never
+# commit any of them.
 baseline/
+baseline*/
 after*/
 control/
 
