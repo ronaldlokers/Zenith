@@ -33,6 +33,12 @@ baseline/
 after*/
 control/
 
+# scripts/storybook-shots.mjs OUT_DIR captures (default storybook-shots/,
+# same throwaway-diff pattern as the baseline/after*/control/ app captures
+# above) — regenerated per run, never commit.
+storybook-shots/
+storybook-shots*/
+
 # saved browser session for the baseline script — never commit
 .auth.json
 

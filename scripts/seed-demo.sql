@@ -45,6 +45,11 @@ DELETE FROM languages WHERE id IN (9911, 9912);
 DELETE FROM work_experience WHERE id IN (9801, 9802);
 DELETE FROM skills WHERE id BETWEEN 9701 AND 9706;
 DELETE FROM cv_versions WHERE id = 9920;
+DELETE FROM notifications WHERE id IN (9551, 9552);
+DELETE FROM outreach_templates WHERE id IN (9531, 9532);
+DELETE FROM webhooks WHERE id = 9541;
+DELETE FROM ai_credentials WHERE user_id = 'seed-admin';
+DELETE FROM "user" WHERE id = 'seed-member';
 
 -- --- Companies ---
 -- (id, name, website, location, is_agency, notes, created_at, description, logo_url, researched_at, user_id)
@@ -347,3 +352,63 @@ INSERT INTO cv_versions (id, user_id, name, snapshot, created_at) VALUES
   (9920, 'seed-admin', 'Platform-focused',
    '{"profile":{"id":1,"name":"Jordan Ellis","email":"jordan.ellis@example.com","phone":"+31 6 1234 5678","location":"Amsterdam, NL","linkedin":"https://linkedin.com/in/jordanellis-demo","github":"https://github.com/jordanellis-demo","portfolio":"https://jordanellis.example","summary":"Platform-minded full-stack engineer with 8 years building developer tooling and infrastructure.","share_token":null,"calendar_token":null,"api_key":null},"workExperience":[{"id":9801,"company":"Vantage Digital","title":"Senior Platform Engineer","description":"Led the migration to Kubernetes and built the internal developer platform, cutting average deploy time by 70%.","start_month":3,"start_year":2021,"end_month":null,"end_year":null,"is_current":1,"sort_order":0,"skills":[{"id":9701,"name":"Kubernetes"},{"id":9702,"name":"Terraform"}]},{"id":9802,"company":"Beacon Software","title":"Full-stack Engineer","description":"Built and maintained a TypeScript and React SaaS product.","start_month":6,"start_year":2017,"end_month":2,"end_year":2021,"is_current":0,"sort_order":1,"skills":[{"id":9703,"name":"TypeScript"},{"id":9704,"name":"React"}]}],"education":[{"id":9910,"institution":"Utrecht University","degree":"BSc","field":"Computer Science","start_month":null,"start_year":2013,"end_month":null,"end_year":2017,"sort_order":0}],"languages":[{"id":9911,"name":"English","proficiency":"fluent"},{"id":9912,"name":"Dutch","proficiency":"native"}]}',
    '2026-07-20 09:00:00');
+
+-- --- Verification coverage additions ------------------------------------
+-- Six controls were refactored onto <Button> but never appear in any
+-- screenshot capture, because the seeded account has no state that opens
+-- their guard/gate — they were verified by CSS derivation only. Each block
+-- below names the control it exists to make renderable. IDs continue the
+-- existing >= 9000 demo range (or, for the "user" table's text ids, the
+-- existing 'seed-*' prefix convention); all dates stay hardcoded ISO
+-- strings anchored to this file's 2026-07-29 baseline. Deleted up front in
+-- the clean-slate block above, so this stays idempotent.
+
+-- Second user (src/settings/admin.tsx "remove user" button — admin.tsx
+-- renders the reset-password/reset-2FA/remove actions only for rows where
+-- `u.id !== session?.user.id`, so they never appear while seed-admin is
+-- the only account). authClient.admin.listUsers() reads straight off the
+-- "user" table (id, name, email, twoFactorEnabled, plus the role/ban
+-- fields used elsewhere in this settings tab), so a plain second row is
+-- enough — no "account"/password row is needed since this user is never
+-- logged in as, only listed.
+INSERT INTO "user" (id, name, email, "emailVerified", image, "createdAt", "updatedAt", role, banned, "banReason", "banExpires", "twoFactorEnabled") VALUES
+  ('seed-member', 'Sam Okafor', 'sam.okafor@example.com', 1, NULL, '2026-07-01 09:00:00', '2026-07-01 09:00:00', 'user', 0, NULL, NULL, 0);
+
+-- Webhook (src/settings/api.tsx "remove webhook" button — needs at least
+-- one row in `webhooks`). `secret` is an obviously-fake placeholder, never
+-- a real HMAC signing secret; last_status/last_attempt_at give it the
+-- "healthy" display state rather than the unattempted one.
+INSERT INTO webhooks (id, user_id, url, secret, enabled, created_at, last_status, last_attempt_at, failure_count) VALUES
+  (9541, 'seed-admin', 'https://example.com/webhook-demo', 'seed-demo-secret-not-real', 1, '2026-07-01 09:00:00', 'ok', '2026-07-24 09:00:00', 0);
+
+-- Outreach templates (src/outreach-composer.tsx delete button in the
+-- template manager — needs at least one `outreach_templates` row).
+INSERT INTO outreach_templates (id, user_id, name, body, sort_order, created_at) VALUES
+  (9531, 'seed-admin', 'Follow-up nudge',
+    'Hi {{first_name}}, following up on the {{role}} role at {{company}} — would love to hear where things stand.',
+    0, '2026-07-01 09:00:00'),
+  (9532, 'seed-admin', 'Thank-you note',
+    'Hi {{first_name}}, thanks for taking the time to talk today — really enjoyed learning more about {{company}}.',
+    1, '2026-07-01 09:05:00');
+
+-- BYO Claude key (src/components/MockInterview.tsx and
+-- src/components/NegotiationRoleplay.tsx, both wrapped in AiKeyGate). The
+-- gate opens purely on row presence: GET /api/ai/credentials
+-- (worker/ai.ts) selects only `hint` and never decrypts, so a fake
+-- ciphertext/iv is enough for the gate to open and the idle panel to
+-- render. `seed-demo-inert-*` below is NOT a real encrypted key or a valid
+-- AES-GCM payload — clicking "Start" in either panel would fail server-side
+-- decryption, which is fine, since the screenshot only needs the gate's
+-- idle view, not a live AI turn.
+INSERT INTO ai_credentials (user_id, ciphertext, iv, hint, created_at) VALUES
+  ('seed-admin', 'seed-demo-inert-not-a-real-ciphertext', 'seed-demo-inert-iv', 'demo', '2026-07-01 09:00:00');
+
+-- Unread notifications (src/components/NotificationBell.tsx "mark all
+-- read" button — gated on `unreadCount > 0`, i.e. at least one row with
+-- read_at IS NULL). Mirrors the shape worker/notifications.ts generates:
+-- a due_followup for application 9002 (whose next_action_at, 2026-07-22,
+-- is already overdue against this file's 2026-07-29 anchor) and an
+-- aggregate feed_match for the five feed_items seeded above.
+INSERT INTO notifications (id, user_id, type, title, body, link, dedup_key, read_at, created_at) VALUES
+  (9551, 'seed-admin', 'due_followup', 'DevOps Engineer', 'Follow up if no response by Friday', '/board/9002', 'followup:9002:2026-07-22', NULL, '2026-07-23 06:00:00'),
+  (9552, 'seed-admin', 'feed_match', '5 new listing(s) in your Feed', NULL, '/feed', 'feed:2026-07-27', NULL, '2026-07-27 08:00:00');

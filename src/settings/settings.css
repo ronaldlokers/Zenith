@@ -122,8 +122,24 @@
      is filled, so there's nothing for a radius to clip) — stated
      explicitly so the recipe doesn't silently depend on background/border
      staying "none" forever, and to match its sibling block above rather
-     than reading as an oversight. */
+     than reading as an oversight.
+
+     `display: inline-block` is restated too — caught by the zero-diff
+     capture, not by the analysis above (the seed had no webhooks, so no
+     screenshot ever rendered this control until capture coverage was
+     extended). This control's only content is a `<RemoveIcon/>`, the same
+     icon-only shape `.zui-cv-language-remove` (cv.css) already documents:
+     a raw `<button>` is `display: inline-block`, the base `.zui-btn` is
+     `inline-flex`, and swapping the two shifts an icon-only control's box
+     metrics even though the icon's intrinsic size is fixed. Measured as a
+     few-pixel rightward shift of the × glyph on both viewports.
+     `zui-admin-user-remove` above does NOT need the same fix: it renders a
+     single text node (`t("account.removeUser")`) with no competing
+     content, so its shrink-to-fit width is identical under inline-block
+     and inline-flex and `justify-content: center` has no extra space to
+     redistribute — confirmed by the capture showing zero damage there. */
   .zui-btn.zui-btn--danger.zui-webhook-remove.zui-webhook-remove {
+    display: inline-block;
     background: none;
     border: none;
     border-radius: 0;
