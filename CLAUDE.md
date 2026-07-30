@@ -26,6 +26,7 @@ Ask clarifying questions before large design work; prefer `AskUserQuestion` with
 - **Never commit to `main`.** Short-lived branches: `fix/<topic>`, `feat/<topic>`, `refactor/<topic>`, `docs/<topic>`, `chore/<topic>`.
 - Conventional-commit subjects, lowercase imperative: `fix: …`, `feat: …`.
 - Open PRs with `gh`; detailed body. Watch CI (`gh pr checks <n> --watch`), then `gh pr merge <n> --squash --delete-branch`. CI jobs: "checks" + "preview". Deploy on `main` auto-applies D1 migrations.
+- **`main` is protected (#43) and it binds admins too**, so a refused merge is the rule working, not a glitch: PRs only (no direct pushes), `checks` must be green, and the branch must be up to date with `main` first — if `main` moved, update the branch and let CI re-run. `--admin` will not override any of it. Only `checks` is required, not `preview`: `preview` needs `CLOUDFLARE_API_TOKEN`, which a fork PR cannot have, and it `needs: checks`, so a red `checks` leaves it skipped and permanently unsatisfied. Force-pushing and deleting `main` are blocked, and PR conversations must be resolved before merge.
 - Never write secrets in plaintext; flag any found.
 
 ## Verify before claiming done
