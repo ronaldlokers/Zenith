@@ -38,7 +38,11 @@ const AUTH = process.env.AUTH_STATE ?? ".auth.json";
 // ever opened a menu. Any task that changes a surface only reachable by
 // interaction adds the interaction here first, then verifies.
 const VIEWS = [
-  ["overview", "/", [{ suffix: "nextup-upcoming", click: ".today-nextup .zui-segmented button:nth-child(2)" }]],
+  ["overview", "/", [
+    { suffix: "nextup-upcoming", click: ".today-nextup .zui-segmented button:nth-child(2)" },
+    // The bell popover holds "mark all read", which no capture ever opened.
+    { suffix: "bell", click: ".zui-notification-bell .settings-btn" },
+  ]],
   ["board", "/board", [{ suffix: "cardmenu", click: ".zui-cardmenu-btn" }]],
   ["detail", `/board/${process.env.DETAIL_ID ?? "1"}`, [
     { suffix: "tab-track", click: "#detail-tab-track" },
@@ -47,7 +51,22 @@ const VIEWS = [
   ["feed", "/feed", [{ suffix: "sort-match", click: ".feed-controls .zui-segmented button:nth-child(2)" }]],
   ["insights", "/insights"],
   ["companies", "/companies", [{ suffix: "grid", click: ".zui-segmented button:nth-child(2)" }]],
-  ["people", "/people", [{ suffix: "grid", click: ".zui-segmented button:nth-child(2)" }]],
+  // ORDER MATTERS HERE. Some controls persist their choice to localStorage,
+  // which survives the re-navigation between interactions within a context —
+  // so a state-mutating interaction poisons every one after it. The grid
+  // toggle writes `zenith_contacts_view`, which flips the list to tiles and
+  // made `.zui-row` disappear for the two interactions that follow. Keep
+  // interactions that only reveal a surface before any that change a stored
+  // preference.
+  ["people", "/people", [
+    // Contact dialog: holds the outreach composer.
+    { suffix: "contact", click: ".zui-row" },
+    // Two deep — open the contact, then its template manager, which is where
+    // the template delete control lives. That control was previously verified
+    // by CSS derivation alone because the harness could not reach it.
+    { suffix: "templates", click: [".zui-row", ".outreach-composer-head .zui-btn--link"] },
+    { suffix: "grid", click: ".zui-segmented button:nth-child(2)" },
+  ]],
   ["cv", "/cv", [{ suffix: "rowmenu", click: ".zui-rowmenu-btn" }]],
   ["settings", "/settings"],
   ["settings-account", "/settings?s=account"],
@@ -156,14 +175,22 @@ for (const [vpName, viewport] of VIEWPORTS) {
     await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
     console.log(`captured ${name}-${vpName}`);
     for (const { suffix, click } of interactions ?? []) {
-      const target = page.locator(click).first();
-      // A missing selector means the harness has drifted from the markup —
-      // silently skipping it would make the diff pass while covering nothing.
-      if (!(await target.count())) {
-        console.error(`Interaction selector not found on ${route}: ${click}`);
-        process.exit(1);
+      // `click` is a selector or an ordered list of them. Sequences reach
+      // surfaces one click cannot: the outreach template manager needs a
+      // contact dialog opened first, and a control nested two deep was
+      // previously verified by CSS derivation alone because the harness could
+      // not express it.
+      for (const selector of Array.isArray(click) ? click : [click]) {
+        const target = page.locator(selector).first();
+        // A missing selector means the harness has drifted from the markup —
+        // silently skipping it would make the diff pass while covering nothing.
+        if (!(await target.count())) {
+          console.error(`Interaction selector not found on ${route}: ${selector}`);
+          process.exit(1);
+        }
+        await target.click();
+        await page.waitForTimeout(120);
       }
-      await target.click();
       await parkPointer(page);
       await page.waitForTimeout(150);
       await page.screenshot({ path: `${OUT}/${name}-${suffix}-${vpName}.png`, fullPage: true });
