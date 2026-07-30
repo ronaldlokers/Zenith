@@ -232,7 +232,12 @@ band and inside `.cv-doc`'s box.
 
 ## Remaining debt — deliberately deferred, not forgotten
 
-**Accessibility follow-ups, now cheap.** These were preserved rather than changed because PRs 1–4
+**Now tracked as issues**, so this section is the reasoning and the issue list is the work:
+#517 (ARIA tabs pattern), #518 (per-user timezone), #519 (`.login-stage` shadow scope),
+#520 (screenshot-rig blind spots), #521 (small code-health items). Where an item below has an
+issue, the issue carries the same reasoning — update both or neither.
+
+**Accessibility follow-ups, now cheap** (#517). These were preserved rather than changed because PRs 1–4
 held a strict zero-diff bar and the bar cannot see behaviour.
 
 - **No arrow-key roving focus** on `TabBar`/`PillTabs`, which the ARIA tabs pattern expects. This
@@ -254,7 +259,7 @@ held a strict zero-diff bar and the bar cannot see behaviour.
   role threaded into both components; wrapping them would change the DOM under a layout parent.
   This is why `PillTabs` passes no `idPrefix`.
 
-**The last non-token elevation shadow — and why tokenising it is the wrong fix.**
+**The last non-token elevation shadow — and why tokenising it is the wrong fix** (#519).
 `src/App.css:242` (`.login-card`) still carries a literal two-layer elevation shadow. PR 5
 deliberately left it, and the reason matters: `.login-stage` is *a committed Night ground in both
 themes* (`App.css:218`), while the shadow tokens are per-theme "since shadow needs the ground"
@@ -282,7 +287,7 @@ if they ever merge. `SegmentedControl` also sits in Storybook's `Core/` while th
 controls introduced `Navigation/`; a merge would have a `Core/` component absorb a `Navigation/`
 one.
 
-**Blind spots in the bar itself** — structural, and worth knowing before trusting a green run:
+**Blind spots in the bar itself** (#520) — structural, and worth knowing before trusting a green run:
 
 - **`AiKeyGate` is Storybook-verified only** and cannot be app-captured from this seed: the AI
   credential that makes `MockInterview`/`NegotiationRoleplay` render is exactly what closes its
@@ -293,12 +298,14 @@ one.
   spinner/shimmer animation or a wrong caret colour would render identically whether correct or
   defective.
 - **The clock is pinned** to `2026-07-29T12:00:00.000Z`, so date-boundary bugs (off-by-one,
-  pluralisation thresholds) are invisible. There are still no unit tests for the date-relative
-  logic in `format.ts` — worth adding with fake timers.
+  pluralisation thresholds) are invisible to the captures. **Closed on the unit-test side:**
+  `src/format.test.ts` (#515) now covers the date-relative logic with fake timers and a pinned
+  timezone, and found a real bug doing it — `ageDays` returned the string `"NaNd"` on ISO-form
+  input. The rig itself still cannot see date boundaries; the tests are what cover them now.
 - **`.cv-doc` renders at desktop only.** At 390px it is not in the DOM at all, so a mobile
   capture showing no change to the CV preview is correct rather than suspicious.
 
-**Client and server disagree about what day it is, on purpose.** `today()` in `src/format.ts`
+**Client and server disagree about what day it is, on purpose** (#518). `today()` in `src/format.ts`
 is the **local** calendar date (#516) — `next_action_at`, `follow_up_at` and `deadline_at` are
 dates the user picked in their own calendar, so a UTC "today" read tomorrow's actions as due all
 evening west of UTC. The server side — `worker/notifications.ts`, `worker/calendar.ts`, and the
@@ -308,7 +315,7 @@ Closing it properly means storing a timezone preference per user and threading i
 notification and calendar queries; that is a feature, not a cleanup. Until then the divergence is
 documented at `today()` rather than discovered.
 
-**Smaller items.**
+**Smaller items** (#521).
 
 - `classesIn()` in the self-containment test reuses a JS-shaped comment stripper on CSS; a
   `url(https://…)` would truncate the line. Latent — no current CSS has one, and it fails toward
