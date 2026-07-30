@@ -123,8 +123,22 @@ mkdirSync(OUT, { recursive: true });
 // cost 3258). --disable-gpu does NOT fix it, so this is a raster-scheduling
 // effect rather than a GPU one.
 const browser = await chromium.launch({ args: ["--disable-partial-raster"] });
+// Half the app's copy is relative to "now" — "due today", "overdue", "upd 2d",
+// the calendar's today marker, the stale-hint thresholds. With a real clock the
+// baseline silently expires at the next local midnight: a capture taken the
+// following day differs from it on views nobody touched, and the diff then
+// reads as a regression in whatever task happens to be running. That already
+// happened mid-Task-8.
+//
+// Pin the clock instead, so a capture depends only on the code and the seeded
+// data — both of which are fixed. scripts/seed-demo.sql hardcodes its dates
+// around 2026-07 for the same reason. setFixedTime freezes what the page reads
+// from Date without stopping timers, which is what a screenshot needs.
+const FIXED_NOW = process.env.FIXED_NOW ?? "2026-07-29T12:00:00.000Z";
+
 for (const [vpName, viewport] of VIEWPORTS) {
   const context = await browser.newContext({ viewport, storageState: AUTH });
+  await context.clock.setFixedTime(new Date(FIXED_NOW));
   const page = await context.newPage();
   for (const [name, route, interactions] of VIEWS) {
     await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
