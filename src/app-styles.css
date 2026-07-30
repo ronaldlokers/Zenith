@@ -3,7 +3,9 @@
 
    Three layers, lowest priority first:
      reset      — index.css: design tokens plus the base element reset
-     app        — App.css: every view rule the app ships today
+     app        — utilities.css (the .muted/.small/.sr-only primitives shared
+                  with components, see CLAUDE.md), then App.css: every view
+                  rule the app ships today
      components — src/components/*.css, each wrapping its rules in
                   @layer components
 
@@ -23,4 +25,5 @@
    for layer order to resolve. */
 @layer reset, app, components;
 @import "./index.css" layer(reset);
+@import "./utilities.css" layer(app);
 @import "./App.css" layer(app);

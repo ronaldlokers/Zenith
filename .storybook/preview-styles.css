@@ -6,8 +6,11 @@
    the base reset (`button, input, select, textarea { font: inherit; color:
    inherit }`). It is layered as `reset` so those unlayered-in-source rules do
    not outrank the components' `@layer components` styles — exactly as
-   src/app-styles.css does for the app. There is no `app` layer here (App.css
-   is deliberately absent — owned components are self-contained), but the name
+   src/app-styles.css does for the app. App.css itself is still deliberately
+   absent — owned components are self-contained — but the `app` layer is no
+   longer empty: it carries src/utilities.css, the .muted/.small/.sr-only
+   primitives a handful of components share (see CLAUDE.md). The layer name
    is kept so the layer order matches src/app-styles.css. */
 @layer reset, app, components;
 @import "../src/index.css" layer(reset);
+@import "../src/utilities.css" layer(app);
