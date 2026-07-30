@@ -428,7 +428,7 @@ export default function App() {
                   { key: "contacts", label: t("tabs.people") },
                 ]}
                 active={tab}
-                onSelect={(k) => setTab(k as "companies" | "contacts")}
+                onSelect={setTab}
                 aria-label={t("tabs.network")}
               />
             )}

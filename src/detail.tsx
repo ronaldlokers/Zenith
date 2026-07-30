@@ -679,7 +679,7 @@ export function ApplicationDetailModal({
                 { key: "tailor", label: t("detail.tabTailor") },
               ]}
               active={secTab}
-              onSelect={(k) => setSecTab(k as "track" | "prep" | "tailor")}
+              onSelect={setSecTab}
               idPrefix="detail"
               aria-label={t("detail.sections")}
             />

@@ -42,7 +42,7 @@ export interface SegmentedItemProps extends ButtonHTMLAttributes<HTMLButtonEleme
 
 function Item({ active, className, type = "button", ...rest }: SegmentedItemProps) {
   const classes = [active ? "active" : null, className].filter(Boolean).join(" ");
-  return <button type={type} className={classes || undefined} aria-pressed={active} {...rest} />;
+  return <button type={type} className={classes || undefined} {...rest} aria-pressed={active} />;
 }
 
 SegmentedControl.Item = Item;

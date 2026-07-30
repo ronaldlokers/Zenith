@@ -29,7 +29,7 @@ export type { RowProps } from "./Row";
 export { FieldLabel } from "./FieldLabel";
 export type { FieldLabelProps } from "./FieldLabel";
 export { SegmentedControl } from "./SegmentedControl";
-export type { SegmentedControlProps } from "./SegmentedControl";
+export type { SegmentedControlProps, SegmentedItemProps } from "./SegmentedControl";
 export { TabBar } from "./TabBar";
 export type { TabBarProps, TabBarTab } from "./TabBar";
 export { SettingsNav } from "./SettingsNav";

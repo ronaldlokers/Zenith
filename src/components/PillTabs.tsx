@@ -1,6 +1,6 @@
 import "./PillTabs.css";
 
-// The network subnav's pill tablist (App.css:1083): a bordered capsule whose
+// The network subnav's pill tablist (App.css:1007): a bordered capsule whose
 // active tab is a filled accent pill, as against TabBar's underline.
 //
 // This is the same SHAPE as SegmentedControl — same border, same radius-full,
@@ -13,15 +13,15 @@ import "./PillTabs.css";
 // PillTabs.css fully describes it rather than depending on App.css, which
 // Storybook never loads — including the band-5 touch-target minimum, which the
 // raw markup inherited from a grouped selector.
-export interface PillTabsTab {
-  key: string;
+export interface PillTabsTab<K extends string> {
+  key: K;
   label: string;
 }
 
-export interface PillTabsProps {
-  tabs: PillTabsTab[];
-  active: string;
-  onSelect: (key: string) => void;
+export interface PillTabsProps<K extends string> {
+  tabs: PillTabsTab<K>[];
+  active: K;
+  onSelect: (key: K) => void;
   /**
    * Namespaces the tab/panel ids: `${idPrefix}-tab-${key}` / `-panel-`.
    * Omit where the caller renders no tabpanel — the network view does not,
@@ -32,7 +32,13 @@ export interface PillTabsProps {
   "aria-label": string;
 }
 
-export function PillTabs({ tabs, active, onSelect, idPrefix, ...rest }: PillTabsProps) {
+export function PillTabs<K extends string>({
+  tabs,
+  active,
+  onSelect,
+  idPrefix,
+  ...rest
+}: PillTabsProps<K>) {
   return (
     <div className="zui-pilltabs" role="tablist" aria-label={rest["aria-label"]}>
       {tabs.map(({ key, label }) => (

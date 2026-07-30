@@ -209,7 +209,7 @@ export function SettingsPage({
       <SettingsNav
         sections={sections.map((s) => ({ key: s, label: t(`settings.section.${s}`) }))}
         active={section}
-        onSelect={(k) => setSection(k as SettingsSection)}
+        onSelect={setSection}
         aria-label={t("settings.title")}
       />
       <div className="settings-content settings-modal">

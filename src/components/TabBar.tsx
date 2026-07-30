@@ -8,21 +8,27 @@ import "./TabBar.css";
 // TabBar.css fully describes it rather than depending on App.css, which
 // Storybook never loads. The panel stays with the caller; this owns only the
 // tablist and the id wiring between the two.
-export interface TabBarTab {
-  key: string;
+export interface TabBarTab<K extends string> {
+  key: K;
   label: string;
 }
 
-export interface TabBarProps {
-  tabs: TabBarTab[];
-  active: string;
-  onSelect: (key: string) => void;
+export interface TabBarProps<K extends string> {
+  tabs: TabBarTab<K>[];
+  active: K;
+  onSelect: (key: K) => void;
   /** Namespaces the tab/panel ids: `${idPrefix}-tab-${key}` / `-panel-`. */
   idPrefix: string;
   "aria-label": string;
 }
 
-export function TabBar({ tabs, active, onSelect, idPrefix, ...rest }: TabBarProps) {
+export function TabBar<K extends string>({
+  tabs,
+  active,
+  onSelect,
+  idPrefix,
+  ...rest
+}: TabBarProps<K>) {
   return (
     <div className="zui-tabbar" role="tablist" aria-label={rest["aria-label"]}>
       {tabs.map(({ key, label }) => (

@@ -13,29 +13,6 @@ type Story = StoryObj<typeof SegmentedControl>;
 
 // useState lives in a named component (not directly in the story render
 // arrow) so this doesn't trip the react-hooks lint rule.
-function ListGridToggle() {
-  const [view, setView] = useState<"list" | "grid">("list");
-  return (
-    <SegmentedControl role="group" aria-label="View">
-      <button
-        className={view === "list" ? "active" : ""}
-        onClick={() => setView("list")}
-      >
-        List
-      </button>
-      <button
-        className={view === "grid" ? "active" : ""}
-        onClick={() => setView("grid")}
-      >
-        Grid
-      </button>
-    </SegmentedControl>
-  );
-}
-
-export const ListGrid: Story = {
-  render: () => <ListGridToggle />,
-};
 
 // The API callers actually use: SegmentedControl.Item owns the active class
 // and aria-pressed together, so the two states shown here always agree.

@@ -12,19 +12,24 @@ import "./SettingsNav.css";
 // SettingsNav.css fully describes it rather than depending on App.css, which
 // Storybook never loads — including the mobile block, which is the layout on
 // a phone and not an optional extra.
-export interface SettingsNavSection {
-  key: string;
+export interface SettingsNavSection<K extends string> {
+  key: K;
   label: string;
 }
 
-export interface SettingsNavProps {
-  sections: SettingsNavSection[];
-  active: string;
-  onSelect: (key: string) => void;
+export interface SettingsNavProps<K extends string> {
+  sections: SettingsNavSection<K>[];
+  active: K;
+  onSelect: (key: K) => void;
   "aria-label": string;
 }
 
-export function SettingsNav({ sections, active, onSelect, ...rest }: SettingsNavProps) {
+export function SettingsNav<K extends string>({
+  sections,
+  active,
+  onSelect,
+  ...rest
+}: SettingsNavProps<K>) {
   return (
     <nav className="zui-settingsnav" aria-label={rest["aria-label"]}>
       {sections.map(({ key, label }) => (

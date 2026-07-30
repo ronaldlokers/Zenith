@@ -46,7 +46,7 @@ export function AdminPage({
         <SettingsNav
           sections={ADMIN_SECTIONS.map((s) => ({ key: s, label: t(`admin.section.${s}`) }))}
           active={section}
-          onSelect={(k) => setSection(k as AdminSection)}
+          onSelect={setSection}
           aria-label={t("admin.navLabel")}
         />
         <div className="admin-content">
