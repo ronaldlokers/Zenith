@@ -11,10 +11,13 @@ import "./Documents.css";
 // Extracted verbatim from detail.tsx (the application detail's document
 // list: upload form + list of uploaded files with delete) as part of the
 // #285 App.tsx/detail.tsx split — self-contained. The delete control is
-// <Button variant="danger" className="tl-del">, the same shared class
-// Timeline (src/timeline.tsx) also renders on its own Button — each
-// component restates the layer-priority override in its own stylesheet, see
-// Documents.css. .tl-empty stays App.css, unrelated to the button. Documents.css
+// <Button variant="danger" className="tl-del">, carrying the literal class
+// name unchanged from the #285 split. Timeline (src/timeline.tsx) mirrors
+// the same layer-priority override pattern on its own Button, but not the
+// class itself — Timeline moved to zui-tl-del in 0858819, before this
+// component's raw <button> became a Button, so the two no longer share a
+// class; each restates its own override in its own stylesheet (this one in
+// Documents.css). .tl-empty stays App.css, unrelated to the button. Documents.css
 // reproduces the App.css .docs*/.upload-btn/.doc-label/.doc-size recipe
 // under the .zui-docs* names this component emits.
 function formatSize(bytes: number): string {

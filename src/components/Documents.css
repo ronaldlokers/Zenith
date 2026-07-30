@@ -125,12 +125,15 @@
     white-space: nowrap;
   }
 
-  /* Mirrors timeline.css's identical treatment of the same shared `tl-del`
-     class: App.css's `.tl-del` (App.css:2051, @layer app) still matches —
-     the class is kept on the Button — but app-styles.css orders layers
-     `reset, app, components`, so @layer app can never reclaim background/
-     border/padding/min-height from Button's danger variant (@layer
-     components) regardless of specificity; this restates them. The bare
+  /* Mirrors timeline.css's override pattern, not its class: App.css's
+     `.tl-del` (App.css:2051, @layer app) still matches — this component
+     kept the literal `tl-del` class it had before the #285 split, unlike
+     Timeline (src/timeline.tsx), which moved to `zui-tl-del` in 0858819.
+     app-styles.css orders layers `reset, app, components`, so @layer app
+     can never reclaim background/border/padding/min-height from Button's
+     danger variant (@layer components) regardless of specificity; this
+     restates them, keyed off the class this component actually carries.
+     The bare
      `button.danger` (App.css:1241) is a genuine vanished selector — the
      literal "danger" class is gone from the markup — but its only
      declaration (color) is already reproduced unconditionally by

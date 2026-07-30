@@ -9,13 +9,22 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /**
    * Visual emphasis.
    *  - "default"   — neutral surface + border (App.css's pre-existing base look).
-   *  - "primary"   — Recipe A, App.css:1212 button.primary.
-   *  - "secondary" — Recipe B, App.css:4649 (.card-actions/.detail-actions/
-   *    .settings-modal/.shortcut-help/.form-actions/.share-actions button).
-   *  - "danger"    — Recipe B + App.css:4693 colour/border-colour override.
+   *  - "primary"   — Recipe A, App.css:1218 button.primary.
+   *  - "secondary" — Recipe B, App.css:4325 (.card-actions/.settings-modal/
+   *    .shortcut-help button — .detail-actions/.form-actions/.share-actions
+   *    moved to the owned ActionBar component).
+   *  - "danger"    — Recipe B + a colour/border-colour override that App.css
+   *    no longer carries (retired in 27ffc4e, "fix: retire the App.css
+   *    secondary and danger recipes") — this file is now the only
+   *    definition.
    *  - "ghost", "dark" — design-system additions, no current call sites.
-   *  - "link"      — borderless underlined text link (App.css:4542 .linklike).
-   *  - "close"     — borderless × button in modal headers (App.css:846 .modal-close).
+   *  - "link"      — borderless underlined text link, ported from App.css's
+   *    .linklike, retired in 568b29d ("feat: link + close Button variants
+   *    from the app's own recipes (#403)") — this file is now the only
+   *    definition.
+   *  - "close"     — borderless × button in modal headers, ported from
+   *    App.css's .modal-close, retired in the same commit (568b29d) — this
+   *    file is now the only definition.
    */
   variant?:
     | "default"
