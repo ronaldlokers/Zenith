@@ -5,12 +5,19 @@ import type { Document } from "../types";
 import { RemoveIcon } from "../icons";
 import { requestConfirm } from "../hooks";
 import { buildCvSnapshotFile, cvSnapshotLabel } from "../cv-snapshot";
+import { Button } from "./Button";
 import "./Documents.css";
 
 // Extracted verbatim from detail.tsx (the application detail's document
 // list: upload form + list of uploaded files with delete) as part of the
-// #285 App.tsx/detail.tsx split — self-contained except .tl-del/.tl-empty,
-// shared with Timeline (src/timeline.tsx) and kept as-is. Documents.css
+// #285 App.tsx/detail.tsx split — self-contained. The delete control is
+// <Button variant="danger" className="tl-del">, carrying the literal class
+// name unchanged from the #285 split. Timeline (src/timeline.tsx) mirrors
+// the same layer-priority override pattern on its own Button, but not the
+// class itself — Timeline moved to zui-tl-del in 0858819, before this
+// component's raw <button> became a Button, so the two no longer share a
+// class; each restates its own override in its own stylesheet (this one in
+// Documents.css). .tl-empty stays App.css, unrelated to the button. Documents.css
 // reproduces the App.css .docs*/.upload-btn/.doc-label/.doc-size recipe
 // under the .zui-docs* names this component emits.
 function formatSize(bytes: number): string {
@@ -108,8 +115,9 @@ export function Documents({ applicationId, onError }: DocumentsProps) {
             </a>
             {d.label && <span className="zui-doc-label">{d.label}</span>}
             <span className="zui-doc-size">{formatSize(d.size)}</span>
-            <button
-              className="tl-del danger"
+            <Button
+              variant="danger"
+              className="tl-del"
               aria-label={t("common.delete")}
               onClick={async () => {
                 if (
@@ -124,7 +132,7 @@ export function Documents({ applicationId, onError }: DocumentsProps) {
               }}
             >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
         {items?.length === 0 && <li className="tl-empty">{t("detail.noFiles")}</li>}

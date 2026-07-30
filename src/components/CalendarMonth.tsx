@@ -2,15 +2,17 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDate, today } from "../format";
 import type { AgendaEntry } from "../types";
+import { Button } from "./Button";
 import "./CalendarMonth.css";
 
 // Extracted verbatim from calendar.tsx (#386 #10 — the desktop calendar
 // month grid: a header with month nav, a weekday row, day cells with
 // kind-coloured event chips, and an Upcoming rail) as part of the #285
-// App.tsx split — self-contained (except shared .btn-secondary).
-// CalendarMonth.css reproduces the App.css .cal-* recipe (App.css:1729-1935)
-// under the .zui-cal-* names this component emits. CalendarTab's mobile
-// agenda list is a separate view and stays in calendar.tsx.
+// App.tsx split — self-contained. The nav/today controls are
+// <Button variant="secondary">. CalendarMonth.css reproduces the App.css
+// .cal-* recipe (App.css:1729-1935) under the .zui-cal-* names this
+// component emits. CalendarTab's mobile agenda list is a separate view and
+// stays in calendar.tsx.
 export interface CalendarMonthProps {
   entries: AgendaEntry[];
   onJump: (title: string) => void;
@@ -99,23 +101,25 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
     <div className="zui-cal-month">
       <div className="zui-cal-month-head">
         <h3>{monthLabel}</h3>
-        <button
-          className="btn-secondary zui-cal-nav"
+        <Button
+          variant="secondary"
+          className="zui-cal-nav"
           onClick={() => move(-1)}
           aria-label={t("calendar.prevMonth")}
         >
           ‹
-        </button>
-        <button
-          className="btn-secondary zui-cal-nav"
+        </Button>
+        <Button
+          variant="secondary"
+          className="zui-cal-nav"
           onClick={() => move(1)}
           aria-label={t("calendar.nextMonth")}
         >
           ›
-        </button>
-        <button className="btn-secondary" onClick={goToday}>
+        </Button>
+        <Button variant="secondary" onClick={goToday}>
           {t("calendar.today")}
-        </button>
+        </Button>
         <span className="zui-cal-count">
           {t("calendar.eventCount", { count: entries.length })}
         </span>

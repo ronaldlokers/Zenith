@@ -23,6 +23,7 @@ import {
   Skeleton,
   Toolbar,
 } from "./components";
+import "./feed.css";
 
 export function FeedSettings({
   roleTypes,
@@ -214,13 +215,14 @@ export function FeedSettings({
               aria-label={t("feedSettings.roleNameLabel")}
               onBlur={(e) => renameRole(r, e.target.value)}
             />
-            <button
-              className="danger"
+            <Button
+              variant="danger"
+              className="zui-feed-list-remove"
               aria-label={t("feedSettings.removeRole")}
               onClick={() => removeRole(r)}
             >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
@@ -330,13 +332,14 @@ export function FeedSettings({
             <span>
               {b.source === "greenhouse" ? "Greenhouse" : "Ashby"}: {b.slug}
             </span>
-            <button
-              className="danger"
+            <Button
+              variant="danger"
+              className="zui-feed-list-remove"
               aria-label={t("feedSettings.removeBoard")}
               onClick={() => removeAtsBoard(b.id)}
             >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>
@@ -571,9 +574,9 @@ export function FeedTab({
         <p className="muted small" style={{ margin: 0 }}>
           {t("feed.pulledFrom")}
         </p>
-        <button className="btn-secondary" onClick={onOpenSettings}>
+        <Button variant="secondary" onClick={onOpenSettings}>
           {t("feed.settings")}
-        </button>
+        </Button>
         <Button variant="primary" disabled={refreshing} onClick={refresh}>
           {refreshing ? t("feed.checking") : t("feed.checkNow")}
         </Button>
@@ -700,12 +703,12 @@ export function FeedTab({
                 >
                   {t("feed.addToJobs")}
                 </Button>
-                <button
-                  className="btn-secondary"
+                <Button
+                  variant="secondary"
                   onClick={() => dismiss(focusedItem)}
                 >
                   {t("feed.dismiss")}
-                </button>
+                </Button>
               </div>
               <p className="feed-detail-hint">{t("feed.triageHint")}</p>
             </aside>
@@ -829,15 +832,15 @@ function FeedCard({
         >
           {t("feed.addToJobs")}
         </Button>
-        <button
-          className="btn-secondary"
+        <Button
+          variant="secondary"
           onClick={(e) => {
             e.stopPropagation();
             onDismiss();
           }}
         >
           {t("feed.dismiss")}
-        </button>
+        </Button>
       </div>
     </li>
   );

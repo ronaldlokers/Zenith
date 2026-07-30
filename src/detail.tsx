@@ -402,9 +402,8 @@ export function ApplicationDetailModal({
                   );
                 })()}
               {a.status === "offer" && (
-                <button
-                  type="button"
-                  className="btn-secondary"
+                <Button
+                  variant="secondary"
                   onClick={() =>
                     setNegotiationDraft((cur) =>
                       cur == null ? buildNegotiationDraft(a, allApplications, t) : null,
@@ -414,7 +413,7 @@ export function ApplicationDetailModal({
                   {negotiationDraft == null
                     ? t("offer.draftNegotiation")
                     : t("offer.hideNegotiationDraft")}
-                </button>
+                </Button>
               )}
               {negotiationDraft != null && (
                 <div className="negotiation-draft">
@@ -484,9 +483,8 @@ export function ApplicationDetailModal({
                   </button>
                 </span>
               ) : (
-                <button
-                  type="button"
-                  className="btn-secondary"
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setFuText("");
                     setFuDate("");
@@ -494,7 +492,7 @@ export function ApplicationDetailModal({
                   }}
                 >
                   {t("detail.setFollowUp")}
-                </button>
+                </Button>
               )}
               {inlineField === "notes" ? (
                 <form
@@ -539,16 +537,15 @@ export function ApplicationDetailModal({
                   </button>
                 </p>
               ) : (
-                <button
-                  type="button"
-                  className="btn-secondary"
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setNoteDraft("");
                     setInlineField("notes");
                   }}
                 >
                   {t("detail.addNote")}
-                </button>
+                </Button>
               )}
               {a.job_description && (
                 <details className="jd-snapshot">
@@ -568,9 +565,8 @@ export function ApplicationDetailModal({
                 </details>
               )}
               {a.job_description && (
-                <button
-                  type="button"
-                  className="btn-secondary"
+                <Button
+                  variant="secondary"
                   onClick={() =>
                     navigate("/cv", {
                       state: { tailorJd: a.job_description },
@@ -578,7 +574,7 @@ export function ApplicationDetailModal({
                   }
                 >
                   {t("detail.tailorForJob")}
-                </button>
+                </Button>
               )}
             </div>
 

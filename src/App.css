@@ -152,9 +152,10 @@
 /* .notification-bell/.notification-dot/.notification-backdrop/
    .notification-panel/.notification-panel-head/.notification-list/
    .notification-title/.notification-empty moved to the owned
-   NotificationBell component (src/components/NotificationBell.css). The
-   .settings-btn trigger and .btn-secondary "mark all read" button stay
-   here — both are shared with other buttons elsewhere in the app. */
+   NotificationBell component (src/components/NotificationBell.css); its
+   "mark all read" button is now <Button variant="secondary">, styled
+   entirely by Button.css. The .settings-btn trigger stays here — it's
+   shared with other buttons elsewhere in the app. */
 
 /* Refined refresh (#465): section title takes the display voice (--serif, the display
    voice) over a hairline, matching the detail header band. */
@@ -683,16 +684,6 @@
 /* .toolbar (container + its child control normalization) moved to the owned
    Toolbar component (src/components/Toolbar.css). */
 
-.btn-secondary {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-  padding: 0.4rem 0.7rem;
-  font-size: var(--text-body);
-}
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -996,10 +987,11 @@
 }
 
 /* Inline follow-up actions in the Next Up panel (#285). Layout only: the
-   buttons carry .btn-secondary and take the normalized control recipe
-   (34px, 10px corner, --text-body) from the band below, instead of the
-   25px-tall bespoke pair they used to be — these are the primary actions on
-   the home screen and were its smallest controls (#492). */
+   buttons are now <Button variant="secondary">, styled by Button.css —
+   the 34px/10px-corner/--text-body recipe they used to take from the band
+   below no longer applies (their raw `.btn-secondary` class is gone). The
+   mobile 40px touch-target bump moved to dashboard.css, which restates it
+   against `.zui-btn--secondary` (App.css:1010 no longer matches). */
 .nextup-actions {
   display: flex;
   align-items: center;
@@ -1007,7 +999,6 @@
 }
 
 @media (max-width: 600px) {
-  .nextup-actions .btn-secondary,
   .today-quiet-close {
     min-height: 40px;
   }
@@ -1236,10 +1227,6 @@ button.primary {
 
 button.primary:hover {
   background: color-mix(in srgb, var(--accent) 85%, black);
-}
-
-button.danger {
-  color: var(--danger);
 }
 
 .remove-icon {
@@ -1555,10 +1542,6 @@ button.danger {
   .card-actions button {
     min-height: 44px;
     padding: 0.5rem 0.8rem;
-  }
-
-  .card-actions .danger {
-    margin-left: auto;
   }
 
   .card-actions select.status {
@@ -2093,16 +2076,6 @@ select.status {
   border-radius: var(--radius-sm);
   background: var(--bg);
   font-size: var(--text-body);
-}
-
-.settings-list .danger {
-  border: none;
-  background: none;
-  color: var(--danger);
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0.2rem 0.4rem;
 }
 
 .settings-add {
@@ -3255,9 +3228,6 @@ summary.bcol-head::after {
   color: var(--muted);
   cursor: pointer;
 }
-.cv-version-actions button.danger {
-  color: var(--danger);
-}
 .cv-versions-h {
   margin-top: var(--space-3);
 }
@@ -3707,9 +3677,6 @@ summary.bcol-head::after {
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
-}
-.outreach-manage-actions button.danger {
-  color: var(--danger);
 }
 .outreach-form {
   display: flex;
@@ -4350,8 +4317,11 @@ button:not(:disabled):active,
 /* Secondary buttons — default size. One metric set, one fill,
    every one with a hover state. */
 /* The form/detail/share-actions entries moved to the owned ActionBar
-   component; the remaining containers keep this shared Recipe-B rule. */
-.btn-secondary,
+   component; the remaining containers keep this shared Recipe-B rule.
+   `.btn-secondary` itself is gone (Button.css's variant="secondary" is
+   the only definition left) — these container selectors stay because
+   they target plain `button`, not a class, so they still apply to any
+   raw <button> a container wraps. */
 .card-actions button,
 .settings-modal > button,
 .shortcut-help button {
@@ -4365,18 +4335,10 @@ button:not(:disabled):active,
   cursor: pointer;
 }
 
-.btn-secondary:hover,
 .card-actions button:hover,
 .settings-modal > button:hover,
 .shortcut-help button:hover {
   background: var(--bg);
-}
-
-/* Danger stays danger; .form-actions/.card-actions danger buttons keep
-   their red identity over the neutral normalization above. */
-.card-actions button.danger {
-  color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
 }
 
 /* Quiet destructive icons: one treatment — muted at rest, danger on

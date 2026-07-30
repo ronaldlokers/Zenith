@@ -70,14 +70,34 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    /* Button.css's .zui-btn sets justify-content: center unconditionally, and
+       this selector's specificity (0,1,1) only wins over .zui-btn (0,1,0) for
+       properties actually declared here — text-align does nothing on a flex
+       item. Every item here is now a Button, so without this every row-menu
+       item's label centers app-wide. */
+    justify-content: flex-start;
+    /* .zui-btn--default sets font-weight: 500 (0,1,0), and nothing here
+       competed for that property, so the non-danger items rendered bold
+       instead of the raw <button>'s inherited normal (400). */
+    font-weight: 400;
   }
 
   .zui-rowmenu-pop > button:hover {
     background: var(--hover);
   }
 
-  .zui-rowmenu-pop > button.danger {
+  /* Button.css also compounds .zui-btn--danger.zui-btn--md { padding: 0.4rem
+     0.8rem } — two classes, (0,2,0) — which beats the base rule above (0,1,1)
+     for padding specifically. This selector is (0,2,1), so it wins back both
+     properties for the danger item. .zui-btn--danger also sets an
+     unconditional min-height: 34px that nothing here competed for, pinning
+     the Delete row a fraction of a pixel taller than its raw-button
+     predecessor — invisible to the eye but not to the pixel diff, since it
+     shifts the popover's bottom rounded corner. */
+  .zui-rowmenu-pop > button.zui-btn--danger {
     color: var(--danger);
+    padding: 0.4rem 0.55rem;
+    min-height: 0;
   }
 
   .zui-rowmenu-pop > button:disabled {

@@ -8,6 +8,7 @@ import { api } from "./api";
 import { Badge, Button } from "./components";
 import { formatDate, today } from "./format";
 import { RemoveIcon } from "./icons";
+import "./timeline.css";
 import { INTERACTION_TYPES } from "./types";
 import type { Interaction } from "./types";
 
@@ -145,8 +146,9 @@ export function Timeline({
               {it.notes ?? ""}
               {it.via_contact ? <Badge>{t("timeline.viaContact")}</Badge> : null}
             </span>
-            <button
-              className="tl-del danger"
+            <Button
+              variant="danger"
+              className="zui-tl-del"
               aria-label={t("common.delete")}
               onClick={() =>
                 api
@@ -159,7 +161,7 @@ export function Timeline({
               }
             >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
         {items?.length === 0 && (

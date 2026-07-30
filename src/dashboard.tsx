@@ -28,6 +28,7 @@ import {
   StarRating,
   StatCard,
 } from "./components";
+import "./dashboard.css";
 
 // The climb, low to high. Dead statuses are off the mountain and excluded.
 const ASCENT_STAGES = [
@@ -423,9 +424,9 @@ function NextUpPanel({
                 <span className="side-stage">{t(`stages.${a.status}`)}</span>
               </button>
               <span className="nextup-actions">
-                <button className="btn-secondary" onClick={() => done(a)}>
+                <Button variant="secondary" onClick={() => done(a)}>
                   {t("nextUp.done")}
-                </button>
+                </Button>
                 <RowMenu
                   label={t("nextUp.actionsFor", { title: a.title })}
                   items={[

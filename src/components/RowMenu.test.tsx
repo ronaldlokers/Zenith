@@ -27,7 +27,7 @@ describe("RowMenu", () => {
     expect(screen.getAllByRole("menuitem")).toHaveLength(4);
     expect(screen.getByRole("menuitem", { name: "Move up" })).toBeDisabled();
     expect(screen.getByRole("menuitem", { name: "Delete" })).toHaveClass(
-      "danger",
+      "zui-btn--danger",
     );
   });
 
@@ -47,6 +47,24 @@ describe("RowMenu", () => {
     fireEvent.click(screen.getByRole("button", { name: "Actions" }));
     fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  // Same trap as CardMenu: RowMenu.css scopes the destructive colour with a
+  // selector on the literal class `danger`, which Button does not render.
+  test("a danger item carries Button's danger class, not the app's", () => {
+    render(
+      <RowMenu
+        label="Actions for Acme Corp"
+        items={[
+          { label: "Edit", onSelect: () => {} },
+          { label: "Delete", onSelect: () => {}, danger: true },
+        ]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Acme Corp" }));
+    const del = screen.getByRole("menuitem", { name: "Delete" });
+    expect(del).toHaveClass("zui-btn--danger");
+    expect(del).not.toHaveClass("danger");
   });
 
   test("emits zui-rowmenu class names", () => {

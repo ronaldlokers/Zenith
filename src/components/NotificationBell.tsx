@@ -6,16 +6,17 @@ import type { AppNotification } from "../types";
 import { BellIcon } from "../icons";
 import { formatDate } from "../format";
 import { rowActivate, useFocusTrap } from "../hooks";
+import { Button } from "./Button";
 import "./NotificationBell.css";
 
 // Extracted verbatim from chrome.tsx (the header notifications bell: a
 // button with an unread dot that opens a backdrop + panel listing
 // notifications) as part of the #285 App.tsx/chrome.tsx split —
 // self-contained, except the trigger button keeps the shared `.settings-btn`
-// class (App.css) also used by the top-bar settings button, and the "mark
-// all read" button keeps the shared `.btn-secondary` class. Both stay in
-// App.css. NotificationBell.css reproduces the App.css .notification-*
-// recipe under the .zui-notification-* names this component emits.
+// class (App.css), also used by the top-bar settings button. The "mark all
+// read" button is <Button variant="secondary">. NotificationBell.css
+// reproduces the App.css .notification-* recipe under the
+// .zui-notification-* names this component emits.
 //
 // In-app notification center (#213) — due/overdue follow-ups, stale
 // postings, and new Feed matches, generated server-side on the existing 6h
@@ -91,9 +92,9 @@ export function NotificationBell() {
             <div className="zui-notification-panel-head">
               <span>{t("header.notifications")}</span>
               {unreadCount > 0 && (
-                <button className="btn-secondary" onClick={markAllRead}>
+                <Button variant="secondary" onClick={markAllRead}>
                   {t("header.markAllRead")}
-                </button>
+                </Button>
               )}
             </div>
             <ul className="zui-notification-list">

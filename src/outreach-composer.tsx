@@ -9,6 +9,7 @@ import {
   STARTER_TEMPLATES,
   TEMPLATE_VARS,
 } from "./outreach-templates";
+import "./outreach-composer.css";
 
 // Compose an outreach message from a reusable template (#472), with the
 // contact's details, their company, and the user's own name substituted in.
@@ -202,9 +203,13 @@ export function OutreachComposer({
                   <button onClick={() => startEdit(tpl)}>
                     {t("common.edit")}
                   </button>
-                  <button className="danger" onClick={() => removeTemplate(tpl)}>
+                  <Button
+                    variant="danger"
+                    className="zui-outreach-tpl-remove"
+                    onClick={() => removeTemplate(tpl)}
+                  >
                     {t("common.delete")}
-                  </button>
+                  </Button>
                 </span>
               </li>
             ))}

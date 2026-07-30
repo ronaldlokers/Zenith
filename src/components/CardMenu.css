@@ -24,9 +24,23 @@
     text-align: left; border: none; background: none; color: var(--ink);
     padding: 0.4rem 0.55rem; border-radius: var(--radius-sm); cursor: pointer;
     font-size: var(--text-body); display: flex; align-items: center; gap: 0.4rem;
+    /* Button.css's .zui-btn sets justify-content: center unconditionally, and
+       this selector's specificity (0,1,1) only wins over .zui-btn (0,1,0) for
+       properties actually declared here — text-align does nothing on a flex
+       item. Without this, the Archive item (now a Button) centers its label
+       while its raw <button> siblings stay left-aligned. */
+    justify-content: flex-start;
   }
   .zui-cardmenu-pop > button:hover { background: var(--hover); }
-  .zui-cardmenu-pop > button.danger { color: var(--danger); }
+  /* Button.css also compounds .zui-btn--danger.zui-btn--md { padding: 0.4rem
+     0.8rem } — two classes, (0,2,0) — which beats the base rule above (0,1,1)
+     for padding specifically. This selector is (0,2,1), so it wins back both
+     properties for the danger item. .zui-btn--danger also sets an
+     unconditional min-height: 34px that nothing here competed for, pinning
+     the last (and only auto-sized) row a fraction of a pixel taller than its
+     raw-button predecessor — invisible to the eye but not to the pixel diff,
+     since it shifts the popover's bottom rounded corner. */
+  .zui-cardmenu-pop > button.zui-btn--danger { color: var(--danger); padding: 0.4rem 0.55rem; min-height: 0; }
   .zui-cardmenu-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sc, var(--accent)); flex-shrink: 0; }
   .zui-cardmenu-fu { padding: 0.4rem 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
   .zui-cardmenu-fu input { padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); }

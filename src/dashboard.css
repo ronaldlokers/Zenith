@@ -1,0 +1,27 @@
+/* Owns the Next Up "done" button's mobile touch-target override so
+   Button.css can stay call-site-agnostic. `.nextup-actions .btn-secondary`
+   (App.css:1010, @media max-width:600px, @layer app) used to bump the
+   button's min-height to 40px on phones — these are the home screen's
+   primary actions and were deliberately enlarged there (#492). The swap
+   replaced the raw `btn-secondary` class with `variant="secondary"`,
+   which renders `zui-btn--secondary`, not `btn-secondary` — so
+   `.nextup-actions .btn-secondary` no longer matches this element at all;
+   the mobile bump didn't lose a cascade fight, its selector simply
+   stopped applying. Restating it here does have to out-rank Button's own
+   unconditional `.zui-btn--secondary` min-height: 34px — that part is a
+   genuine same-layer specificity contest (both rules live in
+   @layer components), resolved below. Desktop needs no override: Button's
+   default 34px already matches Recipe B's own 34px floor exactly.
+
+   Specificity: `.nextup-actions .zui-btn--secondary` is (0,2,0), beating
+   the only Button.css rule that touches min-height for this variant,
+   the unconditional `.zui-btn--secondary` at (0,1,0) — no hover/disabled
+   rule in Button.css touches min-height, so there is nothing higher to
+   beat. */
+@layer components {
+  @media (max-width: 600px) {
+    .nextup-actions .zui-btn--secondary {
+      min-height: 40px;
+    }
+  }
+}

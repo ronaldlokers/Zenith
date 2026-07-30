@@ -1,0 +1,55 @@
+/* Owns the outreach template manager's delete-control override so
+   Button.css can stay call-site-agnostic. `.outreach-manage-actions
+   button.danger` (App.css:3702/3711) sits outside every Recipe A/B
+   container, so it never rendered as Recipe B — it's a compact meta-sized
+   chip: 0.75rem type (var(--text-meta)), 0.25/0.5rem padding, a plain 1px
+   var(--border) border, var(--radius-sm) corners, var(--surface) fill, and
+   no min-height floor. The same shape as CV's version-remove control
+   (src/cv/cv.css's .zui-cv-version-remove, `.cv-version-actions
+   button.danger`) — mirrored here, the two App.css recipes match exactly.
+
+   None of Button's Recipe-B danger sizing applies: `.zui-btn` sets
+   border-radius var(--radius-md) (10px, not 8px) unconditionally;
+   `.zui-btn--danger.zui-btn--md` sets padding 0.4/0.8 (not 0.25/0.5); and
+   `.zui-btn--md:not(.zui-btn--primary)` sets font-size var(--text-body)
+   (not var(--text-meta)). Background happens to already match at rest
+   (var(--surface) both sides) but not on hover — this container has no
+   hover rule at all, so the raw button never changed colour on hover,
+   while Button's `.zui-btn--danger:hover:not(:disabled)` swaps it to
+   var(--bg) — so background is restated unconditionally too, to cancel
+   that hover change rather than just to match the resting value.
+
+   `.outreach-manage-actions button.danger` (App.css:3711/3712) also sets
+   `color: var(--danger)` on top of the base rule, and that selector
+   requires the literal `.danger` class too — it stopped matching the
+   instant the swap landed, same trap as everything else here. It isn't
+   restated below because Button's own `.zui-btn--danger` already sets
+   `color: var(--danger)` — the same token, by coincidence, not because
+   the vanished App.css rule is somehow still settled "at rest". If
+   Button's danger colour ever diverges from `--danger`, this becomes a
+   fourth leak with nothing here to catch it.
+
+   Specificity: the class is repeated four times, (0,4,0), to beat every
+   competing Button.css declaration on these properties outright — the
+   highest is `.zui-btn--danger:hover:not(:disabled)` on background,
+   (0,3,0) (class + :hover + :not, one class-equivalent each). Outright,
+   not a tie: a tie would fall back to which file the bundler happens to
+   load last between this file (via outreach-composer.tsx's import) and
+   Button.css (via Button.tsx's), which nothing pins.
+
+   Not restated: display. This control's only content is the plain text
+   node t("common.delete") — no icon, no competing content — so its
+   shrink-to-fit width is identical under inline-block and Button's
+   inline-flex, and justify-content: center has no extra space to
+   redistribute. Confirmed by the zero-diff capture showing no damage
+   (mirrors CV's .zui-cv-version-remove, the same text-only shape). */
+@layer components {
+  .zui-btn.zui-btn--danger.zui-outreach-tpl-remove.zui-outreach-tpl-remove {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.25rem 0.5rem;
+    font-size: var(--text-meta);
+    min-height: 0;
+  }
+}

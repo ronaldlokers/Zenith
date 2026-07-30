@@ -3,18 +3,26 @@
    App.css and the catalog has to match production.
 
    App.css actually ships two distinct button recipes, not one:
-     - Recipe A, "primary"   — App.css:1212 button.primary (+ :1222 hover)
-     - Recipe B, "secondary" — App.css:4649 .card-actions/.detail-actions/
-       .settings-modal/.shortcut-help/.form-actions/.share-actions button
-       (the "control normalization layer", :4665 hover). This supersedes
-       the older per-container declarations at :406, :799, :884, :1493 and
-       :3381 — same specificity, later source order wins.
-     - "danger" is Recipe B plus a colour/border-colour override
-       (App.css:4693), scoped to the same three containers; there is no
-       danger-specific hover, so it uses Recipe B's hover unchanged. The
-       *bare* global `button.danger` (App.css:1226) is thinner still (just
-       `color`) — real danger buttons in the app all live inside one of
-       Recipe B's containers, so that's the recipe this variant models.
+     - Recipe A, "primary"   — App.css:1218 button.primary (+ :1228 hover)
+     - Recipe B, "secondary" — App.css:4325 .card-actions/.settings-modal/
+       .shortcut-help button (the "control normalization layer", :4338
+       hover). This supersedes the older per-container declarations, now at
+       :532 (.settings-modal > button), :750 (.shortcut-help button) and
+       :1525 (.card-actions button) — same specificity, later source order
+       wins. Their .detail-actions/.form-actions counterparts (both the
+       older declarations and Recipe B's own entries for those containers)
+       were retired when ActionBar took over button normalization for them
+       (132f93c, "feat: extract ActionBar, re-home its button normalization
+       (#406)").
+     - "danger" is Recipe B plus a colour/border-colour override, scoped to
+       the same three containers; there is no danger-specific hover, so it
+       used Recipe B's hover unchanged. Both that override (formerly
+       App.css:4693) and the *bare* global `button.danger` (formerly
+       App.css:1226, thinner still — just `color`) were retired from
+       App.css in 27ffc4e ("fix: retire the App.css secondary and danger
+       recipes"), which left this file as the only definition — real danger
+       buttons in the app all lived inside one of Recipe B's containers, so
+       that's the recipe this variant modeled.
 
    Layer priority applies per-property, not per-rule: a property this file
    declares unconditionally beats a lower-layer (App.css / @layer app)
@@ -31,7 +39,7 @@
     font-family: var(--sans);
     /* No line-height override. The raw app buttons carried index.css's
        `button { font: inherit }`, so they inherited the body's 1.5 — and
-       button.primary (App.css:1212) declares none, so its box height is
+       button.primary (App.css:1218) declares none, so its box height is
        padding + 1.5*font-size. Forcing line-height:1 here made every
        primary button ~7px shorter than the markup it replaces, shifting
        the top-bar "+ Add" (present on every view) and the whole content
@@ -61,7 +69,7 @@
   }
 
   /* Matches the global focus geometry (src/index.css:229) — the real
-     :focus-visible rule, not the [role="button"] one (App.css:1853), which
+     :focus-visible rule, not the [role="button"] one (App.css:1746), which
      targets ARIA-button divs, not <button> elements. */
   .zui-btn:focus-visible {
     outline: 2px solid var(--accent);
@@ -89,7 +97,7 @@
   }
 
   /* md font-size is owned by the size EXCEPT for primary, which must inherit.
-     button.primary (App.css:1212) sets no font-size, so a *standalone*
+     button.primary (App.css:1218) sets no font-size, so a *standalone*
      primary inherits the body's 1rem, but a primary *inside* a Recipe-B
      container renders at var(--text-body): `.form-actions button` (App.css
      :4650, 0,1,1) ties button.primary (0,1,1) on specificity and wins by
@@ -123,7 +131,7 @@
     background: var(--bg);
   }
 
-  /* Recipe A — App.css:1212. border: none (zero width), not just
+  /* Recipe A — App.css:1218. border: none (zero width), not just
      transparent — with border-box sizing a 1px transparent border still
      adds ~2px. */
   .zui-btn--primary {
@@ -133,12 +141,12 @@
     font-weight: 650;
   }
 
-  /* App.css:1222 */
+  /* App.css:1228 */
   .zui-btn--primary:hover:not(:disabled) {
     background: color-mix(in srgb, var(--accent) 85%, black);
   }
 
-  /* Recipe B — App.css:4649. No font-weight is declared there, so these
+  /* Recipe B — App.css:4325. No font-weight is declared there, so these
      buttons inherit ~400 from the body; do not add one here. */
   .zui-btn--secondary {
     background: var(--surface);
@@ -147,7 +155,7 @@
     min-height: 34px;
   }
 
-  /* App.css:4665 */
+  /* App.css:4338 */
   .zui-btn--secondary:hover:not(:disabled) {
     background: var(--bg);
   }
@@ -156,7 +164,7 @@
      generic scale above, since App.css has no sm/lg equivalent of this
      recipe to match.
 
-     NOT reproduced: App.css:1510 bumps .card-actions button specifically
+     NOT reproduced: App.css:1542 bumps .card-actions button specifically
      (not the other five Recipe B containers) to min-height 44px + padding
      0.5rem 0.8rem at max-width 600px. That's a single-container special
      case with zero call sites (see the closing comment), not part of
@@ -177,7 +185,8 @@
     padding: 0.4rem 0.8rem;
   }
 
-  /* Recipe B + App.css:4693 colour/border-colour override. Composed
+  /* Recipe B + a colour/border-colour override, retired from App.css
+     (formerly :4693) in 27ffc4e. Composed
      directly (not layered on top of .zui-btn--secondary) because variant
      is a single exclusive class, not a combination. */
   .zui-btn--danger {
@@ -188,7 +197,7 @@
   }
 
   /* No danger-specific hover exists in App.css for these containers —
-     it falls through to Recipe B's hover unchanged (App.css:4665). */
+     it falls through to Recipe B's hover unchanged (App.css:4338). */
   .zui-btn--danger:hover:not(:disabled) {
     background: var(--bg);
   }
@@ -227,7 +236,7 @@
   }
 
   /* No mobile min-height. App.css's only button-targeting 44px rule is
-     `.card-actions button` (App.css:1510) at max-width 600px, and
+     `.card-actions button` (App.css:1542) at max-width 600px, and
      .card-actions has ZERO call sites in the app — so no real button ever
      rendered at a 44px mobile min-height. An earlier version of this file
      imposed a universal 44px here for "touch target parity", but that
@@ -237,8 +246,11 @@
      default/ghost/dark keep their natural height and secondary/danger keep
      their own unconditional min-height: 34px, exactly as today. */
 
-  /* Link + close — the app's own borderless button recipes (App.css .linklike
-     :4542, .modal-close :846). Both are "unsized": they override the size
+  /* Link + close — the app's own borderless button recipes, .linklike and
+     .modal-close, both retired from App.css in 568b29d ("feat: link + close
+     Button variants from the app's own recipes (#403)"), the same commit
+     that added these variants here — this file is now the only definition
+     of both. Both are "unsized": they override the size
      class's padding and font-size, so the selectors carry an extra class for
      specificity (0,2,0, beating .zui-btn--md and the md font-size :not rule)
      and sit after the size rules. */

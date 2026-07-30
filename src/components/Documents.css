@@ -124,4 +124,29 @@
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
+
+  /* Mirrors timeline.css's override pattern, not its class: App.css's
+     `.tl-del` (App.css:2051, @layer app) still matches — this component
+     kept the literal `tl-del` class it had before the #285 split, unlike
+     Timeline (src/timeline.tsx), which moved to `zui-tl-del` in 0858819.
+     app-styles.css orders layers `reset, app, components`, so @layer app
+     can never reclaim background/border/padding/min-height from Button's
+     danger variant (@layer components) regardless of specificity; this
+     restates them, keyed off the class this component actually carries.
+     The bare
+     `button.danger` (App.css:1241) is a genuine vanished selector — the
+     literal "danger" class is gone from the markup — but its only
+     declaration (color) is already reproduced unconditionally by
+     `.zui-btn--danger`, so no color override belongs here.
+
+     Three classes, (0,3,0), chosen to beat `.zui-btn--danger.zui-btn--md`'s
+     padding override (0,2,0) on specificity, not on whichever of Button.css
+     and Documents.css the bundler happens to load last — nothing pins their
+     relative order within @layer components. */
+  .zui-btn.zui-btn--danger.tl-del {
+    background: none;
+    border: none;
+    padding: 0 0.2rem;
+    min-height: 0;
+  }
 }

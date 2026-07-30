@@ -104,6 +104,25 @@ describe("CardMenu", () => {
     ).toBeInTheDocument();
   });
 
+  // CardMenu.css scopes the destructive colour to the popover. It has to select
+  // the class Button actually renders, or the Archive item silently loses its
+  // colour — invisible to tsc, lint and every other test in this file.
+  test("the destructive item carries Button's danger class, not the app's", () => {
+    render(
+      <CardMenu
+        a={mockApplication}
+        onMove={noop}
+        onSetFollowUp={noop}
+        onOpenDetail={noop}
+        onArchive={noop}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Actions for Staff Engineer" }));
+    const archive = screen.getByRole("menuitem", { name: "Archive" });
+    expect(archive).toHaveClass("zui-btn--danger");
+    expect(archive).not.toHaveClass("danger");
+  });
+
   test("emits zui-cardmenu classes, never the legacy card-menu name", () => {
     const { container } = render(
       <CardMenu

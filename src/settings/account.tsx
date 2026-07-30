@@ -4,8 +4,10 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { useAiStatus } from "../ai-status-context";
 import { authClient, signOut, useSession } from "../auth-client";
+import { Button } from "../components";
 import { requestConfirm } from "../hooks";
 import { formatDate } from "../format";
+import "./settings.css";
 
 export function DeleteAccount({
   onError,
@@ -30,9 +32,14 @@ export function DeleteAccount({
     <div className="admin-invite">
       <h3>{t("account.deleteAccount")}</h3>
       <p className="muted small">{t("account.deleteHint")}</p>
-      <button className="danger" disabled={busy} onClick={del}>
+      <Button
+        variant="danger"
+        className="zui-settings-native"
+        disabled={busy}
+        onClick={del}
+      >
         {t("account.deleteAccount")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -176,9 +183,9 @@ export function TwoFactorSettings() {
               <li key={c}>{c}</li>
             ))}
           </ul>
-          <button
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
             onClick={() => {
               // Backup codes are shown once (#285) — let the user save them.
               const blob = new Blob(
@@ -194,7 +201,7 @@ export function TwoFactorSettings() {
             }}
           >
             {t("account.twoFactorDownloadCodes")}
-          </button>
+          </Button>
           <form onSubmit={verify} className="tfa-verify">
             <input
               placeholder={t("account.twoFactorCodePlaceholder")}
@@ -223,9 +230,14 @@ export function TwoFactorSettings() {
             />
           </label>
           {error && <p className="login-error">{error}</p>}
-          <button type="submit" disabled={busy} className={enabled ? "danger" : ""}>
+          <Button
+            type="submit"
+            disabled={busy}
+            variant={enabled ? "danger" : "default"}
+            className="zui-settings-native"
+          >
             {enabled ? t("account.twoFactorDisable") : t("account.twoFactorEnable")}
-          </button>
+          </Button>
         </form>
       )}
     </div>
@@ -286,13 +298,14 @@ export function SessionManagement() {
               </span>
             </span>
             {s.token !== currentToken && (
-              <button
-                className="danger"
+              <Button
+                variant="danger"
+                className="zui-settings-native"
                 disabled={busyToken === s.token}
                 onClick={() => revoke(s.token)}
               >
                 {t("account.revoke")}
-              </button>
+              </Button>
             )}
           </li>
         ))}
@@ -361,9 +374,14 @@ export function AnthropicKeySettings() {
           <span className="muted small">
             {t("account.aiKeyConnected", { hint })}
           </span>
-          <button className="danger" disabled={busy} onClick={remove}>
+          <Button
+            variant="danger"
+            className="zui-settings-native"
+            disabled={busy}
+            onClick={remove}
+          >
             {t("account.aiKeyRemove")}
-          </button>
+          </Button>
         </div>
       ) : (
         <form onSubmit={save}>

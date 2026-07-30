@@ -16,6 +16,7 @@ import {
 } from "../components";
 import type { Education, Language, Profile, WorkExperience } from "../types";
 import { formatMonthYear } from "../format";
+import "./cv.css";
 
 export function ProfileSection({
   profile,
@@ -381,9 +382,9 @@ export function WorkExperienceSection({
           onSubmit={(data) => run(() => api.create("work-experience", data))}
         />
       ) : (
-        <button className="btn-secondary" onClick={() => setEditing("new")}>
+        <Button variant="secondary" onClick={() => setEditing("new")}>
           {t("cv.addWorkExperience")}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -562,9 +563,9 @@ export function EducationSection({
           onSubmit={(data) => run(() => api.create("education", data))}
         />
       ) : (
-        <button className="btn-secondary" onClick={() => setEditing("new")}>
+        <Button variant="secondary" onClick={() => setEditing("new")}>
           {t("cv.addEducation")}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -608,8 +609,9 @@ export function LanguagesSection({
             <span>
               {l.name} — {t(`cv.proficiency.${l.proficiency}`)}
             </span>
-            <button
-              className="danger"
+            <Button
+              variant="danger"
+              className="zui-cv-language-remove"
               aria-label={t("cv.removeLanguage")}
               onClick={() =>
                 api
@@ -619,7 +621,7 @@ export function LanguagesSection({
               }
             >
               <RemoveIcon />
-            </button>
+            </Button>
           </li>
         ))}
         {items.length === 0 && <EmptyState as="li">{t("cv.noLanguages")}</EmptyState>}
@@ -640,9 +642,9 @@ export function LanguagesSection({
           <option value="fluent">{t("cv.proficiency.fluent")}</option>
           <option value="native">{t("cv.proficiency.native")}</option>
         </select>
-        <button type="submit" className="btn-secondary">
+        <Button type="submit" variant="secondary" className="zui-cv-add-btn">
           {t("feedSettings.add")}
-        </button>
+        </Button>
       </form>
     </div>
   );
