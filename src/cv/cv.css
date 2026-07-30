@@ -37,15 +37,20 @@
   /* LanguagesSection's remove-language control, `<button class="danger">`
      as a direct child of its `<li>` inside `<ul className="settings-list">`
      — the same shape as api.tsx's remove-webhook control (settings.css).
-     App.css's `.settings-list .danger` (App.css:2098, (0,2,0)) makes it
-     borderless/transparent with 1rem type and 0.2/0.4 padding; because it's
-     a direct `<li> > <button>`, `.settings-list li > button` (App.css:4503/
-     4507) additionally pins min-height/min-width to 34px (40px under
-     600px) on top of that. Button's `.zui-btn--danger` base already
-     matches the 34px desktop floor unconditionally, so only the *mobile*
-     bump needs restating here — min-width is left alone entirely, since
-     Button.css never sets min-width for any variant, so the app rule is
-     uncontested (nothing in a higher layer to lose it to).
+     The old markup's `.danger` class is what App.css's `.settings-list
+     .danger` (App.css:2098) keyed on — border none, background none,
+     font-size 1rem, padding 0.2/0.4rem, line-height 1 — but the swap
+     renders `zui-btn--danger`, not `.danger`, so that selector no longer
+     matches at all; these properties are restated below because their
+     only source vanished, not because anything outranks it. `.settings-list
+     li > button` (App.css:4503/4507) is different: it's keyed on the DOM
+     shape (a direct `<li>` child), not a class, so it's unaffected by the
+     swap and still pins min-height/min-width to 34px (40px under 600px)
+     today. Button's `.zui-btn--danger` base already matches that 34px
+     desktop floor unconditionally, so only the *mobile* bump is a genuine
+     ongoing contest that needs restating here — min-width is left alone
+     entirely, since Button.css never sets min-width for any variant, so
+     the app rule is uncontested (nothing in a higher layer to lose it to).
 
      Specificity is (0,4,0) (the class is repeated) to outright beat
      `.zui-btn--danger:hover:not(:disabled)` (Button.css, also (0,3,0)) on
@@ -96,14 +101,23 @@
   /* CvVersions' remove-version control, `<button class="danger">` inside
      `<span className="cv-version-actions">` inside a `<li>` in
      `<ul className="cv-versions-list">`. App.css's `.cv-version-actions
-     button` (App.css:3249, (0,1,1)) gives every button in this row a
-     compact meta-sized chip look — 0.75rem type (var(--text-meta)),
-     0.25/0.5rem padding, a plain 1px var(--border) border, var(--radius-sm)
-     corners, var(--surface) fill, no min-height floor (this container
-     never joined the touch-target-floor list) — and `.cv-version-actions
-     button.danger` (App.css:3258, (0,2,1)) recolors only `color` to
-     var(--danger) on top of that; there's no hover rule at all for this
-     container. None of the sizing matches Button's Recipe-B danger
+     button` (App.css:3249, (0,1,1)) is keyed on the container class plus
+     tag, not `.danger`, so it's unaffected by the swap and still gives
+     every button in this row a compact meta-sized chip look — 0.75rem
+     type (var(--text-meta)), 0.25/0.5rem padding, a plain 1px var(--border)
+     border, var(--radius-sm) corners, var(--surface) fill, no min-height
+     floor (this container never joined the touch-target-floor list); this
+     part is a genuine ongoing cross-layer contest against Button's own
+     defaults, restated below. `.cv-version-actions button.danger`
+     (App.css:3258) is different: it requires the literal `.danger` class
+     to recolor `color` to var(--danger), and the swap renders
+     `zui-btn--danger` instead — that selector no longer matches at all,
+     so its contribution didn't lose a specificity fight, it vanished. It
+     isn't restated below because Button's own `.zui-btn--danger` already
+     sets `color: var(--danger)` — the same token, coincidentally, not
+     because the vanished App.css rule is still exerting any influence.
+     There's no hover rule at all in App.css for this container. None of
+     the sizing matches Button's Recipe-B danger
      variant: `.zui-btn` sets border-radius: var(--radius-md) (10px, not
      8px) unconditionally; `.zui-btn--danger` sets a color-mixed border
      (not a plain var(--border) one) and an unconditional min-height: 34px

@@ -5,13 +5,20 @@
    of App.css's Recipe A/B containers (.card-actions/.detail-actions/
    .settings-modal/.shortcut-help/.form-actions/.share-actions), so Button's
    danger variant — which models Recipe B plus the danger colour override —
-   does not describe them. The real recipe is `.settings-list .danger`
-   (App.css:2098: border none, background none, color var(--danger),
-   font-size 1rem, line-height 1, padding 0.2rem 0.4rem) plus `.settings-list
-   li > button` (App.css:4503/4507: min-height/min-width 34px, 40px under
-   600px). Same shape as CV's LanguagesSection remove control
-   (src/cv/cv.css's .zui-cv-language-remove) — mirrored here for feed's two
-   remove-from-list controls, which share the exact same markup shape.
+   does not describe them. The old markup's `.danger` class is what drove
+   App.css's `.settings-list .danger` (App.css:2098: border none,
+   background none, color var(--danger), font-size 1rem, line-height 1,
+   padding 0.2rem 0.4rem); the swap renders `zui-btn--danger` instead, so
+   that selector no longer matches at all, and every property it set has
+   to be restated below because its source vanished — not because
+   Button.css's danger variant conflicts with them (it sets no
+   line-height anywhere, and its own font-size/padding just differ, they
+   don't "outrank" these). `.settings-list li > button` (App.css:4503/4507:
+   min-height/min-width 34px, 40px under 600px) is keyed on DOM shape, not
+   a class, so it's unaffected by the swap and still applies today. Same
+   shape as CV's LanguagesSection remove control (src/cv/cv.css's
+   .zui-cv-language-remove) — mirrored here for feed's two remove-from-list
+   controls, which share the exact same markup shape.
 
    Not restated: border-radius. With border/background both none there is
    nothing for a radius to clip, so it's not genuinely contested — a

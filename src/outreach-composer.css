@@ -19,6 +19,16 @@
    var(--bg) — so background is restated unconditionally too, to cancel
    that hover change rather than just to match the resting value.
 
+   `.outreach-manage-actions button.danger` (App.css:3711/3712) also sets
+   `color: var(--danger)` on top of the base rule, and that selector
+   requires the literal `.danger` class too — it stopped matching the
+   instant the swap landed, same trap as everything else here. It isn't
+   restated below because Button's own `.zui-btn--danger` already sets
+   `color: var(--danger)` — the same token, by coincidence, not because
+   the vanished App.css rule is somehow still settled "at rest". If
+   Button's danger colour ever diverges from `--danger`, this becomes a
+   fourth leak with nothing here to catch it.
+
    Specificity: the class is repeated four times, (0,4,0), to beat every
    competing Button.css declaration on these properties outright — the
    highest is `.zui-btn--danger:hover:not(:disabled)` on background,
