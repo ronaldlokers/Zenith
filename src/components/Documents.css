@@ -104,6 +104,12 @@
     overflow-wrap: anywhere;
   }
 
+  /* Was the bare App.css .tl-empty (App.css:2022) — restated here so the
+     empty-state row doesn't depend on App.css for its color. */
+  .zui-docs-empty {
+    color: var(--faint);
+  }
+
   .zui-doc-label {
     font-family: var(--mono);
     font-size: var(--text-chrome);

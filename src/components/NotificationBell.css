@@ -3,11 +3,33 @@
    list at App.css:4073-4079) under the .zui-notification-* names
    NotificationBell.tsx emits — moved verbatim, renamed only. The "mark all
    read" button is <Button variant="secondary">, so the shared recipe lives
-   in Button.css rather than being copied here or borrowed from App.css. The
-   .settings-btn trigger keeps only what is specific to the bell. */
+   in Button.css rather than being copied here or borrowed from App.css. */
 @layer components {
   .zui-notification-bell {
     position: relative;
+  }
+
+  /* Was the shared App.css .settings-btn (App.css:129) — restated here
+     since src/shell.tsx still uses the original for the top-bar settings
+     button, a not-yet-owned call site. */
+  .zui-notification-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: var(--radius-sm);
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    .zui-notification-trigger {
+      width: 40px;
+      min-height: 40px;
+    }
   }
 
   .zui-notification-dot {

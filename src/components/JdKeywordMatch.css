@@ -1,8 +1,17 @@
 /* Reproduces the App.css "JD keyword match" recipe (App.css:2234-2249)
    under the .zui-jd-match-* names JdKeywordMatch.tsx emits — moved
-   verbatim, renamed only. (.jd-match itself had no App.css rule — it was
-   an unstyled wrapper — so it is renamed here with no accompanying CSS.) */
+   verbatim, renamed only. (.jd-match itself had no App.css rule — it was an
+   unstyled wrapper.) */
 @layer components {
+  /* Intentionally empty. .jd-match had no App.css rule either — this is a
+     bare wrapper div — but the class stays as the component's root identity
+     marker (JdKeywordMatch.test.tsx: "emits zui-jd-match classes, never the
+     legacy jd-match name"), so it's declared here, with no declarations,
+     rather than left as a class the self-containment test can't see this
+     component owns. */
+  .zui-jd-match {
+  }
+
   .zui-jd-match-input {
     width: 100%;
     padding: 0.5rem 0.6rem;
@@ -89,6 +98,16 @@
   }
   .ats-verdict.band-weak {
     color: var(--danger);
+  }
+
+  /* Was the shared App.css .keyword-chips (App.css:2108) — restated under
+     this component's own name since feed.tsx, detail.tsx and cv/sections.tsx
+     still use the original for their own, not-yet-owned chip lists. */
+  .zui-jd-match-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.3rem;
   }
 
   .ats-checks {

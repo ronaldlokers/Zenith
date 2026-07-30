@@ -17,9 +17,12 @@ import "./Documents.css";
 // class itself — Timeline moved to zui-tl-del in 0858819, before this
 // component's raw <button> became a Button, so the two no longer share a
 // class; each restates its own override in its own stylesheet (this one in
-// Documents.css). .tl-empty stays App.css, unrelated to the button. Documents.css
-// reproduces the App.css .docs*/.upload-btn/.doc-label/.doc-size recipe
-// under the .zui-docs* names this component emits.
+// Documents.css). The empty-state row used to carry App.css's .tl-empty —
+// caught by the self-containment test, since nothing in this component's own
+// CSS defined it — so it's renamed to zui-docs-empty, restated in
+// Documents.css. Documents.css reproduces the App.css
+// .docs*/.upload-btn/.doc-label/.doc-size recipe under the .zui-docs* names
+// this component emits.
 function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${Math.max(1, Math.round(bytes / 1024))} kB`;
@@ -135,7 +138,9 @@ export function Documents({ applicationId, onError }: DocumentsProps) {
             </Button>
           </li>
         ))}
-        {items?.length === 0 && <li className="tl-empty">{t("detail.noFiles")}</li>}
+        {items?.length === 0 && (
+          <li className="zui-docs-empty">{t("detail.noFiles")}</li>
+        )}
       </ul>
     </div>
   );

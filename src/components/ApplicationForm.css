@@ -5,7 +5,15 @@
    with .cal-nav padding vs .btn-secondary): none matches — the button
    carries no class and isn't inside .card-actions/.settings-modal/
    .shortcut-help/.tabs/etc., so .url-row button was already the effective
-   rule in App.css and stays effective here unchanged. */
+   rule in App.css and stays effective here unchanged.
+
+   .zui-appform* below reproduces the shared App.css "form" recipe
+   (App.css:2364-2429, plus .error/.error-text at App.css:652-668) that this
+   component used to compose directly — .form/.form-group/.error/.error-text
+   are still the live recipe for companies.tsx, contacts.tsx and
+   cv/sections.tsx, none of which is owned yet, so App.css keeps the
+   originals; this restates the same declarations under this component's own
+   names, caught by the self-containment test. Moved verbatim, renamed only. */
 @layer components {
   .zui-url-row {
     display: flex;
@@ -26,5 +34,89 @@
   .zui-url-row button:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+
+  .zui-appform {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+    padding: 0.9rem;
+    margin-bottom: var(--space-3);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+  }
+
+  .zui-appform label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-chrome);
+    color: var(--muted);
+  }
+
+  .zui-appform label.zui-appform-full,
+  .zui-appform .zui-appform-group {
+    grid-column: 1 / -1;
+  }
+
+  .zui-appform-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.8rem 0.85rem;
+  }
+
+  .zui-appform-group h4 {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-chrome);
+    color: var(--faint);
+  }
+
+  .zui-appform input,
+  .zui-appform select,
+  .zui-appform textarea {
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    width: 100%;
+    font-family: var(--sans);
+    font-size: var(--text-title);
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  @media (max-width: 600px) {
+    .zui-appform,
+    .zui-appform-group {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .zui-appform-error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: color-mix(in srgb, var(--danger) 12%, var(--surface));
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 0.8rem;
+    color: var(--danger);
+  }
+
+  .zui-appform-error-text {
+    flex: 1;
+    color: var(--ink);
   }
 }
