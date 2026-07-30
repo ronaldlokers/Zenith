@@ -298,6 +298,16 @@ one.
 - **`.cv-doc` renders at desktop only.** At 390px it is not in the DOM at all, so a mobile
   capture showing no change to the CV preview is correct rather than suspicious.
 
+**Client and server disagree about what day it is, on purpose.** `today()` in `src/format.ts`
+is the **local** calendar date (#516) — `next_action_at`, `follow_up_at` and `deadline_at` are
+dates the user picked in their own calendar, so a UTC "today" read tomorrow's actions as due all
+evening west of UTC. The server side — `worker/notifications.ts`, `worker/calendar.ts`, and the
+`date('now')` SQL defaults — is still UTC, because it has no per-user timezone to work from.
+So a due-follow-up push notification and the board can disagree by a day for part of the day.
+Closing it properly means storing a timezone preference per user and threading it through the
+notification and calendar queries; that is a feature, not a cleanup. Until then the divergence is
+documented at `today()` rather than discovered.
+
 **Smaller items.**
 
 - `classesIn()` in the self-containment test reuses a JS-shaped comment stripper on CSS; a

@@ -1,6 +1,6 @@
 import i18n from "./i18n";
 import { api } from "./api";
-import { getCvLanguage } from "./format";
+import { getCvLanguage, today } from "./format";
 import type { Education, Language, WorkExperience } from "./types";
 
 // Freezes the current CV builder state into a PDF File, so it can be attached
@@ -32,7 +32,7 @@ export async function buildCvSnapshotFile(
     template === "two-column"
       ? generateCvPdfTwoColumn(cvData, labels)
       : generateCvPdf(cvData, labels);
-  const stamp = new Date().toISOString().slice(0, 10);
+  const stamp = today();
   const base = profile.name ? profile.name.replace(/\s+/g, "-") : "CV";
   return new File([doc.output("blob")], `${base}-CV-${stamp}.pdf`, {
     type: "application/pdf",
@@ -42,6 +42,6 @@ export async function buildCvSnapshotFile(
 // The date-stamped label stored on the snapshot document.
 export function cvSnapshotLabel(): string {
   return i18n.t("documents.cvSnapshotLabel", {
-    date: new Date().toISOString().slice(0, 10),
+    date: today(),
   });
 }

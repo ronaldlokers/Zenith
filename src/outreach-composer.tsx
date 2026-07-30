@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import type { Contact, OutreachTemplate, Profile } from "./types";
 import { Button, FieldLabel } from "./components";
+import { today } from "./format";
 import {
   fillTemplate,
   firstName,
@@ -82,11 +83,10 @@ export function OutreachComposer({
   };
 
   const markContacted = () => {
-    const today = new Date().toISOString().slice(0, 10);
     Promise.resolve(
       api.update("contacts", contact.id, {
         ...contact,
-        last_contacted_at: today,
+        last_contacted_at: today(),
         outreach_status:
           contact.outreach_status === "not_contacted"
             ? "awaiting_reply"

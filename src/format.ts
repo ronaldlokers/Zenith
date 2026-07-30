@@ -26,8 +26,37 @@ export function isDead(status: Status): boolean {
   return status === "rejected" || status === "withdrawn" || status === "ghosted";
 }
 
+// Deliberately the *local* calendar date, not UTC: next_action_at,
+// follow_up_at and deadline_at are dates the user picked in their own
+// calendar, so "today" has to mean the same thing their calendar means by
+// it. Building this from toISOString() (UTC) instead makes tomorrow's
+// actions read as due all evening west of UTC, and today's actions read as
+// not-yet-due for the first couple of hours east of UTC — do not
+// "simplify" it back to that.
+//
+// The server side (worker/notifications.ts, worker/calendar.ts, and the
+// date('now') SQL defaults) stays on UTC for now: it has no per-user
+// timezone to work from. That's a separate feature (a stored timezone
+// preference), so the client/server dates deliberately diverge until then.
 export function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// Same local-calendar basis as today(), offset by whole days. Uses local
+// date arithmetic (setDate), not millisecond addition — adding
+// days * 86400000 breaks across a DST transition, where a local day is 23
+// or 25 hours long rather than exactly 24.
+export function daysFromToday(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export function isDue(a: Application): boolean {
