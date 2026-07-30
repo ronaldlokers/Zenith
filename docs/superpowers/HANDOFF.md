@@ -27,11 +27,23 @@ the `btn-secondary`/`danger` grep returns nothing at all (not even in tests and 
 injected violation; `scripts/dead-css.mjs` reports 12 candidate blocks (18 lines), down from 58 (−79%);
 and all 38 components in `src/components/` have both a `.stories.tsx` and a `.test.tsx`.
 
-**Note on the plan document:** every `App.css:NNNN` line number in it is stale — the file shrank
-from 5175 to 4641 lines across these PRs. Locate recipes by selector, never by the plan's line
-numbers. Two of the plan's own prescribed code blocks also carried errors that survived into
-review (a stale citation, and a `key: string` signature that lost compile-time safety). Treat
-its code as a strong draft, not as gospel.
+**Note on the plan document:** its line references do not resolve against `main`, but they are
+not wrong — they are **anchored to `e57f6a3`**, the commit the plan was written against, where
+`App.css` was 5175 lines. Every one of them is exact there. They stopped resolving because the
+plan's own PRs 1–3 deleted ~534 lines above most of them and later PRs moved six of the cited
+recipes out of `App.css` altogether. Read them with `git show e57f6a3:src/App.css`, which the
+plan's own header now explains, along with a table of where each moved recipe went.
+
+The lesson is about *citing*, not about that plan: a bare line number is only meaningful with the
+commit it was taken against. Where a citation has to survive, name the selector too — and if it
+is going into a component file, where it will read as a live pointer, name the commit. One
+citation in this work shipped into `PillTabs.tsx` reading `App.css:1083`, correct at the anchor
+but meaningless in the file it landed in; #511 corrected it.
+
+The plan does carry one genuine content error: Task 16's prescribed `TabBar` signature types its
+key as `string`, which forces a cast at every call site and silently accepts a typo'd tab key
+that `main` rejected at compile time. The shipped components are generic in the key instead.
+Treat the plan's code blocks as a strong draft, not as gospel.
 
 ## Rebuilding the rig — nothing verifies without it
 

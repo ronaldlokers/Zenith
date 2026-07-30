@@ -10,6 +10,44 @@
 
 **Spec:** `docs/superpowers/specs/2026-07-29-ds-adoption-wave2-design.md`
 
+**Status: executed and merged** — PRs #504–#508, #510 and #511. This is now a historical
+document; the durable record of the rig, the rules and the remaining debt is
+`docs/superpowers/HANDOFF.md`.
+
+## Reading the line references
+
+Every `App.css:NNNN` and `src/<file>:NN` reference below is anchored to **`e57f6a3`** — the
+commit this plan was written against, where `src/App.css` was 5175 lines. They were correct
+when written and **will not resolve against `main`**, because the plan's own PRs 1–3 deleted
+~534 lines above most of them and later PRs moved the recipes out of `App.css` entirely.
+
+Read them against the anchor rather than translating them:
+
+```bash
+git show e57f6a3:src/App.css | sed -n '4512,4542p'   # e.g. Task 16's .detail-tabs recipe
+```
+
+Six of the cited recipes no longer live in `App.css` at all. Where they went:
+
+| Cited in the plan as | Recipe | Now lives in |
+| --- | --- | --- |
+| `App.css:1083` | `.subnav` | `src/components/PillTabs.css` (`.zui-pilltabs`) |
+| `App.css:3999` | `.settings-nav` | `src/components/SettingsNav.css` (`.zui-settingsnav`) |
+| `App.css:4512` | `.detail-tabs` | `src/components/TabBar.css` (`.zui-tabbar`) |
+| `App.css:1109`, `:1656`, `:1660` | `.sr-only`, `.muted`, `.small` | `src/utilities.css` |
+| `App.css:2856` | `.ai-key-gate a` | `src/components/AiKeyGate.css` |
+| `App.css:3602` | `.quickadd-hint` | `src/components/QuickAddDialog.css` |
+
+`App.css:4862` and `:4877` were grouped touch-target selectors; only their `.subnav button,`
+line was removed, and the six other controls in each group still carry the repair. `App.css:2998`
+(the `.cv-doc` elevation shadow) is still in `App.css` and now reads `var(--shadow-1)`.
+
+**One known content error, not a numbering one.** Task 16's prescribed `TabBar` signature types
+its key as `string`, which forces every call site to cast and silently accepts a typo'd tab key
+that `main` used to reject at compile time. The shipped components are generic in the key
+(`<K extends string>`) instead — see #510. Treat the code blocks below as a strong draft, not as
+gospel.
+
 ## Global Constraints
 
 - **Never commit to `main`.** One short-lived branch per PR: `fix/…`, `feat/…`, `refactor/…`, `docs/…`, `chore/…`. Conventional-commit subjects, lowercase imperative.
