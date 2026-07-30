@@ -130,16 +130,41 @@ means a user silently misses a digest rather than seeing a visible error.
 
 ### Push pass
 
-New hourly cron `"7 * * * *"`, dispatched in the `scheduled` handler alongside
-the existing `event.cron` string matches. It selects notifications where
-`pushed_at IS NULL`, the record is under 24 hours old, and the owner's
-`localHour` is 8 or later; sends the push; stamps `pushed_at`.
+A new `deliverDuePushes(env)` pass selects notifications where `pushed_at IS
+NULL`, the record is under 24 hours old, and the owner's `localHour` is 8 or
+later; sends the push; stamps `pushed_at`.
 
 `insertAndPush` in `worker/notifications.ts` becomes insert-only.
 
-Cron budget: this is the **fourth of five** triggers allowed per account on the
-Workers free plan (the limit is account-level, not per-Worker — confirm no other
-Worker on the account is using them).
+**No new cron trigger.** The free plan allows 5 per *account*, not per Worker,
+and the account is already at 4 (Zenith's 3 plus one elsewhere). Adding a fourth
+here would take the last slot. Instead the existing trigger goes hourly and the
+handler branches:
+
+```jsonc
+"crons": ["17 * * * *", "11 3 * * *", "0 8 * * 1"]
+//          ^ was 17 */6 * * *
+```
+
+```ts
+const hour = new Date(event.scheduledTime).getUTCHours();
+if (hour % 6 === 0) {
+  // Feed pull stays 6-hourly — external sources, and nothing about a
+  // listing needs hourly resolution. Only the push pass does, so it can
+  // land near 08:00 local in any timezone.
+  const [feed] = await Promise.all([refreshFeed(env), checkStalePostings(env)]);
+  await generateNotifications(env, feed.inserted);
+}
+await deliverDuePushes(env);
+```
+
+`hour % 6 === 0` reproduces the current 00:17 / 06:17 / 12:17 / 18:17 cadence
+exactly. Use `event.scheduledTime`, not `Date.now()` — a retried or delayed
+invocation must branch on the time it was scheduled for, not the time it ran.
+
+The trade is that the feed cadence is no longer visible in `wrangler.jsonc`; the
+comment above is therefore mandatory, not decorative. The account stays at 4 of
+5 with a slot free.
 
 ### Client
 
@@ -179,7 +204,9 @@ Worker on the account is using them).
   the invalid/null fallback to UTC.
 - **Worker tests** — the push pass holds a record before the local hour and
   releases it after; the 24-hour window excludes an older record; due queries
-  select on the user's local date rather than UTC.
+  select on the user's local date rather than UTC; the `hour % 6` branch runs
+  the feed exactly at the four old times and never at the other twenty, driven
+  by `event.scheduledTime` rather than the wall clock.
 - **Client tests** — detection fires only when the stored value is `NULL`; the
   select renders grouped options and PUTs on change; the local-time hint shows
   the time for the *selected* zone, not the browser's.
