@@ -1,0 +1,48 @@
+/* Owns the feed settings list's remove-control override so Button.css can
+   stay call-site-agnostic. Neither the role-type nor the ATS-board remove
+   button (both `<li> > <button class="danger">` inside `<ul
+   className="settings-list">`, src/feed.tsx's FeedSettings) sits inside any
+   of App.css's Recipe A/B containers (.card-actions/.detail-actions/
+   .settings-modal/.shortcut-help/.form-actions/.share-actions), so Button's
+   danger variant — which models Recipe B plus the danger colour override —
+   does not describe them. The real recipe is `.settings-list .danger`
+   (App.css:2098: border none, background none, color var(--danger),
+   font-size 1rem, line-height 1, padding 0.2rem 0.4rem) plus `.settings-list
+   li > button` (App.css:4503/4507: min-height/min-width 34px, 40px under
+   600px). Same shape as CV's LanguagesSection remove control
+   (src/cv/cv.css's .zui-cv-language-remove) — mirrored here for feed's two
+   remove-from-list controls, which share the exact same markup shape.
+
+   Not restated: border-radius. With border/background both none there is
+   nothing for a radius to clip, so it's not genuinely contested — a
+   verified zero-diff capture, not an assumption. min-width is left alone
+   too: Button.css never sets min-width for any variant, so the app rule is
+   uncontested (nothing in a higher layer to lose it to). display is left
+   at Button's default inline-flex is NOT what's needed here — this control
+   renders only a RemoveIcon, the same icon-only shape Button.css's own
+   --link variant comment flags: inline-flex renders a few pixels wider/
+   taller than the inline-block box the raw markup had, shifting the glyph.
+
+   Specificity: the class is repeated four times, (0,4,0), to beat every
+   competing Button.css declaration on these properties outright — the
+   highest is `.zui-btn--danger:hover:not(:disabled)` on background,
+   (0,3,0) (class + :hover + :not, one class-equivalent each). Outright,
+   not a tie: a tie would fall back to which file the bundler happens to
+   load last (Button.css via Button.tsx's import vs this file via
+   feed.tsx's), which nothing pins. */
+@layer components {
+  .zui-btn.zui-btn--danger.zui-feed-list-remove.zui-feed-list-remove {
+    display: inline-block;
+    background: none;
+    border: none;
+    padding: 0.2rem 0.4rem;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  @media (max-width: 600px) {
+    .zui-btn.zui-btn--danger.zui-feed-list-remove.zui-feed-list-remove {
+      min-height: 40px;
+    }
+  }
+}

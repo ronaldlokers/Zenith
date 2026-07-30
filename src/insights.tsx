@@ -22,7 +22,7 @@ import {
   totalComp,
 } from "./format";
 import { ActivityTab, CalendarTab } from "./calendar";
-import { DashCard, MomentumBand, Skeleton, StatCard } from "./components";
+import { Button, DashCard, MomentumBand, Skeleton, StatCard } from "./components";
 
 export function InsightsTab({
   applications,
@@ -178,25 +178,26 @@ export function InsightsTab({
             {/* The side-by-side offer PDF used to live in the retired "all the
                 numbers" drawer (#486) — it is the one thing there that wasn't
                 already on this screen, so it moves onto the offers card. */}
-            <button
-              type="button"
-              className="btn-secondary dash-offers-pdf"
+            <Button
+              variant="secondary"
+              className="dash-offers-pdf"
               onClick={() => downloadOfferComparisonPdf(liveOffers, t)}
             >
               {t("stats.downloadOfferComparison")}
-            </button>
+            </Button>
             </>
           )}
         </DashCard>
       </div>
 
-      <button
-        className="btn-secondary insights-toggle"
+      <Button
+        variant="secondary"
+        className="insights-toggle"
         onClick={() => setShowActivity((v) => !v)}
         aria-expanded={showActivity}
       >
         {showActivity ? t("overview.hideActivity") : t("overview.showActivity")}
-      </button>
+      </Button>
       {showActivity && <ActivityTab onError={onError} onOpenJob={onOpenJob} />}
 
       {/* Calendar folded in from its own tab (#481) — deadlines, interviews
@@ -208,13 +209,14 @@ export function InsightsTab({
         </>
       ) : (
         <>
-          <button
-            className="btn-secondary insights-toggle"
+          <Button
+            variant="secondary"
+            className="insights-toggle"
             onClick={() => setShowCalendar((v) => !v)}
             aria-expanded={showCalendar}
           >
             {showCalendar ? t("calendar.hide") : t("calendar.show")}
-          </button>
+          </Button>
           {showCalendar && <CalendarTab onError={onError} onJump={onJump} />}
         </>
       )}
