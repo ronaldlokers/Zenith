@@ -93,7 +93,11 @@ export function safeHref(url: string | null | undefined): string | undefined {
 }
 
 export function ageDays(updatedAt: string): string {
-  const then = new Date(updatedAt.replace(" ", "T") + "Z").getTime();
+  // Delegate to parseSqlDate rather than re-implementing the parse: this
+  // used to do `updatedAt.replace(" ", "T") + "Z"` unconditionally, which
+  // only works for SQL-form input. Fed an ISO string (already has "T" and
+  // a trailing "Z"), that produced "...ZZ" -> Invalid Date -> NaN -> "NaNd".
+  const then = parseSqlDate(updatedAt);
   const days = Math.max(0, Math.floor((Date.now() - then) / 86400000));
   return `${days}d`;
 }
