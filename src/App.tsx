@@ -422,7 +422,7 @@ export default function App() {
               />
             )}
             {(tab === "companies" || tab === "contacts") && (
-              <PillTabs
+              <PillTabs<"companies" | "contacts">
                 tabs={[
                   { key: "companies", label: t("tabs.companies") },
                   { key: "contacts", label: t("tabs.people") },
