@@ -1,8 +1,7 @@
 // The quick-add job dialog (#285 split from chrome.tsx). Lead path is now
 // paste-a-link (#482): drop a posting URL and it pulls the title, company and
 // source via the existing importer, so the common case is near-zero typing.
-// Manual entry is the fallback and needs only a title. Not self-contained-
-// styled — composes Dialog + the shared .settings-field form layer in App.css.
+// Manual entry is the fallback and needs only a title.
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
@@ -11,6 +10,7 @@ import { STATUSES } from "../types";
 import { Dialog } from "../ui";
 import { ActionBar } from "./ActionBar";
 import { Button } from "./Button";
+import "./QuickAddDialog.css";
 
 export interface QuickAddDialogProps {
   companies: Company[];
@@ -97,9 +97,9 @@ export function QuickAddDialog({
           submit(true);
         }}
       >
-        <label className="settings-field">
+        <label className="zui-quickadd-field">
           <span>{t("quickAdd.pasteLink")}</span>
-          <div className="quickadd-import-row">
+          <div className="zui-quickadd-import-row">
             <input
               autoFocus
               type="url"
@@ -123,9 +123,9 @@ export function QuickAddDialog({
             </Button>
           </div>
         </label>
-        <p className="quickadd-hint muted small">{t("quickAdd.hint")}</p>
+        <p className="zui-quickadd-hint muted small">{t("quickAdd.hint")}</p>
 
-        <label className="settings-field">
+        <label className="zui-quickadd-field">
           <span>{t("forms.title")}</span>
           <input
             required
@@ -133,7 +133,7 @@ export function QuickAddDialog({
             onChange={(e) => setTitle(e.target.value)}
           />
         </label>
-        <label className="settings-field">
+        <label className="zui-quickadd-field">
           <span>{t("forms.company")}</span>
           <select
             value={companyId ?? ""}
@@ -149,7 +149,7 @@ export function QuickAddDialog({
             ))}
           </select>
         </label>
-        <label className="settings-field">
+        <label className="zui-quickadd-field">
           <span>{t("detail.status")}</span>
           <select
             value={status}

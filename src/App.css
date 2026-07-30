@@ -2559,12 +2559,8 @@ summary.bcol-head::after {
   margin: 0.35rem 0 0.5rem;
 }
 
-/* AI usage surfacing (#443): key-gate prompt, per-app JD grounding badge,
-   and the Account settings feature list. */
-.ai-key-gate a {
-  color: var(--accent-ink);
-}
-
+/* AI usage surfacing (#443): key-gate prompt (now AiKeyGate.css), per-app JD
+   grounding badge, and the Account settings feature list. */
 .ai-grounding {
   font-size: var(--text-body);
   margin: 0.2rem 0 0.4rem;
@@ -3196,19 +3192,6 @@ summary.bcol-head::after {
 .today-quiet-close:hover {
   color: var(--ink);
   background: var(--bg);
-}
-
-/* Quick-add paste-a-link row (#482) — URL input + Import button. */
-.quickadd-import-row {
-  display: flex;
-  gap: 0.4rem;
-}
-.quickadd-import-row input {
-  flex: 1;
-  min-width: 0;
-}
-.quickadd-hint {
-  margin: 0.35rem 0 0.9rem;
 }
 
 /* Calendar folded into Insights (#481) — section heading. Mono eyebrow to

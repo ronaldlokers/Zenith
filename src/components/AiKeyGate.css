@@ -1,0 +1,8 @@
+/* Reproduces the App.css .ai-key-gate recipe (App.css:2564) under the
+   zui- name AiKeyGate emits. muted/small still come from utilities.css —
+   this is the one App.css-only rule the gate needed. */
+@layer components {
+  .zui-ai-key-gate a {
+    color: var(--accent-ink);
+  }
+}

@@ -29,9 +29,6 @@ const mockCompanies: Company[] = [
   },
 ];
 
-// Form fields render unstyled here since they use the shared App.css
-// .settings-field/.form utilities, which aren't loaded in Storybook — that's
-// expected: this component has no styling of its own to preview.
 export const Default: Story = {
   render: () => (
     <QuickAddDialog
