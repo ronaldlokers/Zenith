@@ -11,6 +11,7 @@ import type { Application, StatusHistoryRow, Stats, UserGoal } from "./types";
 import { api } from "./api";
 import {
   computeWeeklyMomentum,
+  daysFromToday,
   formatDate,
   isDead,
   isDue,
@@ -351,7 +352,7 @@ function NextUpPanel({
       next_action: a.next_action ?? null,
       next_action_at: a.next_action_at ?? null,
     };
-    const at = new Date(Date.now() + days * DAY).toISOString().slice(0, 10);
+    const at = daysFromToday(days);
     return Promise.resolve(
       api.updateFollowUp(a.id, {
         next_action: a.next_action ?? null,

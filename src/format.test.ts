@@ -16,6 +16,7 @@ import {
   ageDays,
   DEADLINE_SOON_DAYS,
   deadlineDaysLeft,
+  daysFromToday,
   formatDate,
   isDeadlinePast,
   isDeadlineSoon,
@@ -107,20 +108,76 @@ describe("today", () => {
     vi.useRealTimers();
   });
 
-  it("returns the UTC calendar date, not the local one (known bug, recorded not fixed)", () => {
+  it("returns the local calendar date, not the UTC one", () => {
     // At this instant it is still the evening of 2026-08-04 in the pinned
-    // zone, but today() reads new Date().toISOString() — UTC — so it
-    // reports 2026-08-05: tomorrow, from the user's perspective. In
-    // production this means from ~17:00 local onward (UTC-7/-8), a
-    // next_action_at/deadline_at the user picked in their own calendar for
-    // "tomorrow" already registers as due today. That is a genuine
-    // product bug; fixing it changes what the whole board/dashboard
-    // consider "due" and is the product owner's call, not a side effect of
-    // adding tests. This test only pins the current behaviour so a future
-    // change to it is a deliberate, visible diff.
+    // zone (PDT, UTC-7). Before this fix, today() read
+    // new Date().toISOString() — UTC — and reported 2026-08-05: tomorrow,
+    // from the user's perspective. That made tomorrow's next_action_at/
+    // deadline_at/follow_up_at (dates the user picked in their own
+    // calendar) read as due all evening. This is the whole bug in one
+    // assertion.
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-05T03:00:00Z"));
-    expect(today()).toBe("2026-08-05");
+    expect(today()).toBe("2026-08-04");
+  });
+
+  it("an application due tomorrow (local) is not due and not overdue", () => {
+    // Same instant as above: 2026-08-05T03:00:00Z is still 2026-08-04
+    // evening in America/Los_Angeles. next_action_at "2026-08-05" is
+    // tomorrow in the user's calendar, so it must not register as due —
+    // the user-facing behaviour change this fix exists for.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-05T03:00:00Z"));
+    const a = makeApplication({ next_action_at: "2026-08-05" });
+    expect(isDue(a)).toBe(false);
+    expect(isOverdue(a)).toBe(false);
+  });
+
+  it("returns the same calendar date in UTC and local when they agree", () => {
+    // Midday UTC is still midday-ish in a UTC-7 zone (05:00 local) — same
+    // calendar day either way, so this covers the ordinary case where a
+    // UTC/local mix-up wouldn't be visible.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-15T12:00:00Z"));
+    expect(today()).toBe("2026-06-15");
+  });
+});
+
+describe("daysFromToday", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("offset 0 equals today()", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-05T03:00:00Z"));
+    expect(daysFromToday(0)).toBe(today());
+  });
+
+  it("a positive offset advances the local calendar date", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-05T03:00:00Z")); // 2026-08-04 local
+    expect(daysFromToday(1)).toBe("2026-08-05");
+    expect(daysFromToday(3)).toBe("2026-08-07");
+  });
+
+  it("a negative offset moves the local calendar date back", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-05T03:00:00Z")); // 2026-08-04 local
+    expect(daysFromToday(-1)).toBe("2026-08-03");
+  });
+
+  it("stays exactly one calendar day across the US spring-forward DST transition", () => {
+    // 2027-03-14 is the second Sunday of March 2027 — the US DST
+    // transition in America/Los_Angeles, where that local day is only 23
+    // hours long. Starting at 2027-03-13T23:30 local (this instant), a
+    // milliseconds-based offset (adding 86400000) lands at 2027-03-15
+    // 00:30 local — it overshoots by a whole calendar day because the
+    // intervening day is short an hour. Local date arithmetic (setDate)
+    // must land on 2027-03-14, exactly one calendar day later.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2027-03-14T07:30:00Z")); // 2027-03-13 23:30 PST
+    expect(daysFromToday(1)).toBe("2027-03-14");
   });
 });
 
