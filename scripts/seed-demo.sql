@@ -412,3 +412,9 @@ INSERT INTO ai_credentials (user_id, ciphertext, iv, hint, created_at) VALUES
 INSERT INTO notifications (id, user_id, type, title, body, link, dedup_key, read_at, created_at) VALUES
   (9551, 'seed-admin', 'due_followup', 'DevOps Engineer', 'Follow up if no response by Friday', '/board/9002', 'followup:9002:2026-07-22', NULL, '2026-07-23 06:00:00'),
   (9552, 'seed-admin', 'feed_match', '5 new listing(s) in your Feed', NULL, '/feed', 'feed:2026-07-27', NULL, '2026-07-27 08:00:00');
+
+-- A share token, so the public /shared/:token page has something to render and
+-- scripts/screenshot-baseline.mjs can capture it. The page is the only Zenith
+-- surface a non-user ever sees, and it was previously unverifiable: no seeded
+-- token meant no URL to point a capture at (#528).
+UPDATE profile SET share_token = 'demo-share-token' WHERE user_id = 'seed-admin';

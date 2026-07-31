@@ -77,7 +77,19 @@ const VIEWS = [
   ["settings-data", "/settings?s=data"],
   ["settings-feed", "/settings?s=feed"],
   ["admin", "/admin"],
+  // The public share page (#528). Server-rendered by the worker with its own
+  // inline <style> — it loads none of the app's CSS, so nothing else in this
+  // list can catch a regression in it. It is also the only Zenith surface a
+  // non-user ever sees, which makes it the one most worth watching and,
+  // until now, the only one that was never captured at all. The token comes
+  // from scripts/seed-demo.sql.
+  ["shared", `/shared/${process.env.SHARE_TOKEN ?? "demo-share-token"}`],
 ];
+
+// Views the Worker renders itself, which the dev server will not hand to a
+// browser navigation. See the STANDALONE branch in the capture loop below for
+// why, and what it costs. Keep this set as small as the reason justifies.
+const STANDALONE = new Set(["shared"]);
 const VIEWPORTS = [
   ["desktop", { width: 1440, height: 900 }],
   ["mobile", { width: 390, height: 844 }],
@@ -163,6 +175,32 @@ for (const [vpName, viewport] of VIEWPORTS) {
   await context.clock.setFixedTime(new Date(FIXED_NOW));
   const page = await context.newPage();
   for (const [name, route, interactions] of VIEWS) {
+    if (STANDALONE.has(name)) {
+      // Worker-rendered pages are NOT reachable by browser navigation in dev.
+      // Vite's middleware answers navigation requests with index.html before
+      // the Worker ever sees them, so page.goto() here silently captures the
+      // SPA shell — a file named `shared-*.png` containing the dashboard.
+      // That is exactly what happened the first time this view was added, and
+      // the filename is what makes it dangerous: the capture looks like proof.
+      //
+      // An APIRequest sends no navigation headers, so it reaches the Worker.
+      // And because these pages are fully self-contained documents — inline
+      // <style>, no scripts, no external assets — setContent renders exactly
+      // what a real visitor's browser gets. Verify that assumption before
+      // adding a page here; the moment one grows a <link> or a <script>, this
+      // stops being faithful.
+      const res = await context.request.get(`${BASE}${route}`);
+      if (!res.ok()) {
+        console.error(`${route} returned ${res.status()} — is the token seeded?`);
+        process.exit(1);
+      }
+      await page.setContent(await res.text(), { waitUntil: "load" });
+      await freezeMotion(page);
+      await parkPointer(page);
+      await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
+      console.log(`captured ${name}-${vpName}`);
+      continue;
+    }
     await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
     // Fail loudly rather than capture a login page: the session expired.
     // A password *label* is the wrong signal — Settings > Account has its own
