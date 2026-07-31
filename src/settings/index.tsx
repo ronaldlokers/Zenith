@@ -107,7 +107,19 @@ export function SettingsPage({
     void api
       .getPreferences()
       .then((p) => {
-        if (p.timezone) setTimezone(p.timezone);
+        if (p.timezone) {
+          setTimezone(p.timezone);
+          return;
+        }
+        // Server still holds NULL: useAppData's own detect-and-store attempt
+        // fails silently by design, and a browser-resolved zone workerd's
+        // ICU doesn't recognise would 400 forever there. Settings is about
+        // to *display* the browser's zone regardless, so write that value
+        // through here too — a visit to Settings repairs the server state
+        // instead of only reflecting a selection that was never saved.
+        const detected =
+          Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+        void api.setTimezone(detected).catch(() => {});
       })
       .catch(() => {});
   }, []);

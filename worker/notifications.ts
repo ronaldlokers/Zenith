@@ -94,7 +94,11 @@ export async function generateNotifications(
 
   // New Feed matches — one aggregate notification per user per day
   // (not per item) so a 6-hourly cron with a healthy source list
-  // doesn't spam the panel.
+  // doesn't spam the panel. Deliberately the UTC `today` above, not a
+  // per-user local day like the due-date queries above it: this key is a
+  // run-level aggregate (one count for however many sources fed this one
+  // cron invocation), not a per-user comparison against a due date, so
+  // there's no per-user local day to key it by in the first place.
   if (feedInsertedCount > 0) {
     await insertNotifications(
       env,

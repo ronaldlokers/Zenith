@@ -85,7 +85,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
     const profile = await c.env.DB.prepare(
       `SELECT profile.user_id, "user".timezone AS timezone
        FROM profile
-       LEFT JOIN "user" ON "user".id = profile.user_id
+       JOIN "user" ON "user".id = profile.user_id
        WHERE profile.calendar_token = ?`,
     )
       .bind(token)

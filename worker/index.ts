@@ -9,12 +9,11 @@ import { registerOutreachRoutes } from "./outreach.js";
 import { registerGoalRoutes } from "./goals.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
-import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
+import { deliverDuePushes, generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { generateWeeklyDigest } from "./digest.js";
 import { registerAiRoutes } from "./ai.js";
 import { registerCalendarRoutes } from "./calendar.js";
 import { registerPushRoutes, sendPushToUser } from "./push.js";
-import { deliverDuePushes } from "./notifications.js";
 import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
 
 export type AppEnv = {

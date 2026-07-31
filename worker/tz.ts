@@ -36,6 +36,12 @@ export function localHour(tz: string | null | undefined, now: Date): number {
     hour12: false,
   }).formatToParts(now);
   const hour = parts.find((p) => p.type === "hour")?.value ?? "0";
-  // Some ICU builds render midnight as "24" under hour12:false.
+  // Some ICU builds render midnight as "24" under hour12:false — a 24 would
+  // pass a `>= 8` delivery-hour gate at exactly the wrong moment (deliverDuePushes
+  // in notifications.ts), so it's normalised here. Workerd's ICU doesn't
+  // reproduce the "24" case (test/tz.spec.ts's "reports midnight as 0" can't
+  // demonstrate this guard is load-bearing on this runtime), but other
+  // Node/ICU builds do — kept defensively, don't delete it on the strength of
+  // the test suite alone.
   return Number(hour) % 24;
 }

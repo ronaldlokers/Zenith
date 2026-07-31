@@ -43,18 +43,22 @@ export function TimezoneField({
   // settings page is not open long enough for a minute of staleness to matter,
   // and a ticking value sits in a surface the screenshot rig captures.
   //
-  // hour12: false pins the hour cycle to 24-hour regardless of locale — there
-  // is no other time-of-day rendering in the client, so this is the
+  // hourCycle: "h23" pins the hour cycle to 24-hour regardless of locale —
+  // there is no other time-of-day rendering in the client, so this is the
   // precedent, and it matches the only other hour formatting in the repo
   // (worker/tz.ts). The hint's job is unambiguous verification of the
   // selected zone at a glance; 24-hour serves that and an AM/PM suffix only
   // lengthens it. Locale still governs digit shaping and separators — only
-  // the hour cycle is pinned.
+  // the hour cycle is pinned. hourCycle is used instead of hour12: false
+  // because hour12 only requests 12/24-hour framing and leaves the actual
+  // cycle (h11/h12/h23/h24) up to locale default/ICU version — the same
+  // midnight-as-"24" quirk worker/tz.ts guards against with `% 24`.
+  // hourCycle: "h23" says what is meant directly: 0-23, midnight is "0".
   const now = new Date().toLocaleTimeString(i18n.resolvedLanguage, {
     timeZone: value,
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    hourCycle: "h23",
   });
 
   return (

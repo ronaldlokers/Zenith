@@ -1,4 +1,3 @@
-import { sendPushToUser } from "./push.js";
 import { localDate } from "./tz.js";
 
 // Weekly accountability digest (proactive recap of the past week + a nudge on
@@ -77,9 +76,11 @@ export async function generateWeeklyDigest(env: Env): Promise<void> {
   );
   if (active.length === 0) return;
 
-  // Batch every user's INSERT into one D1 round-trip, then fire the pushes
-  // concurrently (#449) — the old per-user await-INSERT-then-await-push loop
-  // serialized 2N round-trips inside one cron invocation.
+  // Batch every user's INSERT into one D1 round-trip (#449) — the old
+  // per-user await-INSERT loop serialized N round-trips inside one cron
+  // invocation. Delivery is not this function's job: deliverDuePushes picks
+  // these rows up (pushed_at stays NULL here) and pushes each one once, at
+  // 08:00 in that user's own timezone — never straight from this insert.
   const stmts = active.map((r) => {
     const loc: Locale = r.locale === "nl" ? "nl" : "en";
     const s = STRINGS[loc];
@@ -95,25 +96,8 @@ export async function generateWeeklyDigest(env: Env): Promise<void> {
     return env.DB.prepare(
       `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
        VALUES (?, 'weekly_digest', ?, ?, '/', ?)
-       ON CONFLICT (user_id, dedup_key) DO NOTHING
-       RETURNING user_id, title, body, link`,
+       ON CONFLICT (user_id, dedup_key) DO NOTHING`,
     ).bind(r.user_id, s.title, body, `weekly_digest:${weekKey}`);
   });
-  const batch = await env.DB.batch<{
-    user_id: string;
-    title: string;
-    body: string;
-    link: string;
-  }>(stmts);
-  // Only genuinely-new rows (RETURNING skips no-op conflicts) fire a push.
-  const inserted = batch.flatMap((b) => b.results);
-  await Promise.all(
-    inserted.map((n) =>
-      sendPushToUser(env, n.user_id, {
-        title: n.title,
-        body: n.body,
-        url: n.link,
-      }),
-    ),
-  );
+  await env.DB.batch(stmts);
 }

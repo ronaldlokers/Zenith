@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateWeeklyDigest } from "../worker/digest";
 
 const USER = "seed-admin";
@@ -37,6 +37,13 @@ async function digestRows() {
   const { results } = await env.DB.prepare(
     "SELECT title, body, link FROM notifications WHERE type = 'weekly_digest' ORDER BY id",
   ).all<{ title: string; body: string; link: string }>();
+  return results;
+}
+
+async function digestPushedAt() {
+  const { results } = await env.DB.prepare(
+    "SELECT pushed_at FROM notifications WHERE type = 'weekly_digest' ORDER BY id",
+  ).all<{ pushed_at: string | null }>();
   return results;
 }
 
@@ -87,6 +94,48 @@ describe("weekly digest", () => {
     await generateWeeklyDigest(env);
     await generateWeeklyDigest(env);
     expect(await digestRows()).toHaveLength(1);
+  });
+
+  // The digest must leave delivery to deliverDuePushes' 08:00-local gate
+  // rather than pushing straight from here — pushing here double-sends
+  // (deliverDuePushes picks the same row up on its next hourly run since
+  // pushed_at is never stamped either) and ignores the recipient's local
+  // hour entirely (#518 fix wave).
+  //
+  // Asserting pushed_at IS NULL alone doesn't catch a regression here: the
+  // pre-fix code never stamped it either (only deliverDuePushes does), so
+  // that column is NULL right after generateWeeklyDigest in both the buggy
+  // and the fixed code — it's a symptom of the bug, not something the fix
+  // changes at this call site. And vi.mock("../worker/push", …) can't catch
+  // it: @cloudflare/vitest-pool-workers gives generateWeeklyDigest its own
+  // module instance of push.js that a mock of the test file's own import
+  // doesn't reach (see test/scheduled-dispatch.spec.ts's comment for the
+  // same finding against worker/index.ts). What *is* shared is the D1
+  // binding object itself — env.DB is passed by reference into digest.ts,
+  // not re-imported — so spying on env.DB.prepare and giving sendPushToUser
+  // real-looking VAPID keys (it no-ops before touching the DB without them)
+  // turns "was push attempted" into an observable query: sendPushToUser's
+  // first DB call is a SELECT against push_subscriptions.
+  it("leaves delivery to the push gate instead of pushing directly", async () => {
+    await seedApp("applied", "-1 days");
+    const origPub = env.VAPID_PUBLIC_KEY;
+    const origPriv = env.VAPID_PRIVATE_KEY;
+    env.VAPID_PUBLIC_KEY = "test-probe-key";
+    env.VAPID_PRIVATE_KEY = "test-probe-key";
+    try {
+      const prepareSpy = vi.spyOn(env.DB, "prepare");
+      await generateWeeklyDigest(env);
+      const queriedPushSubscriptions = prepareSpy.mock.calls.some((call) =>
+        String(call[0]).includes("push_subscriptions"),
+      );
+      expect(queriedPushSubscriptions).toBe(false);
+    } finally {
+      env.VAPID_PUBLIC_KEY = origPub;
+      env.VAPID_PRIVATE_KEY = origPriv;
+    }
+    const rows = await digestPushedAt();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].pushed_at).toBeNull();
   });
 
   it("localizes to the user's stored locale", async () => {

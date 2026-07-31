@@ -8,3 +8,8 @@ ALTER TABLE "user" ADD COLUMN timezone TEXT;
 -- created whenever it is generated; the push waits until the owner reaches
 -- 08:00 in their own timezone. NULL means "not pushed yet".
 ALTER TABLE notifications ADD COLUMN pushed_at TEXT;
+
+-- Existing rows were already delivered by the old insert-and-push path. Without
+-- this, the first run of deliverDuePushes after deploy would re-push every
+-- notification from the preceding 24 hours.
+UPDATE notifications SET pushed_at = created_at;

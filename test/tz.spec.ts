@@ -29,9 +29,12 @@ describe("localHour", () => {
     expect(localHour("Europe/Amsterdam", EVENING_IN_LA)).toBe(5);
   });
 
-  // hour12:false emits "24" for midnight on some ICU builds. A 24 would
-  // pass a `>= 8` gate at exactly the wrong moment, so it is normalised.
-  it("reports midnight as 0, never 24", () => {
+  // The `% 24` guard in localHour normalises the "24" some ICU builds emit
+  // for midnight under hour12:false — see the comment on that guard in
+  // worker/tz.ts for why it stays even though this runtime never exercises
+  // the "24" branch (this suite can't demonstrate the guard is *needed*
+  // here, only that midnight comes out 0).
+  it("reports midnight as 0", () => {
     expect(localHour("Europe/Amsterdam", new Date("2026-08-04T22:00:00Z"))).toBe(0);
     expect(localHour("UTC", new Date("2026-08-05T00:00:00Z"))).toBe(0);
   });
