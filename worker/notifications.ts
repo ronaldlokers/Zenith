@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 import { sendPushToUser } from "./push.js";
+import { localDate } from "./tz.js";
 
 // In-app notification center (#213) — generated on the existing 6h
 // feed/stale-posting cron rather than a new trigger. Idempotent via
@@ -35,23 +36,37 @@ export async function generateNotifications(
 ): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
 
+  // SQLite's date('now') is UTC and knows nothing about who is asking. Group by
+  // stored zone so each distinct timezone's local date is computed once, then
+  // scope the due queries to that group.
+  const { results: zoneRows } = await env.DB.prepare(
+    'SELECT DISTINCT timezone FROM "user"',
+  ).all<{ timezone: string | null }>();
+  const now = new Date();
+
   // Due/overdue follow-ups — one per application per next_action_at
   // value, so editing the date naturally produces a fresh notification
   // instead of silently staying dismissed.
-  await insertAndPush(
-    env,
-    `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
-     SELECT applications.user_id, 'due_followup', applications.title,
-            COALESCE(applications.next_action, ''), '/board/' || applications.id,
-            'followup:' || applications.id || ':' || applications.next_action_at
-     FROM applications
-     WHERE applications.next_action_at IS NOT NULL
-       AND applications.next_action_at <= date('now')
-       AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')
-     ON CONFLICT (user_id, dedup_key) DO NOTHING
-     RETURNING user_id, title, body, link`,
-    [],
-  );
+  for (const { timezone } of zoneRows) {
+    const day = localDate(timezone, now); // localDate(null, …) is the UTC date
+    const scope = timezone === null ? "IS NULL" : "= ?";
+    const binds = timezone === null ? [day] : [day, timezone];
+    await insertAndPush(
+      env,
+      `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
+       SELECT applications.user_id, 'due_followup', applications.title,
+              COALESCE(applications.next_action, ''), '/board/' || applications.id,
+              'followup:' || applications.id || ':' || applications.next_action_at
+       FROM applications
+       WHERE applications.next_action_at IS NOT NULL
+         AND applications.next_action_at <= ?
+         AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')
+         AND applications.user_id IN (SELECT id FROM "user" WHERE timezone ${scope})
+       ON CONFLICT (user_id, dedup_key) DO NOTHING
+       RETURNING user_id, title, body, link`,
+      binds,
+    );
+  }
 
   // Stale postings — one-time per application, mirroring the soft
   // "may be gone" badge posting-check.ts already sets.
@@ -70,20 +85,26 @@ export async function generateNotifications(
   // Due/overdue contact follow-ups — mirrors due_followup but keyed off
   // the user-set contacts.follow_up_at. dedup_key embeds the date, so
   // rescheduling produces a fresh nudge and an unchanged date nudges once.
-  await insertAndPush(
-    env,
-    `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
-     SELECT contacts.user_id, 'due_contact', contacts.name,
-            COALESCE(contacts.role, ''), '/people/' || contacts.id,
-            'contact_followup:' || contacts.id || ':' || contacts.follow_up_at
-     FROM contacts
-     WHERE contacts.follow_up_at IS NOT NULL
-       AND contacts.follow_up_at <= date('now')
-       AND contacts.user_id IS NOT NULL
-     ON CONFLICT (user_id, dedup_key) DO NOTHING
-     RETURNING user_id, title, body, link`,
-    [],
-  );
+  for (const { timezone } of zoneRows) {
+    const day = localDate(timezone, now); // localDate(null, …) is the UTC date
+    const scope = timezone === null ? "IS NULL" : "= ?";
+    const binds = timezone === null ? [day] : [day, timezone];
+    await insertAndPush(
+      env,
+      `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
+       SELECT contacts.user_id, 'due_contact', contacts.name,
+              COALESCE(contacts.role, ''), '/people/' || contacts.id,
+              'contact_followup:' || contacts.id || ':' || contacts.follow_up_at
+       FROM contacts
+       WHERE contacts.follow_up_at IS NOT NULL
+         AND contacts.follow_up_at <= ?
+         AND contacts.user_id IS NOT NULL
+         AND contacts.user_id IN (SELECT id FROM "user" WHERE timezone ${scope})
+       ON CONFLICT (user_id, dedup_key) DO NOTHING
+       RETURNING user_id, title, body, link`,
+      binds,
+    );
+  }
 
   // New Feed matches — one aggregate notification per user per day
   // (not per item) so a 6-hourly cron with a healthy source list

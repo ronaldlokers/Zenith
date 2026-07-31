@@ -1,4 +1,5 @@
 import { sendPushToUser } from "./push.js";
+import { localDate } from "./tz.js";
 
 // Weekly accountability digest (proactive recap of the past week + a nudge on
 // stalled applications). Runs on a weekly cron; one notification per user per
@@ -37,6 +38,7 @@ const STAGE_RANK =
 interface DigestRow {
   user_id: string;
   locale: string | null;
+  timezone: string | null;
   added: number;
   advanced: number;
   stalled: number;
@@ -45,12 +47,10 @@ interface DigestRow {
 export async function generateWeeklyDigest(env: Env): Promise<void> {
   const rankTo = STAGE_RANK.replace("%col", "sh.to_status");
   const rankFrom = STAGE_RANK.replace("%col", "sh.from_status");
-  // Stamped once per run; the cron fires weekly (Monday), so this is the
-  // week's Monday date and dedup_key yields one digest per user per week.
-  const weekKey = new Date().toISOString().slice(0, 10);
+  const now = new Date();
 
   const { results } = await env.DB.prepare(
-    `SELECT u.id AS user_id, u.locale AS locale,
+    `SELECT u.id AS user_id, u.locale AS locale, u.timezone AS timezone,
        (SELECT COUNT(*) FROM applications a
           WHERE a.user_id = u.id
             AND a.created_at >= datetime('now', '-7 days')) AS added,
@@ -88,6 +88,10 @@ export async function generateWeeklyDigest(env: Env): Promise<void> {
       advanced: r.advanced,
       stalled: r.stalled,
     });
+    // Computed per user (not once for the whole run): users either side of
+    // the date boundary would otherwise share a key that is wrong for one of
+    // them, and a wrong dedup key means a silently missed digest.
+    const weekKey = localDate(r.timezone, now);
     return env.DB.prepare(
       `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
        VALUES (?, 'weekly_digest', ?, ?, '/', ?)
