@@ -37,6 +37,10 @@ colors:
   st-dead: "#6b675e"
   heat-quiet: "#c98a2b"
   ev-touch: "#7a5fb8"
+  rail-ink: "#e7e6f0"
+  rail-text: "#f4f2ec"
+  rail-muted: "#b9b8cc"
+  rail-faint: "#8b8fa8"
 typography:
   display:
     fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"

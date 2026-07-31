@@ -1398,19 +1398,36 @@ app.get("/shared/:token", async (c) => {
 <meta name="robots" content="noindex, nofollow" />
 <title>Zenith — shared pipeline</title>
 <style>
-  body { font-family: system-ui, -apple-system, sans-serif; background: #101318; color: #e8ebef; margin: 0; padding: 2rem 1.25rem; }
+  /* This page is the only Zenith surface someone who is not a user ever sees,
+     so it carries the brand rather than a generic dark theme (#528). It is a
+     standalone document with no access to src/index.css, so the tokens are
+     inlined as literals — but they are the REAL token values, named here so a
+     drift is obvious on sight:
+       #14173a --night          #1b1f4d --night-raised
+       #e7e6f0 --rail-ink       #b9b8cc --rail-muted     #8b8fa8 --rail-faint
+       #d6a441 --accent (Struck Brass)
+     The rail tones are the ones already contrast-validated against the Night
+     ground, which is why they are reused here rather than picked by eye.
+     Sizes are the DESIGN.md ramp: 0.95 title, 1.375 heading, 0.875 body,
+     0.75 meta, 0.64 chrome. */
+  body { font-family: system-ui, -apple-system, sans-serif; background: #14173a; color: #e7e6f0; margin: 0; padding: 2rem 1.25rem; }
   .wrap { max-width: 32rem; margin: 0 auto; }
-  h1 { font-size: 1.1rem; font-weight: 600; margin: 0 0 1.5rem; }
-  .momentum { padding: 0.9rem 1rem; margin-bottom: 1.5rem; border-radius: 10px; border: 1px solid #232935; background: #171b22; }
-  .momentum-label { display:block; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6d7684; }
-  .momentum-value { font-size: 1.3rem; font-weight: 700; }
-  .open-count { color: #8b95a5; font-size: 0.85rem; margin-bottom: 1.5rem; display: block; }
-  .row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; font-size: 0.8rem; }
-  .lbl { width: 5.5rem; text-transform: capitalize; color: #8b95a5; }
-  .track { flex: 1; height: 8px; background: #262d3a; border-radius: 4px; overflow: hidden; }
-  .fill { display: block; height: 100%; background: #2dd4bf; }
+  h1 { font-size: 0.95rem; font-weight: 600; margin: 0 0 1.5rem; }
+  /* No border: on the Night ground the raised fill is the lift, and DESIGN.md
+     puts state in the fill rather than on a coloured edge. */
+  .momentum { padding: 0.9rem 1rem; margin-bottom: 1.5rem; border-radius: 10px; background: #1b1f4d; }
+  .momentum-label { display:block; font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.06em; color: #b9b8cc; }
+  /* The one focal statement on the page — the Single Hero Rule's tier-3. */
+  .momentum-value { font-size: 1.375rem; font-weight: 700; }
+  .open-count { color: #b9b8cc; font-size: 0.875rem; margin-bottom: 1.5rem; display: block; }
+  .row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; font-size: 0.875rem; }
+  .lbl { width: 5.5rem; text-transform: capitalize; color: #b9b8cc; }
+  .track { flex: 1; height: 8px; background: #1b1f4d; border-radius: 999px; overflow: hidden; }
+  /* Struck Brass, not the teal this page used to invent. Brass is the one
+     accent Zenith spends on the figure that carries the eye. */
+  .fill { display: block; height: 100%; background: #d6a441; }
   .n { width: 1.5rem; text-align: right; }
-  footer { margin-top: 2rem; font-size: 0.72rem; color: #6d7684; }
+  footer { margin-top: 2rem; font-size: 0.75rem; color: #8b8fa8; }
 </style>
 </head>
 <body>
