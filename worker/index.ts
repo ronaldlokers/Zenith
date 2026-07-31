@@ -1269,6 +1269,41 @@ app.put("/api/preferences/locale", async (c) => {
   return c.body(null, 204);
 });
 
+// Validation is by construction, not by list membership: Intl.supportedValuesOf
+// omits "UTC" — which is our own fallback — and may omit legacy aliases like
+// Asia/Calcutta. Anything Intl can build a formatter for is a zone we can use.
+function isUsableTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-CA", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+app.get("/api/preferences", async (c) => {
+  const row = await c.env.DB.prepare(
+    'SELECT locale, timezone FROM "user" WHERE id = ?',
+  )
+    .bind(c.get("userId"))
+    .first<{ locale: string | null; timezone: string | null }>();
+  return c.json({ locale: row?.locale ?? null, timezone: row?.timezone ?? null });
+});
+
+// The client mirrors its detected zone here once, and the Settings select
+// writes here on change. The server needs it because SQLite's date('now') is
+// UTC and knows nothing about who is asking.
+app.put("/api/preferences/timezone", async (c) => {
+  const { timezone } = await c.req.json<{ timezone?: string }>();
+  if (typeof timezone !== "string" || !isUsableTimeZone(timezone)) {
+    return c.json({ error: "unsupported timezone" }, 400);
+  }
+  await c.env.DB.prepare('UPDATE "user" SET timezone = ? WHERE id = ?')
+    .bind(timezone, c.get("userId"))
+    .run();
+  return c.body(null, 204);
+});
+
 const SHARE_PIPELINE = ["interested", "applied", "screening", "interview", "offer"];
 
 function shareParseSqlDate(d: string): number {
