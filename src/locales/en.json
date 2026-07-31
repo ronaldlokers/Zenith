@@ -671,7 +671,9 @@
       "stale_posting": "Posting may be gone",
       "feed_match": "New feed matches",
       "due_contact": "Contact follow-up due",
-      "weekly_digest": "Weekly digest"
+      "weekly_digest": "Weekly digest",
+      "upcoming_followup": "Application follow-up tomorrow",
+      "upcoming_contact": "Contact follow-up tomorrow"
     },
     "signedInAs": "Signed in as {{email}}",
     "aiKeyTitle": "AI (Claude)",

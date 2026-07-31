@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 import { sendPushToUser } from "./push.js";
-import { localDate, localHour } from "./tz.js";
+import { localDate, localDatePlus, localHour } from "./tz.js";
 
 // In-app notification center (#213) — generated on the existing 6h
 // feed/stale-posting cron rather than a new trigger. Idempotent via
@@ -85,6 +85,46 @@ export async function generateNotifications(
        FROM contacts
        WHERE contacts.follow_up_at IS NOT NULL
          AND contacts.follow_up_at <= ?
+         AND contacts.user_id IS NOT NULL
+         AND contacts.user_id IN (SELECT id FROM "user" WHERE timezone ${scope})
+       ON CONFLICT (user_id, dedup_key) DO NOTHING`,
+      binds,
+    );
+  }
+
+  // Day-before heads-up for both kinds of follow-up (#62). Same shape as the
+  // due queries above, comparing `= tomorrow` instead of `<= today`.
+  //
+  // The dedup_key prefix is deliberately NOT the due queries' `followup:` /
+  // `contact_followup:`. Reusing those would let this notification claim the
+  // key a day early, and the day-of notification would then be swallowed by
+  // ON CONFLICT DO NOTHING — the user would be told "tomorrow" and hear
+  // nothing on the day itself. That failure is silent in production.
+  for (const { timezone } of zoneRows) {
+    const tomorrow = localDatePlus(timezone, now, 1);
+    const scope = timezone === null ? "IS NULL" : "= ?";
+    const binds = timezone === null ? [tomorrow] : [tomorrow, timezone];
+    await insertNotifications(
+      env,
+      `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
+       SELECT applications.user_id, 'upcoming_followup', applications.title,
+              COALESCE(applications.next_action, ''), '/board/' || applications.id,
+              'upcoming:' || applications.id || ':' || applications.next_action_at
+       FROM applications
+       WHERE applications.next_action_at = ?
+         AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')
+         AND applications.user_id IN (SELECT id FROM "user" WHERE timezone ${scope})
+       ON CONFLICT (user_id, dedup_key) DO NOTHING`,
+      binds,
+    );
+    await insertNotifications(
+      env,
+      `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
+       SELECT contacts.user_id, 'upcoming_contact', contacts.name,
+              COALESCE(contacts.role, ''), '/people/' || contacts.id,
+              'upcoming_contact:' || contacts.id || ':' || contacts.follow_up_at
+       FROM contacts
+       WHERE contacts.follow_up_at = ?
          AND contacts.user_id IS NOT NULL
          AND contacts.user_id IN (SELECT id FROM "user" WHERE timezone ${scope})
        ON CONFLICT (user_id, dedup_key) DO NOTHING`,

@@ -28,6 +28,25 @@ export function localDate(tz: string | null | undefined, now: Date): string {
   }).format(now);
 }
 
+/**
+ * The calendar date in `tz` `days` after `now`, as "YYYY-MM-DD".
+ *
+ * Resolves the local date first, then does the arithmetic in pure calendar
+ * space. Adding `days * 86400000` to the instant instead would be wrong across
+ * a DST transition, where a local day is 23 or 25 hours — and "tomorrow" has to
+ * mean the next date on the user's calendar, not 24 hours later.
+ */
+export function localDatePlus(
+  tz: string | null | undefined,
+  now: Date,
+  days: number,
+): string {
+  const [y, m, d] = localDate(tz, now).split("-").map(Number);
+  // Date.UTC handles month and year rollover; anchoring in UTC keeps this
+  // arithmetic free of any zone, which is correct once the date is resolved.
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
 /** The hour (0–23) in `tz` at `now`. */
 export function localHour(tz: string | null | undefined, now: Date): number {
   const parts = new Intl.DateTimeFormat("en-GB", {
