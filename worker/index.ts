@@ -1554,7 +1554,9 @@ type AppNotificationType =
   | "stale_posting"
   | "feed_match"
   | "due_contact"
-  | "weekly_digest";
+  | "weekly_digest"
+  | "upcoming_followup"
+  | "upcoming_contact";
 
 const TEST_PUSH_SAMPLES: Record<
   AppNotificationType,
@@ -1565,6 +1567,8 @@ const TEST_PUSH_SAMPLES: Record<
   feed_match: { title: "3 new listing(s) in your Feed", body: "", url: "/feed" },
   due_contact: { title: "Ada Lovelace", body: "Recruiter", url: "/people/1" },
   weekly_digest: { title: "Your week on Zenith", body: "4 added · 2 advanced · 3 need a nudge", url: "/" },
+  upcoming_followup: { title: "Follow-up tomorrow", body: "Senior Engineer · Acme", url: "/board/1" },
+  upcoming_contact: { title: "Ada Lovelace", body: "Recruiter", url: "/people/1" },
 };
 
 app.post("/api/admin/test-push", async (c) => {

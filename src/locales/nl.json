@@ -671,7 +671,9 @@
       "stale_posting": "Vacature mogelijk verdwenen",
       "feed_match": "Nieuwe feed-matches",
       "due_contact": "Contactopvolging verschuldigd",
-      "weekly_digest": "Wekelijks overzicht"
+      "weekly_digest": "Wekelijks overzicht",
+      "upcoming_followup": "Sollicitatie-opvolging morgen",
+      "upcoming_contact": "Contactopvolging morgen"
     },
     "signedInAs": "Ingelogd als {{email}}",
     "aiKeyTitle": "AI (Claude)",
