@@ -1,33 +1,22 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 import { sendPushToUser } from "./push.js";
-import { localDate } from "./tz.js";
+import { localDate, localHour } from "./tz.js";
 
 // In-app notification center (#213) — generated on the existing 6h
 // feed/stale-posting cron rather than a new trigger. Idempotent via
 // dedup_key + ON CONFLICT DO NOTHING, so re-running the same scan
-// never produces duplicate rows. Each newly-inserted row (via
-// RETURNING, so only genuinely new ones, not no-op conflicts) also
-// fires a push notification (#214) — best effort, silently skipped
-// for users with no push subscription or no VAPID keys configured.
+// never produces duplicate rows.
 
-async function insertAndPush(
+// Insert only. The push is no longer sent here: deliverDuePushes below owns
+// delivery, so that one gate covers every notification type and nothing
+// buzzes a phone before 08:00 in the recipient's own morning.
+async function insertNotifications(
   env: Env,
   sql: string,
   bind: unknown[],
 ): Promise<void> {
-  const { results } = await env.DB.prepare(sql)
-    .bind(...bind)
-    .all<{ user_id: string; title: string; body: string | null; link: string | null }>();
-  await Promise.all(
-    results.map((n) =>
-      sendPushToUser(env, n.user_id, {
-        title: n.title,
-        body: n.body ?? undefined,
-        url: n.link ?? "/",
-      }),
-    ),
-  );
+  await env.DB.prepare(sql).bind(...bind).run();
 }
 
 export async function generateNotifications(
@@ -51,7 +40,7 @@ export async function generateNotifications(
     const day = localDate(timezone, now); // localDate(null, …) is the UTC date
     const scope = timezone === null ? "IS NULL" : "= ?";
     const binds = timezone === null ? [day] : [day, timezone];
-    await insertAndPush(
+    await insertNotifications(
       env,
       `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
        SELECT applications.user_id, 'due_followup', applications.title,
@@ -62,23 +51,21 @@ export async function generateNotifications(
          AND applications.next_action_at <= ?
          AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')
          AND applications.user_id IN (SELECT id FROM "user" WHERE timezone ${scope})
-       ON CONFLICT (user_id, dedup_key) DO NOTHING
-       RETURNING user_id, title, body, link`,
+       ON CONFLICT (user_id, dedup_key) DO NOTHING`,
       binds,
     );
   }
 
   // Stale postings — one-time per application, mirroring the soft
   // "may be gone" badge posting-check.ts already sets.
-  await insertAndPush(
+  await insertNotifications(
     env,
     `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
      SELECT applications.user_id, 'stale_posting', applications.title,
             NULL, '/board/' || applications.id, 'stale:' || applications.id
      FROM applications
      WHERE applications.posting_status = 'maybe_stale'
-     ON CONFLICT (user_id, dedup_key) DO NOTHING
-     RETURNING user_id, title, body, link`,
+     ON CONFLICT (user_id, dedup_key) DO NOTHING`,
     [],
   );
 
@@ -89,7 +76,7 @@ export async function generateNotifications(
     const day = localDate(timezone, now); // localDate(null, …) is the UTC date
     const scope = timezone === null ? "IS NULL" : "= ?";
     const binds = timezone === null ? [day] : [day, timezone];
-    await insertAndPush(
+    await insertNotifications(
       env,
       `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
        SELECT contacts.user_id, 'due_contact', contacts.name,
@@ -100,8 +87,7 @@ export async function generateNotifications(
          AND contacts.follow_up_at <= ?
          AND contacts.user_id IS NOT NULL
          AND contacts.user_id IN (SELECT id FROM "user" WHERE timezone ${scope})
-       ON CONFLICT (user_id, dedup_key) DO NOTHING
-       RETURNING user_id, title, body, link`,
+       ON CONFLICT (user_id, dedup_key) DO NOTHING`,
       binds,
     );
   }
@@ -110,7 +96,7 @@ export async function generateNotifications(
   // (not per item) so a 6-hourly cron with a healthy source list
   // doesn't spam the panel.
   if (feedInsertedCount > 0) {
-    await insertAndPush(
+    await insertNotifications(
       env,
       `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
        SELECT DISTINCT feed_sources.user_id, 'feed_match',
@@ -118,11 +104,58 @@ export async function generateNotifications(
               'feed:' || ?
        FROM feed_sources
        WHERE feed_sources.enabled = 1
-       ON CONFLICT (user_id, dedup_key) DO NOTHING
-       RETURNING user_id, title, body, link`,
+       ON CONFLICT (user_id, dedup_key) DO NOTHING`,
       [feedInsertedCount, today],
     );
   }
+}
+
+// Recording and pushing are separate. A record appears in the bell as soon as
+// it is generated; the push waits until the owner has reached 08:00 in their
+// own timezone, so nothing buzzes a phone at 02:00. One gate for every type,
+// rather than one per generator — which also keeps the feed-match count
+// coupled to the run that produced it.
+const DELIVERY_HOUR = 8;
+const MAX_AGE_HOURS = 24;
+
+export async function deliverDuePushes(env: Env): Promise<void> {
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - MAX_AGE_HOURS * 3600_000)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+
+  const { results } = await env.DB.prepare(
+    `SELECT n.id, n.user_id, n.title, n.body, n.link, u.timezone
+       FROM notifications n
+       JOIN "user" u ON u.id = n.user_id
+      WHERE n.pushed_at IS NULL
+        AND n.created_at >= ?
+      ORDER BY n.id`,
+  )
+    .bind(cutoff)
+    .all<{
+      id: number;
+      user_id: string;
+      title: string;
+      body: string | null;
+      link: string | null;
+      timezone: string | null;
+    }>();
+
+  const due = results.filter((n) => localHour(n.timezone, now) >= DELIVERY_HOUR);
+  await Promise.all(
+    due.map(async (n) => {
+      await sendPushToUser(env, n.user_id, {
+        title: n.title,
+        body: n.body ?? undefined,
+        url: n.link ?? "/",
+      });
+      await env.DB.prepare("UPDATE notifications SET pushed_at = datetime('now') WHERE id = ?")
+        .bind(n.id)
+        .run();
+    }),
+  );
 }
 
 export function registerNotificationRoutes(app: Hono<AppEnv>) {
