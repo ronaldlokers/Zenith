@@ -199,7 +199,9 @@
     "keyShortcuts": "Single-key shortcuts (n, /)",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs."
+    "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
+    "timezone": "Time zone",
+    "timezoneNow": "{{time}} right now"
   },
   "admin": {
     "title": "Admin",
