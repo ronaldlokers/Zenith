@@ -1,5 +1,21 @@
+import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { looksStale } from "../worker/posting-check";
+import { checkStalePostings, looksStale } from "../worker/posting-check";
+
+describe("checkStalePostings", () => {
+  // D1 rejects batch([]) with "No SQL statements detected", so an account
+  // whose applications all lack a url — a fresh signup, a demo reset, anyone
+  // who only ever types a company name — made the scheduled run throw. Since
+  // #518 the handler catches and logs it, so the only symptom was recurring
+  // cron-log noise and a stale-posting check that silently never completed.
+  it("does not throw when no application has a url", async () => {
+    await env.DB.prepare("DELETE FROM applications").run();
+    await expect(checkStalePostings(env)).resolves.toEqual({
+      checked: 0,
+      flagged: 0,
+    });
+  });
+});
 
 describe("looksStale", () => {
   it("flags a 404", () => {
