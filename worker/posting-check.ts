@@ -82,13 +82,19 @@ export async function checkStalePostings(env: Env): Promise<{ checked: number; f
     }),
   );
   const flagged = checks.filter((c) => c.postingStatus === "maybe_stale").length;
-  // One batched write instead of one round-trip per candidate.
-  await env.DB.batch(
-    checks.map((c) =>
-      env.DB.prepare(
-        `UPDATE applications SET posting_status = ?, posting_checked_at = datetime('now') WHERE id = ?`,
-      ).bind(c.postingStatus, c.id),
-    ),
-  );
+  // One batched write instead of one round-trip per candidate. Guarded because
+  // D1 rejects an empty batch with "No SQL statements detected", and the
+  // candidate set is legitimately empty whenever no non-terminal application
+  // carries a url — a fresh account, a demo reset, or anyone who only ever
+  // types a company name (#526).
+  if (checks.length > 0) {
+    await env.DB.batch(
+      checks.map((c) =>
+        env.DB.prepare(
+          `UPDATE applications SET posting_status = ?, posting_checked_at = datetime('now') WHERE id = ?`,
+        ).bind(c.postingStatus, c.id),
+      ),
+    );
+  }
   return { checked: results.length, flagged };
 }
