@@ -106,6 +106,23 @@ export function useAppData(
     reload();
   }, [reload]);
 
+  // Detect only when nothing is stored. Re-detecting on every load would
+  // silently overwrite a deliberate choice the moment the user travels or
+  // connects through a VPN, which is the one thing the setting exists to allow.
+  // Best-effort end to end: offline, a 500, or a session that expired between
+  // load and this call must leave the app indistinguishable from one where
+  // the user already had a zone stored, not surface a console error.
+  useEffect(() => {
+    void api
+      .getPreferences()
+      .then((prefs) => {
+        if (prefs.timezone) return;
+        const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (detected) void api.setTimezone(detected).catch(() => {});
+      })
+      .catch(() => {});
+  }, []);
+
   // Delete with an undo window: hide immediately, commit after the
   // toast expires unless undone (cascaded data survives an undo).
   const deleteWithUndo = useCallback(

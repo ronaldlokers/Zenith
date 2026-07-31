@@ -9,7 +9,7 @@ import { registerOutreachRoutes } from "./outreach.js";
 import { registerGoalRoutes } from "./goals.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
-import { generateNotifications, registerNotificationRoutes } from "./notifications.js";
+import { deliverDuePushes, generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { generateWeeklyDigest } from "./digest.js";
 import { registerAiRoutes } from "./ai.js";
 import { registerCalendarRoutes } from "./calendar.js";
@@ -1269,6 +1269,41 @@ app.put("/api/preferences/locale", async (c) => {
   return c.body(null, 204);
 });
 
+// Validation is by construction, not by list membership: Intl.supportedValuesOf
+// omits "UTC" — which is our own fallback — and may omit legacy aliases like
+// Asia/Calcutta. Anything Intl can build a formatter for is a zone we can use.
+function isUsableTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-CA", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+app.get("/api/preferences", async (c) => {
+  const row = await c.env.DB.prepare(
+    'SELECT locale, timezone FROM "user" WHERE id = ?',
+  )
+    .bind(c.get("userId"))
+    .first<{ locale: string | null; timezone: string | null }>();
+  return c.json({ locale: row?.locale ?? null, timezone: row?.timezone ?? null });
+});
+
+// The client mirrors its detected zone here once, and the Settings select
+// writes here on change. The server needs it because SQLite's date('now') is
+// UTC and knows nothing about who is asking.
+app.put("/api/preferences/timezone", async (c) => {
+  const { timezone } = await c.req.json<{ timezone?: string }>();
+  if (typeof timezone !== "string" || !isUsableTimeZone(timezone)) {
+    return c.json({ error: "unsupported timezone" }, 400);
+  }
+  await c.env.DB.prepare('UPDATE "user" SET timezone = ? WHERE id = ?')
+    .bind(timezone, c.get("userId"))
+    .run();
+  return c.body(null, 204);
+});
+
 const SHARE_PIPELINE = ["interested", "applied", "screening", "interview", "offer"];
 
 function shareParseSqlDate(d: string): number {
@@ -1754,6 +1789,13 @@ export async function runScheduledBackup(env: Env): Promise<void> {
   await Promise.all(toDelete.map((k) => env.DOCS.delete(k)));
 }
 
+// The feed pull stays 6-hourly: the sources are external and nothing about a
+// listing needs hourly resolution. Only the push pass does, so it can land
+// near 08:00 local in any timezone. Reproduces the old "17 */6 * * *".
+export function shouldRunFeedPull(scheduledAt: Date): boolean {
+  return scheduledAt.getUTCHours() % 6 === 0;
+}
+
 export default {
   fetch: app.fetch,
   async scheduled(event, env, ctx) {
@@ -1765,14 +1807,35 @@ export default {
       ctx.waitUntil(generateWeeklyDigest(env));
       return;
     }
+    // event.scheduledTime, not Date.now(): a retried or delayed invocation
+    // must branch on the time it was scheduled for, or it would skip or
+    // double the feed pull.
+    if (shouldRunFeedPull(new Date(event.scheduledTime))) {
+      // Separate waitUntil (and its own catch) from the push pass below —
+      // a D1 outage inside one must not stop the other from running, and
+      // an unhandled rejection here would otherwise surface as a bare
+      // "script threw an exception" with no indication which pass failed.
+      // Independent waitUntils also means the two passes start concurrently
+      // rather than sequentially: a notification this run's
+      // generateNotifications inserts can miss this run's push pass (below)
+      // and go out on the next hourly one instead — up to an hour late, not
+      // incorrect.
+      ctx.waitUntil(
+        (async () => {
+          const [feedResult] = await Promise.all([
+            refreshFeed(env),
+            checkStalePostings(env),
+          ]);
+          await generateNotifications(env, feedResult.inserted);
+        })().catch((err: unknown) => {
+          console.error("scheduled feed pull failed", err);
+        }),
+      );
+    }
     ctx.waitUntil(
-      (async () => {
-        const [feedResult] = await Promise.all([
-          refreshFeed(env),
-          checkStalePostings(env),
-        ]);
-        await generateNotifications(env, feedResult.inserted);
-      })(),
+      deliverDuePushes(env).catch((err: unknown) => {
+        console.error("scheduled push delivery failed", err);
+      }),
     );
   },
   async email(message, env, ctx) {

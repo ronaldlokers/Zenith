@@ -199,7 +199,9 @@
     "keyShortcuts": "Enkele-toets sneltoetsen (n, /)",
     "themeLight": "Licht",
     "themeDark": "Donker",
-    "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel."
+    "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
+    "timezone": "Tijdzone",
+    "timezoneNow": "{{time}} op dit moment"
   },
   "admin": {
     "title": "Beheer",

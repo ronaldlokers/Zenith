@@ -1,5 +1,6 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
+import { localDate } from "./tz.js";
 
 // ICS calendar export (#215) — a subscribe URL any calendar app can
 // add (Google/Outlook/Apple all support "subscribe from URL"), auto-
@@ -82,11 +83,15 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
   app.get("/calendar/:token", async (c) => {
     const token = c.req.param("token");
     const profile = await c.env.DB.prepare(
-      "SELECT user_id FROM profile WHERE calendar_token = ?",
+      `SELECT profile.user_id, "user".timezone AS timezone
+       FROM profile
+       JOIN "user" ON "user".id = profile.user_id
+       WHERE profile.calendar_token = ?`,
     )
       .bind(token)
-      .first<{ user_id: string }>();
+      .first<{ user_id: string; timezone: string | null }>();
     if (!profile) return c.text("Not found", 404);
+    const today = localDate(profile.timezone, new Date());
 
     const [followUps, deadlines, interviews] = await Promise.all([
       c.env.DB.prepare(
@@ -122,9 +127,9 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
          LEFT JOIN companies ON companies.id = applications.company_id
          WHERE interactions.user_id = ?
            AND interactions.type = 'interview'
-           AND interactions.happened_at >= date('now')`,
+           AND interactions.happened_at >= ?`,
       )
-        .bind(profile.user_id)
+        .bind(profile.user_id, today)
         .all<{ id: number; date: string; title: string | null; company_name: string | null }>(),
     ]);
 

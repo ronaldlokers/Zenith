@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
 
 describe("user locale preference", () => {
@@ -23,5 +23,67 @@ describe("user locale preference", () => {
       body: JSON.stringify({ locale: "fr" }),
     });
     expect(res.status).toBe(400);
+  });
+});
+
+const BASE = "http://zenith.test";
+const USER = "seed-admin";
+
+async function storedTimezone(): Promise<string | null> {
+  const row = await env.DB.prepare('SELECT timezone FROM "user" WHERE id = ?')
+    .bind(USER)
+    .first<{ timezone: string | null }>();
+  return row?.timezone ?? null;
+}
+
+describe("timezone preference", () => {
+  beforeEach(async () => {
+    await env.DB.prepare('UPDATE "user" SET timezone = NULL WHERE id = ?')
+      .bind(USER)
+      .run();
+  });
+
+  it("reports a null timezone before one is set", async () => {
+    const res = await authedFetch(`${BASE}/api/preferences`);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ timezone: null });
+  });
+
+  it("stores a valid IANA zone and reads it back", async () => {
+    const put = await authedFetch(`${BASE}/api/preferences/timezone`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timezone: "Europe/Amsterdam" }),
+    });
+    expect(put.status).toBe(204);
+    expect(await storedTimezone()).toBe("Europe/Amsterdam");
+
+    const get = await authedFetch(`${BASE}/api/preferences`);
+    expect(await get.json()).toMatchObject({ timezone: "Europe/Amsterdam" });
+  });
+
+  // A stored zone that Intl cannot parse would fall back to UTC forever and
+  // silently give the user the wrong day, so it is rejected at the door.
+  it("rejects a zone Intl does not recognise, leaving the stored value alone", async () => {
+    await env.DB.prepare('UPDATE "user" SET timezone = ? WHERE id = ?')
+      .bind("Europe/Amsterdam", USER)
+      .run();
+    const res = await authedFetch(`${BASE}/api/preferences/timezone`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timezone: "Not/AZone" }),
+    });
+    expect(res.status).toBe(400);
+    expect(await storedTimezone()).toBe("Europe/Amsterdam");
+  });
+
+  it("accepts UTC, which is not in Intl.supportedValuesOf", async () => {
+    const res = await authedFetch(`${BASE}/api/preferences/timezone`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ timezone: "UTC" }),
+    });
+    expect(res.status).toBe(204);
+    expect(await storedTimezone()).toBe("UTC");
   });
 });

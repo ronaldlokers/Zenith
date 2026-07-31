@@ -37,6 +37,15 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ locale }),
     }),
+  getPreferences: () =>
+    request<{ locale: string | null; timezone: string | null }>("/api/preferences"),
+  // The server compares date-only columns against the user's own calendar
+  // day; without this it can only use UTC.
+  setTimezone: (timezone: string) =>
+    request<void>("/api/preferences/timezone", {
+      method: "PUT",
+      body: JSON.stringify({ timezone }),
+    }),
   // Admin: send yourself a sample push of the given notification type.
   testPush: (type: string) =>
     request<{ sent: number }>("/api/admin/test-push", {

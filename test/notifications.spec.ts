@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { generateNotifications } from "../worker/notifications";
 
 // generateNotifications is normally driven by the daily cron; here we call it
-// directly (like posting-check's unit tests). Push is best-effort and silently
-// skips users with no subscription/VAPID, so it no-ops in tests.
+// directly (like posting-check's unit tests). It only records notification
+// rows — push is no longer invoked from this path at all (deliverDuePushes
+// owns delivery, gated on the recipient's local 08:00), so there's nothing
+// push-related to no-op here.
 const USER = "seed-admin";
 
 async function seedContact(

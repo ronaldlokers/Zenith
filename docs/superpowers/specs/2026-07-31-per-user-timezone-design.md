@@ -168,9 +168,11 @@ comment above is therefore mandatory, not decorative. The account stays at 4 of
 
 ### Client
 
-- `PUT /api/preferences/timezone`, validating against
-  `Intl.supportedValuesOf("timeZone")` server-side and rejecting anything else,
-  mirroring how `/api/preferences/locale` rejects unsupported locales.
+- `PUT /api/preferences/timezone`, validating by constructing an
+  `Intl.DateTimeFormat` with the given zone and rejecting anything that
+  throws — not by list membership against `Intl.supportedValuesOf("timeZone")`,
+  which (per the edge-case table below) omits `UTC`, our own fallback, and
+  would reject it.
 - `api.setTimezone(tz)` in `src/api.ts`, beside `setLocale`.
 - A native `<select>` in `src/settings/index.tsx`'s General section, options
   from `Intl.supportedValuesOf("timeZone")` grouped into `<optgroup>` by the

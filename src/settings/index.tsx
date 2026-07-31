@@ -16,6 +16,7 @@ import type { RoleTypeDef } from "../types";
 import { useLocation } from "react-router-dom";
 import { ActionBar, Button, SettingsNav } from "../components";
 import { FeedSettings } from "../feed";
+import { TimezoneField } from "./timezone-field";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
 import { DataExport, SampleDataSettings } from "./data";
 import { PublicApiSettings } from "./api";
@@ -99,6 +100,29 @@ export function SettingsPage({
       return saved === "control-room" ? "dark" : (saved ?? "auto");
     },
   );
+  const [timezone, setTimezone] = useState<string>(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  );
+  useEffect(() => {
+    void api
+      .getPreferences()
+      .then((p) => {
+        if (p.timezone) {
+          setTimezone(p.timezone);
+          return;
+        }
+        // Server still holds NULL: useAppData's own detect-and-store attempt
+        // fails silently by design, and a browser-resolved zone workerd's
+        // ICU doesn't recognise would 400 forever there. Settings is about
+        // to *display* the browser's zone regardless, so write that value
+        // through here too — a visit to Settings repairs the server state
+        // instead of only reflecting a selection that was never saved.
+        const detected =
+          Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+        void api.setTimezone(detected).catch(() => {});
+      })
+      .catch(() => {});
+  }, []);
   const [keyShortcuts, setKeyShortcuts] = useState(keyShortcutsEnabled);
   const [weeklyGoal, setWeeklyGoal] = useState<number>(0);
   const [searchStart, setSearchStart] = useState<string>("");
@@ -250,6 +274,15 @@ export function SettingsPage({
             <option value="dark">{t("settings.themeDark")}</option>
           </select>
         </label>
+        <TimezoneField
+          value={timezone}
+          onChange={(next) => {
+            // Update the surface first, then mirror it up — same shape as the
+            // Language field. The select must not wait on the request.
+            setTimezone(next);
+            void api.setTimezone(next).catch(() => {});
+          }}
+        />
         <label className="settings-field">
           <span>{t("settings.cvLanguage")}</span>
           <select

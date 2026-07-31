@@ -39,9 +39,12 @@
 		}
 	],
 	"triggers": {
-		// Every 6 hours: pull new listings from free job sources into the feed review inbox
+		// Hourly: deliver pushes whose recipient has reached 08:00 local (#518). The
+		// feed pull still runs every 6 hours — see shouldRunFeedPull in worker/index.ts,
+		// which is now the only place that cadence is expressed.
 		// Daily at 03:11: full data backup to R2 (see #116)
-		"crons": ["17 */6 * * *", "11 3 * * *", "0 8 * * 1"]
+		// Mondays at 08:00: weekly digest
+		"crons": ["17 * * * *", "11 3 * * *", "0 8 * * 1"]
 	}
 	/**
 	 * Smart Placement
