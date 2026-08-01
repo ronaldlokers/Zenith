@@ -77,6 +77,12 @@ const VIEWS = [
   ["settings-data", "/settings?s=data"],
   ["settings-feed", "/settings?s=feed"],
   ["admin", "/admin"],
+  // /admin defaults to the users section, so everything under the other tabs
+  // was invisible to the bar. The notifications tab holds the test-push and
+  // test-email controls — a button was once added there and the whole 54-shot
+  // diff came back unchanged, which reads as "no regression" when it actually
+  // means "not looked at".
+  ["admin-notifications", "/admin?s=notifications"],
   // The public share page (#528). Server-rendered by the worker with its own
   // inline <style> — it loads none of the app's CSS, so nothing else in this
   // list can catch a regression in it. It is also the only Zenith surface a
