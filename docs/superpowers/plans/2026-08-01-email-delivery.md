@@ -121,7 +121,7 @@ describe("sendEmail", () => {
 });
 ```
 
-Read `test/helpers.ts` and one existing spec first for the house import style. If `fetchMock` needs different setup in this repo's pool-workers version, follow what the repo already does rather than this sketch — but keep every assertion.
+Read `test/ai-credentials.spec.ts` first — the stub above is modelled on it, including capturing `realFetch` and passing non-matching URLs through so `authedFetch`/`SELF` still works. Follow what the repo already does rather than this sketch if they differ, but keep every assertion.
 
 - [ ] **Step 2: Run it to verify it fails**
 
