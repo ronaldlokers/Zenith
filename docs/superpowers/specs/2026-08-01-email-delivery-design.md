@@ -167,6 +167,30 @@ whatever the toggles say.
 Labels are UI strings, so they live in `src/locales/{en,nl}.json` under strict
 key parity — unlike the message bodies, which the worker owns.
 
+## Admin test-send
+
+A **Send test email** control in the admin section that already holds Send test
+push (`src/settings/admin.tsx`), backed by `POST /api/admin/test-email` behind
+the existing admin-role middleware. It takes `{ type: "reminders" | "digest" }`,
+builds that message from the same `messages.ts` the real path uses, and sends it
+to the calling admin's own address with a `[test]` subject prefix — mirroring
+how `test-push` prefixes its title.
+
+**It deliberately ignores the preference toggles.** Turning reminders off must
+not make the test button lie about whether email works; the two answer different
+questions.
+
+**And it surfaces errors rather than swallowing them.** This is the one place
+that must, because everywhere else does the opposite: the delivery path is
+best-effort by design, so a missing key, an unverified domain or a rejected API
+call all fail silently there. Without this button the only signal that email is
+misconfigured would be a Monday that passes without a digest. So the endpoint
+returns the provider's actual failure — `RESEND_API_KEY` unset, domain not
+verified, 401, whatever it is — and the UI shows it.
+
+That matters most for the DNS prerequisite below: domain verification is the
+step most likely to be half-done, and its failure mode is otherwise invisible.
+
 ## Testing
 
 `fetchMock` from `cloudflare:test`. **`vi.mock` will not work** — it does not
@@ -184,6 +208,8 @@ again on #531.
   not push or the bell
 - `email_digest = 0` suppresses the digest email only
 - both off sends nothing, and the pass still succeeds
+- the admin test-send ignores both toggles and still sends
+- the admin test-send reports a provider failure instead of returning success
 
 ## Prerequisite
 
