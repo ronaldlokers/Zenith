@@ -38,13 +38,23 @@ export const api = {
       body: JSON.stringify({ locale }),
     }),
   getPreferences: () =>
-    request<{ locale: string | null; timezone: string | null }>("/api/preferences"),
+    request<{
+      locale: string | null;
+      timezone: string | null;
+      emailReminders: boolean;
+      emailDigest: boolean;
+    }>("/api/preferences"),
   // The server compares date-only columns against the user's own calendar
   // day; without this it can only use UTC.
   setTimezone: (timezone: string) =>
     request<void>("/api/preferences/timezone", {
       method: "PUT",
       body: JSON.stringify({ timezone }),
+    }),
+  setEmailPreferences: (prefs: { emailReminders?: boolean; emailDigest?: boolean }) =>
+    request<void>("/api/preferences/email", {
+      method: "PUT",
+      body: JSON.stringify(prefs),
     }),
   // Admin: send yourself a sample push of the given notification type.
   testPush: (type: string) =>

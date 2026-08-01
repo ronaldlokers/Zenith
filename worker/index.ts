@@ -1283,11 +1283,21 @@ function isUsableTimeZone(tz: string): boolean {
 
 app.get("/api/preferences", async (c) => {
   const row = await c.env.DB.prepare(
-    'SELECT locale, timezone FROM "user" WHERE id = ?',
+    'SELECT locale, timezone, email_reminders, email_digest FROM "user" WHERE id = ?',
   )
     .bind(c.get("userId"))
-    .first<{ locale: string | null; timezone: string | null }>();
-  return c.json({ locale: row?.locale ?? null, timezone: row?.timezone ?? null });
+    .first<{
+      locale: string | null;
+      timezone: string | null;
+      email_reminders: number;
+      email_digest: number;
+    }>();
+  return c.json({
+    locale: row?.locale ?? null,
+    timezone: row?.timezone ?? null,
+    emailReminders: row?.email_reminders === 1,
+    emailDigest: row?.email_digest === 1,
+  });
 });
 
 // The client mirrors its detected zone here once, and the Settings select
@@ -1300,6 +1310,32 @@ app.put("/api/preferences/timezone", async (c) => {
   }
   await c.env.DB.prepare('UPDATE "user" SET timezone = ? WHERE id = ?')
     .bind(timezone, c.get("userId"))
+    .run();
+  return c.body(null, 204);
+});
+
+// Which emails the user wants. Per email, not per notification type: the four
+// reminder types batch into one message, so four switches would imply a
+// granularity the delivery does not have.
+app.put("/api/preferences/email", async (c) => {
+  const body = await c.req.json<{ emailReminders?: unknown; emailDigest?: unknown }>();
+  const sets: string[] = [];
+  const binds: unknown[] = [];
+  for (const [key, column] of [
+    ["emailReminders", "email_reminders"],
+    ["emailDigest", "email_digest"],
+  ] as const) {
+    const value = body[key];
+    if (value === undefined) continue;
+    if (typeof value !== "boolean") {
+      return c.json({ error: `${key} must be a boolean` }, 400);
+    }
+    sets.push(`${column} = ?`);
+    binds.push(value ? 1 : 0);
+  }
+  if (sets.length === 0) return c.json({ error: "nothing to update" }, 400);
+  await c.env.DB.prepare(`UPDATE "user" SET ${sets.join(", ")} WHERE id = ?`)
+    .bind(...binds, c.get("userId"))
     .run();
   return c.body(null, 204);
 });
