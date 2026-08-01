@@ -16,4 +16,10 @@ interface Env {
   // API keys at rest (BYO Claude key). BYO-key endpoints 503 gracefully when
   // unset; the rest of the app is unaffected.
   AI_KEY_ENCRYPTION_KEY?: string;
+  // Resend API key (#62). Email is skipped gracefully when unset — it is the
+  // master switch above the per-user preference toggles.
+  RESEND_API_KEY?: string;
+  // Overrides the default From address; must be on a domain verified in the
+  // provider or every send is rejected.
+  EMAIL_FROM?: string;
 }
