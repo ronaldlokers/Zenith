@@ -675,6 +675,14 @@
       "upcoming_followup": "Sollicitatie-opvolging morgen",
       "upcoming_contact": "Contactopvolging morgen"
     },
+    "testEmailSend": "Test-e-mail versturen",
+    "testEmailHint": "Stuur jezelf een voorbeeld-e-mail om te controleren of e-mail is ingesteld. Negeert je hieronder ingestelde herinneringen/overzicht-voorkeuren — dit test of e-mail werkt, niet waarvoor je gekozen hebt.",
+    "testEmailSent": "Verstuurd — controleer je inbox.",
+    "testEmailFailed": "Versturen mislukt: {{error}}",
+    "emailType": {
+      "reminders": "Herinneringenoverzicht",
+      "digest": "Wekelijks overzicht"
+    },
     "signedInAs": "Ingelogd als {{email}}",
     "aiKeyTitle": "AI (Claude)",
     "aiKeyHint": "Voeg je eigen Anthropic API-sleutel toe om AI-functies te gebruiken (zoals cv-afstemming). Je cv en de vacaturetekst worden onder jouw sleutel naar Anthropic gestuurd wanneer je ze gebruikt; Zenith bewaart de sleutel versleuteld en nooit leesbaar.",

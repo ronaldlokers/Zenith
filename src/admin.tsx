@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { SettingsNav } from "./components";
-import { AdminUsers, AdminInvite, TestPush } from "./settings/admin";
+import { AdminUsers, AdminInvite, TestPush, TestEmail } from "./settings/admin";
 import { ResetDemoData } from "./settings/data";
 
 // Dedicated admin area (#457) — lifted out of Settings, where user management,
@@ -53,7 +53,12 @@ export function AdminPage({
           {section === "users" && <AdminUsers onError={onError} />}
           {section === "invites" && <AdminInvite />}
           {section === "demo" && <ResetDemoData />}
-          {section === "notifications" && <TestPush onError={onError} />}
+          {section === "notifications" && (
+            <>
+              <TestPush onError={onError} />
+              <TestEmail onError={onError} />
+            </>
+          )}
         </div>
       </div>
     </section>

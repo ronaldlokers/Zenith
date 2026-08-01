@@ -268,3 +268,61 @@ export function TestPush({
     </div>
   );
 }
+
+// The two email kinds the delivery gate ever sends, kept in sync with
+// worker/index.ts's test-email route.
+const EMAIL_TYPES = ["reminders", "digest"] as const;
+
+// Admin debug tool: send yourself a sample email to verify the transport is
+// actually configured. Unlike TestPush, this ignores the reminders/digest
+// preference toggles and calls the provider directly (not the best-effort
+// sendEmail every other path uses) — a missing key or an unverified domain
+// is otherwise invisible until a Monday passes without a digest, so the
+// whole point of this button is to surface the provider's real error text
+// on failure rather than a generic "failed".
+export function TestEmail({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [type, setType] = useState<string>("reminders");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  const send = async () => {
+    setBusy(true);
+    setResult(null);
+    try {
+      await api.testEmail(type);
+      setResult(t("account.testEmailSent"));
+    } catch (e) {
+      onError(t("account.testEmailFailed", { error: (e as Error).message }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("account.testEmailSend")}</h3>
+      <p className="muted small">{t("account.testEmailHint")}</p>
+      <div className="settings-fieldgrid">
+        <label className="settings-field">
+          <span>{t("account.testPushType")}</span>
+          <select value={type} onChange={(e) => setType(e.target.value)}>
+            {EMAIL_TYPES.map((ty) => (
+              <option key={ty} value={ty}>
+                {t(`account.emailType.${ty}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <Button variant="primary" onClick={send} disabled={busy}>
+        {t("account.testEmailSend")}
+      </Button>
+      {result && <p className="admin-invite-success">{result}</p>}
+    </div>
+  );
+}

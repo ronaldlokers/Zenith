@@ -675,6 +675,14 @@
       "upcoming_followup": "Application follow-up tomorrow",
       "upcoming_contact": "Contact follow-up tomorrow"
     },
+    "testEmailSend": "Send test email",
+    "testEmailHint": "Send yourself a sample email to verify the transport is configured. Ignores your reminders/digest preferences below — this checks whether email works at all, not what you've opted into.",
+    "testEmailSent": "Sent — check your inbox.",
+    "testEmailFailed": "Send failed: {{error}}",
+    "emailType": {
+      "reminders": "Reminder digest",
+      "digest": "Weekly digest"
+    },
     "signedInAs": "Signed in as {{email}}",
     "aiKeyTitle": "AI (Claude)",
     "aiKeyHint": "Add your own Anthropic API key to enable AI features (like CV tailoring). Your CV and the job description are sent to Anthropic under your key when you use them; Zenith stores the key encrypted and never in plain text.",

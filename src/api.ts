@@ -62,6 +62,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ type }),
     }),
+  // Admin: send yourself a sample email, bypassing the reminders/digest
+  // preference toggles — this checks whether the transport is configured,
+  // not what the user opted into. Rejects with the provider's own error
+  // text (bad key, unverified domain, ...) rather than a generic failure.
+  testEmail: (type: string) =>
+    request<{ sent: boolean; provider: string }>("/api/admin/test-email", {
+      method: "POST",
+      body: JSON.stringify({ type }),
+    }),
   // BYO Claude key. The key itself is never returned — only whether one is
   // configured and its last-4 hint.
   getAiCredentials: () =>
