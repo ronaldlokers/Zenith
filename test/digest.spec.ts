@@ -96,14 +96,14 @@ describe("weekly digest", () => {
     expect(await digestRows()).toHaveLength(1);
   });
 
-  // The digest must leave delivery to deliverDuePushes' 08:00-local gate
+  // The digest must leave delivery to deliverDueNotifications' 08:00-local gate
   // rather than pushing straight from here — pushing here double-sends
-  // (deliverDuePushes picks the same row up on its next hourly run since
+  // (deliverDueNotifications picks the same row up on its next hourly run since
   // pushed_at is never stamped either) and ignores the recipient's local
   // hour entirely (#518 fix wave).
   //
   // Asserting pushed_at IS NULL alone doesn't catch a regression here: the
-  // pre-fix code never stamped it either (only deliverDuePushes does), so
+  // pre-fix code never stamped it either (only deliverDueNotifications does), so
   // that column is NULL right after generateWeeklyDigest in both the buggy
   // and the fixed code — it's a symptom of the bug, not something the fix
   // changes at this call site. And vi.mock("../worker/push", …) can't catch

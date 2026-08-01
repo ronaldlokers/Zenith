@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deliverDuePushes } from "../worker/notifications";
+import { deliverDueNotifications } from "../worker/notifications";
 
 const USER = "seed-admin";
 
@@ -34,7 +34,7 @@ describe("push gate", () => {
     // 04:00Z is 06:00 in Amsterdam — before the delivery hour.
     vi.setSystemTime(new Date("2026-08-05T04:00:00Z"));
     const id = await seedNotification("2026-08-05 03:30:00");
-    await deliverDuePushes(env);
+    await deliverDueNotifications(env);
     expect(await pushedAt(id)).toBeNull();
   });
 
@@ -42,7 +42,7 @@ describe("push gate", () => {
     // 07:00Z is 09:00 in Amsterdam.
     vi.setSystemTime(new Date("2026-08-05T07:00:00Z"));
     const id = await seedNotification("2026-08-05 03:30:00");
-    await deliverDuePushes(env);
+    await deliverDueNotifications(env);
     expect(await pushedAt(id)).not.toBeNull();
   });
 
@@ -59,7 +59,7 @@ describe("push gate", () => {
     await env.DB.prepare("UPDATE notifications SET pushed_at = '2020-01-01 00:00:00' WHERE id = ?")
       .bind(id)
       .run();
-    await deliverDuePushes(env);
+    await deliverDueNotifications(env);
     expect(await pushedAt(id)).toBe("2020-01-01 00:00:00");
   });
 
@@ -67,7 +67,7 @@ describe("push gate", () => {
   it("ignores a record older than 24 hours", async () => {
     vi.setSystemTime(new Date("2026-08-05T07:00:00Z"));
     const id = await seedNotification("2026-08-03 09:00:00");
-    await deliverDuePushes(env);
+    await deliverDueNotifications(env);
     expect(await pushedAt(id)).toBeNull();
   });
 
@@ -78,7 +78,7 @@ describe("push gate", () => {
       .run();
     vi.setSystemTime(new Date("2026-08-05T13:00:00Z")); // 06:00 in LA
     const id = await seedNotification("2026-08-05 12:30:00");
-    await deliverDuePushes(env);
+    await deliverDueNotifications(env);
     expect(await pushedAt(id)).toBeNull();
   });
 });

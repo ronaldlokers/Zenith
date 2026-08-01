@@ -34,7 +34,7 @@ function fakeController(scheduledTime: number): ScheduledArgs[0] {
 // the handler to prove it reads the right one.
 //
 // This does NOT mock refreshFeed/checkStalePostings/generateNotifications/
-// deliverDuePushes and assert one was called — that was tried first, and
+// deliverDueNotifications and assert one was called — that was tried first, and
 // doesn't work here: worker/index.ts is the wrangler `main` entry, and
 // @cloudflare/vitest-pool-workers loads the entry's own module graph as a
 // separate, pre-bundled "worker under test" that vi.mock cannot reach.

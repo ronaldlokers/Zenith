@@ -4,7 +4,7 @@ import { generateNotifications } from "../worker/notifications";
 
 // generateNotifications is normally driven by the daily cron; here we call it
 // directly (like posting-check's unit tests). It only records notification
-// rows — push is no longer invoked from this path at all (deliverDuePushes
+// rows — push is no longer invoked from this path at all (deliverDueNotifications
 // owns delivery, gated on the recipient's local 08:00), so there's nothing
 // push-related to no-op here.
 const USER = "seed-admin";

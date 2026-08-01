@@ -87,3 +87,39 @@ describe("timezone preference", () => {
     expect(await storedTimezone()).toBe("UTC");
   });
 });
+
+describe("email preferences", () => {
+  beforeEach(async () => {
+    await env.DB.prepare(
+      'UPDATE "user" SET email_reminders = 1, email_digest = 1 WHERE id = ?',
+    )
+      .bind(USER)
+      .run();
+  });
+
+  it("reports both as on by default", async () => {
+    const res = await authedFetch(`${BASE}/api/preferences`);
+    expect(await res.json()).toMatchObject({ emailReminders: true, emailDigest: true });
+  });
+
+  it("persists a single toggle without disturbing the other", async () => {
+    const res = await authedFetch(`${BASE}/api/preferences/email`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailReminders: false }),
+    });
+    expect(res.status).toBe(204);
+
+    const after = await authedFetch(`${BASE}/api/preferences`);
+    expect(await after.json()).toMatchObject({ emailReminders: false, emailDigest: true });
+  });
+
+  it("rejects a non-boolean rather than coercing it", async () => {
+    const res = await authedFetch(`${BASE}/api/preferences/email`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailDigest: "yes" }),
+    });
+    expect(res.status).toBe(400);
+  });
+});

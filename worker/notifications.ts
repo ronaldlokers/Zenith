@@ -1,5 +1,7 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
+import { buildDigestEmail, buildReminderEmail, type ReminderItem } from "./email/messages.js";
+import { sendEmail } from "./email/index.js";
 import { sendPushToUser } from "./push.js";
 import { localDate, localDatePlus, localHour } from "./tz.js";
 
@@ -8,9 +10,10 @@ import { localDate, localDatePlus, localHour } from "./tz.js";
 // dedup_key + ON CONFLICT DO NOTHING, so re-running the same scan
 // never produces duplicate rows.
 
-// Insert only. The push is no longer sent here: deliverDuePushes below owns
-// delivery, so that one gate covers every notification type and nothing
-// buzzes a phone before 08:00 in the recipient's own morning.
+// Insert only. The push/email is no longer sent here: deliverDueNotifications
+// below owns delivery, so that one gate covers every notification type and
+// nothing buzzes a phone (or lands an email) before 08:00 in the recipient's
+// own morning.
 async function insertNotifications(
   env: Env,
   sql: string,
@@ -154,52 +157,165 @@ export async function generateNotifications(
   }
 }
 
-// Recording and pushing are separate. A record appears in the bell as soon as
-// it is generated; the push waits until the owner has reached 08:00 in their
-// own timezone, so nothing buzzes a phone at 02:00. One gate for every type,
-// rather than one per generator — which also keeps the feed-match count
-// coupled to the run that produced it.
+// Recording and delivery are separate. A record appears in the bell as soon
+// as it is generated; push and email both wait until the owner has reached
+// 08:00 in their own timezone, so nothing buzzes a phone (or lands an email)
+// at 02:00. One gate for every type, rather than one per generator — which
+// also keeps the feed-match count coupled to the run that produced it.
+//
+// Not from the generators, in particular not from generateWeeklyDigest: that
+// cron fires at 08:00 UTC, which is 01:00 in Los Angeles, so sending inline
+// there would reintroduce exactly what #518 fixed for push. This gate already
+// knows who has reached their own 08:00.
 const DELIVERY_HOUR = 8;
 const MAX_AGE_HOURS = 24;
 
-export async function deliverDuePushes(env: Env): Promise<void> {
+// due_followup/due_contact are "due today"; upcoming_followup/upcoming_contact
+// are the day-before heads-up (#62). weekly_digest and the non-emailable types
+// (feed_match, stale_posting) are handled separately below.
+const REMINDER_KIND: Record<string, ReminderItem["kind"]> = {
+  due_followup: "due",
+  due_contact: "due",
+  upcoming_followup: "upcoming",
+  upcoming_contact: "upcoming",
+};
+
+interface DueRow {
+  id: number;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  pushed_at: string | null;
+  emailed_at: string | null;
+  timezone: string | null;
+  email: string;
+  locale: string | null;
+  email_reminders: number;
+  email_digest: number;
+}
+
+async function stampEmailed(env: Env, ids: number[]): Promise<void> {
+  if (ids.length === 0) return;
+  await env.DB.batch(
+    ids.map((id) =>
+      env.DB.prepare("UPDATE notifications SET emailed_at = datetime('now') WHERE id = ?").bind(
+        id,
+      ),
+    ),
+  );
+}
+
+// Groups one user's still-unemailed rows into at most two outbound
+// messages — one batched reminder email and one digest email — never one
+// per notification. Three due_followup rows must produce one email, not
+// three, or the batching design is defeated and the user gets spammed.
+async function emailUser(env: Env, rows: DueRow[]): Promise<void> {
+  const { email, locale, email_reminders, email_digest } = rows[0];
+
+  const reminderRows = rows.filter((n) => n.type in REMINDER_KIND);
+  const digestRows = rows.filter((n) => n.type === "weekly_digest");
+  // Neither a reminder nor a digest — feed_match, stale_posting. Never
+  // emailed, but still stamped below so they stop being re-selected on
+  // every run for the rest of their 24-hour window.
+  const unemailableRows = rows.filter(
+    (n) => !(n.type in REMINDER_KIND) && n.type !== "weekly_digest",
+  );
+
+  if (reminderRows.length > 0) {
+    if (email_reminders) {
+      const items: ReminderItem[] = reminderRows.map((n) => ({
+        kind: REMINDER_KIND[n.type],
+        title: n.title,
+        body: n.body,
+      }));
+      const sent = await sendEmail(env, buildReminderEmail(email, locale ?? "en", items));
+      // Only stamp what this send actually covered, and only on success — a
+      // failure must leave every row NULL so the next hourly run retries the
+      // whole batch instead of silently losing it.
+      if (sent) await stampEmailed(env, reminderRows.map((n) => n.id));
+    } else {
+      // The owner has reminder email off: "I don't want these" means this
+      // notification will not be emailed, full stop — not "pending until the
+      // toggle changes". Stamp now, same as the never-emailable types below,
+      // so a later opt-in can't retroactively deliver up to 24h of backlog
+      // in one batch — exactly the surprise #518's freshness window exists
+      // to prevent for push, arriving through a different door. Do not
+      // revert this to "leave NULL" — it looks harmless (can't double-send
+      // or lose an email) but it isn't.
+      await stampEmailed(env, reminderRows.map((n) => n.id));
+    }
+  }
+
+  // weekly_digest arrives as its own separate message, never folded into the
+  // reminder email — it's a different cadence and a different kind of news.
+  if (digestRows.length > 0) {
+    if (email_digest) {
+      for (const n of digestRows) {
+        const sent = await sendEmail(env, buildDigestEmail(email, n.title, n.body ?? ""));
+        if (sent) await stampEmailed(env, [n.id]);
+      }
+    } else {
+      // Same reasoning as the reminder branch above: digest off means this
+      // digest is handled, not deferred.
+      await stampEmailed(env, digestRows.map((n) => n.id));
+    }
+  }
+
+  await stampEmailed(env, unemailableRows.map((n) => n.id));
+}
+
+export async function deliverDueNotifications(env: Env): Promise<void> {
   const now = new Date();
   const cutoff = new Date(now.getTime() - MAX_AGE_HOURS * 3600_000)
     .toISOString()
     .replace("T", " ")
     .slice(0, 19);
 
+  // A row is outstanding when EITHER channel is unsent — a failed batch email
+  // must not need a fresh push to earn a retry, and vice versa. Each stamp
+  // below is written independently so one channel's failure never blocks the
+  // other's delivery or retry.
   const { results } = await env.DB.prepare(
-    `SELECT n.id, n.user_id, n.title, n.body, n.link, u.timezone
+    `SELECT n.id, n.user_id, n.type, n.title, n.body, n.link, n.pushed_at, n.emailed_at,
+            u.timezone, u.email, u.locale, u.email_reminders, u.email_digest
        FROM notifications n
        JOIN "user" u ON u.id = n.user_id
-      WHERE n.pushed_at IS NULL
+      WHERE (n.pushed_at IS NULL OR n.emailed_at IS NULL)
         AND n.created_at >= ?
       ORDER BY n.id`,
   )
     .bind(cutoff)
-    .all<{
-      id: number;
-      user_id: string;
-      title: string;
-      body: string | null;
-      link: string | null;
-      timezone: string | null;
-    }>();
+    .all<DueRow>();
 
   const due = results.filter((n) => localHour(n.timezone, now) >= DELIVERY_HOUR);
+
+  // 1. Push every row not yet pushed, exactly as before.
   await Promise.all(
-    due.map(async (n) => {
-      await sendPushToUser(env, n.user_id, {
-        title: n.title,
-        body: n.body ?? undefined,
-        url: n.link ?? "/",
-      });
-      await env.DB.prepare("UPDATE notifications SET pushed_at = datetime('now') WHERE id = ?")
-        .bind(n.id)
-        .run();
-    }),
+    due
+      .filter((n) => n.pushed_at === null)
+      .map(async (n) => {
+        await sendPushToUser(env, n.user_id, {
+          title: n.title,
+          body: n.body ?? undefined,
+          url: n.link ?? "/",
+        });
+        await env.DB.prepare("UPDATE notifications SET pushed_at = datetime('now') WHERE id = ?")
+          .bind(n.id)
+          .run();
+      }),
   );
+
+  // 2. Email, grouped by user so a batch of reminders becomes one message.
+  const unemailed = due.filter((n) => n.emailed_at === null);
+  const byUser = new Map<string, DueRow[]>();
+  for (const n of unemailed) {
+    const list = byUser.get(n.user_id);
+    if (list) list.push(n);
+    else byUser.set(n.user_id, [n]);
+  }
+  await Promise.all(Array.from(byUser.values()).map((rows) => emailUser(env, rows)));
 }
 
 export function registerNotificationRoutes(app: Hono<AppEnv>) {

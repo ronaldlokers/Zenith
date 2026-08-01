@@ -38,7 +38,12 @@ export const api = {
       body: JSON.stringify({ locale }),
     }),
   getPreferences: () =>
-    request<{ locale: string | null; timezone: string | null }>("/api/preferences"),
+    request<{
+      locale: string | null;
+      timezone: string | null;
+      emailReminders: boolean;
+      emailDigest: boolean;
+    }>("/api/preferences"),
   // The server compares date-only columns against the user's own calendar
   // day; without this it can only use UTC.
   setTimezone: (timezone: string) =>
@@ -46,9 +51,23 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ timezone }),
     }),
+  setEmailPreferences: (prefs: { emailReminders?: boolean; emailDigest?: boolean }) =>
+    request<void>("/api/preferences/email", {
+      method: "PUT",
+      body: JSON.stringify(prefs),
+    }),
   // Admin: send yourself a sample push of the given notification type.
   testPush: (type: string) =>
     request<{ sent: number }>("/api/admin/test-push", {
+      method: "POST",
+      body: JSON.stringify({ type }),
+    }),
+  // Admin: send yourself a sample email, bypassing the reminders/digest
+  // preference toggles — this checks whether the transport is configured,
+  // not what the user opted into. Rejects with the provider's own error
+  // text (bad key, unverified domain, ...) rather than a generic failure.
+  testEmail: (type: string) =>
+    request<{ sent: boolean; provider: string }>("/api/admin/test-email", {
       method: "POST",
       body: JSON.stringify({ type }),
     }),

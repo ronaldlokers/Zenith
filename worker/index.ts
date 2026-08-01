@@ -9,11 +9,13 @@ import { registerOutreachRoutes } from "./outreach.js";
 import { registerGoalRoutes } from "./goals.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
-import { deliverDuePushes, generateNotifications, registerNotificationRoutes } from "./notifications.js";
+import { deliverDueNotifications, generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { generateWeeklyDigest } from "./digest.js";
 import { registerAiRoutes } from "./ai.js";
 import { registerCalendarRoutes } from "./calendar.js";
 import { registerPushRoutes, sendPushToUser } from "./push.js";
+import { resolveProvider } from "./email/index.js";
+import { buildDigestEmail, buildReminderEmail, type ReminderItem } from "./email/messages.js";
 import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
 
 export type AppEnv = {
@@ -1283,11 +1285,21 @@ function isUsableTimeZone(tz: string): boolean {
 
 app.get("/api/preferences", async (c) => {
   const row = await c.env.DB.prepare(
-    'SELECT locale, timezone FROM "user" WHERE id = ?',
+    'SELECT locale, timezone, email_reminders, email_digest FROM "user" WHERE id = ?',
   )
     .bind(c.get("userId"))
-    .first<{ locale: string | null; timezone: string | null }>();
-  return c.json({ locale: row?.locale ?? null, timezone: row?.timezone ?? null });
+    .first<{
+      locale: string | null;
+      timezone: string | null;
+      email_reminders: number;
+      email_digest: number;
+    }>();
+  return c.json({
+    locale: row?.locale ?? null,
+    timezone: row?.timezone ?? null,
+    emailReminders: row?.email_reminders === 1,
+    emailDigest: row?.email_digest === 1,
+  });
 });
 
 // The client mirrors its detected zone here once, and the Settings select
@@ -1300,6 +1312,32 @@ app.put("/api/preferences/timezone", async (c) => {
   }
   await c.env.DB.prepare('UPDATE "user" SET timezone = ? WHERE id = ?')
     .bind(timezone, c.get("userId"))
+    .run();
+  return c.body(null, 204);
+});
+
+// Which emails the user wants. Per email, not per notification type: the four
+// reminder types batch into one message, so four switches would imply a
+// granularity the delivery does not have.
+app.put("/api/preferences/email", async (c) => {
+  const body = await c.req.json<{ emailReminders?: unknown; emailDigest?: unknown }>();
+  const sets: string[] = [];
+  const binds: unknown[] = [];
+  for (const [key, column] of [
+    ["emailReminders", "email_reminders"],
+    ["emailDigest", "email_digest"],
+  ] as const) {
+    const value = body[key];
+    if (value === undefined) continue;
+    if (typeof value !== "boolean") {
+      return c.json({ error: `${key} must be a boolean` }, 400);
+    }
+    sets.push(`${column} = ?`);
+    binds.push(value ? 1 : 0);
+  }
+  if (sets.length === 0) return c.json({ error: "nothing to update" }, 400);
+  await c.env.DB.prepare(`UPDATE "user" SET ${sets.join(", ")} WHERE id = ?`)
+    .bind(...binds, c.get("userId"))
     .run();
   return c.body(null, 204);
 });
@@ -1591,6 +1629,55 @@ app.post("/api/admin/test-push", async (c) => {
   return c.json({ sent: subs.length });
 });
 
+const TEST_REMINDER_SAMPLE: ReminderItem[] = [
+  { kind: "due", title: "Senior Engineer · Acme", body: "Follow-up due" },
+  { kind: "upcoming", title: "Ada Lovelace", body: "Recruiter" },
+];
+
+// Admin email test-send (#62, #114) — same shape as test-push above, but
+// deliberately the inverse of the delivery gate it verifies. That gate
+// (notifications.ts) uses sendEmail, which swallows every failure by design:
+// it runs once per user in a loop, and one bad address must not stop the
+// rest. That makes a missing key, an unverified domain, or a rejected call
+// all invisible — the only symptom would be a Monday that passes without a
+// digest. So this route calls resolveProvider/provider.send directly instead
+// of sendEmail, to surface the provider's real error, and it ignores the
+// email_reminders/email_digest toggles — those govern scheduled delivery,
+// not whether the transport itself is configured, and honoring them here
+// would let "reminders off" report success while sending nothing.
+app.post("/api/admin/test-email", async (c) => {
+  const { type } = await c.req.json<{ type?: string }>();
+  if (type !== "reminders" && type !== "digest") {
+    return c.json({ error: "unknown email type" }, 400);
+  }
+  const userId = c.get("userId");
+  const user = await c.env.DB.prepare('SELECT email, locale FROM "user" WHERE id = ?')
+    .bind(userId)
+    .first<{ email: string; locale: string | null }>();
+  if (!user) return c.json({ error: "user not found" }, 404);
+
+  const provider = resolveProvider(c.env);
+  if (!provider) {
+    return c.json({ error: "email is not configured: RESEND_API_KEY is not set" }, 503);
+  }
+
+  const msg =
+    type === "reminders"
+      ? buildReminderEmail(user.email, user.locale ?? "en", TEST_REMINDER_SAMPLE)
+      : buildDigestEmail(
+          user.email,
+          "Your week on Zenith",
+          "4 added · 2 advanced · 3 need a nudge",
+        );
+
+  try {
+    await provider.send({ ...msg, subject: `[test] ${msg.subject}` });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 502);
+  }
+  return c.json({ sent: true, provider: provider.name });
+});
+
 // Admin resets a user's 2FA (#285) — the Better Auth admin plugin can reset
 // passwords and remove users, but has no built-in to clear another user's
 // second factor, so a user who loses their authenticator would otherwise be
@@ -1854,8 +1941,8 @@ export default {
       );
     }
     ctx.waitUntil(
-      deliverDuePushes(env).catch((err: unknown) => {
-        console.error("scheduled push delivery failed", err);
+      deliverDueNotifications(env).catch((err: unknown) => {
+        console.error("scheduled notification delivery failed", err);
       }),
     );
   },
