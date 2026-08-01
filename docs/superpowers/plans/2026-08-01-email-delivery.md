@@ -22,7 +22,8 @@
 - **No telemetry.** Open and click tracking must be explicitly disabled in every provider request.
 - `noUnusedLocals` is on — an unused symbol is a compile error.
 - Vitest globs: `workers` = `test/**/*.spec.ts`, `components` = `src/**/*.test.{ts,tsx}`, `node` = `test-node/**/*.spec.ts`. A file outside these is collected by nothing.
-- **`vi.mock` does not cross the vitest-pool-workers module boundary.** Use `fetchMock` from `cloudflare:test` for outbound HTTP, and spy on `env.DB` for database calls. This cost time on #518 and again on #531.
+- **Outbound HTTP is stubbed with `vi.stubGlobal("fetch", …)`** — the established pattern in `test/ai-credentials.spec.ts` and `test/feed-providers.spec.ts`, which works because *the test and the worker share the isolate*. Capture `globalThis.fetch` first and pass non-matching URLs through, so `authedFetch`/`SELF` still works; `vi.unstubAllGlobals()` in `afterEach`.
+- **`vi.mock` does NOT cross the vitest-pool-workers module boundary** — that is a different mechanism, and the worker gets its own module instances. Spy on `env.DB` (passed by reference) for database calls. Cost time on #518 and again on #531.
 - **`vi.useFakeTimers()` does not reach SQLite's `date('now')`/`datetime('now')`** inside workerd — only the JS-realm `Date` is faked. Seed any `created_at` that matters explicitly rather than letting the column default.
 
 ---
@@ -575,7 +576,7 @@ Create `test/email-delivery.spec.ts`. Model the setup on `test/push-gate.spec.ts
 
 **Seed `created_at` explicitly on every row** — `vi.useFakeTimers()` does not reach SQLite's `datetime('now')`, so a defaulted column gets the real wall clock and the 24-hour window assertions become meaningless.
 
-Use `fetchMock` from `cloudflare:test`; `vi.mock` will not reach the worker's module instance.
+Stub outbound HTTP with `vi.stubGlobal("fetch", …)` per the house pattern; `vi.mock` will not reach the worker's module instance.
 
 - [ ] **Step 2: Run it to verify it fails**
 
@@ -715,7 +716,7 @@ Create `test/admin-test-email.spec.ts` covering:
 - **a provider 401 comes back in the response body**, not swallowed
 - it sends even when `email_reminders = 0` and `email_digest = 0`
 
-Use `fetchMock`, and `authedFetch` from `test/helpers.ts`.
+Stub with `vi.stubGlobal("fetch", …)`, and use `authedFetch` from `test/helpers.ts`.
 
 - [ ] **Step 2: Run it to verify it fails**
 
