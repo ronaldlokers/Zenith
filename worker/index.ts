@@ -9,7 +9,7 @@ import { registerOutreachRoutes } from "./outreach.js";
 import { registerGoalRoutes } from "./goals.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
-import { deliverDuePushes, generateNotifications, registerNotificationRoutes } from "./notifications.js";
+import { deliverDueNotifications, generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { generateWeeklyDigest } from "./digest.js";
 import { registerAiRoutes } from "./ai.js";
 import { registerCalendarRoutes } from "./calendar.js";
@@ -1890,8 +1890,8 @@ export default {
       );
     }
     ctx.waitUntil(
-      deliverDuePushes(env).catch((err: unknown) => {
-        console.error("scheduled push delivery failed", err);
+      deliverDueNotifications(env).catch((err: unknown) => {
+        console.error("scheduled notification delivery failed", err);
       }),
     );
   },
