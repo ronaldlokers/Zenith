@@ -6,6 +6,9 @@ export function resendProvider(apiKey: string, from: string): EmailProvider {
   return {
     name: "resend",
     async send(msg: EmailMessage): Promise<void> {
+      // Open and click tracking are domain-level settings in the Resend
+      // dashboard, not per-request fields — there is no flag here that could
+      // disable them. Verify they're off there, not by reading this code.
       const res = await fetch(ENDPOINT, {
         method: "POST",
         headers: {

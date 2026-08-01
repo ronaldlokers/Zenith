@@ -12,3 +12,10 @@ ALTER TABLE notifications ADD COLUMN emailed_at TEXT;
 -- say, so defaulting on cannot surprise anyone who has not set email up.
 ALTER TABLE "user" ADD COLUMN email_reminders INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE "user" ADD COLUMN email_digest INTEGER NOT NULL DEFAULT 1;
+
+-- Existing rows predate email entirely: they were pushed and read in the bell
+-- before this feature existed. Without this, the first deliverDueNotifications
+-- run after deploy would batch a day of already-delivered notifications into
+-- one email — the same retroactive-backlog surprise the preference path is
+-- careful to prevent. Mirrors 0051's pushed_at backfill.
+UPDATE notifications SET emailed_at = created_at;

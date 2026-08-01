@@ -675,12 +675,14 @@
       "upcoming_followup": "Application follow-up tomorrow",
       "upcoming_contact": "Contact follow-up tomorrow"
     },
+    "testEmailTitle": "Test email",
+    "testEmailType": "Email type",
     "testEmailSend": "Send test email",
-    "testEmailHint": "Send yourself a sample email to verify the transport is configured. Ignores your reminders/digest preferences below — this checks whether email works at all, not what you've opted into.",
+    "testEmailHint": "Send yourself a sample email to verify the transport is configured. Ignores your reminders/digest preferences in Settings › Integrations — this checks whether email works at all, not what you've opted into.",
     "testEmailSent": "Sent — check your inbox.",
     "testEmailFailed": "Send failed: {{error}}",
     "emailType": {
-      "reminders": "Reminder digest",
+      "reminders": "Follow-up reminders",
       "digest": "Weekly digest"
     },
     "signedInAs": "Signed in as {{email}}",

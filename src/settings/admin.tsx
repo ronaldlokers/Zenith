@@ -305,11 +305,11 @@ export function TestEmail({
 
   return (
     <div className="admin-invite">
-      <h3>{t("account.testEmailSend")}</h3>
+      <h3>{t("account.testEmailTitle")}</h3>
       <p className="muted small">{t("account.testEmailHint")}</p>
       <div className="settings-fieldgrid">
         <label className="settings-field">
-          <span>{t("account.testPushType")}</span>
+          <span>{t("account.testEmailType")}</span>
           <select value={type} onChange={(e) => setType(e.target.value)}>
             {EMAIL_TYPES.map((ty) => (
               <option key={ty} value={ty}>

@@ -79,7 +79,7 @@ export async function generateWeeklyDigest(env: Env): Promise<void> {
   // Batch every user's INSERT into one D1 round-trip (#449) — the old
   // per-user await-INSERT loop serialized N round-trips inside one cron
   // invocation. Delivery is not this function's job: deliverDueNotifications picks
-  // these rows up (pushed_at stays NULL here) and pushes each one once, at
+  // these rows up (pushed_at stays NULL here) and delivers each one once, at
   // 08:00 in that user's own timezone — never straight from this insert.
   const stmts = active.map((r) => {
     const loc: Locale = r.locale === "nl" ? "nl" : "en";

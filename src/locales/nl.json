@@ -675,12 +675,14 @@
       "upcoming_followup": "Sollicitatie-opvolging morgen",
       "upcoming_contact": "Contactopvolging morgen"
     },
+    "testEmailTitle": "Test-e-mail",
+    "testEmailType": "Type e-mail",
     "testEmailSend": "Test-e-mail versturen",
-    "testEmailHint": "Stuur jezelf een voorbeeld-e-mail om te controleren of e-mail is ingesteld. Negeert je hieronder ingestelde herinneringen/overzicht-voorkeuren — dit test of e-mail werkt, niet waarvoor je gekozen hebt.",
+    "testEmailHint": "Stuur jezelf een voorbeeld-e-mail om te controleren of e-mail is ingesteld. Negeert je herinneringen/overzicht-voorkeuren in Instellingen › Integraties — dit test of e-mail werkt, niet waarvoor je gekozen hebt.",
     "testEmailSent": "Verstuurd — controleer je inbox.",
     "testEmailFailed": "Versturen mislukt: {{error}}",
     "emailType": {
-      "reminders": "Herinneringenoverzicht",
+      "reminders": "Herinneringen voor opvolging",
       "digest": "Wekelijks overzicht"
     },
     "signedInAs": "Ingelogd als {{email}}",

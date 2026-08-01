@@ -63,8 +63,6 @@ describe("sendEmail", () => {
     expect(seen.subject).toBe("Test");
     expect(seen.html).toBe("<p>Test</p>");
     expect(seen.text).toBe("Test");
-    // No telemetry, ever. Nothing here may opt into open or click tracking.
-    expect(Object.keys(seen)).not.toContain("tags");
   });
 
   it("reports failure rather than throwing when the provider rejects", async () => {

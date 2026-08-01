@@ -72,8 +72,12 @@ No retries, no queue, no templating engine. `send()` and nothing else.
 
 The split that actually makes a swap cheap is **`messages.ts` being independent
 of the provider**: content generation does not know who sends it, and the
-provider does not know what it is sending. Swapping touches one file under
-`providers/`, and the copy and locale handling are untouched.
+provider does not know what it is sending. Swapping touches four files, not
+one: the new file under `providers/` itself, `resolveProvider` and
+`DEFAULT_FROM` in `worker/email/index.ts`, the `RESEND_API_KEY` binding in
+`worker/env.d.ts`, and the admin route's 503 string in `worker/index.ts`,
+which names the secret in prose. Still cheap — the copy and locale handling in
+`messages.ts` are untouched — just not one file.
 
 Provider resolution is one branch returning the Resend provider or `null`.
 `null` means email is off — the existing degrade-quietly behaviour, not a new
@@ -138,10 +142,6 @@ The digest reuses the localised title and body `generateWeeklyDigest` already
 builds, rather than growing a second copy path.
 
 Recipient is `user.email`, already on the row the queries read.
-
-Open and click tracking are explicitly disabled in the Resend request. A
-tracking pixel in a product whose first principle is "no telemetry, ever" would
-be a contradiction shipped by accident.
 
 ## Preferences
 
@@ -217,6 +217,14 @@ again on #531.
 alongside the Email Routing MX already on that zone. Until then an unverified
 account can only send to the account owner's own address. This is a DNS step,
 done once, before any of the code is useful.
+
+Open and click tracking must be confirmed **disabled in the Resend
+dashboard**. Resend has no per-request tracking field — tracking is a
+domain-level setting, not something a request body can express — so the code
+cannot disable it; this is a one-time dashboard step, same class as the
+SPF/DKIM verification above: invisible in code, with a silent failure mode. A
+tracking pixel in a product whose first principle is "no telemetry, ever"
+would be a contradiction shipped by accident.
 
 ## Out of scope
 
