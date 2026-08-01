@@ -20,7 +20,7 @@ import { TimezoneField } from "./timezone-field";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
 import { DataExport, SampleDataSettings } from "./data";
 import { PublicApiSettings } from "./api";
-import { PushSettings } from "./notifications";
+import { NotificationSettings } from "./notifications";
 
 const LANGUAGES: [string, string][] = [
   ["en", "languageEn"],
@@ -425,7 +425,7 @@ export function SettingsPage({
         {section === "integrations" && session && (
           <div className="account-section">
             <PublicApiSettings onError={setApiError} />
-            <PushSettings />
+            <NotificationSettings />
           </div>
         )}
         {section === "data" && session && (
