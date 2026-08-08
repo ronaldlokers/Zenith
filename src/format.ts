@@ -109,6 +109,23 @@ export function formatDate(d: string): string {
 // Only http(s) links are ever rendered as href — a stored javascript:
 // or data: URI (from a feed source, a scraped import, or hand-typed)
 // must not be clickable.
+// Keeps the year, unlike formatDate: credential provenance (when an API key
+// was generated, #381) can plausibly be years old, where the pipeline dates
+// this app mostly shows are within weeks.
+//
+// Takes a stored *timestamp*, not a date-only value, so it parses through
+// parseSqlDate rather than slicing to the date part: SQLite's datetime('now')
+// is UTC, and slicing would print the UTC calendar day — the same off-by-a-day
+// that #516 fixed for today(). A key generated at 01:00 local is otherwise
+// dated to the previous day.
+export function formatDateWithYear(d: string): string {
+  return new Date(parseSqlDate(d)).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function safeHref(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
   try {

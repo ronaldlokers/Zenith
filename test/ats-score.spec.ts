@@ -34,7 +34,8 @@ const fullProfile: Profile = {
   summary: "Seasoned platform engineer with a decade of distributed systems.",
   share_token: null,
   calendar_token: null,
-  api_key: null,
+  api_key_hint: null,
+  api_key_created_at: null,
 };
 
 const SKILLS = [

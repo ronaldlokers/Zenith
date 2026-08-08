@@ -1,6 +1,16 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 
+// The API-key digest is the one profile column the client never sees (#381):
+// the hint and creation date are what Settings renders, and the digest itself
+// has no use in the browser. Both profile responses are SELECT *, so strip it
+// on the way out rather than enumerating every other column.
+function withoutKeyHash(row: Record<string, unknown> | null) {
+  if (!row) return row;
+  const { api_key_hash: _hash, ...rest } = row;
+  return rest;
+}
+
 export function registerCvRoutes(app: Hono<AppEnv>) {
   // --- Profile (one row per user, auto-created on first read) ---
 
@@ -18,7 +28,7 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
         .bind(userId)
         .first();
     }
-    return c.json(result);
+    return c.json(withoutKeyHash(result));
   });
 
   app.put("/api/profile", async (c) => {
@@ -44,7 +54,7 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
         userId,
       )
       .first();
-    return c.json(result);
+    return c.json(withoutKeyHash(result));
   });
 
   // --- Skills ---

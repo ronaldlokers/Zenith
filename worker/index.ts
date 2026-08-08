@@ -1720,7 +1720,7 @@ async function hasAnyUserData(env: Env, userId: string): Promise<boolean> {
       + (SELECT COUNT(*) FROM tags WHERE user_id = ?)
       + (SELECT COUNT(*) FROM profile WHERE user_id = ?
            AND (name IS NOT NULL OR summary IS NOT NULL
-                OR api_key IS NOT NULL OR share_token IS NOT NULL
+                OR api_key_hash IS NOT NULL OR share_token IS NOT NULL
                 OR calendar_token IS NOT NULL)) AS n`,
   )
     .bind(
@@ -1776,20 +1776,32 @@ app.delete("/api/account/sample-data", async (c) => {
   // sample account doesn't silently revoke an API key, share link, or
   // calendar link the user created while exploring (#285).
   const creds = await c.env.DB.prepare(
-    "SELECT api_key, share_token, calendar_token FROM profile WHERE user_id = ?",
+    "SELECT api_key_hash, api_key_hint, api_key_created_at, share_token, calendar_token FROM profile WHERE user_id = ?",
   )
     .bind(userId)
     .first<{
-      api_key: string | null;
+      api_key_hash: string | null;
+      api_key_hint: string | null;
+      api_key_created_at: string | null;
       share_token: string | null;
       calendar_token: string | null;
     }>();
   await wipeUserData(c.env, userId);
-  if (creds && (creds.api_key || creds.share_token || creds.calendar_token)) {
+  if (
+    creds &&
+    (creds.api_key_hash || creds.share_token || creds.calendar_token)
+  ) {
     await c.env.DB.prepare(
-      "INSERT INTO profile (user_id, api_key, share_token, calendar_token) VALUES (?, ?, ?, ?)",
+      "INSERT INTO profile (user_id, api_key_hash, api_key_hint, api_key_created_at, share_token, calendar_token) VALUES (?, ?, ?, ?, ?, ?)",
     )
-      .bind(userId, creds.api_key, creds.share_token, creds.calendar_token)
+      .bind(
+        userId,
+        creds.api_key_hash,
+        creds.api_key_hint,
+        creds.api_key_created_at,
+        creds.share_token,
+        creds.calendar_token,
+      )
       .run();
   }
   return c.body(null, 204);

@@ -250,7 +250,10 @@ export interface Profile {
   summary: string | null;
   share_token: string | null;
   calendar_token: string | null;
-  api_key: string | null;
+  // The key itself is never returned — only its digest is stored (#381), so
+  // these two are all Settings has to identify an existing key by.
+  api_key_hint: string | null;
+  api_key_created_at: string | null;
 }
 
 export interface Webhook {
