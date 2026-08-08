@@ -1,3 +1,4 @@
+import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
 
@@ -66,9 +67,16 @@ describe("sample data", () => {
     expect(gen.api_key).toBeTruthy();
 
     await authedFetch(`${BASE}/api/account/sample-data`, { method: "DELETE" });
+    // The key itself is unreadable after generation (#381), so the surviving
+    // hint stands in for it — and the key still authenticating proves the
+    // digest came through the wipe intact.
     const profile = (await (
       await authedFetch(`${BASE}/api/profile`)
-    ).json()) as { api_key: string | null };
-    expect(profile.api_key).toBe(gen.api_key);
+    ).json()) as { api_key_hint: string | null };
+    expect(profile.api_key_hint).toBe(gen.api_key.slice(-4));
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      headers: { Authorization: `Bearer ${gen.api_key}` },
+    });
+    expect(res.status).toBe(200);
   });
 });

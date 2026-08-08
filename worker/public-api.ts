@@ -10,20 +10,43 @@ import type { AppEnv } from "./index.js";
 // auth never have to share one middleware's assumptions — the two
 // stay independent even if either changes later.
 
+// The key is stored as a SHA-256 digest (#381), never in the clear. Plain
+// SHA-256 rather than a password KDF because the key is CSPRNG output, not
+// a memorised secret: there's nothing to dictionary-attack and no salt to
+// add, and the lookup stays one indexed equality.
+export async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value),
+  );
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export function registerApiKeyRoutes(app: Hono<AppEnv>) {
   app.post("/api/profile/api-key", async (c) => {
-    const token = crypto.randomUUID();
+    const token = crypto.randomUUID().replace(/-/g, "");
     const userId = c.get("userId");
+    // Shown once, in this response only — the digest is all that's kept, so
+    // there is no later read path to recover it from.
     await c.env.DB.prepare(
-      "INSERT INTO profile (user_id, api_key) VALUES (?, ?) ON CONFLICT (user_id) DO UPDATE SET api_key = excluded.api_key",
+      `INSERT INTO profile (user_id, api_key_hash, api_key_hint, api_key_created_at)
+       VALUES (?, ?, ?, datetime('now'))
+       ON CONFLICT (user_id) DO UPDATE SET
+         api_key_hash = excluded.api_key_hash,
+         api_key_hint = excluded.api_key_hint,
+         api_key_created_at = excluded.api_key_created_at`,
     )
-      .bind(userId, token)
+      .bind(userId, await sha256Hex(token), token.slice(-4))
       .run();
     return c.json({ api_key: token });
   });
 
   app.delete("/api/profile/api-key", async (c) => {
-    await c.env.DB.prepare("UPDATE profile SET api_key = NULL WHERE user_id = ?")
+    await c.env.DB.prepare(
+      "UPDATE profile SET api_key_hash = NULL, api_key_hint = NULL, api_key_created_at = NULL WHERE user_id = ?",
+    )
       .bind(c.get("userId"))
       .run();
     return c.body(null, 204);
@@ -172,9 +195,9 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
     const key = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
     if (!key) return c.json({ error: "missing bearer token" }, 401);
     const profile = await c.env.DB.prepare(
-      "SELECT user_id FROM profile WHERE api_key = ?",
+      "SELECT user_id FROM profile WHERE api_key_hash = ?",
     )
-      .bind(key)
+      .bind(await sha256Hex(key))
       .first<{ user_id: string }>();
     if (!profile) return c.json({ error: "invalid API key" }, 401);
     c.set("apiUserId", profile.user_id);

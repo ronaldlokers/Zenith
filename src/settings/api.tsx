@@ -2,24 +2,27 @@ import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
+import { formatDateWithYear } from "../format";
 import { requestConfirm } from "../hooks";
 import { RemoveIcon } from "../icons";
 import type { Webhook } from "../types";
 import { ActionBar, Button } from "../components";
 import "./settings.css";
 
-// Public API key + webhooks (#228) — the key is shown in full whenever
-// it exists (unlike a password) since it's meant to be copied into
-// another tool's config; a webhook's signing secret, by contrast, is
-// only ever shown once at creation (see addWebhook below), same as the
-// 2FA backup codes.
+// Public API key + webhooks (#228). The key is shown once at generation and
+// never again (#381) — only its SHA-256 digest is stored, so there is no read
+// path left to show it from. Afterwards Settings identifies it by its last
+// four characters and creation date. Same show-once contract as a webhook's
+// signing secret (see addWebhook below) and the 2FA backup codes.
 export function PublicApiSettings({
   onError,
 }: {
   onError: (message: string | null) => void;
 }) {
   const { t } = useTranslation();
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [keyHint, setKeyHint] = useState<string | null>(null);
+  const [keyCreatedAt, setKeyCreatedAt] = useState<string | null>(null);
+  const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [keyBusy, setKeyBusy] = useState(false);
   const [webhooks, setWebhooks] = useState<Webhook[] | null>(null);
   const [newWebhookUrl, setNewWebhookUrl] = useState("");
@@ -36,19 +39,26 @@ export function PublicApiSettings({
   );
 
   useEffect(() => {
-    api.profile().then((p) => setApiKey(p.api_key));
+    api.profile().then((p) => {
+      setKeyHint(p.api_key_hint);
+      setKeyCreatedAt(p.api_key_created_at);
+    });
     loadWebhooks();
   }, [loadWebhooks]);
 
   const generateKey = async () => {
     // Regenerating (a key already exists) invalidates the current one, so
     // warn — but the first-time generate has nothing to break (#285).
-    if (apiKey && !(await requestConfirm(t("account.regenerateKeyConfirm"))))
+    if (keyHint && !(await requestConfirm(t("account.regenerateKeyConfirm"))))
       return;
     setKeyBusy(true);
     api
       .generateApiKey()
-      .then((r) => setApiKey(r.api_key))
+      .then((r) => {
+        setNewApiKey(r.api_key);
+        setKeyHint(r.api_key.slice(-4));
+        setKeyCreatedAt(new Date().toISOString());
+      })
       .catch((e) => onError((e as Error).message))
       .finally(() => setKeyBusy(false));
   };
@@ -58,7 +68,11 @@ export function PublicApiSettings({
     setKeyBusy(true);
     api
       .revokeApiKey()
-      .then(() => setApiKey(null))
+      .then(() => {
+        setNewApiKey(null);
+        setKeyHint(null);
+        setKeyCreatedAt(null);
+      })
       .catch((e) => onError((e as Error).message))
       .finally(() => setKeyBusy(false));
   };
@@ -90,9 +104,24 @@ export function PublicApiSettings({
     <div className="admin-invite">
       <h3>{t("account.apiKey")}</h3>
       <p className="muted small">{t("account.apiKeyHint")}</p>
-      {apiKey ? (
+      {newApiKey && (
         <>
-          <input readOnly value={apiKey} onClick={(e) => (e.target as HTMLInputElement).select()} />
+          {/* Sentence outside the mono box: .tfa-secret sets word-break:
+              break-all, which is right for an unbroken key and mangles prose. */}
+          <p className="muted small">{t("account.apiKeyOnceHint")}</p>
+          <p className="tfa-secret">{newApiKey}</p>
+        </>
+      )}
+      {keyHint ? (
+        <>
+          <p className="muted small">
+            {keyCreatedAt
+              ? t("account.apiKeyActiveOn", {
+                  hint: keyHint,
+                  date: formatDateWithYear(keyCreatedAt),
+                })
+              : t("account.apiKeyActive", { hint: keyHint })}
+          </p>
           <ActionBar variant="share">
             <Button disabled={keyBusy} variant="secondary" onClick={generateKey}>
               {t("settings.regenerateLink")}

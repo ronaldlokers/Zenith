@@ -78,6 +78,65 @@ describe("public v1 API", () => {
   });
 });
 
+describe("API key storage (#381)", () => {
+  it("never returns the key after generation, only a hint and a date", async () => {
+    const key = await apiKey();
+    const p = await (
+      await authedFetch(`${BASE}/api/profile`)
+    ).json<Record<string, unknown>>();
+    expect(p).not.toHaveProperty("api_key");
+    expect(p).not.toHaveProperty("api_key_hash");
+    expect(p.api_key_hint).toBe(key.slice(-4));
+    expect(p.api_key_created_at).toBeTruthy();
+  });
+
+  it("does not accept the stored digest as a bearer token", async () => {
+    const key = await apiKey();
+    const digest = [
+      ...new Uint8Array(
+        await crypto.subtle.digest("SHA-256", new TextEncoder().encode(key)),
+      ),
+    ]
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      headers: { Authorization: `Bearer ${digest}` },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("regenerating invalidates the previous key", async () => {
+    const first = await apiKey();
+    const second = await apiKey();
+    expect(second).not.toBe(first);
+    const stale = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      headers: { Authorization: `Bearer ${first}` },
+    });
+    expect(stale.status).toBe(401);
+    const fresh = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      headers: { Authorization: `Bearer ${second}` },
+    });
+    expect(fresh.status).toBe(200);
+  });
+
+  it("revoking clears the hint and stops the key working", async () => {
+    const key = await apiKey();
+    const del = await authedFetch(`${BASE}/api/profile/api-key`, {
+      method: "DELETE",
+    });
+    expect(del.status).toBe(204);
+    const p = await (
+      await authedFetch(`${BASE}/api/profile`)
+    ).json<Record<string, unknown>>();
+    expect(p.api_key_hint).toBeNull();
+    expect(p.api_key_created_at).toBeNull();
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    expect(res.status).toBe(401);
+  });
+});
+
 describe("webhooks", () => {
   it("creates (with a secret), lists, and deletes", async () => {
     const created = await authedFetch(`${BASE}/api/webhooks`, {
