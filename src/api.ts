@@ -30,6 +30,13 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
+  // Why an application ended (#381) — lands on its latest terminal transition,
+  // which the server resolves. A null reason clears both fields.
+  setOutcome: (id: number, reason: string | null, note: string | null) =>
+    request<{ outcome_reason: string | null; outcome_note: string | null }>(
+      `/api/applications/${id}/outcome`,
+      { method: "PUT", body: JSON.stringify({ reason, note }) },
+    ),
   // Mirror the UI language into the user row so the worker can localize the
   // content it generates (weekly digest). Fire-and-forget from the caller.
   setLocale: (locale: string) =>

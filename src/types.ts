@@ -11,6 +11,40 @@ export const STATUSES = [
 
 export type Status = (typeof STATUSES)[number];
 
+export const TERMINAL_STATUSES = ["rejected", "withdrawn", "ghosted"] as const;
+
+export type TerminalStatus = (typeof TERMINAL_STATUSES)[number];
+
+export function isTerminalStatus(s: string): s is TerminalStatus {
+  return (TERMINAL_STATUSES as readonly string[]).includes(s);
+}
+
+// Why an application ended (#381), scoped per terminal status: the options
+// have to make sense for the move that was just made, or "other" becomes the
+// only honest answer. Slugs are stored — the labels live in the locale files
+// under `outcome.reason.*`, so rewording never touches data.
+//
+// worker/index.ts validates a submitted reason against the list for that
+// transition's own to_status, and imports this table rather than keeping a
+// second copy: a drift between the two would be a silent validation bug.
+export const OUTCOME_REASONS: Record<TerminalStatus, readonly string[]> = {
+  rejected: [
+    "no_response",
+    "after_screening",
+    "after_interview",
+    "role_cancelled",
+    "other",
+  ],
+  withdrawn: [
+    "took_other_offer",
+    "comp_too_low",
+    "role_changed",
+    "bad_signal",
+    "other",
+  ],
+  ghosted: ["no_reply_after_applying", "went_quiet_mid_process", "other"],
+};
+
 // Role types are configurable (issue #45) — fetched from /api/role-types
 // rather than a fixed union, since the list can change without a deploy.
 export type RoleType = string;
@@ -58,6 +92,10 @@ export interface StatusHistoryRow {
   from_status: Status | null;
   to_status: Status;
   changed_at: string;
+  // Only ever set on a terminal transition (#381), and absent from the public
+  // share page's copy of this payload — the note is free text the user wrote.
+  outcome_reason?: string | null;
+  outcome_note?: string | null;
 }
 
 export interface Stats {

@@ -884,6 +884,34 @@
     "addOpen": "Toevoegen & openen",
     "add": "Toevoegen"
   },
+  "outcome": {
+    "title": "Waarom is dit gestopt?",
+    "lead": "Gemarkeerd als {{stage}}. Vastleggen waarom maakt van afgesloten sollicitaties iets waar je van leert.",
+    "note": "Notitie (optioneel)",
+    "notePlaceholder": "Iets wat het onthouden waard is",
+    "skip": "Overslaan",
+    "detailHeading": "Waarom het stopte",
+    "detailEmpty": "Geen reden vastgelegd",
+    "detailEdit": "Reden vastleggen",
+    "detailChange": "Wijzigen",
+    "reason": {
+      "no_response": "Geen reactie",
+      "after_screening": "Na een screeningsgesprek",
+      "after_interview": "Na een interview",
+      "role_cancelled": "Functie is geschrapt",
+      "took_other_offer": "Ander aanbod aangenomen",
+      "comp_too_low": "Arbeidsvoorwaarden te laag",
+      "role_changed": "Functie of scope veranderd",
+      "bad_signal": "Slecht signaal tijdens het proces",
+      "no_reply_after_applying": "Geen reactie na het solliciteren",
+      "went_quiet_mid_process": "Stil gevallen tijdens het proces",
+      "other": "Anders"
+    },
+    "insightsTitle": "Waarom sollicitaties stoppen",
+    "insightsEmpty": "Nog geen afgesloten sollicitaties.",
+    "insightsUnrecorded_one": "{{count}} afgesloten zonder vastgelegde reden",
+    "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden"
+  },
   "contacts": {
     "view": "Weergave mensen"
   },

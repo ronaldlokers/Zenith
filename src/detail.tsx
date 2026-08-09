@@ -14,6 +14,7 @@ import {
   ApplicationForm,
   Button,
   Chip,
+  OutcomeDialog,
   CoverLetterSection,
   AiKeyGate,
   Documents,
@@ -32,8 +33,10 @@ import type {
   PrepItem,
   RoleTypeDef,
   Status,
+  StatusHistoryRow,
+  TerminalStatus,
 } from "./types";
-import { STATUSES } from "./types";
+import { isTerminalStatus, STATUSES } from "./types";
 import { salaryResearchLinks } from "./salary-research";
 import { EditIcon, RemoveIcon } from "./icons";
 import {
@@ -63,6 +66,8 @@ export function ApplicationDetailModal({
   notify,
   onDelete,
   onStatus,
+  history,
+  onSaveOutcome,
   asPane,
 }: {
   application: Application;
@@ -76,6 +81,16 @@ export function ApplicationDetailModal({
   notify: (message: string, undo?: () => void) => void;
   onDelete: (resource: string, id: number, name: string) => void;
   onStatus: (id: number, status: Status) => void;
+  // Status history for this user, used only to read back the outcome recorded
+  // on this application's latest terminal transition (#381) — the reason
+  // lives on the transition, not the application row. Optional: a caller
+  // without stats loaded simply shows no outcome section.
+  history?: StatusHistoryRow[];
+  onSaveOutcome?: (
+    id: number,
+    reason: string | null,
+    note: string | null,
+  ) => void;
   // Split-pane mode (#131) — rendered inline in the Jobs sidebar on wide
   // desktop viewports instead of an overlay modal. Same content either
   // way; only the outer wrapper (backdrop, click-outside-to-close,
@@ -117,7 +132,23 @@ export function ApplicationDetailModal({
   // summary in the facts column refetches instead of going stale.
   const [activityKey, setActivityKey] = useState(0);
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
+  const [editingOutcome, setEditingOutcome] = useState(false);
   const a = application;
+
+  // The outcome lives on the latest terminal transition, which is also the
+  // row the endpoint writes to — so read it from the same place rather than
+  // from the application row. `history` arrives ordered by changed_at, and
+  // the last matching row is the current closure.
+  const outcomeStatus: TerminalStatus | null = isTerminalStatus(a.status)
+    ? a.status
+    : null;
+  const outcomeRow = outcomeStatus
+    ? [...(history ?? [])]
+        .reverse()
+        .find(
+          (r) => r.application_id === a.id && isTerminalStatus(r.to_status),
+        )
+    : undefined;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -215,6 +246,18 @@ export function ApplicationDetailModal({
         aria-modal={asPane ? undefined : true}
         aria-label={a.title}
       >
+        {editingOutcome && outcomeStatus && onSaveOutcome && (
+          <OutcomeDialog
+            status={outcomeStatus}
+            initialReason={outcomeRow?.outcome_reason ?? null}
+            initialNote={outcomeRow?.outcome_note ?? null}
+            onClose={() => setEditingOutcome(false)}
+            onSave={(reason, note) => {
+              onSaveOutcome(a.id, reason, note);
+              setEditingOutcome(false);
+            }}
+          />
+        )}
         <div className="detail-head">
           <div className="detail-head-main">
             <h2>{a.title}</h2>
@@ -333,6 +376,29 @@ export function ApplicationDetailModal({
                   <>
                     <dt>{t("forms.appliedOn")}</dt>
                     <dd>{formatDate(a.applied_at)}</dd>
+                  </>
+                )}
+                {/* Why it ended (#381) — sits in the facts list because that
+                    is what it is. Only for a closed application, and only
+                    when the caller passed history to read it from. */}
+                {outcomeStatus && onSaveOutcome && (
+                  <>
+                    <dt>{t("outcome.detailHeading")}</dt>
+                    <dd className="detail-outcome">
+                      <span className={outcomeRow?.outcome_reason ? "" : "muted"}>
+                        {outcomeRow?.outcome_reason
+                          ? t(`outcome.reason.${outcomeRow.outcome_reason}`)
+                          : t("outcome.detailEmpty")}
+                        {outcomeRow?.outcome_note
+                          ? ` — ${outcomeRow.outcome_note}`
+                          : ""}
+                      </span>
+                      <Button variant="link" onClick={() => setEditingOutcome(true)}>
+                        {outcomeRow?.outcome_reason
+                          ? t("outcome.detailChange")
+                          : t("outcome.detailEdit")}
+                      </Button>
+                    </dd>
                   </>
                 )}
                 {a.salary_range && (

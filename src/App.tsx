@@ -50,6 +50,7 @@ import {
   Button,
   CommandPalette,
   OnboardingChecklist,
+  OutcomeDialog,
   PillTabs,
   QuickAddDialog,
   Skeleton,
@@ -106,6 +107,9 @@ export default function App() {
     reload,
     deleteWithUndo,
     setStatus,
+    outcomePrompt,
+    setOutcomePrompt,
+    saveOutcome,
     visibleApps,
     activeApps,
     visibleCompanies,
@@ -223,6 +227,16 @@ export default function App() {
             setApplications((prev) => [...prev, a]);
             if (open) navigate(`/board/${a.id}`);
             void reload();
+          }}
+        />
+      )}
+      {outcomePrompt && (
+        <OutcomeDialog
+          status={outcomePrompt.status}
+          onClose={() => setOutcomePrompt(null)}
+          onSave={(reason, note) => {
+            void saveOutcome(outcomePrompt.id, reason, note);
+            setOutcomePrompt(null);
           }}
         />
       )}
@@ -385,6 +399,8 @@ export default function App() {
                   notify={notify}
                   onDelete={deleteWithUndo}
                   onStatus={setStatus}
+                  history={statsData?.history ?? []}
+                  onSaveOutcome={saveOutcome}
                   asPane
                 />
               </section>
@@ -403,6 +419,7 @@ export default function App() {
                 initialQuery={jumpQuery}
                 onQueryConsumed={() => setJumpQuery("")}
                 history={statsData?.history ?? []}
+                onSaveOutcome={saveOutcome}
                 lastInteractions={statsData?.interactions ?? []}
                 onOpenJob={(id: number | null) =>
                   navigate(id ? `/board/${id}` : "/board")

@@ -884,6 +884,34 @@
     "addOpen": "Add & open",
     "add": "Add"
   },
+  "outcome": {
+    "title": "Why did this end?",
+    "lead": "Marked as {{stage}}. Recording why turns dead applications into something you can learn from.",
+    "note": "Note (optional)",
+    "notePlaceholder": "Anything worth remembering",
+    "skip": "Skip",
+    "detailHeading": "Why it ended",
+    "detailEmpty": "No reason recorded",
+    "detailEdit": "Record why",
+    "detailChange": "Change",
+    "reason": {
+      "no_response": "No response",
+      "after_screening": "After a screening call",
+      "after_interview": "After an interview",
+      "role_cancelled": "Role was cancelled",
+      "took_other_offer": "Took another offer",
+      "comp_too_low": "Compensation too low",
+      "role_changed": "Role or scope changed",
+      "bad_signal": "Bad signal during the process",
+      "no_reply_after_applying": "No reply after applying",
+      "went_quiet_mid_process": "Went quiet mid-process",
+      "other": "Other"
+    },
+    "insightsTitle": "Why applications end",
+    "insightsEmpty": "No closed applications yet.",
+    "insightsUnrecorded_one": "{{count}} closed with no reason recorded",
+    "insightsUnrecorded_other": "{{count}} closed with no reason recorded"
+  },
   "contacts": {
     "view": "People view"
   },

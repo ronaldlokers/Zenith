@@ -125,6 +125,8 @@ function BoardTab({
   notify,
   onDelete,
   onStatus,
+  history,
+  onSaveOutcome,
   initialDetailId,
   onDetailIdChange,
 }: CrudTabProps & {
@@ -133,6 +135,10 @@ function BoardTab({
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
+  // Passed straight through to the detail pane, which reads the outcome
+  // recorded on the latest terminal transition off it (#381).
+  history: StatusHistoryRow[];
+  onSaveOutcome: (id: number, reason: string | null, note: string | null) => void;
   attention?: Map<number, Urgency>;
   sort: BoardSort;
   initialDetailId?: number | null;
@@ -297,6 +303,8 @@ function BoardTab({
           notify={notify}
           onDelete={onDelete}
           onStatus={onStatus}
+          history={history}
+          onSaveOutcome={onSaveOutcome}
         />
       )}
     </>
@@ -317,6 +325,7 @@ export function PipelineTab({
   initialQuery,
   onQueryConsumed,
   history,
+  onSaveOutcome,
   onOpenJob,
   onOpenQuickAdd,
   onOpenSampleData,
@@ -329,6 +338,7 @@ export function PipelineTab({
   initialQuery?: string;
   onQueryConsumed?: () => void;
   history: StatusHistoryRow[];
+  onSaveOutcome: (id: number, reason: string | null, note: string | null) => void;
   lastInteractions: { application_id: number; last_at: string }[];
   onOpenJob: (id: number | null) => void;
   onOpenQuickAdd: () => void;
@@ -740,6 +750,8 @@ export function PipelineTab({
         notify={notify}
         onDelete={onDelete}
         onStatus={onStatus}
+        history={history}
+        onSaveOutcome={onSaveOutcome}
         initialDetailId={null}
         onDetailIdChange={onOpenJob}
       />
