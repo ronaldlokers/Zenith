@@ -17,6 +17,11 @@ import { registerPushRoutes, sendPushToUser } from "./push.js";
 import { resolveProvider } from "./email/index.js";
 import { buildDigestEmail, buildReminderEmail, type ReminderItem } from "./email/messages.js";
 import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
+// The one place the worker reaches into src/: the outcome vocabulary has to be
+// identical on both sides (the client renders it, the worker validates against
+// it), and a second copy would drift into a silent validation bug. Type-only
+// plus a const table — no DOM, nothing browser-specific comes with it.
+import { OUTCOME_REASONS, type TerminalStatus } from "../src/types.js";
 
 export type AppEnv = {
   Bindings: Env;
@@ -676,6 +681,45 @@ app.patch("/api/applications/:id/status", async (c) => {
   return c.json(result);
 });
 
+// Why an application ended (#381). The reason belongs to the transition, so
+// this writes onto the status_history row rather than the application: an
+// application reopened and closed again keeps both outcomes, each bound to
+// the stage it happened at.
+//
+// One route serves both the capture dialog (which fires straight after the
+// move) and a later edit from the detail page, so it resolves the target row
+// itself — the latest terminal transition for this application. Changing
+// status twice while the dialog is open therefore lands the reason on the
+// newer transition; accepted over threading a row id through every
+// status-change response, since the window is a user racing themselves.
+app.put("/api/applications/:id/outcome", async (c) => {
+  const body = await c.req.json<{ reason?: string | null; note?: string | null }>();
+  const userId = c.get("userId");
+  const row = await c.env.DB.prepare(
+    `SELECT id, to_status FROM status_history
+     WHERE application_id = ? AND user_id = ? AND to_status IN ('rejected', 'withdrawn', 'ghosted')
+     ORDER BY changed_at DESC, id DESC LIMIT 1`,
+  )
+    .bind(c.req.param("id"), userId)
+    .first<{ id: number; to_status: TerminalStatus }>();
+  if (!row) return c.json({ error: "not found" }, 404);
+
+  const reason = body.reason?.trim() || null;
+  // Validated against the vocabulary for this row's own to_status, not the
+  // union of all three: comp_too_low is not a thing that happens to a
+  // ghosted application, and storing it would poison the breakdown.
+  if (reason && !OUTCOME_REASONS[row.to_status].includes(reason)) {
+    return c.json({ error: `reason is not valid for ${row.to_status}` }, 400);
+  }
+  const note = reason ? body.note?.trim() || null : null;
+  await c.env.DB.prepare(
+    "UPDATE status_history SET outcome_reason = ?, outcome_note = ? WHERE id = ?",
+  )
+    .bind(reason, note, row.id)
+    .run();
+  return c.json({ outcome_reason: reason, outcome_note: note });
+});
+
 app.delete("/api/applications/:id", async (c) => {
   await c.env.DB.prepare("DELETE FROM applications WHERE id = ? AND user_id = ?")
     .bind(c.req.param("id"), c.get("userId"))
@@ -1197,7 +1241,11 @@ app.get("/api/stats", async (c) => {
       .bind(userId)
       .all(),
     c.env.DB.prepare(
-      `SELECT application_id, from_status, to_status, changed_at
+      // outcome_reason/outcome_note ride along here (#381) so Insights can
+      // build its breakdown client-side, like every other insight on that
+      // tab — no second endpoint. The share page's copy of this query
+      // deliberately takes neither; see it below.
+      `SELECT application_id, from_status, to_status, changed_at, outcome_reason, outcome_note
        FROM status_history WHERE user_id = ? ORDER BY application_id, changed_at, id`,
     )
       .bind(userId)
@@ -1364,6 +1412,9 @@ app.get("/shared/:token", async (c) => {
       .bind(profile.user_id)
       .all<{ id: number; status: string; applied_at: string | null; created_at: string }>(),
     c.env.DB.prepare(
+      // Deliberately without outcome_reason/outcome_note (#381), unlike the
+      // in-app stats query: the note is free text the user wrote about a
+      // company, and this page is aggregate-only for anyone with the link.
       `SELECT application_id, from_status, to_status, changed_at
        FROM status_history WHERE user_id = ? ORDER BY application_id, changed_at, id`,
     )

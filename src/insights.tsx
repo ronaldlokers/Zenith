@@ -11,6 +11,7 @@ import {
   FUNNEL_STAGES,
   funnelConversions,
   funnelReachCounts,
+  outcomeBreakdown,
   responseRate,
 } from "./stats";
 import {
@@ -67,6 +68,8 @@ export function InsightsTab({
   const weekMax = Math.max(1, ...mom.weeks.map((w) => w.count));
   const pipe = computePipelineMomentum(history);
   const t2o = medianTimeToOffer(history);
+  const outcomes = outcomeBreakdown(history);
+  const outcomeMax = Math.max(1, ...outcomes.counts.map((o) => o.count));
   const liveOffers = applications.filter((a) => a.status === "offer");
   const comps = liveOffers
     .map((o) => totalComp(o))
@@ -189,6 +192,38 @@ export function InsightsTab({
           )}
         </DashCard>
       </div>
+
+      {/* Full width rather than a third cell in .dash-cols: that grid is two
+          columns at ≥900px, so a third card would sit lopsided in the left
+          one. A reason label is also a phrase, and wants the room. */}
+      <DashCard heading={t("outcome.insightsTitle")}>
+        {outcomes.total === 0 ? (
+          <p className="muted small" style={{ margin: 0 }}>
+            {t("outcome.insightsEmpty")}
+          </p>
+        ) : (
+          <>
+            <div className="dash-funnel dash-outcome">
+              {outcomes.counts.map(({ reason, count }) => (
+                <div className="dash-fn" key={reason}>
+                  <span className="dash-fl">{t(`outcome.reason.${reason}`)}</span>
+                  <span className="dash-fbar">
+                    <i style={{ width: `${(count / outcomeMax) * 100}%` }} />
+                  </span>
+                  <span className="dash-fn-n">{count}</span>
+                </div>
+              ))}
+            </div>
+            {outcomes.unrecorded > 0 && (
+              <p className="muted small dash-outcome-rest">
+                {t("outcome.insightsUnrecorded", {
+                  count: outcomes.unrecorded,
+                })}
+              </p>
+            )}
+          </>
+        )}
+      </DashCard>
 
       <Button
         variant="secondary"
