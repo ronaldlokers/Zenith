@@ -63,14 +63,18 @@ const config = JSON.parse(stripComments(readFileSync(CONFIG, "utf8"))) as {
 };
 
 describe("asset routing", () => {
-  it("sends the document through the Worker so it gets the headers", () => {
+  it("sends every request through the Worker so all of it gets the headers", () => {
     const first = config.assets?.run_worker_first;
     expect(first, "no run_worker_first: / would bypass the Worker").toBeDefined();
-    const covered = first === true || (Array.isArray(first) && first.includes("/"));
+    // Specifically not `includes("/")`. The array form is an allowlist, not
+    // an addition: ["/"] sends the root to the Worker and takes every client
+    // route off it, which moves the gap instead of closing it. That was
+    // shipped to a preview deployment and measured before this was written —
+    // / gained the headers on exactly the deploy /board lost them.
     expect(
-      covered,
-      "run_worker_first must cover \"/\", or the root document is served " +
-        "with no Content-Security-Policy and no security headers",
+      first,
+      "run_worker_first must be true; an array is an allowlist and would " +
+        "leave every unlisted path served with no security headers",
     ).toBe(true);
   });
 
