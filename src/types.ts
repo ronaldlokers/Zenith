@@ -419,6 +419,8 @@ export interface TabProps {
 }
 
 export interface CrudTabProps extends TabProps {
-  notify: (message: string, undo?: () => void) => void;
+  // The third argument names the undo action: most toasts say "Undo", but a
+  // view someone landed in says how to get back ("Back to live").
+  notify: (message: string, undo?: () => void, label?: string) => void;
   onDelete: (resource: string, id: number, name: string) => void;
 }

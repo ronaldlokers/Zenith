@@ -5,6 +5,7 @@ import { api } from "./api";
 import { type Profile, type Status } from "./types";
 import {
   AdminIcon,
+  ArchiveIcon,
   ErrorIcon,
   NavCvIcon,
   NavInsightsIcon,
@@ -139,6 +140,10 @@ export default function App() {
       setMenuOpen(false);
     },
     onToggleMenu: () => setMenuOpen((v) => !v),
+    onShowClosed: () => {
+      setMenuOpen(false);
+      navigate("/board", { state: { showClosed: true } });
+    },
   });
 
   useEffect(() => {
@@ -338,11 +343,23 @@ export default function App() {
               icon: <span aria-hidden="true">+</span>,
               active: false,
             },
+            {
+              // There is no Archive screen (#535): a closed application is
+              // still in the pipeline, it has just stopped moving. This opens
+              // the closed stages on the board instead of a separate list.
+              id: "closed",
+              label: t("menu.closedApplications"),
+              shortcut: "a",
+              icon: <ArchiveIcon />,
+              active: false,
+            },
           ]}
           onSelect={(id) => {
             setMenuOpen(false);
             if (id === "settings") return setTab("settings");
             if (id === "quick-add") return setShowQuickAdd(true);
+            if (id === "closed")
+              return navigate("/board", { state: { showClosed: true } });
             const target = navItems.find((n) => n.data === id);
             if (target) setTab(target.to);
           }}

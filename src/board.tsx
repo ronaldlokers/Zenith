@@ -3,6 +3,7 @@
 // ring, filters, and drag-to-restage. Only PipelineTab is public.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import type {
   Application,
@@ -570,12 +571,16 @@ export function PipelineTab({
   const [folded, setFolded] = useState<Set<BoardRail>>(
     () => new Set(DEFAULT_FOLDED),
   );
+  // Set once "Closed applications" has rearranged the board: the profile
+  // read resolves after it, and without this it would put the live stages
+  // straight back.
+  const overridden = useRef(false);
   useEffect(() => {
     let live = true;
     api
       .profile()
       .then((p) => {
-        if (!live) return;
+        if (!live || overridden.current) return;
         // NULL means never set, so the defaults apply; the empty string
         // means someone deliberately unfolded everything.
         if (p.board_folded == null) return;
@@ -589,14 +594,38 @@ export function PipelineTab({
       live = false;
     };
   }, []);
+  const applyFold = useCallback(
+    (next: Set<BoardRail>) => {
+      overridden.current = true;
+      setFolded(next);
+      api
+        .setBoardFolded(BOARD_RAILS.filter((r) => next.has(r)))
+        .catch((e) => onError((e as Error).message));
+    },
+    [onError],
+  );
   const toggleFold = (rail: BoardRail) => {
     const next = new Set(folded);
     if (!next.delete(rail)) next.add(rail);
-    setFolded(next);
-    api
-      .setBoardFolded(BOARD_RAILS.filter((r) => next.has(r)))
-      .catch((e) => onError((e as Error).message));
+    applyFold(next);
   };
+
+  // "Closed applications" from the menu (A) — there is no Archive screen, so
+  // it folds the live stages and opens the closed ones on the board itself.
+  // The toast offers the way back, because this is a view someone lands in
+  // and has to be able to leave without knowing what was folded before.
+  const navigate = useNavigate();
+  const showClosed = (useLocation().state as { showClosed?: boolean } | null)
+    ?.showClosed;
+  useEffect(() => {
+    if (!showClosed) return;
+    const before = new Set(folded);
+    applyFold(new Set<BoardRail>(PIPELINE));
+    notify(t("board.showingClosed"), () => applyFold(before), t("board.backToLive"));
+    // Consume it, or every later visit to the board reopens the closed view.
+    navigate("/board", { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showClosed]);
 
   // One-shot: consume the jump query then clear it upstream, so a single
   // Calendar jump doesn't re-inject the search on every later visit (#314).

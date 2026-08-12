@@ -807,7 +807,9 @@
     "railArchived": "Gearchiveerd",
     "addHere": "+ Sollicitatie toevoegen",
     "foldRail": "{{stage}} inklappen",
-    "unfoldRail": "{{stage}} openen, {{count}} sollicitaties"
+    "unfoldRail": "{{stage}} openen, {{count}} sollicitaties",
+    "showingClosed": "Gesloten sollicitaties worden getoond",
+    "backToLive": "Terug naar actief"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
@@ -919,7 +921,8 @@
   },
   "menu": {
     "label": "Bestemmingen",
-    "open": "Menu openen"
+    "open": "Menu openen",
+    "closedApplications": "Gesloten sollicitaties"
   },
   "contacts": {
     "view": "Weergave mensen",

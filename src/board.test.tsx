@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
 import type { Application, Profile, Status } from "./types";
 import { PipelineTab } from "./board";
@@ -71,9 +72,15 @@ function app(over: Partial<Application> & { id: number }): Application {
 
 function renderBoard(
   applications: Application[],
-  over: { onOpenQuickAdd?: (stage?: Status) => void } = {},
+  over: {
+    onOpenQuickAdd?: (stage?: Status) => void;
+    notify?: (m: string, undo?: () => void, label?: string) => void;
+    // Router state, so the "Closed applications" entry point can be exercised.
+    state?: unknown;
+  } = {},
 ) {
   return render(
+    <MemoryRouter initialEntries={[{ pathname: "/board", state: over.state }]}>
     <PipelineTab
       applications={applications}
       companies={[]}
@@ -81,7 +88,7 @@ function renderBoard(
       roleTypes={[]}
       onChanged={() => Promise.resolve()}
       onError={() => {}}
-      notify={() => {}}
+      notify={over.notify ?? (() => {})}
       onDelete={() => {}}
       onStatus={() => {}}
       lastInteractions={[]}
@@ -90,7 +97,8 @@ function renderBoard(
       onOpenJob={() => {}}
       onOpenQuickAdd={over.onOpenQuickAdd ?? (() => {})}
       onOpenSampleData={() => {}}
-    />,
+    />
+    </MemoryRouter>,
   );
 }
 
@@ -195,6 +203,33 @@ describe("board rails", () => {
     } finally {
       window.matchMedia = real;
     }
+  });
+
+  test("'Closed applications' folds the live stages and opens the closed ones", async () => {
+    // There is no Archive screen: this entry point rearranges the board
+    // instead, and the toast has to offer the way back — someone who lands
+    // here has no way of knowing what was folded before.
+    profileFolded = null;
+    savedFolded = null;
+    const toasts: { message: string; label?: string; undo?: () => void }[] = [];
+    renderBoard([], {
+      state: { showClosed: true },
+      notify: (message, undo, label) => toasts.push({ message, undo, label }),
+    });
+    await waitFor(() => expect(headerFor("Rejected")).toBeTruthy());
+    expect(headerFor("Archived")).toBeTruthy();
+    expect(railFor("Interested")).toBeTruthy();
+    expect(savedFolded).toEqual([
+      "interested",
+      "applied",
+      "screening",
+      "interview",
+      "offer",
+    ]);
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].label).toBe("Back to live");
+    toasts[0].undo!();
+    await waitFor(() => expect(headerFor("Interested")).toBeTruthy());
   });
 
   test("the add block opens on the stage it sits in, and closed stages get none", async () => {

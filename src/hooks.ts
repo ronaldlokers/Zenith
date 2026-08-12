@@ -149,6 +149,7 @@ export function useGlobalShortcuts(handlers: {
   onGoToIndex?: (index: number) => void;
   onOpenSettings?: () => void;
   onToggleMenu?: () => void;
+  onShowClosed?: () => void;
 }) {
   // Keep the listener bound once (like the original App effect): stash the
   // latest handlers in a ref so fresh closures from each render don't force
@@ -184,6 +185,11 @@ export function useGlobalShortcuts(handlers: {
           if (e.key === "," && ref.current.onOpenSettings) {
             e.preventDefault();
             ref.current.onOpenSettings();
+            return;
+          }
+          if (e.key === "a" && ref.current.onShowClosed) {
+            e.preventDefault();
+            ref.current.onShowClosed();
             return;
           }
           if (e.key === "m" && ref.current.onToggleMenu) {
