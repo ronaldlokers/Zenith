@@ -769,6 +769,7 @@
     "showingClosed": "Gesloten sollicitaties worden getoond",
     "pin": "Vastzetten",
     "unpin": "Losmaken",
+    "nothingPinned": "Nog niets vastgezet. Zet een sollicitatie vast via het \u22ef-menu om hem hier te houden.",
     "showingPinned": "Vastgezette sollicitaties",
     "showAll": "Alles tonen",
     "backToLive": "Terug naar actief",

@@ -39,7 +39,7 @@ import {
 import { Dialog } from "./ui";
 import { rowActivate } from "./hooks";
 import { ApplicationDetailModal } from "./detail";
-import { ActionBar, Button, CardMenu, StarRating } from "./components";
+import { ActionBar, Button, CardMenu, EmptyState, StarRating } from "./components";
 
 // A stable empty set, so the narrow board does not allocate one per render
 // and re-run everything downstream of it.
@@ -149,6 +149,7 @@ function BoardCard({
 }
 function BoardTab({
   applications,
+  pinnedOnly,
   attention,
   sort,
   companies,
@@ -169,6 +170,8 @@ function BoardTab({
   showAddBlocks,
 }: CrudTabProps & {
   applications: Application[];
+  /** True when the bottom bar's Pinned slot is filtering the board. */
+  pinnedOnly: boolean;
   companies: Company[];
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
@@ -400,6 +403,15 @@ function BoardTab({
           </button>
         ))}
       </div>
+    )}
+    {pinnedOnly && applications.length === 0 && (
+      /* Pressing Pinned with nothing pinned rendered eight empty columns and
+         a toast, which reads as a broken board rather than an empty set.
+         Says where pins come from, since the control that makes one is
+         inside a menu. */
+      <EmptyState className="board-empty-pinned">
+        {t("board.nothingPinned")}
+      </EmptyState>
     )}
     <div
       className="board"
@@ -1043,6 +1055,7 @@ export function PipelineTab({
 
       <BoardTab
         applications={filtered}
+        pinnedOnly={pinnedOnly}
         attention={attention}
         sort={sort}
         companies={companies}

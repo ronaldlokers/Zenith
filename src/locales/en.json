@@ -769,6 +769,7 @@
     "showingClosed": "Showing closed applications",
     "pin": "Pin",
     "unpin": "Unpin",
+    "nothingPinned": "Nothing pinned yet. Pin an application from its \u22ef menu to keep it here.",
     "showingPinned": "Showing pinned applications",
     "showAll": "Show all",
     "backToLive": "Back to live",
