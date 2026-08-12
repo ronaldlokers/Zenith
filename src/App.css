@@ -5,7 +5,15 @@
    3. round-3 component bands (inline editors, feedback, first-run,
       confirm dialog)
    4. control-normalization layer — one recipe per control family; must
-      stay after everything it normalizes
+      stay after everything it normalizes.
+
+      Read this one with care: the band has drifted. Of the ~100 rules
+      between its header and band 5, eight are control recipes and the rest
+      are ordinary view CSS that accumulated here over time. The boundary
+      the rule below describes is therefore not where the header sits — new
+      view CSS placed in this region is following the room's actual
+      contents, not breaking the band. What must not move is the order of
+      the band markers themselves, which test-node/css-bands.spec.ts pins.
    5. cascade repairs — mobile touch-target and hover overrides that must
       beat the layer on source order
    6. print
