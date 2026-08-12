@@ -3675,10 +3675,18 @@ summary.bcol-head::after {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* The segments carry a max-content floor, so the strip has a minimum width
+     of its own — it must be allowed to scroll rather than force the column
+     it sits in to grow. */
+  min-width: 0;
 }
 .today-ascent li {
   flex-basis: 0;
-  min-width: 3.6rem;
+  /* At least as wide as its own label. Segments are sized by how many
+     applications each stage holds, so a short stage can be handed less room
+     than its name needs — which is how "Gesolliciteerd" came to overlap
+     "Screening". The proportions still decide the space beyond this floor. */
+  min-width: max-content;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -3715,6 +3723,20 @@ summary.bcol-head::after {
 @media (max-width: 600px) {
   .today-ascent {
     gap: 0.55rem;
+  }
+
+  /* Five stage names side by side do not fit a phone whatever the gutter,
+     and every way of making them fit is worse than scrolling: breaking
+     inside a word is unreadable, and dropping the label takes away the
+     colour-blind fallback. So the strip scrolls, the same gesture the board
+     below it already uses at this width. */
+  .today-ascent {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .today-ascent::-webkit-scrollbar {
+    display: none;
   }
   .today-ascent-l {
     letter-spacing: 0.01em;
