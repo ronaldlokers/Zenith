@@ -891,6 +891,15 @@ const EXPORT_TABLES = [
   "feed_role_keywords",
   "feed_items",
   "feed_item_status",
+  // Added after a coverage test found them missing: all six hold user data
+  // and none of them were in the backup. journal_entries is prose the user
+  // wrote; the rest is configuration they would have to rebuild by hand.
+  "journal_entries",
+  "saved_views",
+  "webhooks",
+  "feed_ats_boards",
+  "feed_company_blocklist",
+  "notifications",
 ] as const;
 
 // feed_items is a shared pool (no user_id — see migration 0024), so it's
