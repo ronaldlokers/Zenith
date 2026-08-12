@@ -61,11 +61,10 @@ import { useAppData, useToasts } from "./app-data";
 import {
   useGlobalShortcuts,
   useNotificationNavigation,
-  useScrollActiveTabIntoView,
   useScrolled,
   useViewportBottomOffset,
 } from "./hooks";
-import { MobileTabs, type NavItem, Sidebar, ToastStack, TopBar } from "./shell";
+import { BottomBar, type NavItem, Sidebar, ToastStack, TopBar } from "./shell";
 
 export default function App() {
   const { t } = useTranslation();
@@ -120,7 +119,6 @@ export default function App() {
   } = useAppData(notify, navigate, t);
 
   const scrolled = useScrolled();
-  const tabsRef = useScrollActiveTabIntoView(tab);
   useViewportBottomOffset();
   useNotificationNavigation();
   useGlobalShortcuts({
@@ -371,13 +369,6 @@ export default function App() {
           onQuickAdd={() => setShowQuickAdd(true)}
           onOpenMenu={() => setMenuOpen(true)}
         />
-        <MobileTabs
-          navItems={navItems}
-          settingsActive={tab === "settings"}
-          onNavigate={setTab}
-          onOpenSettings={() => setTab("settings")}
-          navRef={tabsRef}
-        />
 
       {error && (
         <p className="error">
@@ -551,6 +542,10 @@ export default function App() {
       </main>
       </div>
 
+      <BottomBar
+        onSearch={() => setShowPalette(true)}
+        onQuickAdd={() => setShowQuickAdd(true)}
+      />
       <ConfirmHost />
       <ToastStack toasts={toasts} onDismiss={dismiss} />
     </div>

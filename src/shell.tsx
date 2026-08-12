@@ -176,45 +176,44 @@ export function TopBar({
   );
 }
 
-// The horizontal tab bar (sub-900px). navRef is forwarded so App's
-// scroll-active-tab-into-view hook can reach the scrolling element.
-export function MobileTabs({
-  navItems,
-  settingsActive,
-  onNavigate,
-  onOpenSettings,
-  navRef,
+// The persistent bottom bar (#535 shell). Three slots, always reachable,
+// never scrolling away — the one piece of chrome that survives the rail's
+// removal.
+//
+// The spec called these Pinned · Search · Notifications, borrowed from the
+// reference. Zenith has no pinning, so the third slot is what the app
+// actually has and what it is most often reached for: adding an application.
+// Naming a slot after a feature that does not exist would have been the
+// prototype leaking into the product.
+export function BottomBar({
+  onSearch,
+  onQuickAdd,
 }: {
-  navItems: NavItem[];
-  settingsActive: boolean;
-  onNavigate: (to: Tab) => void;
-  onOpenSettings: () => void;
-  navRef: React.Ref<HTMLElement>;
+  onSearch: () => void;
+  onQuickAdd: () => void;
 }) {
   const { t } = useTranslation();
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
   return (
-    <nav className="tabs" ref={navRef}>
-      {navItems.map((n) => (
-        <button
-          key={n.data}
-          className={n.active ? "active" : ""}
-          aria-current={n.active ? "page" : undefined}
-          data-tab={n.data}
-          onClick={() => onNavigate(n.to)}
-        >
-          {n.icon}
-          <span className="tab-label">{n.label}</span>
-        </button>
-      ))}
-      <button
-        className={`tab-settings${settingsActive ? " active" : ""}`}
-        data-tab="settings"
-        aria-current={settingsActive ? "page" : undefined}
-        onClick={onOpenSettings}
-      >
-        <SettingsIcon />
-        <span className="tab-label">{t("settings.title")}</span>
+    <nav className="bottombar" aria-label={t("menu.label")}>
+      <button className="bottombar-slot" onClick={onQuickAdd}>
+        <span aria-hidden="true" className="bottombar-glyph">
+          +
+        </span>
+        <span className="bottombar-label">{t("quickAdd.add")}</span>
+        <kbd className="bottombar-key">n</kbd>
       </button>
+      <button className="bottombar-slot mid" onClick={onSearch}>
+        <SearchIcon />
+        <span className="bottombar-label">{t("header.search")}</span>
+        <kbd className="bottombar-key">{isMac ? "\u2318K" : "Ctrl+K"}</kbd>
+      </button>
+      {/* The real bell, not a link to it: it owns its own unread count and
+          popover, and duplicating either here would give two sources of
+          truth for whether you have anything waiting. */}
+      <span className="bottombar-slot end">
+        <NotificationBell />
+      </span>
     </nav>
   );
 }
