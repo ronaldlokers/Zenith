@@ -184,7 +184,7 @@
       "admin": "Beheer",
       "feed": "Feed-bronnen"
     },
-    "keyShortcuts": "Enkele-toets sneltoetsen (n, /)",
+    "keyShortcuts": "Sneltoetsen van één toets (zonder modifier)",
     "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
     "timezone": "Tijdzone",
     "timezoneNow": "{{time}} op dit moment",

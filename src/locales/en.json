@@ -184,7 +184,7 @@
       "admin": "Admin",
       "feed": "Feed sources"
     },
-    "keyShortcuts": "Single-key shortcuts (n, /)",
+    "keyShortcuts": "Single-key shortcuts (no modifier)",
     "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
     "timezone": "Time zone",
     "timezoneNow": "{{time}} right now",

@@ -23,6 +23,7 @@ function handlers() {
     onOpenSettings: vi.fn(),
     onToggleMenu: vi.fn(),
     onShowClosed: vi.fn(),
+    onShowPinned: vi.fn(),
   };
 }
 
@@ -49,6 +50,37 @@ describe("global shortcuts", () => {
     press("m");
     expect(h.onOpenSettings).toHaveBeenCalledTimes(1);
     expect(h.onToggleMenu).toHaveBeenCalledTimes(1);
+  });
+
+  test("p filters the board to what is pinned", () => {
+    // The bottom bar's first slot prints a "p" keycap. A keycap that answers
+    // to nothing is worse than no keycap — it is the reason the notification
+    // slot deliberately has none — so the key and the print have to stay
+    // together.
+    const h = handlers();
+    renderHook(() => useGlobalShortcuts(h));
+    press("p");
+    expect(h.onShowPinned).toHaveBeenCalledTimes(1);
+  });
+
+  test("p obeys the single-key setting, like every other bare key", () => {
+    // WCAG 2.1.4: a bare letter that acts is a hazard for speech input and
+    // single-switch users, so the whole class is switchable in settings.
+    localStorage.setItem(KEY_SHORTCUTS_KEY, "off");
+    const h = handlers();
+    renderHook(() => useGlobalShortcuts(h));
+    press("p");
+    expect(h.onShowPinned).not.toHaveBeenCalled();
+  });
+
+  test("p does nothing while typing", () => {
+    const input = document.createElement("input");
+    document.body.append(input);
+    input.focus();
+    const h = handlers();
+    renderHook(() => useGlobalShortcuts(h));
+    press("p");
+    expect(h.onShowPinned).not.toHaveBeenCalled();
   });
 
   test("c opens the closed applications, and it is not the feed's a", () => {
