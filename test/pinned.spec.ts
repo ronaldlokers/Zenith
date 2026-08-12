@@ -79,6 +79,35 @@ describe("pinning", () => {
     expect(row?.pinned_at, "it wrote to another user's row").toBeNull();
   });
 
+  it("pins as many as you like, and unpinning one leaves the rest", async () => {
+    // There is no cap, deliberately: pinned_at is a per-row toggle, and the
+    // bar's count is just how many carry one. A limit would need a rule
+    // about which pin to evict, and "the handful you are working" is the
+    // user's judgement rather than a number this app should pick.
+    const ids = [
+      await seedApp("First"),
+      await seedApp("Second"),
+      await seedApp("Third"),
+    ];
+    for (const id of ids) expect((await pin(id)).status).toBe(200);
+
+    // Scoped to the rows this test made: storage is shared within a spec
+    // file, and an earlier test here leaves one pinned on purpose.
+    const list = `(${ids.join(",")})`;
+    const all = await env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM applications
+       WHERE pinned_at IS NOT NULL AND id IN ${list}`,
+    ).first<{ n: number }>();
+    expect(all?.n).toBe(3);
+
+    await unpin(ids[1]);
+    const left = await env.DB.prepare(
+      `SELECT id FROM applications
+       WHERE pinned_at IS NOT NULL AND id IN ${list} ORDER BY id`,
+    ).all<{ id: number }>();
+    expect(left.results.map((r) => r.id)).toEqual([ids[0], ids[2]]);
+  });
+
   it("is carried by the export, so a pin survives a restore", async () => {
     const id = await seedApp("Exported pinned");
     await pin(id);
