@@ -94,7 +94,7 @@ export function TailorPanel({
   };
 
   return (
-    <section className="cv-tailor">
+    <section className="cv-tailor" id="cv-tailor">
       <h3>{t("cv.tailorTitle")}</h3>
       <p className="muted small">{t("cv.tailorHint")}</p>
       <AiKeyGate>

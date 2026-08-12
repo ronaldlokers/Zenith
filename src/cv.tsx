@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { api } from "./api";
 import { Button, Skeleton } from "./components";
-import { PrintIcon } from "./icons";
 import type {
   CvSnapshotData,
   CvVersion,
@@ -280,20 +279,28 @@ export function CVTab({
             >
               {t("cv.editBelow")}
             </Button>
+            {/* The mockup's third plate action. It was only reachable by
+                scrolling to find it. */}
+            <Button
+              variant="secondary"
+              onClick={() =>
+                document
+                  .getElementById("cv-tailor")
+                  ?.scrollIntoView({ block: "start" })
+              }
+            >
+              {t("cv.matchPosting")}
+            </Button>
           </div>
         </div>
 
-        <div className="cv-tools cv-tools-right">
-          <button
-            type="button"
-            className="cv-tool"
-            title={t("cv.downloadPdf")}
-            aria-label={t("cv.downloadPdf")}
-            onClick={downloadPdf}
-          >
-            <PrintIcon />
-          </button>
-        </div>
+        {/* No tools on this side. The mockup hangs history and attachments
+            here; Zenith has neither, and the one thing that was here — a
+            second "Download PDF" — repeated the plate's own action under the
+            same accessible name, so a screen reader announced the same
+            button twice. It stays as a spacer so the plate keeps the centre
+            line the wordmark and title sit on. */}
+        <div className="cv-tools cv-tools-right" aria-hidden="true" />
       </div>
 
       <div className="cv-layout" id="cv-builder">

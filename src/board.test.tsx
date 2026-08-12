@@ -342,6 +342,44 @@ describe("board rails", () => {
     expect(moves).toEqual([]);
   });
 
+  test("arrow keys walk the stage strip, but not while typing", async () => {
+    // The narrow board is a carousel; the arrows are how it is worked from a
+    // keyboard. Verified in a browser (the board scrolls 0 → 312 → 661), but
+    // the guard is the part worth pinning: without it, typing "→" in the
+    // search box would scroll the board out from under the search.
+    const narrow = ((query: string) => ({
+      matches: query.includes("max-width"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    const real = window.matchMedia;
+    window.matchMedia = narrow;
+    try {
+      profileFolded = "";
+      const { container } = renderBoard([]);
+      const current = () =>
+        container.querySelector(".stage-chip[aria-current=true]")?.textContent?.trim();
+      await waitFor(() => expect(current()).toContain("Interested"));
+
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+      expect(current()).toContain("Applied");
+      fireEvent.keyDown(window, { key: "ArrowLeft" });
+      expect(current()).toContain("Interested");
+
+      const search = container.querySelector("input.search")!;
+      search.dispatchEvent(new FocusEvent("focus"));
+      Object.defineProperty(document, "activeElement", {
+        value: search,
+        configurable: true,
+      });
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+      expect(current()).toContain("Interested");
+    } finally {
+      window.matchMedia = real;
+    }
+  });
+
   test("an empty board offers one way in, not one per stage", async () => {
     // Five identical primary buttons and no cards is a first-run screen
     // saying the same thing five times. The add blocks are for filing into a

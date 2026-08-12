@@ -602,7 +602,8 @@
       "native": "Moedertaal"
     },
     "itemMenu": "Acties voor {{title}}",
-    "editBelow": "Hieronder bewerken"
+    "editBelow": "Hieronder bewerken",
+    "matchPosting": "Vergelijk met vacature"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
