@@ -250,6 +250,27 @@ describe("board rails", () => {
     await waitFor(() => expect(headerFor("Interested")).toBeTruthy());
   });
 
+  test("the pinned filter opens every rail, so a pinned card cannot hide", async () => {
+    // The bottom bar counts pins wherever they are, and rejected, withdrawn,
+    // ghosted and archived rails are folded by default. Respecting the fold
+    // here meant the bar said "Pinned 1" and the board showed nothing — a
+    // blank screen that reads as broken. Measured in a browser first: pin a
+    // card, move it to Rejected, press p, and the board was empty.
+    profileFolded = "rejected,withdrawn,ghosted,archived";
+    savedFolded = null;
+    renderBoard(
+      [app({ id: 1, status: "rejected", pinned_at: "2026-08-12T10:00:00Z" })],
+      { state: { showPinned: true } },
+    );
+    await waitFor(() => expect(headerFor("Rejected")).toBeTruthy());
+    // Open columns, not rails: nothing is folded away while the filter is on.
+    expect(railFor("Rejected")).toBeFalsy();
+    expect(railFor("Archived")).toBeFalsy();
+    expect(screen.getByText("Role 1")).toBeInTheDocument();
+    // And the fold state itself is untouched — this is a view, not an edit.
+    expect(savedFolded, "the pinned view must not rewrite the saved folds").toBeNull();
+  });
+
   test("paints from the last known fold state, not the defaults", async () => {
     // The server copy is authoritative but arrives on a request. Painting
     // the defaults first meant the board rearranged itself a second after it
