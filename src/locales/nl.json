@@ -5,7 +5,6 @@
     "feed": "Feed",
     "calendar": "Agenda",
     "insights": "Inzichten",
-    "stats": "Statistieken",
     "companies": "Bedrijven",
     "people": "Contacten",
     "cv": "CV",
@@ -21,7 +20,6 @@
     "quietAge": "{{days}} dagen stil",
     "closeOut": "Afsluiten",
     "closedOut": "Gearchiveerd — één ding minder",
-    "title": "Vandaag",
     "nothingTracked": "Nog niets bijgehouden",
     "nothingTrackedHint": "Voeg de eerste vacature toe die je najaagt — alles op dit scherm groeit daaruit.",
     "addFirst": "Voeg je eerste sollicitatie toe",
@@ -148,8 +146,6 @@
     "allRoles": "Alle rollen",
     "allCompanies": "Alle bedrijven",
     "allTags": "Alle labels",
-    "showArchived": "Toon gearchiveerd",
-    "toggle": "Filters",
     "role": "Functie",
     "company": "Bedrijf",
     "tag": "Tag"
@@ -163,16 +159,6 @@
     "noFollowUps": "Geen vervolgacties gepland.",
     "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op “Nu controleren”.",
     "pipelineNoJobs": "Nog niets bijgehouden."
-  },
-  "shortcuts": {
-    "title": "Sneltoetsen",
-    "subtitle": "Desktop.",
-    "focusSearch": "Focus op pipeline-zoeken",
-    "addJob": "Vacature toevoegen (snel)",
-    "closeHelp": "Sluit een formulier of deze hulp",
-    "feedTriage": "Feed: toevoegen / negeren",
-    "palette": "Open het commandopalet",
-    "feedMove": "Feed: focus omhoog / omlaag"
   },
   "settings": {
     "title": "Instellingen",
@@ -217,7 +203,6 @@
   },
   "feed": {
     "pulledFrom": "Opgehaald uit je ingestelde vacaturesites (Greenhouse, Ashby) en Adzuna, elke 6 uur.",
-    "settings": "Instellingen",
     "checkNow": "Nu controleren",
     "checking": "Controleren…",
     "viaSource": "via {{source}}",
@@ -257,27 +242,6 @@
     "offerComparisonBreakdown": "Opbouw",
     "offerComparisonEmpty": "Nog geen aanbiedingen.",
     "exportData": "Exporteer je gegevens",
-    "streak": {
-      "activeTitle_one": "{{count}} week actieve reeks",
-      "activeTitle_other": "{{count}} weken actieve reeks",
-      "milestoneTitle_one": "{{count}} week reeks — goed bezig",
-      "milestoneTitle_other": "{{count}} weken reeks — goed bezig",
-      "brokenTitle": "Geen activiteit deze week",
-      "brokenBody": "Geen probleem — een zoektocht naar een baan verloopt niet lineair. Je resultaten tot nu toe blijven gewoon staan, pak het weer op wanneer je er klaar voor bent."
-    },
-    "weeklyGoal": {
-      "progress": "{{count}} van {{goal}} sollicitaties deze week",
-      "edit": "Doel instellen"
-    },
-    "journal": {
-      "title": "Overwinningen",
-      "placeholder": "Leg een kleine overwinning vast — goede feedback, een sterk gesprek…",
-      "add": "Toevoegen",
-      "empty": "Nog niets vastgelegd.",
-      "showAll_one": "Toon alles ({{count}})",
-      "showAll_other": "Toon alles ({{count}})",
-      "showLess": "Toon minder"
-    },
     "exportAllJson": "Alles (JSON)"
   },
   "palette": {
@@ -317,15 +281,11 @@
     "namePlaceholder": "Versienaam (bijv. Backend-gericht)",
     "save": "Huidige opslaan",
     "saved": "CV-versie opgeslagen",
-    "empty": "Nog geen opgeslagen versies. Sla het huidige CV op om een variant te bewaren die je altijd kunt downloaden.",
-    "download": "Downloaden",
-    "corrupt": "Deze versie kon niet worden gelezen.",
     "live": "Live",
     "newVariant": "+ Nieuwe variant",
     "deleteAria": "Variant {{name}} verwijderen"
   },
   "goals": {
-    "weeklyGoal": "Weekdoel",
     "weeklyGoalLabel": "Wekelijks sollicitatiedoel",
     "searchStartLabel": "Zoektocht gestart",
     "searchWeek_one": "Week {{count}} van je zoektocht",
@@ -478,17 +438,14 @@
     "tabTailor": "Afstemmen",
     "keywordMatch": "Trefwoorden-check",
     "pasteJdPlaceholder": "Plak de vacaturetekst om te vergelijken met je CV-vaardigheden…",
-    "keywordMatchCount": "Je CV noemt {{matched}} van de {{total}} trefwoorden uit deze vacature",
     "cheatSheet": {
       "print": "Spiekbriefje",
-      "printing": "Voorbereiden…",
       "contact": "Contact",
       "companyResearch": "Bedrijfsonderzoek",
       "noNotes": "Nog niets gelogd."
     },
     "jobPostingLink": "Vacature ↗",
     "viaSource": "via {{source}}",
-    "appliedDate": "Gesolliciteerd {{date}}",
     "followUpFallback": "opvolgen",
     "setFollowUp": "Follow-up instellen",
     "addNote": "Notitie toevoegen",
@@ -558,10 +515,8 @@
     "tailorApplied": "Toegepast op je cv",
     "tailorNoCurrent": "(nog niets)",
     "tailorApplyAll": "Alles toepassen",
-    "completeness": "In het kort",
     "livePreview": "Live-preview",
     "skills": "Vaardigheden",
-    "template": "Sjabloon",
     "templateSingle": "ATS-vriendelijk (één kolom)",
     "templateTwoColumn": "Twee kolommen",
     "profile": "Profiel",
@@ -797,11 +752,6 @@
     "viewGrid": "Raster"
   },
   "board": {
-    "groupBy": "Bord groeperen op",
-    "byStage": "Op status",
-    "byCompany": "Op bedrijf",
-    "noCompany": "Geen bedrijf",
-    "closedCount": "Gesloten · {{count}}",
     "updatedAge": "gew. {{age}}",
     "cardMenu": "Acties voor {{title}}",
     "moveToStage": "Verplaats naar fase",
@@ -812,7 +762,6 @@
     "sortUpdated": "Laatst bijgewerkt",
     "restore": "Herstellen",
     "filterBtn": "Filter",
-    "archActive": "Alleen actief",
     "railArchived": "Gearchiveerd",
     "addHere": "+ Sollicitatie toevoegen",
     "foldRail": "{{stage}} inklappen",
@@ -825,10 +774,6 @@
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
   },
   "overview": {
-    "openCount_one": "open sollicitatie",
-    "openCount_other": "open sollicitaties",
-    "interviewingCount_one": "{{count}} in gesprek of aanbod",
-    "interviewingCount_other": "{{count}} in gesprek of aanbod",
     "viewAllJobs": "Bekijk de pipeline",
     "showActivity": "Alle activiteit tonen",
     "hideActivity": "Activiteit verbergen"
@@ -852,7 +797,6 @@
     "discardEdit": "Niet-opgeslagen wijzigingen weggooien?"
   },
   "aria": {
-    "moveToStage": "{{title}} naar fase verplaatsen",
     "interactionType": "Type interactie",
     "interactionDate": "Datum interactie"
   },
@@ -932,6 +876,7 @@
   "menu": {
     "label": "Bestemmingen",
     "open": "Menu openen",
+    "addJob": "Vacature toevoegen",
     "closedApplications": "Gesloten sollicitaties"
   },
   "contacts": {
@@ -940,21 +885,12 @@
     "everyoneElse": "Alle anderen"
   },
   "dashboard": {
-    "kpiOpen": "Open sollicitaties",
-    "kpiResponse": "Respons · {{responded}}/{{applied}}",
     "kpiOffers": "Open aanbiedingen",
     "kpiToOffer": "Mediaan tot aanbod",
     "momentumTitle": "Pijplijn-momentum",
     "funnelConv": "Funnel & conversie",
-    "winLiveAllTime": "live · aller tijden",
-    "winOpen": "open",
-    "win2wk": "2 wk",
-    "stageToStage": "fase-naar-fase",
     "offers": "Aanbiedingen",
     "noOffers": "Nog geen open aanbiedingen.",
-    "thisFortnight": "Deze twee weken",
-    "response": "Respons",
-    "toOffer": "Tot aanbod",
     "kpiOpenShort": "Open",
     "kpiResponseShort": "Respons",
     "kpiResponseOf": "{{responded}} van {{applied}}",

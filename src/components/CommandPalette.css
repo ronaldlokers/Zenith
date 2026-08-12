@@ -35,12 +35,6 @@
     padding: var(--space-2);
   }
 
-  .zui-palette-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: var(--space-2);
-  }
-
   .zui-palette-group-label {
     font-family: var(--mono);
     font-size: var(--text-chrome);

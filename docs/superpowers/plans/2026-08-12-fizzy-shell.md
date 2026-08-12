@@ -284,6 +284,30 @@ it. #564 then moved the key from `A` to `C` — the feed has answered to `a`
 since #144, and the global shortcut was navigating people off the feed
 mid-triage.
 
+### What it cost
+
+The shell is a redesign of every screen, so it is worth knowing what it did
+to the download. Measured against the last commit before the series, both
+gzipped:
+
+| | before | after | change |
+|---|---|---|---|
+| entry stylesheet | 17.24 kB | 18.52 kB | +1.28 kB |
+| entry script | 59.69 kB | 61.13 kB | +1.44 kB |
+
+Under three kilobytes on the critical path, because it removed about as much
+as it added: the rail, the archived modal, the CV's side panel and 134 lines
+of stylesheet that had lost their markup.
+
+"The first paint on mobile is a locked first-class target" had no number
+attached to it, so nothing would have noticed the day it grew by a third.
+`test-node/bundle-budget.spec.ts` now holds one, set about 12% above the
+measured size. Those figures are gzip; Cloudflare serves brotli, which a
+preview deployment confirms (`content-encoding: br`) and which comes out
+about 15% smaller again — 15.38 kB of CSS and 51.09 kB of script. The budget
+stays in gzip because it exists to catch growth and both move together. Raising it is fine; it just has to be a decision someone
+makes rather than a drift nobody sees.
+
 ### The screenshot rig
 
 Still not a CI gate: baselines are not committed, so nothing fails when a

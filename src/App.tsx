@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
@@ -58,6 +58,7 @@ import {
   Skeleton,
   WordmarkMenu,
 } from "./components";
+import { isDead, isDue, isOverdue } from "./format";
 import { useAppData, useToasts } from "./app-data";
 import {
   useGlobalShortcuts,
@@ -211,6 +212,22 @@ export default function App() {
       ? [{ data: "admin" as const, to: "admin" as const, active: tab === "admin", icon: <AdminIcon />, label: t("admin.navLabel") }]
       : []),
   ];
+  // The menu's three tiles carry a live count (shell spec: "icon, label, live
+  // count and shortcut"). Each is the number that destination's own screen
+  // leads with, so the menu cannot quietly disagree with the page behind it:
+  // Today's is the dashboard's "N things need you today", Pipeline's is the
+  // open applications the board shows. Feed has none — its matches are loaded
+  // by the Feed screen itself, and fetching them here would cost every user a
+  // request on every load to put a number on a tile.
+  const liveApps = useMemo(
+    () => visibleApps.filter((a) => !isDead(a.status)),
+    [visibleApps],
+  );
+  const tileCounts: Partial<Record<NavItem["data"], number>> = {
+    overview: liveApps.filter((a) => isOverdue(a) || isDue(a)).length,
+    pipeline: liveApps.length,
+  };
+
   const pageTitle =
     tab === "settings"
       ? t("settings.title")
@@ -327,6 +344,7 @@ export default function App() {
             shortcut: String(i + 1),
             icon: n.icon,
             active: n.active,
+            count: tileCounts[n.data],
           }))}
           actions={[
             {
@@ -341,7 +359,10 @@ export default function App() {
             },
             {
               id: "quick-add",
-              label: t("toolbar.addJob"),
+              // Not toolbar.addJob: that copy carries its own "+" for the
+              // board's button, and this row already draws one as its icon —
+              // the menu read "+ + Add job".
+              label: t("menu.addJob"),
               shortcut: "n",
               icon: <span aria-hidden="true">+</span>,
               active: false,

@@ -4,9 +4,10 @@
    container, so it never rendered as Recipe B — it's a compact meta-sized
    chip: 0.75rem type (var(--text-meta)), 0.25/0.5rem padding, a plain 1px
    var(--border) border, var(--radius-sm) corners, var(--surface) fill, and
-   no min-height floor. The same shape as CV's version-remove control
-   (src/cv/cv.css's .zui-cv-version-remove, `.cv-version-actions
-   button.danger`) — mirrored here, the two App.css recipes match exactly.
+   no min-height floor. It mirrored CV's version-remove control, whose
+   App.css recipe was identical; both that control and its override are gone
+   (the #535 rail replaced the versions list), so this is now the only site
+   with this shape rather than one of a matching pair.
 
    None of Button's Recipe-B danger sizing applies: `.zui-btn` sets
    border-radius var(--radius-md) (10px, not 8px) unconditionally;
@@ -41,8 +42,9 @@
    node t("common.delete") — no icon, no competing content — so its
    shrink-to-fit width is identical under inline-block and Button's
    inline-flex, and justify-content: center has no extra space to
-   redistribute. Confirmed by the zero-diff capture showing no damage
-   (mirrors CV's .zui-cv-version-remove, the same text-only shape). */
+   redistribute. Confirmed by the zero-diff capture showing no damage. (CV's
+   version-remove control was the same text-only shape and carried the same
+   note, until the #535 rail replaced it.) */
 @layer components {
   .zui-btn.zui-btn--danger.zui-outreach-tpl-remove.zui-outreach-tpl-remove {
     background: var(--surface);

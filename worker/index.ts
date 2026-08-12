@@ -30,6 +30,89 @@ export type AppEnv = {
 
 const app = new Hono<AppEnv>();
 
+// Security headers on every response. A deployment was sending none of
+// these, on an app that holds CVs, salary figures and private notes behind
+// a session cookie.
+//
+// The one that mattered most is framing. Nothing stopped another site
+// putting this app in an invisible iframe over its own buttons, and the
+// destructive actions here are single clicks — delete an application,
+// delete the account. DENY rather than SAMEORIGIN: nothing here is meant to
+// be framed at all.
+//
+// nosniff is belt-and-braces for uploaded documents. They already download
+// with Content-Disposition: attachment rather than rendering, which is the
+// real protection; this stops a browser second-guessing the type anyway.
+//
+// Referrer-Policy keeps a full URL from travelling to a third party when
+// someone follows a job posting out of the app — the share and calendar
+// links are unguessable tokens in a path, and a path is exactly what a
+// referrer carries.
+//
+// The app's Content-Security-Policy. script-src 'self' is the line that
+// matters: with no inline script allowed, an injected <script> or an onclick
+// smuggled through user text does not run, which is the whole XSS class this
+// app could plausibly meet (job titles, notes and company names are rendered
+// everywhere).
+//
+// style-src-attr is the one concession, and it is deliberate. React writes
+// the geometry this UI is made of into style attributes — funnel bar widths,
+// the ascent strip's flex growth, the board's grid track list — all
+// continuous values that cannot be a fixed class. Allowing inline *style
+// attributes* while still refusing inline <style> elements and inline script
+// is the narrow version of that concession: a style attribute cannot execute
+// anything, and the CSS injection it would leave open needs an HTML
+// injection first, which script-src already has to fail for.
+//
+// Verified rather than reasoned about: the production build was loaded from a
+// preview deployment under this policy and reported no violations on any
+// route.
+//
+// The dev relaxation is not a nicety. @cloudflare/vite-plugin runs this
+// Worker in front of the dev server, so the policy applies to `npm run dev`
+// too — and Vite injects React Refresh's preamble as an *inline* script,
+// which script-src 'self' blocks. The result is a blank page and one console
+// line ("@vitejs/plugin-react can't detect preamble"), which reads like a
+// broken app rather than a header. Its HMR client also injects inline
+// <style>, hence the style-src half.
+//
+// Keyed on MODE, not DEV. The Worker test runner is a Vite build too and sets
+// DEV — so a DEV check would hand the tests the relaxed policy and leave the
+// shipped one asserted by nothing. MODE separates the three: "development"
+// for the dev server, "test" under vitest, "production" in the build. Only
+// the first relaxes, and the substitution is at build time, so the deployed
+// bundle carries the strict string and no branch (test-node/shipped-csp).
+const DEV =
+  (import.meta as unknown as { env?: { MODE?: string } }).env?.MODE ===
+  "development";
+
+const APP_CSP = [
+  "default-src 'self'",
+  DEV ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'",
+  DEV ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'",
+  "style-src-attr 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
+app.use("*", async (c, next) => {
+  await next();
+  c.header("X-Frame-Options", "DENY");
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  c.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  // The share page builds a stricter, nonced policy of its own; this must not
+  // flatten it back to the app's. Anything that sets its own CSP keeps it.
+  if (!c.res.headers.get("Content-Security-Policy")) {
+    c.header("Content-Security-Policy", APP_CSP);
+  }
+});
+
 // Shared application write shape (#285) — the INSERT column list, the
 // UPDATE SET clause, and the bound values all derive from this one ordered
 // list, so POST and PUT can't drift out of sync. Column names are constants
@@ -1517,13 +1600,23 @@ app.get("/shared/:token", async (c) => {
 
   const rows = funnel
     .map(
-      (f) => `
+      // The width is a class rather than a style attribute so this page can
+      // carry a Content-Security-Policy with no unsafe-inline in it at all
+      // (see the nonce below). It is the only unauthenticated surface here.
+      (f, i) => `
       <div class="row">
         <span class="lbl">${f.stage}</span>
-        <span class="track"><span class="fill" style="width:${(f.count / funnelMax) * 100}%"></span></span>
+        <span class="track"><span class="fill fill-${i}"></span></span>
         <span class="n">${f.count}</span>
       </div>`,
     )
+    .join("");
+
+  // One nonce per response, so the policy below can name this exact style
+  // block without opening the page to any other inline content.
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  const barWidths = funnel
+    .map((f, i) => `.fill-${i}{width:${(f.count / funnelMax) * 100}%}`)
     .join("");
 
   const html = `<!doctype html>
@@ -1533,7 +1626,8 @@ app.get("/shared/:token", async (c) => {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Zenith — shared pipeline</title>
-<style>
+<style nonce="${nonce}">
+${barWidths}
   /* This page is the only Zenith surface someone who is not a user ever sees,
      so it carries the brand rather than a generic dark theme (#528). It is a
      standalone document with no access to src/index.css, so the tokens are
@@ -1580,6 +1674,24 @@ app.get("/shared/:token", async (c) => {
 </body>
 </html>`;
 
+  // The strictest policy this page can carry, which is very strict: it has no
+  // scripts at all, loads nothing from anywhere, and its one style block is
+  // named by nonce. Nothing here is unsafe-inline.
+  //
+  // Only this route. The app itself is a React bundle whose policy needs
+  // working out against a deployment; this page is server-rendered HTML whose
+  // every byte is known here, so it can have the policy today rather than
+  // waiting for that.
+  c.header(
+    "Content-Security-Policy",
+    [
+      "default-src 'none'",
+      `style-src 'nonce-${nonce}'`,
+      "base-uri 'none'",
+      "form-action 'none'",
+      "frame-ancestors 'none'",
+    ].join("; "),
+  );
   return c.html(html);
 });
 

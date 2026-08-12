@@ -5,7 +5,6 @@
     "feed": "Feed",
     "calendar": "Calendar",
     "insights": "Insights",
-    "stats": "Stats",
     "companies": "Companies",
     "people": "People",
     "cv": "CV",
@@ -21,7 +20,6 @@
     "quietAge": "quiet {{days}}d",
     "closeOut": "Close out",
     "closedOut": "Archived — one less thing",
-    "title": "Today",
     "nothingTracked": "Nothing tracked yet",
     "nothingTrackedHint": "Add the first role you're chasing — everything on this screen grows from it.",
     "addFirst": "Add your first application",
@@ -148,8 +146,6 @@
     "allRoles": "All roles",
     "allCompanies": "All companies",
     "allTags": "All tags",
-    "showArchived": "Show archived",
-    "toggle": "Filters",
     "role": "Role",
     "company": "Company",
     "tag": "Tag"
@@ -163,16 +159,6 @@
     "noFollowUps": "No follow-ups scheduled.",
     "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit “Check now”.",
     "pipelineNoJobs": "Nothing tracked yet."
-  },
-  "shortcuts": {
-    "title": "Keyboard shortcuts",
-    "subtitle": "Desktop.",
-    "focusSearch": "Focus the pipeline search",
-    "addJob": "Add a job (quick add)",
-    "closeHelp": "Close a form or this help",
-    "feedTriage": "Feed: add / dismiss",
-    "palette": "Open the command palette",
-    "feedMove": "Feed: move focus down / up"
   },
   "settings": {
     "title": "Settings",
@@ -217,7 +203,6 @@
   },
   "feed": {
     "pulledFrom": "Pulled from your configured job boards (Greenhouse, Ashby) and Adzuna every 6 hours.",
-    "settings": "Settings",
     "checkNow": "Check now",
     "checking": "Checking…",
     "viaSource": "via {{source}}",
@@ -257,27 +242,6 @@
     "offerComparisonBreakdown": "Breakdown",
     "offerComparisonEmpty": "No offers yet.",
     "exportData": "Export your data",
-    "streak": {
-      "activeTitle_one": "{{count}} week active streak",
-      "activeTitle_other": "{{count}} week active streak",
-      "milestoneTitle_one": "{{count}} week streak — nice work",
-      "milestoneTitle_other": "{{count}} week streak — nice work",
-      "brokenTitle": "No activity this week",
-      "brokenBody": "That's fine — job searches aren't linear. Your best is still on record whenever you're ready to pick it back up."
-    },
-    "weeklyGoal": {
-      "progress": "{{count}} of {{goal}} applications this week",
-      "edit": "Set goal"
-    },
-    "journal": {
-      "title": "Wins journal",
-      "placeholder": "Log a small win — good feedback, a strong interview…",
-      "add": "Add",
-      "empty": "Nothing logged yet.",
-      "showAll_one": "Show all ({{count}})",
-      "showAll_other": "Show all ({{count}})",
-      "showLess": "Show less"
-    },
     "exportAllJson": "Everything (JSON)"
   },
   "palette": {
@@ -317,15 +281,11 @@
     "namePlaceholder": "Version name (e.g. Backend-focused)",
     "save": "Save current",
     "saved": "CV version saved",
-    "empty": "No saved versions yet. Save the current CV to keep a variant you can download anytime.",
-    "download": "Download",
-    "corrupt": "This version couldn’t be read.",
     "live": "Live",
     "newVariant": "+ New variant",
     "deleteAria": "Delete variant {{name}}"
   },
   "goals": {
-    "weeklyGoal": "Weekly goal",
     "weeklyGoalLabel": "Weekly application goal",
     "searchStartLabel": "Search started",
     "searchWeek_one": "Week {{count}} of your search",
@@ -478,17 +438,14 @@
     "tabTailor": "Tailor",
     "keywordMatch": "ATS check",
     "pasteJdPlaceholder": "Paste the job description to check it against your CV skills…",
-    "keywordMatchCount": "Your CV mentions {{matched}} of {{total}} keywords found in this posting",
     "cheatSheet": {
       "print": "Cheat sheet",
-      "printing": "Preparing…",
       "contact": "Contact",
       "companyResearch": "Company research",
       "noNotes": "Nothing logged yet."
     },
     "jobPostingLink": "Job posting ↗",
     "viaSource": "via {{source}}",
-    "appliedDate": "Applied {{date}}",
     "followUpFallback": "follow up",
     "setFollowUp": "Set follow-up",
     "addNote": "Add note",
@@ -558,10 +515,8 @@
     "tailorApplied": "Applied to your CV",
     "tailorNoCurrent": "(nothing yet)",
     "tailorApplyAll": "Apply all",
-    "completeness": "At a glance",
     "livePreview": "Live preview",
     "skills": "Skills",
-    "template": "Template",
     "templateSingle": "ATS-friendly (single column)",
     "templateTwoColumn": "Two-column",
     "profile": "Profile",
@@ -797,11 +752,6 @@
     "viewGrid": "Grid"
   },
   "board": {
-    "groupBy": "Group board by",
-    "byStage": "By stage",
-    "byCompany": "By company",
-    "noCompany": "No company",
-    "closedCount": "Closed · {{count}}",
     "updatedAge": "upd {{age}}",
     "cardMenu": "Actions for {{title}}",
     "moveToStage": "Move to stage",
@@ -812,7 +762,6 @@
     "sortUpdated": "Last updated",
     "restore": "Restore",
     "filterBtn": "Filter",
-    "archActive": "Active only",
     "railArchived": "Archived",
     "addHere": "+ Add an application",
     "foldRail": "Fold {{stage}}",
@@ -825,10 +774,6 @@
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
   },
   "overview": {
-    "openCount_one": "open application",
-    "openCount_other": "open applications",
-    "interviewingCount_one": "{{count}} at interview or offer stage",
-    "interviewingCount_other": "{{count}} at interview or offer stage",
     "viewAllJobs": "View the pipeline",
     "showActivity": "Show all activity",
     "hideActivity": "Hide activity"
@@ -852,7 +797,6 @@
     "discardEdit": "Discard unsaved changes?"
   },
   "aria": {
-    "moveToStage": "Move {{title}} to stage",
     "interactionType": "Interaction type",
     "interactionDate": "Interaction date"
   },
@@ -932,6 +876,7 @@
   "menu": {
     "label": "Destinations",
     "open": "Open the menu",
+    "addJob": "Add job",
     "closedApplications": "Closed applications"
   },
   "contacts": {
@@ -940,21 +885,12 @@
     "everyoneElse": "Everyone else"
   },
   "dashboard": {
-    "kpiOpen": "Open applications",
-    "kpiResponse": "Response · {{responded}}/{{applied}}",
     "kpiOffers": "Live offers",
     "kpiToOffer": "Median to offer",
     "momentumTitle": "Pipeline momentum",
     "funnelConv": "Funnel & conversion",
-    "winLiveAllTime": "live · all-time",
-    "winOpen": "open",
-    "win2wk": "2 wk",
-    "stageToStage": "stage-to-stage",
     "offers": "Offers",
     "noOffers": "No live offers yet.",
-    "thisFortnight": "This fortnight",
-    "response": "Response",
-    "toOffer": "To offer",
     "kpiOpenShort": "Open",
     "kpiResponseShort": "Response",
     "kpiResponseOf": "{{responded}} of {{applied}}",

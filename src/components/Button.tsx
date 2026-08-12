@@ -10,9 +10,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    * Visual emphasis.
    *  - "default"   — neutral surface + border (App.css's pre-existing base look).
    *  - "primary"   — Recipe A, App.css:1218 button.primary.
-   *  - "secondary" — Recipe B, App.css:4325 (.card-actions/.settings-modal/
-   *    .shortcut-help button — .detail-actions/.form-actions/.share-actions
-   *    moved to the owned ActionBar component).
+   *  - "secondary" — Recipe B, App.css:4325 (.card-actions/.settings-modal
+   *    button — .detail-actions/.form-actions/.share-actions moved to the
+   *    owned ActionBar component, and .shortcut-help went with the panel it
+   *    styled: nothing has rendered it since the shell replaced the help
+   *    sheet with keycaps printed beside the actions themselves).
    *  - "danger"    — Recipe B + a colour/border-colour override that App.css
    *    no longer carries (retired in 27ffc4e, "fix: retire the App.css
    *    secondary and danger recipes") — this file is now the only

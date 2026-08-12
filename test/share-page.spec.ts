@@ -11,10 +11,18 @@ import { authedFetch } from "./helpers";
 //
 // A note for whoever verifies this by hand: in the Vite dev server a browser
 // navigation to /shared/:token is intercepted by the SPA middleware and
-// renders the login screen instead. `curl` gets the real page. It is a dev
-// artifact — in production the Worker owns the route — but it makes a manual
-// check say whatever you were afraid of, in either direction. This spec runs
+// renders the login screen instead. `curl` gets the real page. This spec runs
 // against the Worker, which is the thing that actually serves it.
+//
+// That it is only a dev artifact is now measured rather than assumed. Against
+// a preview deployment, with a browser's own Accept header:
+//
+//   /shared/<unknown token>  404, empty body   — the Worker answering
+//   /board                   200, SPA shell    — the assets fallback
+//   /nope-not-a-route        200, SPA shell
+//
+// The 404 is the route rejecting a token it does not know, not the SPA
+// shell being served in its place, which is what the dev server does.
 const BASE = "http://zenith.test";
 const TOKEN = "share-page-spec-token";
 
@@ -122,5 +130,56 @@ describe("public share page", () => {
     expect((await SELF.fetch(`${BASE}/shared/${TOKEN}`)).status).toBe(200);
     await authedFetch(`${BASE}/api/profile/share-token`, { method: "DELETE" });
     expect((await SELF.fetch(`${BASE}/shared/${TOKEN}`)).status).toBe(404);
+  });
+
+  it("carries a policy with nothing unsafe in it", async () => {
+    // This is the only surface someone who is not a user ever reaches, and
+    // it is server-rendered HTML whose every byte is known — so it can have
+    // a real Content-Security-Policy today, rather than waiting for the
+    // React bundle's to be worked out against a deployment.
+    await seedShared();
+    const res = await SELF.fetch(`${BASE}/shared/${TOKEN}`);
+    const csp = res.headers.get("content-security-policy");
+    expect(csp, "the share page has no policy").toBeTruthy();
+    expect(csp).toContain("default-src 'none'");
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp, "a nonce beats unsafe-inline; the page needs neither").not.toContain(
+      "unsafe-inline",
+    );
+
+    const html = await res.text();
+    const nonce = csp!.match(/'nonce-([a-f0-9]+)'/)?.[1];
+    expect(nonce, "no nonce in the policy").toBeTruthy();
+    expect(html, "the style block is not the one the policy names").toContain(
+      `<style nonce="${nonce}">`,
+    );
+  });
+
+  it("keeps every style off the elements themselves", async () => {
+    // A style attribute cannot run under this policy, so adding one back
+    // would not error — the rule would simply not apply, and a funnel bar
+    // would quietly render at full width. The bar widths are classes in the
+    // nonced block for exactly this reason.
+    await seedShared();
+    await seedApplication();
+    const html = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+    expect(html).not.toMatch(/ style="/);
+    expect(html, "the widths should be emitted as classes").toMatch(
+      /\.fill-\d+\{width:/,
+    );
+  });
+
+  it("gives each response its own nonce", async () => {
+    // A fixed nonce is the same as no nonce: anyone who has seen one page
+    // knows the value that unlocks the next.
+    await seedShared();
+    const [a, b] = await Promise.all([
+      SELF.fetch(`${BASE}/shared/${TOKEN}`),
+      SELF.fetch(`${BASE}/shared/${TOKEN}`),
+    ]);
+    const nonceOf = (r: Response) =>
+      r.headers.get("content-security-policy")?.match(/'nonce-([a-f0-9]+)'/)?.[1];
+    expect(nonceOf(a)).toBeTruthy();
+    expect(nonceOf(a)).not.toBe(nonceOf(b));
   });
 });

@@ -39,6 +39,18 @@ describe("WordmarkMenu", () => {
     }
   });
 
+  test("puts the live count on a tile beside its shortcut", () => {
+    // The spec asks tiles for "icon, label, live count and shortcut". The
+    // component has always rendered the count; App.tsx went a long time
+    // without passing one, so this fixture agreed with Storybook and not
+    // with the app. Asserting it here keeps the component's half honest.
+    renderMenu();
+    expect(screen.getByText(/4 ·\s*1/)).toBeInTheDocument();
+    expect(screen.getByText(/15 ·\s*2/)).toBeInTheDocument();
+    // A destination without one shows the shortcut alone, not "undefined ·".
+    expect(screen.getByText(/^\s*4\s*$/)).toBeInTheDocument();
+  });
+
   test("advertises the shortcut for every entry", () => {
     // The shortcuts being visible is what makes hiding the destinations
     // defensible — if this stops being true the design decision breaks.

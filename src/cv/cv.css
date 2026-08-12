@@ -1,7 +1,10 @@
-/* Owns three CV-surface controls' overrides so Button.css can stay
-   call-site-agnostic. None of App.css's Recipe A/B containers
-   (.card-actions/.detail-actions/.settings-modal/.shortcut-help/
-   .form-actions/.share-actions) wrap any of these three controls, so their
+/* Owns two CV-surface controls' overrides so Button.css can stay
+   call-site-agnostic. (It owned a third, .zui-cv-version-remove, until the
+   #535 rail replaced the versions list — the control is .cv-rail-del now,
+   and both the class and the App.css rule the override fought are gone.)
+   None of App.css's Recipe A/B containers
+   (.card-actions/.detail-actions/.settings-modal/
+   .form-actions/.share-actions) wrap either of these controls, so their
    raw markup never rendered as plain Recipe A/B and Button's secondary/
    danger variants need call-site help here. sections.tsx's other two
    `.btn-secondary` swaps (WorkExperienceSection/EducationSection's trailing
@@ -200,6 +203,11 @@
      describe. */
   .cv-card-foot {
     display: flex;
+    /* The two-value gap is the tell: a row gap does nothing unless the line
+       wraps, so wrapping was always the intent here and was simply never
+       switched on. Below about 340px the four counts overflow the card and
+       take the document's horizontal scroll with them — 320px is the width
+       WCAG reflow is measured at, and the one this failed. */
     flex-wrap: wrap;
     gap: 0.35rem 1.2rem;
     margin-top: 1rem;
@@ -218,6 +226,18 @@
 
   .cv-plate-actions {
     display: flex;
+    /* At 390px these three buttons are wider than the plate in both locales —
+       measured 382px of content in a 344px box — and nothing was shrinking
+       them, because none has anything to give up. English spilled over the
+       plate's padding and stayed on screen, so it read as a slightly wide
+       row; Dutch ("Vergelijk met vacature" against "Match to a posting")
+       pushed 45px past the viewport and took the whole document's horizontal
+       scroll with it.
+       Wrapping rather than trimming the labels: more locales are planned, and
+       the next one that does not fit should reflow instead of needing a copy
+       edit. This deliberately changes English mobile too, from one spilling
+       row to two contained ones. */
+    flex-wrap: wrap;
     justify-content: center;
     gap: var(--space-2);
     margin-top: 0.75rem;
@@ -327,12 +347,12 @@
      justify-content cancelled alongside it: both properties only affect
      flex/grid containers, and an inline-block box isn't one, so they
      simply go inert — restating them would be a no-op. (Verified this
-     control's sibling swaps, `.zui-cv-version-remove` and `.zui-cv-add-
-     btn` below/above, do NOT need the same fix: both render a single text
-     node with no competing content, so their shrink-to-fit width is
-     identical under inline-block and inline-flex and `justify-content:
-     center` has no extra space to redistribute — confirmed by the capture
-     showing zero damage at either site.) */
+     control's sibling swap, `.zui-cv-add-btn` above, does NOT need the
+     same fix: it renders a single text node with no competing content, so
+     its shrink-to-fit width is identical under inline-block and
+     inline-flex and `justify-content: center` has no extra space to
+     redistribute — confirmed by the capture showing zero damage at that
+     site.) */
   .zui-btn.zui-btn--danger.zui-cv-language-remove.zui-cv-language-remove {
     display: inline-block;
     background: none;
@@ -349,49 +369,37 @@
     }
   }
 
-  /* CvVersions' remove-version control, `<button class="danger">` inside
-     `<span className="cv-version-actions">` inside a `<li>` in
-     `<ul className="cv-versions-list">`. App.css's `.cv-version-actions
-     button` (App.css:3249, (0,1,1)) is keyed on the container class plus
-     tag, not `.danger`, so it's unaffected by the swap and still gives
-     every button in this row a compact meta-sized chip look — 0.75rem
-     type (var(--text-meta)), 0.25/0.5rem padding, a plain 1px var(--border)
-     border, var(--radius-sm) corners, var(--surface) fill, no min-height
-     floor (this container never joined the touch-target-floor list); this
-     part is a genuine ongoing cross-layer contest against Button's own
-     defaults, restated below. `.cv-version-actions button.danger`
-     (App.css:3258) is different: it requires the literal `.danger` class
-     to recolor `color` to var(--danger), and the swap renders
-     `zui-btn--danger` instead — that selector no longer matches at all,
-     so its contribution didn't lose a specificity fight, it vanished. It
-     isn't restated below because Button's own `.zui-btn--danger` already
-     sets `color: var(--danger)` — the same token, coincidentally, not
-     because the vanished App.css rule is still exerting any influence.
-     There's no hover rule at all in App.css for this container. None of
-     the sizing matches Button's Recipe-B danger
-     variant: `.zui-btn` sets border-radius: var(--radius-md) (10px, not
-     8px) unconditionally; `.zui-btn--danger` sets a color-mixed border
-     (not a plain var(--border) one) and an unconditional min-height: 34px
-     (this control has none); `.zui-btn--danger.zui-btn--md` sets padding
-     0.4/0.8 (not 0.25/0.5); and `.zui-btn--md:not(.zui-btn--primary)` sets
-     font-size: var(--text-body) (not var(--text-meta)). Background happens
-     to already match at rest (var(--surface) both sides) but NOT on hover
-     — Button's `.zui-btn--danger:hover:not(:disabled)` swaps it to
-     var(--bg) where the raw markup never changed on hover — so background
-     is restated unconditionally too, to cancel that hover change rather
-     than just to match the resting value.
+  /* Print: the plate is a screen device — it mounts the card and gives it a
+     ground. On paper it is a slab of ink around the content, and the tools
+     and actions are things to click. This has to live in this file: the
+     print band in App.css is @layer app, and no specificity there can beat
+     @layer components. */
+  @media print {
+    .cv-plate {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
 
-     Specificity is (0,4,0) (class repeated) to outright beat
-     `.zui-btn--danger:hover:not(:disabled)` ((0,3,0), the highest
-     contender among the properties touched here, on `background`) rather
-     than tie it — see the load-order reasoning above. */
-  .zui-btn.zui-btn--danger.zui-cv-version-remove.zui-cv-version-remove {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0.25rem 0.5rem;
-    font-size: var(--text-meta);
-    min-height: 0;
+    .cv-tools,
+    .cv-plate-actions,
+    .cv-rail-add,
+    .cv-rail-del {
+      display: none;
+    }
+
+    /* Which variant this is stays — it is the one thing a printed CV has to
+       say that the document itself does not. */
+    .cv-rail-step {
+      display: none;
+    }
+
+    .cv-rail-step.current {
+      display: block;
+      background: none;
+      color: var(--print-ink);
+      padding: 0;
+    }
   }
 
   /* Print: the plate is a screen device — it mounts the card and gives it a

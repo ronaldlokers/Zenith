@@ -5,7 +5,15 @@
    3. round-3 component bands (inline editors, feedback, first-run,
       confirm dialog)
    4. control-normalization layer — one recipe per control family; must
-      stay after everything it normalizes
+      stay after everything it normalizes.
+
+      Read this one with care: the band has drifted. Of the ~100 rules
+      between its header and band 5, eight are control recipes and the rest
+      are ordinary view CSS that accumulated here over time. The boundary
+      the rule below describes is therefore not where the header sits — new
+      view CSS placed in this region is following the room's actual
+      contents, not breaking the band. What must not move is the order of
+      the band markers themselves, which test-node/css-bands.spec.ts pins.
    5. cascade repairs — mobile touch-target and hover overrides that must
       beat the layer on source order
    6. print
@@ -139,42 +147,14 @@
 
 /* Search launcher — an icon-only button below 900px, a full ⌘K pill at rail
    widths. */
-/* The single add affordance (the FAB and the board's duplicate were removed —
-   design review). Full "+ Add" from 600px up; a compact "+" on phones. */
-@media (max-width: 599px) {
-}
-
-/* The Night rail is desktop-only (≥900px; styled in the sidebar-shell band). */
-/* 34px square, the documented control height (#499). These were 1.7rem —
-   27px — which is the smallest target in the app and sits in the top bar
-   where a thumb reaches most often. */
-.settings-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  border-radius: var(--radius-sm);
-  width: 34px;
-  height: 34px;
-  cursor: pointer;
-}
-
-@media (max-width: 600px) {
-  .settings-btn,
-    .settings-btn {
-    width: 40px;
-  }
-}
-
 /* .notification-bell/.notification-dot/.notification-backdrop/
    .notification-panel/.notification-panel-head/.notification-list/
    .notification-title/.notification-empty moved to the owned
    NotificationBell component (src/components/NotificationBell.css); its
    "mark all read" button is now <Button variant="secondary">, styled
-   entirely by Button.css. The .settings-btn trigger stays here — it's
-   shared with other buttons elsewhere in the app. */
+   entirely by Button.css. The .settings-btn trigger went with the top bar
+   the shell replaced: its corners are .top-icon buttons now, and nothing
+   had rendered .settings-btn since. */
 
 /* Section headings are centred and flanked by the rule rather than sitting on
    top of it (#535 shell) — the same treatment the page title gets, so a
@@ -582,20 +562,6 @@
   cursor: pointer;
 }
 
-/* Radial pipeline ring (#143) — replaces the old Jobs-tab stage histogram */
-
-.ring-legend .lbl {
-  /* Count sits right beside its label (#346) — flex:1 stranded the number
-     at the container's far edge, reading as two unrelated columns. */
-  text-transform: none;
-  color: var(--sc-ink, var(--ink));
-}
-
-.ring-legend .n {
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Stage color hooks */
 /* Each stage class publishes two custom properties (#496): --sc is the field
    colour (washes, dots, bars) and --sc-ink is the same hue at a tone that
@@ -620,7 +586,11 @@
   bottom: var(--vv-bottom-offset, 0px);
   z-index: 20;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* minmax(0, 1fr), not 1fr: a grid item's min-width defaults to auto, so a
+     1fr track refuses to shrink below its content and the bar overflows the
+     screen instead of compressing. Invisible at normal text size; at 200%
+     text resize on a 390px phone this bar measured 578px wide. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: var(--space-4);
   padding: 0.4rem var(--gutter) calc(0.4rem + env(safe-area-inset-bottom));
@@ -753,46 +723,6 @@
    src/components/CommandPalette.css, @layer components — moved verbatim
    under the .zui-commandpalette/.zui-palette-* names. The .cmdk* trigger
    button above stays here (App.tsx's top bar). */
-
-.shortcut-help h2 {
-  margin: 0 0 0.2rem;
-  font-size: var(--text-heading);
-}
-
-.shortcut-help ul {
-  list-style: none;
-  margin: 0.8rem 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.shortcut-help li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-body);
-}
-
-.shortcut-help kbd {
-  font-family: var(--mono);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.15rem 0.45rem;
-  min-width: 2.4rem;
-  text-align: center;
-}
-
-.shortcut-help button {
-  margin-top: 0.4rem;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  cursor: pointer;
-}
 
 .detail-modal {
   max-width: 34rem;
@@ -1455,16 +1385,9 @@ button.primary:hover {
 
 /* The `.card`/`.card.row2` list-row element (base, kb-focused, archived, and
    the 2-line row2 layout) now lives in the owned Row component
-   (src/components/Row.css). The separate .card-body / .card-main classes
-   are unrelated and stay (.card-menu moved out too — see
-   src/components/CardMenu.css). */
-.card-body {
-  padding: 0.75rem 0.85rem 0.6rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 0.6rem;
-  justify-content: space-between;
-}
+   (src/components/Row.css), and .card-menu moved to
+   src/components/CardMenu.css. The .card-body / .card-main pair that this
+   note used to say "stays" went with them: nothing rendered either. */
 
 .company-logo {
   width: 36px;
@@ -1521,10 +1444,6 @@ button.primary:hover {
   font-size: var(--text-body);
   font-weight: 600;
   line-height: 1.25;
-}
-
-.card-main.clickable {
-  cursor: pointer;
 }
 
 .card-actions {
@@ -2069,25 +1988,6 @@ select.status {
   border: 1px solid var(--border);
 }
 
-.weekly-goal {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.7rem 0.9rem;
-  margin-bottom: 1.2rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.weekly-goal .htrack {
-  flex: 1;
-}
-
-.weekly-goal.met .weekly-goal-label {
-  color: var(--success-ink);
-  font-weight: 600;
-}
 
 /* Agenda / calendar */
 .agenda {
@@ -2602,10 +2502,6 @@ select.status {
 
 /* .board-group-toggle moved to the owned SegmentedControl component
    (src/components/SegmentedControl.css). */
-
-.lane-label .n {
-  color: var(--faint);
-}
 
 /* Board's columns already fill the full grid width at >=900px, so
    there's no room for a side panel the way Jobs got one — the actual
@@ -3154,13 +3050,6 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .jobs-layout {
-    display: grid;
-    grid-template-columns: 2.2fr 1fr;
-    gap: 1.25rem;
-    align-items: start;
-  }
-
   /* The CV's second track held the side panel — completeness, versions, the
      live preview. All three are on the plate now (#535), so the builder was
      left filling two thirds of a row and sitting narrower than the plate
@@ -3228,15 +3117,8 @@ summary.bcol-head::after {
    week", shares the .today-rows recipe with Next Up (Today home band below). */
 
 /* The pre-#480 overview headline block was deleted (#501): .overview-number,
-   .overview-headline and .overview-label had zero call sites in any tsx. */
-
-.overview .jobs-side {
-  display: block;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1rem;
-}
+   .overview-headline and .overview-label had zero call sites in any tsx.
+   .overview .jobs-side followed it — same story, one scan later. */
 
 /* CV builder (#69) */
 .cv-tab {
@@ -3530,15 +3412,6 @@ summary.bcol-head::after {
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.2rem 0.6rem;
-}
-/* The route's only <h1>: page structure starts here rather than at a stray
-   panel heading, and it carries the date the screen is named after. */
-.today-h1 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: var(--text-heading);
-  font-weight: 600;
-  letter-spacing: -0.01em;
 }
 /* A sentence, so it takes the body voice (#502). It was mono, uppercase and
    tracked at 0.64rem — chrome dress on prose, which DESIGN.md's
@@ -4125,15 +3998,6 @@ summary.bcol-head::after {
   }
 }
 
-/* Mobile: pipeline filters + saved views behind one disclosure (#314). */
-
-@media (max-width: 600px) {
-
-  .pipeline-filters.open {
-    display: block;
-  }
-}
-
 @media (min-width: 1000px) {
   .app:has(.overview) > main {
     max-width: 1000px;
@@ -4328,8 +4192,7 @@ button:not(:disabled):active,
    they target plain `button`, not a class, so they still apply to any
    raw <button> a container wraps. */
 .card-actions button,
-.settings-modal > button,
-.shortcut-help button {
+.settings-modal > button {
   padding: 0.4rem 0.8rem;
   font-size: var(--text-body);
   border: 1px solid var(--border);
@@ -4341,8 +4204,7 @@ button:not(:disabled):active,
 }
 
 .card-actions button:hover,
-.settings-modal > button:hover,
-.shortcut-help button:hover {
+.settings-modal > button:hover {
   background: var(--bg);
 }
 
@@ -4370,8 +4232,7 @@ button:not(:disabled):active,
 .settings-add input,
 .tl-add input,
 .tl-add select,
-.tl-retro input,
-.weekly-goal-edit input {
+.tl-retro input {
   font-size: var(--text-body);
   padding: 0.4rem 0.6rem;
   border-radius: var(--radius-md);
@@ -4382,8 +4243,7 @@ button:not(:disabled):active,
    is an inline <span>.) */
 /* Chip baseline alignment (toolbar control-height moved to the Toolbar
    component). */
-.outreach-pill,
-.tag-chip {
+.outreach-pill {
   min-height: 36px;
 }
 
@@ -4404,7 +4264,6 @@ button:not(:disabled):active,
 /* Insights runs three columns of figures; the dashboard's two-column split is
    an asymmetric pair and stays that way. */
 @media (min-width: 900px) { .dash-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; } }
-.dash-col { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
 
 /* The dashboard content card (.dash-card, its lead/click variants, and the
    .dash-ch heading + .dash-win pill) now lives in the owned DashCard component
@@ -5026,10 +4885,8 @@ button:not(:disabled):active,
    covers Ctrl/Cmd+P from any other view: the main tab content, or a
    detail modal if one happens to be open. */
 @media print {
-  .side,
   .top,
   .header,
-  .quick-add-fab,
   .toast,
   .error-dismiss,
   button,

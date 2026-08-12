@@ -4,11 +4,11 @@
 
    App.css actually ships two distinct button recipes, not one:
      - Recipe A, "primary"   — App.css:1218 button.primary (+ :1228 hover)
-     - Recipe B, "secondary" — App.css:4325 .card-actions/.settings-modal/
-       .shortcut-help button (the "control normalization layer", :4338
+     - Recipe B, "secondary" — App.css:4325 .card-actions/.settings-modal
+       button (the "control normalization layer", :4338
        hover). This supersedes the older per-container declarations, now at
-       :532 (.settings-modal > button), :750 (.shortcut-help button) and
-       :1525 (.card-actions button) — same specificity, later source order
+       :532 (.settings-modal > button) and :1525 (.card-actions button) —
+       same specificity, later source order
        wins. Their .detail-actions/.form-actions counterparts (both the
        older declarations and Recipe B's own entries for those containers)
        were retired when ActionBar took over button normalization for them
@@ -180,8 +180,7 @@
      which re-homes this rule for itself (ActionBar.css); the remaining raw
      containers keep it here. */
   .card-actions .zui-btn--md,
-  .settings-modal > .zui-btn--md,
-  .shortcut-help .zui-btn--md {
+  .settings-modal > .zui-btn--md {
     padding: 0.4rem 0.8rem;
   }
 

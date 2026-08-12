@@ -12,7 +12,30 @@
 		// /board) to the SPA shell instead of falling through to the API's
 		// JSON 404 — see app.notFound in worker/index.ts (#285).
 		"binding": "ASSETS",
-		"not_found_handling": "single-page-application"
+		"not_found_handling": "single-page-application",
+		// A request whose path matches a real asset is answered by the asset
+		// worker without invoking this Worker, so the security-header
+		// middleware never runs for it — and "/" matches index.html, which
+		// made the one URL a person actually types the only document served
+		// with no Content-Security-Policy. Measured on a preview deployment:
+		//
+		//   /board  200  content-security-policy: default-src 'self'; …
+		//   /       200  no security headers at all
+		//
+		// The narrow-looking fix is wrong. run_worker_first as an array is an
+		// allowlist, not an addition: naming ["/"] sends "/" to the Worker and
+		// takes every other path off it, so the client routes lose the headers
+		// they used to get. Measured on the deployment that shipped it — the
+		// protection moved rather than spread:
+		//
+		//   /       200  content-security-policy: …   (gained)
+		//   /board  200  no security headers          (lost)
+		//
+		// true is the honest setting: every request through the Worker, one
+		// place that decides headers. It costs an invocation per hashed asset,
+		// which for an app this size is not a number worth trading correctness
+		// against.
+		"run_worker_first": true
 	},
 	"observability": {
 		"enabled": true
