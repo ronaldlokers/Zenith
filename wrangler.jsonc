@@ -12,7 +12,22 @@
 		// /board) to the SPA shell instead of falling through to the API's
 		// JSON 404 — see app.notFound in worker/index.ts (#285).
 		"binding": "ASSETS",
-		"not_found_handling": "single-page-application"
+		"not_found_handling": "single-page-application",
+		// A request whose path matches a real asset is answered by the asset
+		// worker without ever invoking this Worker, so the security-header
+		// middleware never runs for it. Every client route (/board, /cv, …)
+		// matches no asset and so does reach the Worker — but "/" matches
+		// index.html, which made the one URL people actually type the only
+		// document served with no Content-Security-Policy. Measured on a
+		// preview deployment:
+		//
+		//   /board  200  content-security-policy: default-src 'self'; …
+		//   /       200  (no security headers at all)
+		//
+		// Routing just the document through the Worker fixes that and keeps
+		// the policy defined in one place. The hashed assets stay on the fast
+		// path, where a CSP would do nothing anyway.
+		"run_worker_first": ["/"]
 	},
 	"observability": {
 		"enabled": true
