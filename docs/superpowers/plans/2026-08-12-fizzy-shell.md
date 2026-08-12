@@ -170,15 +170,18 @@ All four open questions were answered before this plan was scheduled:
 
 ## What shipped
 
-The eight planned PRs became eleven, all stacked on each other and none
-merged into `main` while the series was in flight. Splits happened where a
-PR grew two distinct halves (persistence vs the UI that consumes it,
-Insights vs CV), and one PR was added at the end for a behaviour the plan's
-own numbering had left homeless.
+The eight planned PRs became thirty-two, stacked on each other and none
+merged while the series was in flight. Eleven built the design; the rest
+are what auditing it turned up. Splits happened where a PR grew two
+distinct halves (persistence vs the UI that consumes it, Insights vs CV).
+
+### The design
 
 | PR | Scope |
 |---|---|
-| #536–#546 | PRs 1–4: tokens, chrome, wordmark menu, shortcuts, landing screen |
+| #535 | This spec and plan |
+| #536–#545 | PRs 1–3: light-only, spacing tokens, wordmark menu, shortcuts, bottom bar, rail removal, top bar |
+| #546 | PR 4 — the landing screen |
 | #547 | PR 5a — board fold state: migration, API, tests |
 | #548 | PR 5b — board fold + the archive as a rail |
 | #549 | PR 5c — board card + the narrow carousel |
@@ -187,7 +190,53 @@ own numbering had left homeless.
 | #552 | PR 7b — CV plate, variants as the rail |
 | #553 | PR 8a — Feed banded by match strength |
 | #554 | PR 8b — People "Owe a reply" + Settings headings |
-| #555 | "Closed applications" (`A`) — see below |
+| #555 | "Closed applications" — the behaviour the numbering had left homeless |
+
+### What auditing it found
+
+Every one of these was invisible on screen. That is the point of the list:
+the design looked finished at #555, and none of what follows would have
+been caught by looking at it again.
+
+| PR | Found | How |
+|---|---|---|
+| #556 | The destination the spec calls "People & companies" shipped as "Network" | Sweeping every route at two widths |
+| #557 | The landing screen rendered **two** columns, not three — a stale rule won on source order, putting "Happened today" below the fold | Measuring the computed grid |
+| #558 | The wordmark's mark shipped at 22px, the exact size the spec calls "mush" | Measuring against the spec's own number |
+| #559 | A locked decision ("never a filled ground with type on it") contradicted by three surfaces the shell fills | Re-measuring the rule's premise |
+| #560 | 134 lines of CSS whose markup the shell had removed | The repo's own dead-css script |
+| #561 | A tablist that controlled no panel; two radio groups that implement no arrow keys | Reading the ARIA against what it promises |
+| #562 | Printing lost the application's stage entirely, and printed the plate as a slab of ink | Emulating print, which nothing in the build does |
+| #563 | The share page's aggregate-only rule was structural, not enforced | Asking what would object to a comp column |
+| #564 | The closed-applications shortcut stole the feed's own `a` key | Checking that every destination really is one keystroke away |
+| #565 | A new user's first board offered five identical primary CTAs | Logging in as an account with no data |
+| #566 | A three-digit rail count filled its badge edge to edge | Seeding 160 applications |
+
+## Reviewing this stack
+
+Read it bottom-up in merge order; each PR assumes the one below it. If time
+is short, these are where the risk is:
+
+- **#547** is the only migration and the only new API route. It is also the
+  only PR here that can corrupt data.
+- **#548, #549, #550** carry the largest behavioural changes: the Archive
+  screen goes away, the board becomes a carousel below 900px, and the
+  detail page is restructured. Everything after them is smaller.
+- **#559 and #563** change or enforce standing rules, so they are worth
+  disagreeing with explicitly if you are going to disagree at all.
+- The rest are contained fixes with a test each.
+
+What CI cannot check, and a human should:
+
+1. **Is the board's fold model right?** Folding is a choice, not a rule about
+   emptiness. That is a product opinion, not a bug class.
+2. **Does "People & companies" want to be one screen?** The mockup says yes;
+   this ships two tabs, because merging them is a routing change.
+3. **The bottom bar.** Settled decision 3 says the bar is a navigation
+   surface with no slot for adding, and accepts that adding has no one-tap
+   route on a phone. The bar ships with Add in the first slot, and the third
+   slot the design wanted (Pinned) is not a Zenith feature. Either the
+   decision or the bar should change; nothing here decides that.
 
 ### Deviations from the mockups, and why
 
@@ -226,14 +275,20 @@ bugs.
 
 ### One behaviour the numbering lost
 
-The doc's Destinations section specifies a menu row and an `A` shortcut that
-fold the live stages and open the closed ones. It could not be built before
-the board could fold (PR 5), and PR 8 did not come back to it. #555 closes
-it: the toast offers "Back to live" and carries the previous fold set,
-because someone who lands in that view has no way of knowing what was
-folded before it.
+The doc's Destinations section specifies a menu row and a shortcut that fold
+the live stages and open the closed ones. It could not be built before the
+board could fold (PR 5), and PR 8 did not come back to it. #555 closes it:
+the toast offers "Back to live" and carries the previous fold set, because
+someone who lands in that view has no way of knowing what was folded before
+it. #564 then moved the key from `A` to `C` — the feed has answered to `a`
+since #144, and the global shortcut was navigating people off the feed
+mid-triage.
 
-### Also corrected
+### The screenshot rig
 
-The destination the spec calls "People & companies" shipped as "Network" —
-the label the menu row and the page title both read. Renamed to match.
+Still not a CI gate: baselines are not committed, so nothing fails when a
+render changes. Every visual claim in this series was checked by measuring
+the live page instead — computed grid tracks, contrast ratios, element
+boxes — which is what caught the defects a screenshot would have shown as
+"looks fine". Committing baselines is a repo-weight decision, not a
+technical one, and nothing here makes it.
