@@ -2865,20 +2865,12 @@ summary.bcol-head::after {
   gap: 0.15rem;
 }
 
-/* Live PDF preview (#134) */
-.cv-preview-h {
-  margin-top: 1.1rem;
-}
-
-.cv-preview-frame {
+/* Live PDF preview (#134). Its own framed box is gone (#535 shell) — the
+   preview IS the card on the plate now, so the frame it used to sit in would
+   be a second border inside the first. */
+.cv-doc-view {
   width: 100%;
-  aspect-ratio: 210 / 297;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken, var(--bg));
-  overflow: auto;
-  padding: 10px;
-  box-sizing: border-box;
+  min-width: 0;
 }
 
 /* Styled HTML CV document (#386) — a truthful, themable preview of the export
@@ -3118,63 +3110,19 @@ summary.bcol-head::after {
   gap: 1.4rem;
 }
 
-.cv-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.6rem;
-  /* Wrap on narrow viewports so the template picker + Download button never
-     push past the edge (design review — was causing horizontal body scroll). */
-  flex-wrap: wrap;
-}
-
-.cv-template-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.cv-template-picker-label {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-}
-
-.cv-template-options {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.cv-template-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  padding: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  color: var(--ink);
-  font-size: var(--text-meta);
-  cursor: pointer;
-}
-
-.cv-template-option.selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
+/* The CV toolbar and its framed template picker are gone (#535 shell): the
+   template is chosen from the tools hanging off the plate, and the download
+   button sits on the plate with the other actions. The thumbnails below stay —
+   they are what the tool buttons draw. */
 
 .cv-template-thumb {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.2rem;
-  width: 2.6rem;
-  height: 2rem;
-  padding: var(--space-1);
+  gap: 0.14rem;
+  width: 1.25rem;
+  height: 1rem;
+  padding: 0.14rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -3392,10 +3340,6 @@ summary.bcol-head::after {
   color: var(--muted);
   cursor: pointer;
 }
-.cv-versions-h {
-  margin-top: var(--space-3);
-}
-
 /* Felt momentum (#484) — gone-quiet close-out on Today. */
 .today-quiet {
   background: var(--surface);

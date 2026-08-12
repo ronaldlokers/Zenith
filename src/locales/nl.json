@@ -310,7 +310,10 @@
     "saved": "CV-versie opgeslagen",
     "empty": "Nog geen opgeslagen versies. Sla het huidige CV op om een variant te bewaren die je altijd kunt downloaden.",
     "download": "Downloaden",
-    "corrupt": "Deze versie kon niet worden gelezen."
+    "corrupt": "Deze versie kon niet worden gelezen.",
+    "live": "Live",
+    "newVariant": "+ Nieuwe variant",
+    "deleteAria": "Variant {{name}} verwijderen"
   },
   "goals": {
     "weeklyGoal": "Weekdoel",
@@ -588,7 +591,8 @@
       "fluent": "Vloeiend",
       "native": "Moedertaal"
     },
-    "itemMenu": "Acties voor {{title}}"
+    "itemMenu": "Acties voor {{title}}",
+    "editBelow": "Hieronder bewerken"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."

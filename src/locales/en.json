@@ -310,7 +310,10 @@
     "saved": "CV version saved",
     "empty": "No saved versions yet. Save the current CV to keep a variant you can download anytime.",
     "download": "Download",
-    "corrupt": "This version couldn’t be read."
+    "corrupt": "This version couldn’t be read.",
+    "live": "Live",
+    "newVariant": "+ New variant",
+    "deleteAria": "Delete variant {{name}}"
   },
   "goals": {
     "weeklyGoal": "Weekly goal",
@@ -588,7 +591,8 @@
       "fluent": "Fluent",
       "native": "Native"
     },
-    "itemMenu": "Actions for {{title}}"
+    "itemMenu": "Actions for {{title}}",
+    "editBelow": "Edit below"
   },
   "posting": {
     "staleHint": "This posting may no longer be live — worth a quick check."
