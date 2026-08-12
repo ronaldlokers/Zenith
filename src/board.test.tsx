@@ -13,11 +13,13 @@ import "./i18n";
 // gate.
 let savedFolded: string[] | null = null;
 let profileFolded: string | null = null;
+let saveFails = false;
 
 vi.mock("./api", () => ({
   api: {
     profile: () => Promise.resolve({ board_folded: profileFolded } as Profile),
     setBoardFolded: (folded: string[]) => {
+      if (saveFails) return Promise.reject(new Error("nope"));
       savedFolded = folded;
       return Promise.resolve({ board_folded: folded });
     },
@@ -74,6 +76,7 @@ function renderBoard(
   applications: Application[],
   over: {
     onOpenQuickAdd?: (stage?: Status) => void;
+    onError?: (message: string | null) => void;
     notify?: (m: string, undo?: () => void, label?: string) => void;
     // Router state, so the "Closed applications" entry point can be exercised.
     state?: unknown;
@@ -87,7 +90,7 @@ function renderBoard(
       contacts={[]}
       roleTypes={[]}
       onChanged={() => Promise.resolve()}
-      onError={() => {}}
+      onError={over.onError ?? (() => {})}
       notify={over.notify ?? (() => {})}
       onDelete={() => {}}
       onStatus={() => {}}
@@ -113,7 +116,10 @@ const headerFor = (stage: string) =>
 describe("board rails", () => {
   // The fold cache is a paint cache; a test that does not care about it must
   // start without one, or it inherits the previous test's board.
-  beforeEach(() => localStorage.removeItem("zenith_board_folded"));
+  beforeEach(() => {
+    localStorage.removeItem("zenith_board_folded");
+    saveFails = false;
+  });
 
   test("carries all eight stages plus the archive", async () => {
     profileFolded = null;
@@ -378,6 +384,23 @@ describe("board rails", () => {
     } finally {
       window.matchMedia = real;
     }
+  });
+
+  test("puts the board back when the save is refused", async () => {
+    // A fold that stays on screen after the server refused it reverts on the
+    // next load with no explanation — and the paint cache, whose whole job is
+    // to predict what the server will say, is left holding a value the server
+    // refused.
+    profileFolded = "";
+    const errors: (string | null)[] = [];
+    saveFails = true;
+    renderBoard([], { onError: (m) => errors.push(m) });
+    await waitFor(() => expect(headerFor("Offer")).toBeTruthy());
+
+    fireEvent.click(headerFor("Offer")!);
+    await waitFor(() => expect(errors).toEqual(["nope"]));
+    expect(headerFor("Offer"), "the fold should have been undone").toBeTruthy();
+    expect(localStorage.getItem("zenith_board_folded")).toBe("");
   });
 
   test("an empty board offers one way in, not one per stage", async () => {

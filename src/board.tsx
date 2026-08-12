@@ -621,21 +621,27 @@ export function PipelineTab({
     };
   }, []);
   const applyFold = useCallback(
-    (next: Set<BoardRail>) => {
+    (next: Set<BoardRail>, previous: Set<BoardRail>) => {
       overridden.current = true;
       setFolded(next);
       const ordered = BOARD_RAILS.filter((r) => next.has(r));
       writeFoldCache(ordered);
-      api
-        .setBoardFolded(ordered)
-        .catch((e) => onError((e as Error).message));
+      api.setBoardFolded(ordered).catch((e) => {
+        // Put the board back. A rejected save that leaves the fold on screen
+        // reverts on the next load with no explanation, and the cache — whose
+        // whole job is to predict what the server will say — is left holding
+        // a value the server refused.
+        setFolded(previous);
+        writeFoldCache(BOARD_RAILS.filter((r) => previous.has(r)));
+        onError((e as Error).message);
+      });
     },
     [onError],
   );
   const toggleFold = (rail: BoardRail) => {
     const next = new Set(folded);
     if (!next.delete(rail)) next.add(rail);
-    applyFold(next);
+    applyFold(next, folded);
   };
 
   // "Closed applications" from the menu (A) — there is no Archive screen, so
@@ -648,8 +654,12 @@ export function PipelineTab({
   useEffect(() => {
     if (!showClosed) return;
     const before = new Set(folded);
-    applyFold(new Set<BoardRail>(PIPELINE));
-    notify(t("board.showingClosed"), () => applyFold(before), t("board.backToLive"));
+    applyFold(new Set<BoardRail>(PIPELINE), before);
+    notify(
+      t("board.showingClosed"),
+      () => applyFold(before, new Set<BoardRail>(PIPELINE)),
+      t("board.backToLive"),
+    );
     // Consume it, or every later visit to the board reopens the closed view.
     navigate("/board", { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
