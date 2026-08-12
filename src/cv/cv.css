@@ -401,4 +401,37 @@
       padding: 0;
     }
   }
+
+  /* Print: the plate is a screen device — it mounts the card and gives it a
+     ground. On paper it is a slab of ink around the content, and the tools
+     and actions are things to click. This has to live in this file: the
+     print band in App.css is @layer app, and no specificity there can beat
+     @layer components. */
+  @media print {
+    .cv-plate {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .cv-tools,
+    .cv-plate-actions,
+    .cv-rail-add,
+    .cv-rail-del {
+      display: none;
+    }
+
+    /* Which variant this is stays — it is the one thing a printed CV has to
+       say that the document itself does not. */
+    .cv-rail-step {
+      display: none;
+    }
+
+    .cv-rail-step.current {
+      display: block;
+      background: none;
+      color: var(--print-ink);
+      padding: 0;
+    }
+  }
 }
