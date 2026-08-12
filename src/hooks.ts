@@ -44,6 +44,34 @@ export function rowActivate(onActivate: () => void) {
 // behind the modal. Attach the returned ref to the dialog element.
 export function useFocusTrap<T extends HTMLElement>(active = true) {
   const ref = useRef<T>(null);
+  // Captured at render, not in the effect below, and that is the whole point.
+  // React applies a child's autoFocus during commit — before any effect runs
+  // — so an effect that reads document.activeElement finds the dialog's own
+  // first field and records *that* as the opener. On close the field is
+  // already detached, document.contains() says so, nothing is restored, and
+  // focus falls to <body>: the keyboard user is dropped at the top of the
+  // page. At render time the dialog has not mounted, so this is still the
+  // control they activated. Measured — quick-add landed on <body>, the
+  // command palette (which focuses in an effect) did not.
+  // Re-captured on each closed→open transition, so a dialog opened twice from
+  // two different controls goes back to the right one. Deliberately not
+  // cleared on close: the render that flips active to false happens *before*
+  // the effect cleanup that restores focus, so clearing there would leave
+  // nothing to restore — measured on the notification panel, which closed to
+  // <body> until this was a transition rather than a reset.
+  const opener = useRef<HTMLElement | null>(null);
+  const wasActive = useRef(false);
+  // Two shapes to serve, and one capture rule covers both. A dialog that
+  // mounts when it opens is captured on its first render; a panel that stays
+  // mounted and toggles the trap is captured on each closed→open transition,
+  // so opening it from two different controls goes back to the right one.
+  if (active && !wasActive.current && typeof document !== "undefined") {
+    opener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+  }
+  wasActive.current = active;
   useEffect(() => {
     if (!active) return;
     const node = ref.current;
@@ -54,12 +82,6 @@ export function useFocusTrap<T extends HTMLElement>(active = true) {
       Array.from(node.querySelectorAll<HTMLElement>(selector)).filter(
         (el) => el.offsetParent !== null,
       );
-    // Remember where focus came from — closing a dialog must return the
-    // keyboard user to their place, not drop them at <body> (#346).
-    const opener =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
     focusable()[0]?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
@@ -78,7 +100,10 @@ export function useFocusTrap<T extends HTMLElement>(active = true) {
     node.addEventListener("keydown", onKey);
     return () => {
       node.removeEventListener("keydown", onKey);
-      if (opener && document.contains(opener)) opener.focus();
+      // Closing a dialog must return the keyboard user to their place, not
+      // drop them at <body> (#346).
+      const back = opener.current;
+      if (back && document.contains(back)) back.focus();
     };
   }, [active]);
   return ref;
