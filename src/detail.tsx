@@ -14,6 +14,7 @@ import {
   ApplicationForm,
   Button,
   Chip,
+  OutcomeDialog,
   CoverLetterSection,
   AiKeyGate,
   Documents,
@@ -32,10 +33,12 @@ import type {
   PrepItem,
   RoleTypeDef,
   Status,
+  StatusHistoryRow,
+  TerminalStatus,
 } from "./types";
-import { STATUSES } from "./types";
+import { isTerminalStatus, STATUSES } from "./types";
 import { salaryResearchLinks } from "./salary-research";
-import { EditIcon, RemoveIcon } from "./icons";
+import { EditIcon, ExternalLinkIcon, PrintIcon, RemoveIcon } from "./icons";
 import {
   buildNegotiationDraft,
   formatDate,
@@ -63,6 +66,8 @@ export function ApplicationDetailModal({
   notify,
   onDelete,
   onStatus,
+  history,
+  onSaveOutcome,
   asPane,
 }: {
   application: Application;
@@ -76,6 +81,16 @@ export function ApplicationDetailModal({
   notify: (message: string, undo?: () => void) => void;
   onDelete: (resource: string, id: number, name: string) => void;
   onStatus: (id: number, status: Status) => void;
+  // Status history for this user, used only to read back the outcome recorded
+  // on this application's latest terminal transition (#381) — the reason
+  // lives on the transition, not the application row. Optional: a caller
+  // without stats loaded simply shows no outcome section.
+  history?: StatusHistoryRow[];
+  onSaveOutcome?: (
+    id: number,
+    reason: string | null,
+    note: string | null,
+  ) => void;
   // Split-pane mode (#131) — rendered inline in the Jobs sidebar on wide
   // desktop viewports instead of an overlay modal. Same content either
   // way; only the outer wrapper (backdrop, click-outside-to-close,
@@ -117,7 +132,23 @@ export function ApplicationDetailModal({
   // summary in the facts column refetches instead of going stale.
   const [activityKey, setActivityKey] = useState(0);
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
+  const [editingOutcome, setEditingOutcome] = useState(false);
   const a = application;
+
+  // The outcome lives on the latest terminal transition, which is also the
+  // row the endpoint writes to — so read it from the same place rather than
+  // from the application row. `history` arrives ordered by changed_at, and
+  // the last matching row is the current closure.
+  const outcomeStatus: TerminalStatus | null = isTerminalStatus(a.status)
+    ? a.status
+    : null;
+  const outcomeRow = outcomeStatus
+    ? [...(history ?? [])]
+        .reverse()
+        .find(
+          (r) => r.application_id === a.id && isTerminalStatus(r.to_status),
+        )
+    : undefined;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -215,41 +246,81 @@ export function ApplicationDetailModal({
         aria-modal={asPane ? undefined : true}
         aria-label={a.title}
       >
+        {editingOutcome && outcomeStatus && onSaveOutcome && (
+          <OutcomeDialog
+            status={outcomeStatus}
+            initialReason={outcomeRow?.outcome_reason ?? null}
+            initialNote={outcomeRow?.outcome_note ?? null}
+            onClose={() => setEditingOutcome(false)}
+            onSave={(reason, note) => {
+              onSaveOutcome(a.id, reason, note);
+              setEditingOutcome(false);
+            }}
+          />
+        )}
+        {/* The card is mounted on a plate tinted with the current stage, and
+            the tools hang against the plate rather than against the viewport:
+            they belong to this application, not to the page. They are
+            siblings of the plate — nesting them inside it renders plausibly
+            and wrong, which is exactly the bug that hit the prototype twice.
+            test/detail-structure asserts the sibling relationship. */}
+        <div className={`detail-stage stage-${a.status}`}>
+          <div className="detail-tools detail-tools-left">
+            {safeHref(a.url) && (
+              <a
+                className="detail-tool"
+                href={safeHref(a.url)}
+                target="_blank"
+                rel="noreferrer"
+                title={t("detail.jobPostingLink")}
+                aria-label={t("detail.jobPostingLink")}
+              >
+                <ExternalLinkIcon />
+              </a>
+            )}
+          </div>
+          <div className="detail-plate">
+            <article className="detail-card">
+        {/* The identity pill floats inside the card with a margin — unlike
+            the board card's strip, which is flush to its edge. */}
+        <div className="detail-pill">
+          <span className="detail-pill-when">
+            {formatDate(a.applied_at ?? a.created_at)}
+          </span>
+          <span className="detail-pill-co">{a.company_name ?? "—"}</span>
+        </div>
         <div className="detail-head">
           <div className="detail-head-main">
             <h2>{a.title}</h2>
             <span className="detail-co muted small">
-              {a.company_name ?? "—"}
-              {a.contact_name ? ` · ${a.contact_name}` : ""}
-              {safeHref(a.url) && (
-                <>
-                  {" · "}
-                  <a
-                    href={safeHref(a.url)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="detail-posting-link"
-                  >
-                    {t("detail.jobPostingLink")}
-                  </a>
-                </>
-              )}
+              {a.contact_name ? `${a.contact_name} · ` : ""}
+              {roleTypes.find((r) => r.slug === a.role_type)?.label ??
+                a.role_type}
             </span>
           </div>
           {!editing && (
             <div className="detail-head-right">
-              <select
-                className={`status-pill stage-${a.status}`}
-                value={a.status}
+              {/* The stage rail lives inside the card, level with the title:
+                  where this stands is the first thing the page answers, and a
+                  dropdown hides seven of the eight answers behind a click. */}
+              <div
+                className="detail-rail"
+                role="radiogroup"
                 aria-label={t("detail.status")}
-                onChange={(e) => onStatus(a.id, e.target.value as Status)}
               >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {t(`stages.${s}`)}
-                  </option>
+                {STATUSES.map((sName) => (
+                  <button
+                    key={sName}
+                    type="button"
+                    role="radio"
+                    aria-checked={a.status === sName}
+                    className={`detail-rail-step stage-${sName}${a.status === sName ? " current" : ""}`}
+                    onClick={() => onStatus(a.id, sName)}
+                  >
+                    {t(`stages.${sName}`)}
+                  </button>
                 ))}
-              </select>
+              </div>
               <StarRating
                 value={a.fit_score ?? null}
                 aria-label={t("detail.fitScore")}
@@ -333,6 +404,29 @@ export function ApplicationDetailModal({
                   <>
                     <dt>{t("forms.appliedOn")}</dt>
                     <dd>{formatDate(a.applied_at)}</dd>
+                  </>
+                )}
+                {/* Why it ended (#381) — sits in the facts list because that
+                    is what it is. Only for a closed application, and only
+                    when the caller passed history to read it from. */}
+                {outcomeStatus && onSaveOutcome && (
+                  <>
+                    <dt>{t("outcome.detailHeading")}</dt>
+                    <dd className="detail-outcome">
+                      <span className={outcomeRow?.outcome_reason ? "" : "muted"}>
+                        {outcomeRow?.outcome_reason
+                          ? t(`outcome.reason.${outcomeRow.outcome_reason}`)
+                          : t("outcome.detailEmpty")}
+                        {outcomeRow?.outcome_note
+                          ? ` — ${outcomeRow.outcome_note}`
+                          : ""}
+                      </span>
+                      <Button variant="link" onClick={() => setEditingOutcome(true)}>
+                        {outcomeRow?.outcome_reason
+                          ? t("outcome.detailChange")
+                          : t("outcome.detailEdit")}
+                      </Button>
+                    </dd>
                   </>
                 )}
                 {a.salary_range && (
@@ -625,40 +719,6 @@ export function ApplicationDetailModal({
               />
             </div>
 
-            <ActionBar variant="detail">
-              <Button variant="secondary" onClick={() => setEditing(true)}>
-                {t("common.edit")}
-              </Button>
-              <Button variant="secondary" disabled={printingCheatSheet} onClick={printCheatSheet}>
-                {printingCheatSheet
-                  ? t("detail.cheatSheet.printing")
-                  : t("detail.cheatSheet.print")}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  (a.archived_at
-                    ? api.unarchiveApplication(a.id)
-                    : api.archiveApplication(a.id)
-                  )
-                    .then(onChanged)
-                    .catch((e) => onError((e as Error).message))
-                }
-              >
-                {a.archived_at
-                  ? t("detail.unarchive")
-                  : t("detail.archive")}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => {
-                  onDelete("applications", a.id, a.title);
-                  onClose();
-                }}
-              >
-                {t("common.delete")}
-              </Button>
-            </ActionBar>
 
             {/* The facts column ran out well above the fold while the tabbed
                 column kept going (#490). The last few touchpoints answer
@@ -779,6 +839,57 @@ export function ApplicationDetailModal({
           </div>
           </>
         )}
+            </article>
+            <div className="detail-plate-actions">
+            <ActionBar variant="detail">
+              <Button variant="secondary" onClick={() => setEditing(true)}>
+                {t("common.edit")}
+              </Button>
+              <Button variant="secondary" disabled={printingCheatSheet} onClick={printCheatSheet}>
+                {printingCheatSheet
+                  ? t("detail.cheatSheet.printing")
+                  : t("detail.cheatSheet.print")}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  (a.archived_at
+                    ? api.unarchiveApplication(a.id)
+                    : api.archiveApplication(a.id)
+                  )
+                    .then(onChanged)
+                    .catch((e) => onError((e as Error).message))
+                }
+              >
+                {a.archived_at
+                  ? t("detail.unarchive")
+                  : t("detail.archive")}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  onDelete("applications", a.id, a.title);
+                  onClose();
+                }}
+              >
+                {t("common.delete")}
+              </Button>
+            </ActionBar>
+            </div>
+          </div>
+          <div className="detail-tools detail-tools-right">
+            <button
+              type="button"
+              className="detail-tool"
+              disabled={printingCheatSheet}
+              title={t("detail.cheatSheet.print")}
+              aria-label={t("detail.cheatSheet.print")}
+              onClick={printCheatSheet}
+            >
+              <PrintIcon />
+            </button>
+          </div>
+        </div>
       </div>
   );
 

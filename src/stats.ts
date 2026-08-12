@@ -127,3 +127,51 @@ export function responseRate(history: StatusHistoryRow[]): ResponseRate {
   const responded = reached.filter((r) => r >= screeningIdx).length;
   return { applied, responded, rate: applied > 0 ? responded / applied : 0 };
 }
+
+export interface OutcomeBreakdown {
+  counts: { reason: string; count: number }[];
+  unrecorded: number;
+  total: number;
+}
+
+// Why the currently-closed applications ended (#381).
+//
+// Counts each application once, off its *latest* transition — not every
+// terminal transition in history. An application that was rejected, revived
+// and is now interviewing has an ending in its past, but it isn't a closed
+// application today and nothing in the UI can fill in its reason, so
+// counting it would inflate "no reason recorded" with rows nobody can act
+// on. The latest row is also exactly the row the outcome endpoint writes to,
+// which keeps the breakdown and the edit path pointed at the same data.
+export function outcomeBreakdown(history: StatusHistoryRow[]): OutcomeBreakdown {
+  const latest = new Map<number, StatusHistoryRow>();
+  for (const row of history) {
+    const prev = latest.get(row.application_id);
+    // Don't lean on the caller's ordering: same-timestamp rows are ordered
+    // by id server-side, but this function is used on any history array.
+    if (!prev || sqlMs(row.changed_at) >= sqlMs(prev.changed_at)) {
+      latest.set(row.application_id, row);
+    }
+  }
+
+  const tally = new Map<string, number>();
+  let unrecorded = 0;
+  let total = 0;
+  for (const row of latest.values()) {
+    if (FUNNEL_STAGES.includes(row.to_status)) continue;
+    total++;
+    const reason = row.outcome_reason;
+    if (!reason) {
+      unrecorded++;
+      continue;
+    }
+    tally.set(reason, (tally.get(reason) ?? 0) + 1);
+  }
+
+  const counts = [...tally.entries()]
+    .map(([reason, count]) => ({ reason, count }))
+    // Ties break on the slug so the bar order is stable between renders
+    // rather than following Map insertion.
+    .sort((a, b) => b.count - a.count || a.reason.localeCompare(b.reason));
+  return { counts, unrecorded, total };
+}

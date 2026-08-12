@@ -240,7 +240,7 @@ The Ascent — pipeline stage hues, rebuilt as a **temperature climb** so the pi
 - **Aged Brass** (`st-offer`): offer — the climb resolves into the brand accent.
 - **Ash** (`st-dead`): rejected, withdrawn, ghosted. Off the mountain; low chroma on purpose.
 
-Separation is on the blue↔orange axis, the one axis every dichromacy preserves. Worst pair across normal vision and all three dichromacies: **ΔE 12.0 light, 13.4 dark** — against ΔE 1.0 for the palette this replaced.
+Separation is on the blue↔orange axis, the one axis every dichromacy preserves. Worst pair across normal vision and all three dichromacies: **ΔE 12.0** — against ΔE 1.0 for the palette this replaced.
 
 ### Neutral
 
@@ -254,7 +254,7 @@ Separation is on the blue↔orange axis, the one axis every dichromacy preserves
 
 ### Semantic
 
-`success` (a muted forest green), `warning` and `heat-quiet` (an amber that is deliberately *not* a stage hue, so "gone quiet" never reads as a stage), `danger` (a brick red, lightened in dark theme), `info` (a slate blue), `ev-touch` (a violet for interaction/touchpoint events that must not collide with stage colour), `scrim` (indigo at 45%).
+`success` (a muted forest green), `warning` and `heat-quiet` (an amber that is deliberately *not* a stage hue, so "gone quiet" never reads as a stage), `danger` (a brick red), `info` (a slate blue), `ev-touch` (a violet for interaction/touchpoint events that must not collide with stage colour), `scrim` (indigo at 45%).
 
 ### Named Rules
 
@@ -262,13 +262,33 @@ Separation is on the blue↔orange axis, the one axis every dichromacy preserves
 
 **The Stage-Colour Reservation.** The five ascent hues mean pipeline state and nothing else. Never use them as chart series colours, category tags, avatar fills, or decoration.
 
-**The Measured-Palette Rule.** What is locked is the *property*, not the hex. Any five hues may ship provided every pair stays at **ΔE2000 ≥ 10 under normal vision and all three dichromacies**, and every stage's ink tone clears **4.5:1 as label text on both grounds**. `test-node/stage-palette.spec.ts` recomputes this from `index.css` and fails CI below the floor. The previous set was frozen by hex and called accessible; measured, it put applied and screening at ΔE 1.0 under deuteranopia — the same colour to roughly 6% of men.
+**The Measured-Palette Rule.** What is locked is the *property*, not the hex. Any five hues may ship provided every pair stays at **ΔE2000 ≥ 10 under normal vision and all three dichromacies**, and every stage's ink tone clears **4.5:1 as label text on both `--surface` and `--bg`**. `test-node/stage-palette.spec.ts` recomputes this from `index.css` and fails CI below the floor. The previous set was frozen by hex and called accessible; measured, it put applied and screening at ΔE 1.0 under deuteranopia — the same colour to roughly 6% of men.
 
 **The Field / Ink Split.** Every stage publishes two tokens, exactly as the brand already does for `--accent` / `--accent-ink`: `--sc` is the **field** (washes, dots, funnel bars) and may be mid-chroma; `--sc-ink` is the **text** tone, the same hue moved until it is readable. Anything that renders a stage as words reads `--sc-ink`. One token cannot do both jobs — forcing it drives every hue toward near-black.
 
-**The Always-Night Rule.** The rail and the sign-in stage are Ink Indigo in light theme and dark theme alike. Their text tones come from `--rail-ink` / `--rail-text` / `--rail-muted` / `--rail-faint`, declared once on `.side`. Never hardcode a rail hex, and never let `--ink` / `--muted` leak into rail descendants — those flip with the theme and the rail does not.
+**The Always-Night Rule.** The sign-in stage is Ink Indigo — a committed Night-ground brand moment on the paper canvas, so `--ink` / `--muted` must not leak into it: those are paper-ground tones and it is not on the paper ground.
 
-**The Dark-Parity Rule.** Explicit Dark and OS-dark share one palette, declared identically in `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` and `:root[data-theme="dark"]`. A value added to one must be added to the other in the same commit, or the two themes silently diverge.
+The desktop rail was the other Night surface, and it is gone with the Fizzy-philosophy shell; the `--rail-*` token family went with it. Any future Night surface needs its own declared tones rather than reaching for the app's.
+
+**The No-Fill Rule.** A stage colour is a tint, a ring or an edge — never a filled ground with type on it. Measured, no ink clears 4.5:1 on all five hues: the best available is white at a worst case of 3.62:1 on interview, Night ink is worse at 2.37:1, paper worse still. That is not a gap to close by picking a better ink. The hues are tuned to clear 4.5:1 *as label text* on paper, which makes them mid-tone by construction, and a mid-tone cannot also be a reliable ground for type. `--stage-tint` is the mechanism that already does this correctly.
+
+**One theme.** Zenith is light-only. There is no `data-theme` attribute and no `prefers-color-scheme` branch anywhere in the stylesheets; the Automatic and Dark options were removed (see `docs/superpowers/specs/2026-08-12-fizzy-shell-design.md`). Adding a second ground back is a design decision, not a fix — it means re-deriving every token pair below, and re-running the palette suite against both grounds.
+
+### Glyph sizing
+
+`--text-glyph` is the optical size for a **solid** pseudo-element glyph. A filled triangle reads heavier than a stroked arrow at the same nominal size, so it is set smaller to match it — `.board-sort` sets `::before` (`↕`) at `--text-meta` and `::after` (`▾`) at `--text-glyph`, both written in the same commit, which is what marks the difference as an optical judgement rather than drift.
+
+It is **not a step on the reading ramp**. Nothing anyone reads should use it; if a glyph carries meaning it needs a label, and the label uses a real size.
+
+### The printed page
+
+The CV preview (`.cv-doc`) is the one surface that is **not** app UI: it renders a simulated A4 sheet. It therefore runs on a second, deliberate unit system, named as the `--doc-*` family in `index.css`.
+
+- **Sizes are px, not rem.** They are fractions of a sheet, not of the reader's text size, and must not scale with the app's type ramp — a CV that reflows when someone changes their browser font is no longer a preview of what will print.
+- **Ink is the document's, not Zenith's.** `--doc-ink`, `--doc-heading`, `--doc-muted`, `--doc-faint` and `--doc-rule` describe a printed page; they are not `--ink` / `--muted` and must not be swapped for them.
+- **`--doc-radius` is paper**, not a control corner, so it sits outside the `--radius-*` scale.
+
+`test-node/doc-tokens.spec.ts` pins every value and fails if a literal reappears in the document styles. Print output (`@media print`) is a *third* context and shares none of these tokens: the values coincide, the meanings do not.
 
 ## Typography
 
@@ -325,7 +345,7 @@ Self-hosted variable woff2, latin + latin-ext per family. The Mono axis ships **
 - **Tier 2 — raised.** Cards, dashboard panels, KPI tiles, forms, the feed detail pane. `--shadow-1` at rest (a 1px contact shadow plus a soft 10px ambient). Clickable ones lift to `--shadow-2` with `translateY(-2px)` over 120ms.
 - **Tier 3 — focal.** Overlays (modals, dropdowns, the command palette) sit at `--shadow-2` permanently over a `--scrim` backdrop. On a content screen, tier 3 is instead the **hero KPI**: a brass-tinted vertical gradient, a 40%-brass border, a 3px brass top edge, and a brass-cast shadow. One per screen.
 
-Shadows are indigo-tinted on light (`rgba(20, 23, 58, …)`), not neutral black — they belong to the Night. In dark theme they are true black at much higher opacity, because the ground is already dark.
+Shadows are indigo-tinted (`rgba(20, 23, 58, …)`), not neutral black — they belong to the Night.
 
 ### Shadow Vocabulary
 
@@ -426,20 +446,21 @@ A Night squircle (44px at rx 14 on a 48 viewBox) holding three rungs that rise a
 - **Do** give any new animation a `@media (prefers-reduced-motion: reduce)` escape in the same block, and keep it at or under 250ms.
 - **Do** put new CSS in App.css bands 1–3, never after the control-normalization layer at band 4 — that layer exists to collapse per-context variants and must stay last.
 - **Do** make a new owned component's CSS fully self-describing inside `@layer components`, reproducing the App.css recipe it replaces rather than depending on it. Verify a swap is pixel-identical with the screenshot baseline plus `compare -metric AE` = 0; eyeballing misses sub-pixel shifts.
-- **Do** add every new dark-theme value to **both** the `prefers-color-scheme` block and the `[data-theme="dark"]` block.
 - **Do** draw icons as 24×24 line-art SVG, `currentColor`, `strokeWidth` 2.
 
 ### Don't:
 
 - **Don't** change a stage hue without re-running `test-node/stage-palette.spec.ts`. The set is held together by measured separation, not by the specific values; edit one by eye and the suite tells you which pair you just collapsed.
 - **Don't** render a stage as text with `--sc`. That is the field colour; text takes `--sc-ink`.
+- **Don't** fill anything with a stage hue and put type on it. No ink clears 4.5:1 on all five — see the No-Fill Rule. Use a tint, a ring or an edge.
+- **Don't** add a `prefers-color-scheme` block or a `data-theme` selector. There is one theme.
 - **Don't** add a second accent colour, or use a stage hue as a chart series, a category tag, or decoration.
 - **Don't** reach for the SaaS gradient-blob look — no purple-to-pink hero gradients, glow orbs, mesh backgrounds, or floating glass. The system's only gradients are the hero KPI tint, its 3px top edge, and the sign-in radial ground.
 - **Don't** use emoji anywhere in the UI, and don't introduce mascots or stock vector illustration.
 - **Don't** build dense enterprise-dashboard chrome: no data-grid density, no stacked toolbars, no ten-colour chart palettes. Fifty applications is the ceiling, not fifty thousand rows.
 - **Don't** let colour carry meaning alone. A stage hue always travels with a label or a position.
 - **Don't** hardcode a rail hex or let `--ink` / `--muted` reach a rail descendant — use `--rail-ink` / `--rail-text` / `--rail-muted` / `--rail-faint`.
-- **Don't** use `--muted` on empty-state icons; `--empty-stroke` exists because muted drops to about 1.6:1 at those icons' internal opacities on dark.
+- **Don't** use `--muted` on empty-state icons; `--empty-stroke` exists because muted drops to about 1.6:1 at those icons' internal opacities.
 - **Don't** lighten `--faint` — its current value is the one that clears 4.5:1 on both `--surface` and `--bg`.
 - **Don't** set `line-height` on a button. Buttons inherit the body's 1.5 through `button { font: inherit }`, and primary sizes its box off it; forcing 1 shortens every primary by roughly 7px and shifts the whole content column.
 - **Don't** put a coloured border thicker than 1px on any side of a card, row, callout or alert. State goes in the fill.

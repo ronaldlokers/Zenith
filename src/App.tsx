@@ -2,9 +2,10 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
-import { type Profile } from "./types";
+import { type Profile, type Status } from "./types";
 import {
   AdminIcon,
+  ArchiveIcon,
   ErrorIcon,
   NavCvIcon,
   NavInsightsIcon,
@@ -13,6 +14,7 @@ import {
   NavOverviewIcon,
   NavPipelineIcon,
   RemoveIcon,
+  SettingsIcon,
 } from "./icons";
 import { ConfirmHost } from "./ui";
 import { type Tab, TAB_PATHS, canonicalPath, parsePath } from "./routing";
@@ -50,19 +52,20 @@ import {
   Button,
   CommandPalette,
   OnboardingChecklist,
+  OutcomeDialog,
   PillTabs,
   QuickAddDialog,
   Skeleton,
+  WordmarkMenu,
 } from "./components";
 import { useAppData, useToasts } from "./app-data";
 import {
   useGlobalShortcuts,
   useNotificationNavigation,
-  useScrollActiveTabIntoView,
   useScrolled,
   useViewportBottomOffset,
 } from "./hooks";
-import { MobileTabs, type NavItem, Sidebar, ToastStack, TopBar } from "./shell";
+import { BottomBar, type NavItem, ToastStack, TopBar } from "./shell";
 
 export default function App() {
   const { t } = useTranslation();
@@ -73,11 +76,12 @@ export default function App() {
   const { data: session } = useSession();
   const sessionUser = session?.user;
   const isAdmin = sessionUser?.role === "admin";
-  const userInitials = sessionUser?.name
-    ? sessionUser.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
-    : (sessionUser?.email?.[0]?.toUpperCase() ?? "?");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  // Which stage a board add block opened the dialog for (#535). Every other
+  // entry point leaves it unset and the dialog picks its own default.
+  const [quickAddStage, setQuickAddStage] = useState<Status | undefined>();
   const [showPalette, setShowPalette] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [jumpQuery, setJumpQuery] = useState("");
   const [onboardingProfile, setOnboardingProfile] = useState<Profile | null>(
     null,
@@ -106,6 +110,9 @@ export default function App() {
     reload,
     deleteWithUndo,
     setStatus,
+    outcomePrompt,
+    setOutcomePrompt,
+    saveOutcome,
     visibleApps,
     activeApps,
     visibleCompanies,
@@ -113,12 +120,30 @@ export default function App() {
   } = useAppData(notify, navigate, t);
 
   const scrolled = useScrolled();
-  const tabsRef = useScrollActiveTabIntoView(tab);
   useViewportBottomOffset();
   useNotificationNavigation();
   useGlobalShortcuts({
     onTogglePalette: () => setShowPalette((v) => !v),
     onQuickAdd: () => setShowQuickAdd(true),
+    // 1-based, matching the keycaps the menu prints. Out-of-range keys are
+    // ignored rather than clamped: pressing 9 with six destinations should
+    // do nothing, not land on the last one.
+    onGoToIndex: (i) => {
+      const target = navItems[i - 1];
+      if (target) {
+        setTab(target.to);
+        setMenuOpen(false);
+      }
+    },
+    onOpenSettings: () => {
+      setTab("settings");
+      setMenuOpen(false);
+    },
+    onToggleMenu: () => setMenuOpen((v) => !v),
+    onShowClosed: () => {
+      setMenuOpen(false);
+      navigate("/board", { state: { showClosed: true } });
+    },
   });
 
   useEffect(() => {
@@ -213,6 +238,7 @@ export default function App() {
       {showQuickAdd && (
         <QuickAddDialog
           companies={visibleCompanies}
+          initialStatus={quickAddStage}
           onClose={() => setShowQuickAdd(false)}
           onError={setError}
           onCreated={(a, open) => {
@@ -223,6 +249,16 @@ export default function App() {
             setApplications((prev) => [...prev, a]);
             if (open) navigate(`/board/${a.id}`);
             void reload();
+          }}
+        />
+      )}
+      {outcomePrompt && (
+        <OutcomeDialog
+          status={outcomePrompt.status}
+          onClose={() => setOutcomePrompt(null)}
+          onSave={(reason, note) => {
+            void saveOutcome(outcomePrompt.id, reason, note);
+            setOutcomePrompt(null);
           }}
         />
       )}
@@ -280,32 +316,64 @@ export default function App() {
           ]}
         />
       )}
-      <Sidebar
-        navItems={navItems}
-        settingsActive={tab === "settings"}
-        onNavigate={setTab}
-        onOpenSettings={() => setTab("settings")}
-        user={sessionUser}
-        userInitials={userInitials}
-        onboarding={
-          showOnboarding ? <OnboardingChecklist {...onboardingProps} /> : null
-        }
-      />
+      {menuOpen && (
+        <WordmarkMenu
+          destinations={navItems.map((n, i) => ({
+            id: n.data,
+            label: n.label,
+            shortcut: String(i + 1),
+            icon: n.icon,
+            active: n.active,
+          }))}
+          actions={[
+            {
+              id: "settings",
+              label: t("settings.title"),
+              // The keycaps print what the app actually answers to, not what
+              // the spec proposed: quick-add has been "n" since #285 and is
+              // documented in the shortcuts help, so the menu says "n".
+              shortcut: ",",
+              icon: <SettingsIcon />,
+              active: tab === "settings",
+            },
+            {
+              id: "quick-add",
+              label: t("toolbar.addJob"),
+              shortcut: "n",
+              icon: <span aria-hidden="true">+</span>,
+              active: false,
+            },
+            {
+              // There is no Archive screen (#535): a closed application is
+              // still in the pipeline, it has just stopped moving. This opens
+              // the closed stages on the board instead of a separate list.
+              id: "closed",
+              label: t("menu.closedApplications"),
+              shortcut: "a",
+              icon: <ArchiveIcon />,
+              active: false,
+            },
+          ]}
+          onSelect={(id) => {
+            setMenuOpen(false);
+            if (id === "settings") return setTab("settings");
+            if (id === "quick-add") return setShowQuickAdd(true);
+            if (id === "closed")
+              return navigate("/board", { state: { showClosed: true } });
+            const target = navItems.find((n) => n.data === id);
+            if (target) setTab(target.to);
+          }}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
       <div className="main">
         <TopBar
           scrolled={scrolled}
           pageTitle={pageTitle}
           settingsActive={tab === "settings"}
-          onSearch={() => setShowPalette(true)}
           onOpenSettings={() => setTab("settings")}
-          onQuickAdd={() => setShowQuickAdd(true)}
-        />
-        <MobileTabs
-          navItems={navItems}
-          settingsActive={tab === "settings"}
-          onNavigate={setTab}
-          onOpenSettings={() => setTab("settings")}
-          navRef={tabsRef}
+          onOpenMenu={() => setMenuOpen(true)}
+          onOpenBoard={() => setTab("board")}
         />
 
       {error && (
@@ -385,6 +453,8 @@ export default function App() {
                   notify={notify}
                   onDelete={deleteWithUndo}
                   onStatus={setStatus}
+                  history={statsData?.history ?? []}
+                  onSaveOutcome={saveOutcome}
                   asPane
                 />
               </section>
@@ -403,11 +473,15 @@ export default function App() {
                 initialQuery={jumpQuery}
                 onQueryConsumed={() => setJumpQuery("")}
                 history={statsData?.history ?? []}
+                onSaveOutcome={saveOutcome}
                 lastInteractions={statsData?.interactions ?? []}
                 onOpenJob={(id: number | null) =>
                   navigate(id ? `/board/${id}` : "/board")
                 }
-                onOpenQuickAdd={() => setShowQuickAdd(true)}
+                onOpenQuickAdd={(stage) => {
+                  setQuickAddStage(stage);
+                  setShowQuickAdd(true);
+                }}
                 onOpenSampleData={() => navigate("/settings?s=data")}
               />
             )}
@@ -477,6 +551,10 @@ export default function App() {
       </main>
       </div>
 
+      <BottomBar
+        onSearch={() => setShowPalette(true)}
+        onQuickAdd={() => setShowQuickAdd(true)}
+      />
       <ConfirmHost />
       <ToastStack toasts={toasts} onDismiss={dismiss} />
     </div>

@@ -152,7 +152,6 @@ export function DashboardTab({
   return (
     <section className="dash today">
       <header className="today-head">
-        <h1 className="today-h1">{t("today.title")}</h1>
         <p className="today-date">
           {today}
           {searchWeek != null
@@ -261,7 +260,65 @@ export function DashboardTab({
               onOpenJob={onOpenJob}
             />
           </div>
+
+          <div className="today-col">
+            <HappenedToday
+              stats={stats}
+              applications={applications}
+              onOpenJob={onOpenJob}
+            />
+          </div>
         </div>
+      )}
+    </section>
+  );
+}
+
+// What changed today, as sentences rather than a chart (#535 landing). Reads
+// the same status_history rows the weekly momentum already uses, filtered to
+// today: nothing new is fetched.
+function HappenedToday({
+  stats,
+  applications,
+  onOpenJob,
+}: {
+  stats: Stats;
+  applications: Application[];
+  onOpenJob: (id: number) => void;
+}) {
+  const { t } = useTranslation();
+  const since = Date.now() - DAY;
+  const moves = stats.history
+    .filter((h) => parseSqlDate(h.changed_at) >= since)
+    .sort((a, b) => b.changed_at.localeCompare(a.changed_at))
+    .map((h) => ({ h, app: applications.find((a) => a.id === h.application_id) }))
+    .filter((m): m is { h: StatusHistoryRow; app: Application } => !!m.app)
+    .slice(0, 6);
+
+  return (
+    <section className="today-happened">
+      <h2 className="col-h">
+        {t("today.happened")} <span className="col-n">({moves.length})</span>
+      </h2>
+      {moves.length === 0 ? (
+        <p className="muted small">{t("today.happenedNone")}</p>
+      ) : (
+        <ul className="today-happened-list">
+          {moves.map(({ h, app }) => (
+            <li key={`${h.application_id}-${h.changed_at}`}>
+              <button className="today-happened-row" onClick={() => onOpenJob(app.id)}>
+                <span className="today-happened-meta">
+                  {app.company_name ?? "—"}
+                </span>
+                <span className="today-happened-say">
+                  {h.from_status
+                    ? t("today.happenedMoved", { title: app.title, stage: t(`stages.${h.to_status}`) })
+                    : t("today.happenedAdded", { title: app.title })}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

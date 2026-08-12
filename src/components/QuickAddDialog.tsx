@@ -14,6 +14,9 @@ import "./QuickAddDialog.css";
 
 export interface QuickAddDialogProps {
   companies: Company[];
+  // The stage to open on. The board's add block sets it to its own column;
+  // everything else leaves it unset and gets "interested".
+  initialStatus?: Status;
   onClose: () => void;
   onCreated: (app: Application, open: boolean) => void;
   onError: (message: string | null) => void;
@@ -21,6 +24,7 @@ export interface QuickAddDialogProps {
 
 export function QuickAddDialog({
   companies,
+  initialStatus,
   onClose,
   onCreated,
   onError,
@@ -29,7 +33,9 @@ export function QuickAddDialog({
   const [title, setTitle] = useState("");
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [url, setUrl] = useState("");
-  const [status, setStatus] = useState<Status>("interested");
+  // The board's add block opens this against the column it sits in, so what
+  // you add lands where you asked for it (#535).
+  const [status, setStatus] = useState<Status>(initialStatus ?? "interested");
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
   const [extraCompanies, setExtraCompanies] = useState<Company[]>([]);

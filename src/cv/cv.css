@@ -9,6 +9,252 @@
    all — nothing in App.css scopes a button rule to `.cv-section`, so they
    render as plain Recipe B, exactly what variant="secondary" reproduces. */
 @layer components {
+  /* The CV plate (#535 shell) — the same mount the application detail uses,
+     with the variants as its rail. Neutral rather than stage-tinted: a CV has
+     no pipeline state, and the stage hues are reserved for one. */
+  .cv-stage {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .cv-plate {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 1rem 1rem 1.1rem;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--rule) 35%, var(--surface));
+  }
+
+  .cv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.2rem;
+  }
+
+  .cv-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    padding-top: 1rem;
+  }
+
+  .cv-tool {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .cv-tool:hover,
+  .cv-tool:focus-visible {
+    color: var(--ink);
+    border-color: var(--rule);
+  }
+
+  .cv-tool.current {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+
+  .cv-pill {
+    display: inline-flex;
+    align-items: stretch;
+    margin-bottom: 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+  }
+
+  .cv-pill > span {
+    padding: 0.2rem 0.7rem;
+  }
+
+  .cv-pill-kind {
+    background: color-mix(in srgb, var(--rule) 45%, var(--surface));
+    color: var(--ink);
+  }
+
+  .cv-pill-name {
+    border-left: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .cv-card-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.2rem;
+    align-items: start;
+  }
+
+  /* The rail: every variant, the one on the plate marked. */
+  .cv-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.15rem;
+    min-width: 9rem;
+    max-width: 12rem;
+  }
+
+  .cv-rail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  .cv-rail-step {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.25rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .cv-rail-step:hover,
+  .cv-rail-step:focus-visible {
+    color: var(--ink);
+    background: var(--hover);
+  }
+
+  .cv-rail-step.current {
+    background: var(--ink);
+    color: var(--surface);
+  }
+
+  .cv-rail-date {
+    color: var(--faint);
+  }
+
+  .cv-rail-step.current .cv-rail-date {
+    color: color-mix(in srgb, var(--surface) 75%, transparent);
+  }
+
+  .cv-rail-del {
+    border: 0;
+    background: none;
+    color: var(--faint);
+    cursor: pointer;
+    padding: 0 0.2rem;
+  }
+
+  .cv-rail-del:hover,
+  .cv-rail-del:focus-visible {
+    color: var(--danger);
+  }
+
+  .cv-rail-add {
+    border: 0;
+    background: none;
+    padding: 0.25rem 0.5rem;
+    color: var(--accent-ink);
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .cv-rail-new {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .cv-rail-new input {
+    min-width: 0;
+  }
+
+  /* The counts that used to be an "at a glance" panel, on the document they
+     describe. */
+  .cv-card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.2rem;
+    margin-top: 1rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    color: var(--muted);
+  }
+
+  .cv-card-foot b {
+    color: var(--ink);
+  }
+
+  .cv-plate-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: 0.75rem;
+  }
+
+  @media (max-width: 699px) {
+    .cv-stage {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .cv-tools {
+      flex-direction: row;
+      padding-top: 0;
+    }
+
+    .cv-tools-left {
+      order: 1;
+      margin-right: auto;
+    }
+
+    .cv-tools-right {
+      order: 2;
+    }
+
+    .cv-plate {
+      order: 3;
+      flex-basis: 100%;
+      padding: 0.7rem 0.7rem 0.9rem;
+    }
+
+    .cv-card-cols {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cv-rail {
+      flex-direction: row;
+      flex-wrap: wrap;
+      max-width: none;
+    }
+  }
+
   /* LanguagesSection's "Add" submit button, `<button class="btn-secondary"
      type="submit">` inside `<form className="settings-add">`. App.css's
      `.settings-add button` (App.css:2131, (0,1,1): class + type) outranks

@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import { requestConfirm } from "./hooks";
 import { EmptyFeedIcon, RemoveIcon } from "./icons";
-import { safeHref, formatDate } from "./format";
+import type { MatchBand } from "./format";
+import { ageDays, matchBand, MATCH_BANDS, safeHref, formatDate } from "./format";
 import type {
   AtsBoard,
   FeedCursor,
@@ -386,14 +387,25 @@ export function FeedTab({
   // server-side now (#446) and arrives on each item as match_count.
   const [sortBy, setSortBy] = useState<"newest" | "match">("newest");
   const [minFit, setMinFit] = useState(0);
+  // Banded by match strength (#535 shell), strongest first, with the chosen
+  // sort applied inside each band. The list stays flat and in this order so
+  // j/k keeps stepping through it — the bands are headings inside one list,
+  // not three separate ones.
   const visibleItems = useMemo(
-    () =>
-      sortFilterFeed(
+    () => {
+      const sorted = sortFilterFeed(
         items ?? [],
         (i) => i.match_count ?? 0,
         sortBy,
         minFit,
-      ),
+      );
+      // A stable sort by band alone, so the chosen sort survives inside it.
+      return [...sorted].sort(
+        (a, b) =>
+          MATCH_BANDS.indexOf(matchBand(a.match_count)) -
+          MATCH_BANDS.indexOf(matchBand(b.match_count)),
+      );
+    },
     [items, sortBy, minFit],
   );
 
@@ -631,6 +643,21 @@ export function FeedTab({
             {visibleItems.map((item, i) => (
               <FeedCard
                 key={item.id}
+                band={
+                  // The band heading rides on the first card of each band, so
+                  // the list stays one list and j/k keeps its indices.
+                  i === 0 ||
+                  matchBand(visibleItems[i - 1].match_count) !==
+                    matchBand(item.match_count)
+                    ? matchBand(item.match_count)
+                    : null
+                }
+                bandCount={
+                  visibleItems.filter(
+                    (x) =>
+                      matchBand(x.match_count) === matchBand(item.match_count),
+                  ).length
+                }
                 item={item}
                 roleLabel={
                   roleTypes.find((r) => r.slug === item.role_type)?.label ??
@@ -746,6 +773,8 @@ function FeedCard({
   onDismiss,
   onSelect,
   matched,
+  band,
+  bandCount,
 }: {
   item: FeedItem;
   roleLabel: string;
@@ -755,6 +784,10 @@ function FeedCard({
   onDismiss: () => void;
   onSelect: () => void;
   matched: number | null;
+  // Set only on the first card of a band, which draws the heading above
+  // itself — the list has to stay one list for the keyboard.
+  band: MatchBand | null;
+  bandCount: number;
 }) {
   const { t } = useTranslation();
   const [dragX, setDragX] = useState(0);
@@ -780,8 +813,17 @@ function FeedCard({
   // (title + company; meta/link/actions live in the detail pane), and below
   // 900px it expands to the full card with inline actions + swipe.
   return (
+    <>
+    {/* A list item rather than a hidden decoration: "strong, 3" is worth
+        hearing when stepping through the list with a screen reader. */}
+    {band && (
+      <li className="feed-band">
+        <span className="feed-band-h">{t(`feed.band.${band}`)}</span>
+        <span className="feed-band-n">({bandCount})</span>
+      </li>
+    )}
     <li
-      className={`feed-card feed-row${focused ? " kb-focused sel" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
+      className={`feed-card feed-row band-${band ?? "cont"}${focused ? " kb-focused sel" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
       tabIndex={focused ? 0 : -1}
       aria-current={focused ? "true" : undefined}
       onClick={onSelect}
@@ -791,21 +833,35 @@ function FeedCard({
       style={dragging ? { transform: `translateX(${dragX}px)` } : undefined}
     >
       <div className="feed-row-main">
+        {/* Where it came from and how old it is, flush across the top —
+            the same identity strip the board card carries. */}
+        <div className="feed-strip">
+          <span className="feed-strip-co">{item.company ?? "—"}</span>
+          <span className="feed-strip-src">
+            {t("feed.viaSource", { source: item.source })}
+          </span>
+          <span className="feed-strip-age">
+            {t("feed.postedAge", {
+              age: ageDays(item.posted_at ?? item.fetched_at),
+            })}
+          </span>
+        </div>
         <strong>{item.title}</strong>
         <span className="muted small">
-          {[item.company, item.location].filter(Boolean).join(" · ")}
+          {[item.location, roleLabel, item.salary_text]
+            .filter(Boolean)
+            .join(" · ")}
         </span>
-        <span className="muted small feed-row-meta">
-          {roleLabel}
-          {item.salary_text ? ` · ${item.salary_text}` : ""}
-          {" · "}
-          {t("feed.viaSource", { source: item.source })}
-        </span>
-        {matched != null && matched > 0 && (
-          <span className="feed-match" title={t("feed.skillsMatchHint")}>
-            {t("feed.skillsMatch", { count: matched })}
+        {/* The match as a bar, not a sentence: three postings side by side
+            are compared at a glance, which a count in words is not. */}
+        <span className="feed-match" title={t("feed.skillsMatchHint")}>
+          <span className="feed-match-bar">
+            <i style={{ width: `${Math.min(1, (matched ?? 0) / 5) * 100}%` }} />
           </span>
-        )}
+          <span className="feed-match-n">
+            {t("feed.skillsMatch", { count: matched ?? 0 })}
+          </span>
+        </span>
         {safeHref(item.url) && (
           <a
             href={safeHref(item.url)}
@@ -840,5 +896,6 @@ function FeedCard({
         </Button>
       </div>
     </li>
+    </>
   );
 }

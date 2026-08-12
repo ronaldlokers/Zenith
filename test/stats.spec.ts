@@ -5,6 +5,7 @@ import {
   responseRate,
   medianTimeInStageDays,
   median,
+  outcomeBreakdown,
 } from "../src/stats";
 import type { Status, StatusHistoryRow } from "../src/types";
 
@@ -91,5 +92,69 @@ describe("medianTimeInStageDays", () => {
     expect(byStage.applied.n).toBe(3);
     // screening: app1 Jan6→Jan10 = 4d, app2 Jan5→now = 5d → median 4.5
     expect(byStage.screening.median).toBeCloseTo(4.5);
+  });
+});
+
+describe("outcomeBreakdown", () => {
+  function closed(
+    application_id: number,
+    to_status: Status,
+    changed_at: string,
+    outcome_reason: string | null,
+  ): StatusHistoryRow {
+    return { application_id, from_status: "applied", to_status, changed_at, outcome_reason };
+  }
+
+  it("counts each closed application once, by reason", () => {
+    const b = outcomeBreakdown([
+      closed(1, "rejected", "2026-02-01 00:00:00", "no_response"),
+      closed(2, "rejected", "2026-02-02 00:00:00", "no_response"),
+      closed(3, "withdrawn", "2026-02-03 00:00:00", "comp_too_low"),
+    ]);
+    expect(b.total).toBe(3);
+    expect(b.unrecorded).toBe(0);
+    expect(b.counts).toEqual([
+      { reason: "no_response", count: 2 },
+      { reason: "comp_too_low", count: 1 },
+    ]);
+  });
+
+  it("reports closures with no reason separately", () => {
+    const b = outcomeBreakdown([
+      closed(1, "rejected", "2026-02-01 00:00:00", "no_response"),
+      closed(2, "ghosted", "2026-02-02 00:00:00", null),
+    ]);
+    expect(b.total).toBe(2);
+    expect(b.unrecorded).toBe(1);
+    expect(b.counts).toEqual([{ reason: "no_response", count: 1 }]);
+  });
+
+  it("ignores an application that was reopened after closing", () => {
+    // Its ending is real history, but it is not a closed application today
+    // and nothing in the UI can fill its reason in — counting it would
+    // inflate "no reason recorded" with rows nobody can act on.
+    const b = outcomeBreakdown([
+      closed(1, "rejected", "2026-02-01 00:00:00", null),
+      h(1, "interested", "2026-02-05 00:00:00"),
+      h(1, "interview", "2026-02-09 00:00:00"),
+    ]);
+    expect(b.total).toBe(0);
+    expect(b.unrecorded).toBe(0);
+  });
+
+  it("uses the latest closure when an application closed twice", () => {
+    const b = outcomeBreakdown([
+      closed(1, "rejected", "2026-02-01 00:00:00", "after_screening"),
+      h(1, "interested", "2026-02-05 00:00:00"),
+      closed(1, "rejected", "2026-02-09 00:00:00", "after_interview"),
+    ]);
+    expect(b.total).toBe(1);
+    expect(b.counts).toEqual([{ reason: "after_interview", count: 1 }]);
+  });
+
+  it("is empty when nothing has closed", () => {
+    const b = outcomeBreakdown(HISTORY);
+    expect(b.total).toBe(0);
+    expect(b.counts).toEqual([]);
   });
 });

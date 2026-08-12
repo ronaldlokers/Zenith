@@ -28,23 +28,10 @@ const LANGUAGES: [string, string][] = [
 ];
 
 
-const THEME_KEY = "zenith_theme";
 // Single-character shortcuts (n, /) must be switchable off for speech-input
 // and single-switch users (WCAG 2.1.4). Modified chords like ⌘K are exempt
 // and stay on regardless. Read live at keypress so the setting takes effect
 // without a reload.
-// Applies the persisted theme choice — called on initial load (see App())
-// and whenever the Settings selector changes it.
-function applyTheme(value: string) {
-  // "auto" follows the OS via prefers-color-scheme (no attribute); "light"
-  // and "dark" are explicit overrides that win regardless of the OS.
-  if (value === "light" || value === "dark") {
-    document.documentElement.dataset.theme = value;
-  } else {
-    delete document.documentElement.dataset.theme;
-  }
-}
-
 // Settings is a routed page with a section nav (#314) — it had grown to
 // 14+ stacked sections (incl. an admin console) inside a 416px modal.
 type SettingsSection =
@@ -91,14 +78,6 @@ export function SettingsPage({
   }, [location.search]);
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
-  );
-  const [theme, setTheme] = useState(
-    () => {
-      const saved = localStorage.getItem(THEME_KEY);
-      // control-room retired (#346) — its users were on a dark theme, so
-      // fold them into explicit Dark.
-      return saved === "control-room" ? "dark" : (saved ?? "auto");
-    },
   );
   const [timezone, setTimezone] = useState<string>(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
@@ -257,21 +236,6 @@ export function SettingsPage({
                 {t(`settings.${labelKey}`)}
               </option>
             ))}
-          </select>
-        </label>
-        <label className="settings-field">
-          <span>{t("settings.theme")}</span>
-          <select
-            value={theme}
-            onChange={(e) => {
-              setTheme(e.target.value);
-              localStorage.setItem(THEME_KEY, e.target.value);
-              applyTheme(e.target.value);
-            }}
-          >
-            <option value="auto">{t("settings.themeAuto")}</option>
-            <option value="light">{t("settings.themeLight")}</option>
-            <option value="dark">{t("settings.themeDark")}</option>
           </select>
         </label>
         <TimezoneField

@@ -32,3 +32,23 @@ export const Row: Story = {
     </div>
   ),
 };
+
+// Insights renders the same figures as one band rather than four tiles: no
+// chrome per cell, the divider drawn by the cell itself, and the hero marked
+// only by the colour of its figure.
+export const Band: Story = {
+  render: () => (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+        borderBlock: "1px solid var(--rule)",
+      }}
+    >
+      <StatCard band hero value="15" label="Open" onClick={() => {}} />
+      <StatCard band value="35%" label="Response" sub="8 of 23" onClick={() => {}} />
+      <StatCard band value="2" label="Live offers" sub="~€ 92,000" />
+      <StatCard band value="~31d" label="Median to offer" />
+    </div>
+  ),
+};

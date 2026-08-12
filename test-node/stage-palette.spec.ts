@@ -32,16 +32,17 @@ function tokens(block: string): Record<string, string> {
 }
 
 /** The `:root` block, and the explicit-dark block that mirrors it. */
+// One theme since the light-only decision (see
+// docs/superpowers/specs/2026-08-12-fizzy-shell-design.md). The function
+// still returns a list so the separation matrix below reads unchanged, and
+// so a second ground can be added back without reshaping the suite.
 function themeBlocks(): { name: string; vars: Record<string, string>; grounds: RGB[] }[] {
   const rootStart = CSS.indexOf(":root {");
-  const rootEnd = CSS.indexOf("color-scheme: light dark;");
-  const darkStart = CSS.indexOf(':root[data-theme="dark"] {');
-  const darkEnd = CSS.indexOf("color-scheme: dark;");
-  expect(rootStart, "light :root block").toBeGreaterThan(-1);
-  expect(darkStart, "explicit-dark block").toBeGreaterThan(-1);
+  const rootEnd = CSS.indexOf("color-scheme: light;");
+  expect(rootStart, ":root block").toBeGreaterThan(-1);
+  expect(rootEnd, "end-of-:root marker").toBeGreaterThan(rootStart);
   return [
     { name: "light", vars: tokens(CSS.slice(rootStart, rootEnd)), grounds: [hex("#ffffff"), hex("#f4f2ec")] },
-    { name: "dark", vars: tokens(CSS.slice(darkStart, darkEnd)), grounds: [hex("#191c40"), hex("#0f1130")] },
   ];
 }
 
@@ -190,3 +191,10 @@ describe("stage palette", () => {
     }
   });
 });
+
+// There is deliberately no "text on a stage fill" case here: measured, no
+// ink clears 4.5:1 on all five hues (best is white at 3.62:1 on interview).
+// The hues are tuned to be readable AS text, which makes them mid-tone, and
+// a mid-tone cannot also be a safe ground for type. Stage colour is a tint,
+// a ring or an edge — the tinted-field contrast that IS used is covered by
+// the label-readability test above.

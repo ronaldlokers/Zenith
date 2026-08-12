@@ -21,6 +21,14 @@ export interface StatCardProps
   onClick?: MouseEventHandler<HTMLButtonElement>;
   /** Focal "hero" tile (elevation tier 3) — one per screen (#458). */
   hero?: boolean;
+  /**
+   * Band cell instead of a tile (#535 shell): no card chrome, the figure in
+   * the display face, the label in mono. The band's own hairlines and
+   * dividers belong to the container that lays the cells out.
+   */
+  band?: boolean;
+  /** Second line under the label — the working the figure came from. */
+  sub?: ReactNode;
 }
 
 export function StatCard({
@@ -28,6 +36,8 @@ export function StatCard({
   label,
   onClick,
   hero = false,
+  band = false,
+  sub,
   className,
   ...rest
 }: StatCardProps) {
@@ -35,6 +45,7 @@ export function StatCard({
     "zui-statcard",
     onClick ? "zui-statcard--click" : null,
     hero ? "zui-statcard--hero" : null,
+    band ? "zui-statcard--band" : null,
     className,
   ]
     .filter(Boolean)
@@ -43,6 +54,7 @@ export function StatCard({
     <>
       <span className="zui-statcard-value">{value}</span>
       <span className="zui-statcard-label">{label}</span>
+      {sub != null && <span className="zui-statcard-sub">{sub}</span>}
     </>
   );
   return onClick ? (

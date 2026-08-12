@@ -224,6 +224,15 @@ export function FilterIcon() {
     </svg>
   );
 }
+// Two chevrons pointing at each other: the board header's fold affordance
+// (#535). Sized to the mono chrome it sits in rather than the 13px chip size.
+export function FoldIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 6l6 6-6 6M20 6l-6 6 6 6" />
+    </svg>
+  );
+}
 export function ArchiveIcon() {
   return (
     <svg className="chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -235,6 +244,47 @@ export function ArchiveIcon() {
 
 // Matches the stroke-based hand-drawn style of the Empty*Icon set —
 // the error banner previously had no icon at all (#206).
+// Tools that hang against the detail plate (#535): the posting this
+// application came from, and the printable cheat sheet.
+export function ExternalLinkIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 4h6v6M20 4l-9 9" />
+      <path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+    </svg>
+  );
+}
+export function PrintIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 9V3h10v6" />
+      <path d="M5 9h14a1 1 0 0 1 1 1v6h-4v5H8v-5H4v-6a1 1 0 0 1 1-1z" />
+    </svg>
+  );
+}
+// Column marks on Insights (#535 shell) — what kind of figures each column
+// holds: a funnel narrowing, a flag on an ending, a star on a live offer.
+export function FunnelIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+    </svg>
+  );
+}
+export function FlagIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+    </svg>
+  );
+}
+export function OfferIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z" />
+    </svg>
+  );
+}
 export function ErrorIcon() {
   return (
     <svg

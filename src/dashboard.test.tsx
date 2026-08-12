@@ -253,7 +253,11 @@ describe("DashboardTab (Today)", () => {
     expect(document.querySelector('[role="progressbar"]')).toBeNull();
   });
 
-  test("the route has one h1", () => {
+  test("renders no h1 — the shell owns the page title", () => {
+    // The route still has exactly one h1; it just is not this component's
+    // any more. The shell renders it once for every screen (#535), so a
+    // second one here would put two level-1 headings in the outline and
+    // print the word "Today" twice.
     render(
       <DashboardTab
         {...props}
@@ -261,9 +265,11 @@ describe("DashboardTab (Today)", () => {
         stats={emptyStats}
       />,
     );
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Today",
-    );
+    expect(screen.queryAllByRole("heading", { level: 1 })).toHaveLength(0);
+    // Its own headings start one level down, so the outline stays ordered
+    // under the shell's title rather than skipping a level.
+    expect(
+      screen.getAllByRole("heading", { level: 2 }).length,
+    ).toBeGreaterThan(0);
   });
 });

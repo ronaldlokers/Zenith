@@ -1,136 +1,108 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api } from "../api";
-import i18n from "../i18n";
-import { formatDate, getCvLanguage } from "../format";
-import type { CvSnapshotData, CvVersion } from "../types";
+import { formatDate } from "../format";
+import type { CvVersion } from "../types";
 import { Button } from "../components";
 import "./cv.css";
 
-// Named CV versions (#474) — a personal library of resume variants. Saves a
-// JSON snapshot of the current builder state; each can be downloaded as a PDF
-// at any time, independent of later live edits. Non-destructive by design.
-export function CvVersions({
-  current,
-  template,
-  onError,
-  notify,
+// Named CV versions (#474) — a personal library of resume variants, saved as
+// JSON snapshots and independent of later live edits.
+//
+// They are the rail on the CV plate now (#535 shell): picking one is how you
+// look at it, so the list is the navigation rather than a drawer of download
+// buttons. The state lives in the CV tab, because the document on the plate
+// and the PDF it exports both have to follow the selection.
+export function CvVariantRail({
+  versions,
+  activeId,
+  onSelect,
+  onSave,
+  onDelete,
+  busy,
 }: {
-  current: CvSnapshotData;
-  template: "single-column" | "two-column";
-  onError: (message: string | null) => void;
-  notify: (message: string, undo?: () => void) => void;
+  versions: CvVersion[];
+  // null is the live builder state, which is always the first entry.
+  activeId: number | null;
+  onSelect: (id: number | null) => void;
+  onSave: (name: string) => void;
+  onDelete: (v: CvVersion) => void;
+  busy: boolean;
 }) {
   const { t } = useTranslation();
-  const [versions, setVersions] = useState<CvVersion[] | null>(null);
+  const [naming, setNaming] = useState(false);
   const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const load = () =>
-    api
-      .list<CvVersion>("cv-versions")
-      .then(setVersions)
-      .catch((e) => onError((e as Error).message));
-
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const save = () => {
     if (!name.trim()) return;
-    setBusy(true);
-    api
-      .create<CvVersion>("cv-versions", {
-        name: name.trim(),
-        snapshot: JSON.stringify(current),
-      })
-      .then(() => {
-        setName("");
-        return load();
-      })
-      .then(() => notify(t("cvVersions.saved")))
-      .catch((e) => onError((e as Error).message))
-      .finally(() => setBusy(false));
+    onSave(name.trim());
+    setName("");
+    setNaming(false);
   };
-
-  const download = async (v: CvVersion) => {
-    let data: CvSnapshotData;
-    try {
-      data = JSON.parse(v.snapshot) as CvSnapshotData;
-    } catch {
-      onError(t("cvVersions.corrupt"));
-      return;
-    }
-    const { generateCvPdf, generateCvPdfTwoColumn } = await import("../pdf");
-    const tCv = i18n.getFixedT(getCvLanguage(i18n.resolvedLanguage ?? "en"));
-    const labels = {
-      present: tCv("cv.present"),
-      workExperience: tCv("cv.workExperience"),
-      education: tCv("cv.education"),
-      languages: tCv("cv.languages"),
-      skills: tCv("cv.skills"),
-    };
-    const doc =
-      template === "two-column"
-        ? generateCvPdfTwoColumn(data, labels)
-        : generateCvPdf(data, labels);
-    const base = data.profile?.name
-      ? data.profile.name.replace(/\s+/g, "-")
-      : "CV";
-    doc.save(`${base}-${v.name.replace(/\s+/g, "-")}.pdf`);
-  };
-
-  const remove = (v: CvVersion) => {
-    setBusy(true);
-    Promise.resolve(api.remove("cv-versions", v.id))
-      .then(load)
-      .catch((e) => onError((e as Error).message))
-      .finally(() => setBusy(false));
-  };
-
-  if (!versions) return null;
 
   return (
-    <div className="cv-versions">
-      <div className="cv-versions-add">
-        <input
-          placeholder={t("cvVersions.namePlaceholder")}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
+    <div className="cv-rail" role="radiogroup" aria-label={t("cvVersions.title")}>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={activeId === null}
+        className={`cv-rail-step${activeId === null ? " current" : ""}`}
+        onClick={() => onSelect(null)}
+      >
+        {t("cvVersions.live")}
+      </button>
+      {versions.map((v) => (
+        <span className="cv-rail-row" key={v.id}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={activeId === v.id}
+            className={`cv-rail-step${activeId === v.id ? " current" : ""}`}
+            onClick={() => onSelect(v.id)}
+          >
+            {v.name}
+            <span className="cv-rail-date">{formatDate(v.created_at)}</span>
+          </button>
+          <button
+            type="button"
+            className="cv-rail-del"
+            aria-label={t("cvVersions.deleteAria", { name: v.name })}
+            disabled={busy}
+            onClick={() => onDelete(v)}
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      {naming ? (
+        <form
+          className="cv-rail-new"
+          onSubmit={(e) => {
+            e.preventDefault();
+            save();
           }}
-        />
-        <Button variant="secondary" disabled={busy || !name.trim()} onClick={save}>
-          {t("cvVersions.save")}
-        </Button>
-      </div>
-      {versions.length === 0 ? (
-        <p className="muted small">{t("cvVersions.empty")}</p>
+        >
+          <input
+            autoFocus
+            placeholder={t("cvVersions.namePlaceholder")}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setNaming(false);
+            }}
+          />
+          <Button type="submit" variant="secondary" disabled={busy || !name.trim()}>
+            {t("cvVersions.save")}
+          </Button>
+        </form>
       ) : (
-        <ul className="cv-versions-list">
-          {versions.map((v) => (
-            <li key={v.id}>
-              <span className="cv-version-name">{v.name}</span>
-              <span className="cv-version-date muted small">
-                {formatDate(v.created_at)}
-              </span>
-              <span className="cv-version-actions">
-                <button onClick={() => download(v)}>
-                  {t("cvVersions.download")}
-                </button>
-                <Button
-                  variant="danger"
-                  className="zui-cv-version-remove"
-                  onClick={() => remove(v)}
-                >
-                  {t("common.delete")}
-                </Button>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <button
+          type="button"
+          className="cv-rail-add"
+          disabled={busy}
+          onClick={() => setNaming(true)}
+        >
+          {t("cvVersions.newVariant")}
+        </button>
       )}
     </div>
   );

@@ -30,6 +30,13 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
+  // Why an application ended (#381) — lands on its latest terminal transition,
+  // which the server resolves. A null reason clears both fields.
+  setOutcome: (id: number, reason: string | null, note: string | null) =>
+    request<{ outcome_reason: string | null; outcome_note: string | null }>(
+      `/api/applications/${id}/outcome`,
+      { method: "PUT", body: JSON.stringify({ reason, note }) },
+    ),
   // Mirror the UI language into the user row so the worker can localize the
   // content it generates (weekly digest). Fire-and-forget from the caller.
   setLocale: (locale: string) =>
@@ -299,6 +306,14 @@ export const api = {
     request<import("./types").Profile>("/api/profile", {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  // Which board stages are folded (#535 shell). Sent whole rather than as a
+  // toggle: the server stores the canonical set, so there is nothing to
+  // reconcile if two tabs disagree.
+  setBoardFolded: (folded: string[]) =>
+    request<{ board_folded: string[] }>("/api/profile/board-folded", {
+      method: "PUT",
+      body: JSON.stringify({ folded }),
     }),
   goals: () => request<import("./types").UserGoal>("/api/goals"),
   setGoals: (data: {

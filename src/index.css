@@ -78,6 +78,11 @@
   --faint: #6f6c7a;
   --danger-text: #ffffff;
   --border: #e7e4db;
+  /* Structural hairline, distinct from --border. The Fizzy-philosophy shell
+     is carried by 1px rules on the paper ground, and #e7e4db disappears at
+     that weight — this is the one that has to be seen (see
+     docs/superpowers/specs/2026-08-12-fizzy-shell-design.md). */
+  --rule: #cfc9b9;
   --line: #efece4;
   --track: #efece4;
   --hover: color-mix(in srgb, var(--ink) 6%, var(--surface));
@@ -99,7 +104,16 @@
   --info: #4a6ea3;
   --scrim: rgba(20, 23, 58, 0.45);
 
-  /* Stage state renders as a tinted field, not an edge (#494): the row is
+  /* No token exists for "text on a stage FILL", and none can. Measured
+     against all five Ascent hues, the best available ink is white at a worst
+     case of 3.62:1 (interview) — Night ink is worse at 2.37:1, paper worse
+     still. That is not a gap to close: the hues are tuned to clear 4.5:1 as
+     label TEXT on paper, which makes them mid-tone by construction, and a
+     mid-tone cannot also be a reliable ground for either a light or a dark
+     ink. So stage colour is a tint, a ring or an edge — never a filled
+     ground with type on it. See the Fizzy-shell design doc.
+
+     Stage state renders as a tinted field, not an edge (#494): the row is
      washed in its stage hue instead of carrying a 3px bar on its leading
      side. Two strengths — rest and hover — so no rule has to do arithmetic
      inside color-mix(). The uppercase stage label stays in every row, so
@@ -173,6 +187,14 @@
   --text-title: 0.95rem;
   --text-body: 0.875rem;
   --text-meta: 0.75rem;
+  /* Optical size for a SOLID pseudo-element glyph. A filled triangle reads
+     heavier than a stroked arrow at the same nominal size, so it is set
+     smaller to match it — see .board-sort, where ::before (an up-down arrow)
+     takes --text-meta and ::after (a triangle) takes this. Both rules were
+     written in one commit (2904e2f), which is what marks the difference as
+     an optical judgement rather than drift. Not a step on the reading ramp:
+     nothing anyone reads should use it. */
+  --text-glyph: 0.6rem;
   --text-chrome: 0.64rem;
   /* Figures (#501). DESIGN.md's Figures-Speak Rule says numbers a user reads
      as a result take the display voice, tabular and tightly tracked — but it
@@ -191,11 +213,52 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
+  /* The page gutter — the distance from the viewport edge to content, used
+     by the app shell and by anything that has to line up with it. Named
+     separately from --space-3 because it is a layout decision that changes
+     with the shell, not a spacing step that changes with a component. The
+     Fizzy-philosophy shell widens it at ≥900px; until that lands it is the
+     0.75rem the app has always used.
+     Spec: docs/superpowers/specs/2026-08-12-fizzy-shell-design.md */
+  --gutter: var(--space-3);
   /* 10px (--radius-md) is the dominant control corner; 14px (lg) for cards. */
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-full: 999px;
+
+  /* ── The printed page ────────────────────────────────────────────────
+     The CV preview (.cv-doc) is not app UI — it renders a simulated A4
+     sheet, so it is laid out at a physical scale rather than on the app's
+     rem ramp, and its ink is the document's rather than Zenith's. That is
+     deliberate, but it was carried as ~17 literals, which reads as drift
+     and hides real drift in the noise.
+     Named here so the second unit system is explicit and reviewable. The
+     values are unchanged from what the preview already rendered.
+     Sizes are px on purpose: they are fractions of a sheet, not of the
+     reader's text size, and must not scale with the app's type. */
+  --doc-ground: #ffffff;
+  --doc-aside: #f2f0ea;
+  --doc-ink: #1b1d2e;
+  --doc-heading: #14173a;
+  --doc-muted: #4a4d63;
+  --doc-faint: #6b675e;
+  --doc-rule: #d8d5cc;
+  --doc-text: 8.5px;
+  --doc-small: 8px;
+  --doc-fine: 7.5px;
+  --doc-name: 15px;
+  --doc-name-aside: 13px;
+  --doc-radius: 3px;
+  --doc-radius-fine: 1px;
+
+  /* Printing the app itself is a third context, distinct from both the app
+     and the CV preview above. Paper is paper and toner is toner: these are
+     not --doc-ground / --doc-ink, which describe a simulated sheet on
+     screen. They share values today; tying them together would mean a change
+     to the CV preview silently altered every printed page. */
+  --print-ground: #ffffff;
+  --print-ink: #000000;
 
   /* Elevation — two levels: raised surfaces (cards/panels) and overlays
      (modals/dropdowns). Per-theme below since shadow needs the ground. */
@@ -204,131 +267,7 @@
   --shadow-2: 0 4px 14px -3px rgba(20, 23, 58, 0.12),
     0 16px 40px -10px rgba(20, 23, 58, 0.2);
 
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0f1130;
-    --surface: #191c40;
-    --surface-sunken: #14173a;
-    --ink: #ecebf4;
-    --muted: #9a9db8;
-    /* Lightened from #7f83a0 (#494): it measured 3.74:1 on a tinted card and
-       4.41:1 even on a plain one — the dark twin of the light-theme --faint
-       fix from #447, which was never applied here. #9296b0 clears 4.5:1 on
-       surface, bg, sunken and every stage-tinted ground. */
-    --faint: #9296b0;
-    --danger-text: #14173a;
-    --border: #2a2f5a;
-    --line: #242851;
-    --track: #242851;
-    --accent: #d6a441;
-    --accent-text: #14173a;
-    --accent-soft: rgba(214, 164, 65, 0.16);
-    --accent-ink: #e8c072;
-    --accent-on-ink: #e8c072;
-    /* Lightened from #d76a60 (#494): danger text sits on stage-tinted rows
-       now, where the old value measured 4.05:1. #e07d73 clears 4.5:1 on
-       surface, bg and every tinted ground. */
-    --danger: #e07d73;
-    --scrim: rgba(0, 0, 0, 0.6);
-
-    /* Lower than light on purpose: the dark stage hues are LIGHT, so the
-       wash raises the card's luminance and squeezes --muted text against it.
-       9% keeps the field readable and holds muted above 4.5:1 (measured). */
-    --stage-tint: 9%;
-    --stage-tint-hover: 16%;
-    --st-interested: #a4a8dd;
-    --st-applied: #6489a1;
-    --st-screening: #45b9ab;
-    --st-interview: #d1886f;
-    --st-offer: #efc17b;
-    --st-dead: #b3ada0;
-    --st-interested-ink: #a4a8dd;
-    --st-applied-ink: #7398af;
-    --st-screening-ink: #45b9ab;
-    --st-interview-ink: #d1886f;
-    --st-offer-ink: #efc17b;
-    --st-dead-ink: #b3ada0;
-
-    --success-ink: #6cc9a1;
-    --attention: #d9930a;
-    --attention-ink: #f0c070;
-  --heat-quiet: #e0a54a;
-    --heat-quiet-text: #f0c070;
-    --ev-touch: #9c82cf;
-
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35),
-      0 2px 10px -3px rgba(0, 0, 0, 0.45);
-    --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55),
-      0 18px 44px -10px rgba(0, 0, 0, 0.65);
-  }
-}
-
-:root[data-theme="light"] {
   color-scheme: light;
-}
-
-:root[data-theme="dark"] {
-  /* Explicit Dark — same palette as the OS-dark auto theme, so the two never
-     diverge. Wins over prefers-color-scheme via the attribute. */
-  --bg: #0f1130;
-  --surface: #191c40;
-  --surface-sunken: #14173a;
-  --ink: #ecebf4;
-  --muted: #9a9db8;
-  /* Lightened from #7f83a0 (#494): it measured 3.74:1 on a tinted card and
-     4.41:1 even on a plain one — the dark twin of the light-theme --faint
-     fix from #447, which was never applied here. #9296b0 clears 4.5:1 on
-     surface, bg, sunken and every stage-tinted ground. */
-  --faint: #9296b0;
-  --danger-text: #14173a;
-  --border: #2a2f5a;
-  --line: #242851;
-  --track: #242851;
-  --accent: #d6a441;
-  --accent-text: #14173a;
-  --accent-soft: rgba(214, 164, 65, 0.16);
-  --accent-ink: #e8c072;
-  --accent-on-ink: #e8c072;
-  /* Lightened from #d76a60 (#494): danger text sits on stage-tinted rows
-     now, where the old value measured 4.05:1. #e07d73 clears 4.5:1 on
-     surface, bg and every tinted ground. */
-  --danger: #e07d73;
-  --scrim: rgba(0, 0, 0, 0.6);
-
-  /* Lower than light on purpose: the dark stage hues are LIGHT, so the wash
-     raises the card's luminance and squeezes --muted text against it. 9%
-     keeps the field readable and holds muted above 4.5:1 (measured). */
-  --stage-tint: 9%;
-  --stage-tint-hover: 16%;
-  --st-interested: #a4a8dd;
-  --st-applied: #6489a1;
-  --st-screening: #45b9ab;
-  --st-interview: #d1886f;
-  --st-offer: #efc17b;
-  --st-dead: #b3ada0;
-  --st-interested-ink: #a4a8dd;
-  --st-applied-ink: #7398af;
-  --st-screening-ink: #45b9ab;
-  --st-interview-ink: #d1886f;
-  --st-offer-ink: #efc17b;
-  --st-dead-ink: #b3ada0;
-
-  --success-ink: #6cc9a1;
-  --attention: #d9930a;
-  --attention-ink: #f0c070;
-  --heat-quiet: #e0a54a;
-  --heat-quiet-text: #f0c070;
-  --ev-touch: #9c82cf;
-
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35),
-    0 2px 10px -3px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55),
-    0 18px 44px -10px rgba(0, 0, 0, 0.65);
-
-  color-scheme: dark;
 }
 
 * {
@@ -353,15 +292,6 @@ body {
    1px. It was global, so the light theme paid for the dark theme's benefit
    (#501). Scoped to the night ground; light renders with the platform
    default. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body {
-    -webkit-font-smoothing: antialiased;
-  }
-}
-:root[data-theme="dark"] body {
-  -webkit-font-smoothing: antialiased;
-}
-
 button,
 input,
 select,

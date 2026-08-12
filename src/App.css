@@ -14,7 +14,7 @@
 .app {
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 0.75rem 5rem;
+  padding: 0 var(--gutter) 5rem;
 }
 
 /* App-shell top bar (chrome) — replaces the old .header. The brand shows
@@ -24,21 +24,73 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
+  /* Three columns so the wordmark sits on the centre line whatever the
+     corners hold — a flex row would drift it as soon as one side changed. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.5rem;
   /* Break out of the .app side padding so the bar is full-bleed on mobile;
-     reset to 0 at rail widths (≥900px), where .app has no side padding. */
-  margin: 0 -0.75rem;
+     reset to 0 at rail widths (≥900px), where .app has no side padding.
+     Tied to --gutter rather than repeating the number: the two have to
+     cancel exactly, and a literal here would silently stop cancelling the
+     moment the gutter changes. */
+  margin: 0 calc(var(--gutter) * -1);
   padding: 0.5rem 0.9rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 
-.top-brand {
+.top-corner {
   display: flex;
   align-items: center;
+  gap: 0.35rem;
+}
+
+.top-corner.end {
+  justify-content: flex-end;
+}
+
+.top-icon {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.top-icon:hover,
+.top-icon.active {
+  color: var(--ink);
+  border-color: var(--faint);
+  background: var(--hover);
+}
+
+.top-brand {
+  display: inline-flex;
+  align-items: center;
   gap: 0.5rem;
+  /* A button since #535: it opens the destination menu. Strip the UA chrome
+     so the wordmark still reads as the brand rather than a control. */
+  padding: 0.25rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  background: none;
+  cursor: pointer;
+}
+
+.top-chev {
+  color: var(--faint);
+}
+
+.top-brand:hover {
+  border-color: var(--border);
+  background: var(--hover);
 }
 
 .top-brand span {
@@ -49,14 +101,34 @@
   color: var(--ink);
 }
 
-.top-title {
-  display: none;
+/* The page title, with the hairline running THROUGH the line rather than
+   under the block. The words are the break in the rule. */
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0.15rem var(--gutter) var(--space-4);
 }
 
-/* Settings lives in the top bar below the rail breakpoint (the rail carries
-   it at ≥900px). */
-.top-settings {
-  flex: 0 0 auto;
+.page-title::before,
+.page-title::after {
+  content: "";
+  flex: 1 1 0;
+  min-width: var(--space-3);
+  height: 1px;
+  background: var(--rule);
+}
+
+.page-title h1 {
+  flex: 0 1 auto;
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: var(--text-heading);
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--ink);
 }
 
 /* Breathing room between the top bar and page content on mobile; the rail
@@ -67,62 +139,12 @@
 
 /* Search launcher — an icon-only button below 900px, a full ⌘K pill at rail
    widths. */
-.cmdk {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  color: var(--muted);
-  font-family: inherit;
-  font-size: var(--text-meta);
-  cursor: pointer;
-}
-
-.cmdk svg {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-}
-
-.cmdk-label {
-  display: none;
-}
-
-.cmdk kbd {
-  display: none;
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 1px 6px;
-}
-
 /* The single add affordance (the FAB and the board's duplicate were removed —
    design review). Full "+ Add" from 600px up; a compact "+" on phones. */
-.top-add {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
-}
-
 @media (max-width: 599px) {
-  .top-add .top-add-label {
-    display: none;
-  }
 }
 
 /* The Night rail is desktop-only (≥900px; styled in the sidebar-shell band). */
-.side {
-  display: none;
-}
-
 /* 34px square, the documented control height (#499). These were 1.7rem —
    27px — which is the smallest target in the app and sits in the top bar
    where a thumb reaches most often. */
@@ -141,10 +163,7 @@
 
 @media (max-width: 600px) {
   .settings-btn,
-  .cmdk {
-    min-height: 40px;
-  }
-  .settings-btn {
+    .settings-btn {
     width: 40px;
   }
 }
@@ -157,16 +176,39 @@
    entirely by Button.css. The .settings-btn trigger stays here — it's
    shared with other buttons elsewhere in the app. */
 
-/* Refined refresh (#465): section title takes the display voice (--serif, the display
-   voice) over a hairline, matching the detail header band. */
-.settings-modal h2 {
+/* Section headings are centred and flanked by the rule rather than sitting on
+   top of it (#535 shell) — the same treatment the page title gets, so a
+   heading reads the same wherever it appears. Grid rather than a border on
+   the text: the rules have to run to the panel's edges and meet the label,
+   which an underline cannot do. */
+.settings-modal h2,
+.settings-content h3 {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
   margin: 0 0 1.1rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--serif);
-  font-weight: 600;
-  font-size: var(--text-heading);
-  letter-spacing: -0.01em;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+
+.settings-modal h2::before,
+.settings-modal h2::after,
+.settings-content h3::before,
+.settings-content h3::after {
+  content: "";
+  height: 1px;
+  background: var(--rule);
+}
+
+/* A subsection heading sits inside the panel, so it takes the space above it
+   that the section title does not need. */
+.settings-content h3 {
+  margin-top: var(--space-4);
 }
 
 .settings-field {
@@ -565,87 +607,80 @@
 .stage-withdrawn,
 .stage-ghosted { --sc: var(--st-dead); --sc-ink: var(--st-dead-ink); }
 
-.tabs {
-  display: flex;
-  gap: 0.4rem;
-}
-
-/* Settings is reached from the top bar below the rail breakpoint, not the
-   .tabs bar; the rail carries it at ≥900px. */
-.tabs .tab-settings {
-  display: none;
-}
-
-.tabs button {
-  flex: 1;
-  padding: 0.55rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+/* The persistent bottom bar (#535 shell). Fixed, three slots, and — once the
+   rail goes — the only navigation chrome left. Labels and keycaps appear when
+   there is room for them; below that the glyphs carry it. */
+.bottombar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--vv-bottom-offset, 0px);
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0.4rem var(--gutter) calc(0.4rem + env(safe-area-inset-bottom));
   background: var(--surface);
-  cursor: pointer;
+  border-top: 1px solid var(--rule);
+}
+
+.bottombar-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.2rem;
+  border: 0;
+  background: none;
+  color: var(--faint);
   font-family: var(--mono);
-  font-size: var(--text-chrome);
+  font-size: var(--text-meta);
+  letter-spacing: var(--track-chrome);
   text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  color: var(--muted);
 }
 
-.tabs button.active {
-  color: var(--accent);
-  border-color: var(--accent);
-  /* 500 is the top of the mono axis; 700 was synthesised (#501). */
-  font-weight: 500;
+.bottombar-slot:hover {
+  color: var(--ink);
 }
 
-/* The bottom-nav glyphs only show on the mobile bar; the desktop sidebar
-   and the 600-900px top strip keep their text labels (#346). */
-.tabs button .nav-icon {
+.bottombar-slot.mid {
+  justify-self: center;
+}
+
+.bottombar-slot.end {
+  justify-self: end;
+}
+
+.bottombar-glyph {
+  font-family: var(--sans);
+  font-size: var(--text-title);
+  line-height: 1;
+}
+
+.bottombar-label {
   display: none;
 }
 
-@media (max-width: 600px) {
-  .tabs {
-    position: fixed;
-    bottom: var(--vv-bottom-offset, 0px);
-    left: 0;
-    right: 0;
-    z-index: 20;
-    margin: 0;
-    gap: 0.1rem;
-    padding: 0.35rem 0.3rem calc(0.5rem + env(safe-area-inset-bottom));
-    background: var(--bg);
-    border-top: 1px solid var(--border);
-  }
+.bottombar-key {
+  display: none;
+  min-width: 17px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+  line-height: 1.4;
+  color: var(--muted);
+  text-transform: none;
+}
 
-  /* Icon over label, each column an equal share of the width — eight fit
-     any phone from 320px up, so the bar never scrolls or clips (#346). */
-  .tabs button {
-    flex: 1 1 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.15rem;
-    min-width: 0;
-    padding: 0.3rem 0.15rem;
-    border: none;
-    background: none;
-    font-size: 0.6rem;
-    letter-spacing: 0.01em;
-  }
-
-  .tabs button .nav-icon {
-    display: block;
-  }
-
-  .tabs button.active {
-    border: none;
-  }
-
-  .tabs button .tab-label {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+/* Room for words: below this the glyphs do the work, which is also why the
+   labels are not simply hidden with sr-only — there is nothing to read. */
+@media (min-width: 700px) {
+  .bottombar-label,
+  .bottombar-key {
+    display: inline-grid;
   }
 }
 
@@ -765,15 +800,218 @@
 /* Split-pane Jobs detail on wide desktop (#131) — same slot NextUpPanel
    (.jobs-side) occupies, shown instead of it once a job is selected. */
 .detail-pane {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-1);
-  padding: 1.2rem 1.4rem;
   position: sticky;
   top: 4.5rem;
   max-height: calc(100vh - 6rem);
   overflow-y: auto;
+}
+
+/* The detail page (#535 shell): a card mounted on a plate tinted with the
+   current stage, with the tools hanging against the plate's outer edges. The
+   tools are siblings of the plate, not children — their tops line up with it
+   because the row aligns them, not because they sit inside it. */
+.detail-stage {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.detail-plate {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 1rem 1rem 1.1rem;
+  border-radius: var(--radius-lg);
+  /* A wash, not a fill: the stage hues are tuned to be legible as label
+     text, which makes them mid-tone, and a mid-tone cannot also be a safe
+     ground for type. */
+  background: color-mix(in srgb, var(--sc, var(--muted)) 18%, var(--surface));
+}
+
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.2rem 1.4rem;
+}
+
+/* Tools are round, quiet, and sized to the plate's own padding so they read
+   as hanging off it rather than floating in the margin. */
+.detail-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  padding-top: 1rem;
+}
+
+.detail-tool {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.detail-tool:hover:not(:disabled),
+.detail-tool:focus-visible {
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.detail-tool:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Identity pill: floats inside the card with a margin, where the board
+   card's strip is flush to its edge. Same two facts, different register —
+   this one is a label on a page, not a header on a tile. */
+.detail-pill {
+  display: inline-flex;
+  align-items: stretch;
+  margin-bottom: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+}
+
+.detail-pill > span {
+  padding: 0.2rem 0.7rem;
+}
+
+.detail-pill-when {
+  background: color-mix(in srgb, var(--sc, var(--muted)) 18%, var(--surface));
+  color: var(--sc-ink, var(--ink));
+}
+
+.detail-pill-co {
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+}
+
+/* The stage rail: every stage listed, the current one marked. A dropdown
+   put seven of the eight answers behind a click. */
+/* Two columns, split where the pipeline itself splits: the five stages an
+   application moves through, then the three it stops at. A single column of
+   eight left a block of dead space beside the title. */
+.detail-rail {
+  display: grid;
+  grid-template-rows: repeat(5, auto);
+  grid-auto-flow: column;
+  gap: 0.1rem 0.35rem;
+}
+
+.detail-rail-step {
+  padding: 0.15rem 0.5rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  text-align: left;
+  cursor: pointer;
+}
+
+.detail-rail-step:hover,
+.detail-rail-step:focus-visible {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.detail-rail-step.current {
+  background: var(--sc-ink, var(--ink));
+  color: #fff;
+}
+
+/* Narrow: there is no room for a column of tools either side of the plate,
+   so they come off the sides and sit in one row above it, and the stage rail
+   drops below the title instead of fighting it for width. */
+@media (max-width: 699px) {
+  .detail-stage {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .detail-tools {
+    flex-direction: row;
+    padding-top: 0;
+  }
+
+  .detail-tools-left {
+    order: 1;
+    margin-right: auto;
+  }
+
+  .detail-tools-right {
+    order: 2;
+  }
+
+  .detail-plate {
+    order: 3;
+    flex-basis: 100%;
+    padding: 0.7rem 0.7rem 0.9rem;
+  }
+
+  .detail-card {
+    padding: 1rem;
+  }
+
+  .detail-head {
+    flex-direction: column;
+  }
+
+  .detail-head-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .detail-rail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+}
+
+/* The primary actions sit on the plate, below the card — they act on the
+   application the card describes, so they belong to its mount rather than to
+   its contents. */
+.detail-plate-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* History is hatched: a record of what happened, not a surface to act on.
+   The hatch is what stops it reading as another card. */
+.detail-recent {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 5px,
+    color-mix(in srgb, var(--rule) 55%, transparent) 5px 6px
+  );
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+/* The entries themselves stay on paper, so the hatch reads as the band they
+   sit on rather than as texture behind the text. */
+.detail-recent-list,
+.detail-recent-empty {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.6rem;
 }
 
 .detail-head {
@@ -867,6 +1105,16 @@
   font-size: var(--text-meta);
 }
 
+/* Outcome row (#381): reason (plus its note) and the edit link on one line,
+   wrapping to the next when the note is long. Without the gap the link butts
+   straight against the reason text. */
+.detail-outcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.5rem;
+}
+
 /* Recent touchpoints under the facts column's actions (#490) — a read-only
    summary; the logger and full history live in the Track tab. Deliberately
    quieter than the timeline it summarises: no rules, no controls. */
@@ -875,8 +1123,6 @@
   flex-direction: column;
   gap: var(--space-2);
   margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
 }
 .detail-recent-h {
   font-family: var(--mono);
@@ -1165,15 +1411,6 @@
   max-width: 11rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .filters select {
-    color: var(--muted);
-  }
-}
-:root[data-theme="dark"] .filters select {
-  color: var(--muted);
-}
-
 /* .toolbar select moved to the Toolbar component. */
 
 button.primary {
@@ -1316,17 +1553,136 @@ button.primary:hover {
 
 /* Mobile swipe-to-triage (#144) — background tint during the drag,
    before the swipe crosses the commit threshold. */
-/* Feed "fit" badge — count of the user's CV skills the posting mentions. */
+/* Feed match — how many of the user's CV skills the posting mentions. A bar
+   with the count beside it rather than a pill of words (#535 shell): three
+   postings stacked are compared at a glance, which a sentence is not. Five
+   matched skills fills it; past that the bar is full and the count carries
+   the rest. */
 .feed-match {
-  display: inline-block;
-  width: fit-content;
-  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
   font-family: var(--mono);
-  font-size: var(--text-meta);
-  color: var(--accent-ink);
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  font-size: var(--text-chrome);
+  color: var(--muted);
+}
+
+.feed-match-bar {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 5px;
   border-radius: var(--radius-full);
-  padding: 0.05rem 0.5rem;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.feed-match-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+
+.feed-match-n {
+  flex: 0 0 auto;
+}
+
+/* People, banded (#535 shell): the ones the ball is with, then everyone
+   else. Same device as the feed's match bands — a heading that is a list item,
+   so the list stays one list. */
+.people-band {
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: var(--space-3) 0 0.1rem;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+
+.people-band:first-child {
+  margin-top: 0;
+}
+
+.people-band-n {
+  color: var(--faint);
+}
+
+/* Band heading inside the one list: the cards are grouped by how well they
+   match, strongest first, without becoming three separate lists — j/k has to
+   keep stepping through them in order. */
+.feed-band {
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: var(--space-3) 0 0.1rem;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+
+.feed-band:first-child {
+  margin-top: 0;
+}
+
+.feed-band-n {
+  color: var(--faint);
+}
+
+/* Identity strip across the top of a feed card, flush to its edges — the
+   same device the board card uses, so a posting and an application read as
+   the same kind of object. */
+.feed-strip {
+  display: flex;
+  align-items: stretch;
+  margin: -0.6rem -0.8rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: var(--text-glyph);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+  min-width: 0;
+}
+
+.feed-strip > span {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-strip > span:first-child {
+  border-left: 0;
+}
+
+.feed-strip-co {
+  color: var(--ink);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.feed-strip-src {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.feed-strip-age {
+  margin-left: auto;
+  border-left: 0;
+  color: var(--faint);
+  flex: 0 0 auto;
 }
 
 .feed-card {
@@ -1382,6 +1738,8 @@ button.primary:hover {
   align-items: flex-start;
   gap: 0.15rem var(--space-3);
   padding: 0.6rem 0.8rem;
+  /* The identity strip runs to the card's edges, so the card clips it. */
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -2117,9 +2475,112 @@ select.status {
 /* Board (variant 2C) */
 .board {
   display: grid;
+  /* The track list is set inline: it depends on which rails are folded, so
+     the stylesheet can only supply the sliver width the rails resolve to.
+     Below 900px the inline value is overridden back to one column. */
   grid-template-columns: 1fr;
+  --rail-w: 44px;
   gap: 0.9rem;
   margin-top: var(--space-3);
+}
+
+/* Narrow: one stage at a time, with its neighbours peeking in at the edges
+   so it is obvious there is more board either side. Nothing folds here — the
+   strip above is the navigation, and a rail folded on the laptop must not
+   hide a stage on the phone. */
+@media (max-width: 899px) {
+  .board {
+    display: flex;
+    gap: 0.6rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    /* Full-bleed, so the peeking neighbours run to the screen edge rather
+       than stopping at the page gutter. */
+    margin-inline: calc(var(--gutter) * -1);
+    /* No side padding: with scroll-snap centring, the snap target aligns to
+       the scrollport, so padding here would shift every column off-centre
+       and eat the left-hand peek. The peek comes from the column width. */
+    padding-inline: 0;
+    /* start-aligned against an inset snapport rather than centre-aligned:
+       centring is computed against the scrollport and landed the column ~30px
+       off, which ate the left-hand peek entirely. This puts it exactly 9% in,
+       leaving the same sliver either side. */
+    scroll-padding-inline-start: 9%;
+    scrollbar-width: none;
+  }
+
+  .board::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Narrower than the track so both neighbours show a sliver — the peek is
+     the only thing saying there is more board either side. */
+  .board > .bcol {
+    flex: 0 0 82%;
+    scroll-snap-align: start;
+    min-width: 0;
+  }
+
+  /* The strip already carries the stage name and its count, and nothing
+     folds here, so the column header would be a second copy with a control
+     that does nothing. */
+  .board > .bcol > .bcol-head {
+    display: none;
+  }
+}
+
+/* The stage strip: every rail, the one you are on filled with its own ink.
+   White clears 4.5:1 on all of them (5.11:1 at the worst). */
+.stage-strip {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  margin: var(--space-3) calc(var(--gutter) * -1) 0;
+  padding-inline: var(--gutter);
+  scrollbar-width: none;
+  border-block: 1px solid var(--rule);
+}
+
+.stage-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.stage-chip {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.85rem;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.stage-chip:first-child {
+  border-left: 0;
+}
+
+.stage-chip .n {
+  color: var(--faint);
+}
+
+.stage-chip.active {
+  background: var(--sc-ink, var(--ink));
+  color: #fff;
+}
+
+.stage-chip.active .n {
+  color: #fff;
+}
+
+@media (min-width: 900px) {
+  .stage-strip {
+    display: none;
+  }
 }
 
 @media (min-width: 900px) {
@@ -2129,7 +2590,6 @@ select.status {
   }
 
   .board {
-    grid-template-columns: repeat(5, 1fr);
     align-items: start;
   }
 
@@ -2198,16 +2658,6 @@ select.status {
   background: var(--sc);
   flex-shrink: 0;
   align-self: center;
-}
-
-@media (prefers-color-scheme: dark) {
-  /* Stage-color dots lose edge definition against the dark surface (#119) */
-  :root:not([data-theme="light"]) .bcol-head::before {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
-  }
-}
-:root[data-theme="dark"] .bcol-head::before {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 /* Toggle affordance (chevron, pointer cursor) only applies where the
@@ -2559,20 +3009,12 @@ summary.bcol-head::after {
   gap: 0.15rem;
 }
 
-/* Live PDF preview (#134) */
-.cv-preview-h {
-  margin-top: 1.1rem;
-}
-
-.cv-preview-frame {
+/* Live PDF preview (#134). Its own framed box is gone (#535 shell) — the
+   preview IS the card on the plate now, so the frame it used to sit in would
+   be a second border inside the first. */
+.cv-doc-view {
   width: 100%;
-  aspect-ratio: 210 / 297;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken, var(--bg));
-  overflow: auto;
-  padding: 10px;
-  box-sizing: border-box;
+  min-width: 0;
 }
 
 /* Styled HTML CV document (#386) — a truthful, themable preview of the export
@@ -2581,19 +3023,19 @@ summary.bcol-head::after {
 .cv-doc {
   min-height: 100%;
   box-sizing: border-box;
-  background: #fff;
-  color: #1b1d2e;
+  background: var(--doc-ground);
+  color: var(--doc-ink);
   font-family: var(--sans);
-  font-size: 8.5px;
+  font-size: var(--doc-text);
   line-height: 1.42;
   padding: 16px 18px;
-  border-radius: 3px;
+  border-radius: var(--doc-radius);
   box-shadow: var(--shadow-1);
 }
 
 .cv-doc-name {
   margin: 0 0 3px;
-  font-size: 15px;
+  font-size: var(--doc-name);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -2605,8 +3047,8 @@ summary.bcol-head::after {
 .cv-doc-contact,
 .cv-doc-links {
   margin: 0 0 2px;
-  color: #4a4d63;
-  font-size: 8px;
+  color: var(--doc-muted);
+  font-size: var(--doc-small);
 }
 
 .cv-doc-summary {
@@ -2620,12 +3062,12 @@ summary.bcol-head::after {
 .cv-doc-sec > h2 {
   margin: 0 0 4px;
   padding-bottom: 2px;
-  border-bottom: 1px solid #d8d5cc;
-  font-size: 8px;
+  border-bottom: 1px solid var(--doc-rule);
+  font-size: var(--doc-small);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #14173a;
+  color: var(--doc-heading);
 }
 
 .cv-doc-item {
@@ -2645,8 +3087,8 @@ summary.bcol-head::after {
 
 .cv-doc-item-range {
   flex: 0 0 auto;
-  color: #6b675e;
-  font-size: 7.5px;
+  color: var(--doc-faint);
+  font-size: var(--doc-fine);
   white-space: nowrap;
 }
 
@@ -2656,7 +3098,7 @@ summary.bcol-head::after {
 
 .cv-doc-item-skills {
   margin: 1px 0 0;
-  color: #6b675e;
+  color: var(--doc-faint);
   font-style: italic;
 }
 
@@ -2674,12 +3116,12 @@ summary.bcol-head::after {
 }
 
 .cv-doc-2col .cv-doc-aside {
-  background: #f2f0ea;
+  background: var(--doc-aside);
   padding: 16px 12px;
 }
 
 .cv-doc-2col .cv-doc-aside .cv-doc-name {
-  font-size: 13px;
+  font-size: var(--doc-name-aside);
 }
 
 .cv-doc-2col .cv-doc-aside-links {
@@ -2688,8 +3130,8 @@ summary.bcol-head::after {
 
 .cv-doc-2col .cv-doc-aside-links p {
   margin: 0 0 1px;
-  color: #4a4d63;
-  font-size: 8px;
+  color: var(--doc-muted);
+  font-size: var(--doc-small);
   word-break: break-word;
 }
 
@@ -2700,18 +3142,18 @@ summary.bcol-head::after {
 .cv-doc-2col .cv-doc-aside-sec h3 {
   margin: 0 0 3px;
   padding-bottom: 2px;
-  border-bottom: 1px solid #d8d5cc;
-  font-size: 7.5px;
+  border-bottom: 1px solid var(--doc-rule);
+  font-size: var(--doc-fine);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #14173a;
+  color: var(--doc-heading);
 }
 
 .cv-doc-2col .cv-doc-aside-sec p {
   margin: 0;
-  color: #4a4d63;
-  font-size: 8px;
+  color: var(--doc-muted);
+  font-size: var(--doc-small);
 }
 
 .cv-doc-2col .cv-doc-main {
@@ -2812,63 +3254,19 @@ summary.bcol-head::after {
   gap: 1.4rem;
 }
 
-.cv-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.6rem;
-  /* Wrap on narrow viewports so the template picker + Download button never
-     push past the edge (design review — was causing horizontal body scroll). */
-  flex-wrap: wrap;
-}
-
-.cv-template-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.cv-template-picker-label {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-chrome);
-  color: var(--muted);
-}
-
-.cv-template-options {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.cv-template-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  padding: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  color: var(--ink);
-  font-size: var(--text-meta);
-  cursor: pointer;
-}
-
-.cv-template-option.selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
+/* The CV toolbar and its framed template picker are gone (#535 shell): the
+   template is chosen from the tools hanging off the plate, and the download
+   button sits on the plate with the other actions. The thumbnails below stay —
+   they are what the tool buttons draw. */
 
 .cv-template-thumb {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.2rem;
-  width: 2.6rem;
-  height: 2rem;
-  padding: var(--space-1);
+  gap: 0.14rem;
+  width: 1.25rem;
+  height: 1rem;
+  padding: 0.14rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -2894,7 +3292,7 @@ summary.bcol-head::after {
 .cv-t-line {
   display: block;
   height: 2px;
-  border-radius: 1px;
+  border-radius: var(--doc-radius-fine);
   background: var(--faint);
 }
 
@@ -3086,10 +3484,6 @@ summary.bcol-head::after {
   color: var(--muted);
   cursor: pointer;
 }
-.cv-versions-h {
-  margin-top: var(--space-3);
-}
-
 /* Felt momentum (#484) — gone-quiet close-out on Today. */
 .today-quiet {
   background: var(--surface);
@@ -3256,10 +3650,73 @@ summary.bcol-head::after {
 
 /* One column until the rail's content has room for two (#492) — which is
    also what closes the dead canvas the 46rem cap used to leave at 1440. */
+/* Three columns at width, stacked below it (#535 landing): what needs you,
+   what happened, what has gone quiet. The actionable one is first in source
+   order as well as on screen, so it is what you meet on a phone too. */
 .today-cols {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 900px) {
+  .today-cols {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* A column heading: centred, with the count kept quieter than the words. */
+.col-h {
+  margin: 0 0 var(--space-2);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-weight: 400;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.col-n {
+  color: var(--faint);
+}
+
+.today-happened-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: var(--space-1);
+}
+
+.today-happened-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  text-align: left;
+}
+
+.today-happened-row:hover {
+  border-color: var(--faint);
+}
+
+.today-happened-meta {
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+  letter-spacing: var(--track-chrome);
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.today-happened-say {
+  font-size: var(--text-body);
+  color: var(--ink);
 }
 .today-col {
   display: flex;
@@ -3602,242 +4059,47 @@ summary.bcol-head::after {
 }
 
 /* ============================================================
-   Sidebar shell (chrome) — on desktop (≥900px) the shell is a Night
-   left rail (brand · nav · onboarding · Settings) beside a content column
-   with a per-page top bar. Below 900px the rail is hidden and the top bar +
-   .tabs carry navigation: a horizontal strip at 601–899px, a fixed bottom
-   icon-bar under 600px.
+   Sidebar shell (chrome) — the Night left rail at ≥900px, beside a content
+   column with a per-page top bar. Below 900px there is no rail: navigation
+   is the wordmark menu plus the fixed bottom bar (#535 shell). The rail
+   itself is removed in the next PR of that series.
    ============================================================ */
 @media (min-width: 900px) {
   .app {
-    display: flex;
-    align-items: stretch;
-    max-width: none;
-    margin: 0;
-    padding: 0;
+    /* One child since the rail was removed (#535 shell), so this is a
+       centred content column rather than a two-column flex row. The width
+       cap is generous: the board wants room, and the screens that want a
+       reading measure cap themselves. */
+    max-width: 1120px;
+    margin: 0 auto;
+    /* The bottom bar is fixed at every width, so the column clears it here
+       too. Folded into the shorthand: a separate padding-bottom would be
+       overridden by this one. */
+    padding: 0 var(--gutter) 4rem;
     min-height: 100vh;
   }
 
-  /* The Night rail. It's always dark regardless of theme, so its text tones
-     can't be the app --ink/--muted tokens — but they were copy-pasted as raw
-     hex 10+ times (design review, #447). Define them once here; descendants
-     inherit these custom properties. */
-  .side {
-    --rail-ink: #e7e6f0;
-    --rail-text: #f4f2ec;
-    --rail-muted: #b9b8cc;
-    /* 4.28:1 on the Night rail; #8b8fa8 clears 4.5 (#496). */
-    --rail-faint: #8b8fa8;
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 210px;
-    width: 210px;
-    box-sizing: border-box;
-    padding: 20px 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-    background: var(--night);
-    color: var(--rail-ink);
-  }
-
-  .side-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 20px 22px;
-  }
-
-  .side-brand span {
-    font-family: var(--serif);
-    font-weight: 600;
-    font-size: var(--text-heading);
-    letter-spacing: -0.02em;
-    color: var(--rail-text);
-  }
-
-  .side-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 0 12px;
-  }
-
-  .side-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    width: 100%;
-    padding: 9px 12px;
-    border: none;
-    background: none;
-    border-radius: var(--radius-md);
-    font-family: inherit;
-    font-size: var(--text-body);
-    text-align: left;
-    color: var(--rail-muted);
-    cursor: pointer;
-  }
-
-  .side-nav-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--rail-text);
-  }
-
-  .side-nav-item.on {
-    background: rgba(214, 164, 65, 0.16);
-    color: var(--accent);
-  }
-
-  .side-nav-item svg {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 auto;
-  }
-
-  .side-foot {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 16px 12px 0;
-  }
-
-  /* Account block pinned to the rail foot — avatar, name, email, caret;
-     opens Settings (chrome kit). */
-  .side-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    margin-top: 4px;
-    padding: 10px;
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-md);
-    background: none;
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-  .side-user:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-  /* .side-user .avatar moved to the owned Avatar component
-     (src/components/Avatar.css, @layer components). */
-  .side-user .u-info {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .side-user .u-name {
-    font-size: var(--text-meta);
-    font-weight: 600;
-    color: var(--rail-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .side-user .u-email {
-    font-size: var(--text-chrome);
-    color: var(--rail-faint);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .side-user .u-caret {
-    margin-left: auto;
-    color: var(--rail-faint);
-    display: flex;
-  }
-  .side-user .u-caret svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  /* Onboarding recolored for the dark rail. Targets the .zui-onboarding*
-     classes emitted by the owned OnboardingChecklist component (moved out
-     to src/components/OnboardingChecklist.css) — these are ancestor-context
-     overrides, not part of the component's own recipe, so they stay here. */
-  .side .zui-onboarding {
-    margin: 0;
-    padding: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .side .zui-onboarding h3 {
-    color: var(--rail-text);
-  }
-
-  .side .zui-onboarding li button {
-    color: var(--rail-muted);
-  }
-
-  .side .zui-onboarding li.done button,
-  .side .zui-onboarding li.done span {
-    color: var(--rail-faint);
-  }
-
-  .side .zui-onboarding-dismiss {
-    color: #9a99ad;
-  }
-
-  .side .zui-onboarding-sample {
-    color: var(--accent-on-ink);
-  }
-
-  /* Content column with its per-page top bar. */
+  /* Content column with its per-page top bar. `flex: 1` is gone with the
+     rail it used to share a row with; the column is now .app itself. */
   .main {
-    flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
-  }
-
-  .main > .tabs {
-    display: none;
   }
 
   .top {
-    margin: 0;
-    padding: 14px 24px;
-    gap: 12px;
+    padding: 0.6rem var(--gutter);
   }
 
-  .top-brand {
-    display: none;
+  .page-title {
+    padding-bottom: var(--space-5);
   }
 
-  .top-settings {
-    display: none;
+  .page-title h1 {
+    font-size: var(--text-display);
   }
 
-  .top-title {
-    display: block;
-    margin: 0;
-    font-family: var(--serif);
-    font-weight: 600;
-    font-size: var(--text-heading);
-    letter-spacing: -0.01em;
-    color: var(--ink);
-  }
-
-  .cmdk {
-    min-width: 220px;
-    padding: 8px 12px;
-  }
-
-  .cmdk-label {
-    display: inline;
-  }
-
-  .cmdk kbd {
-    display: inline-block;
-  }
-
-  /* The shell spans the full viewport on every view. The per-view caps that
+        /* The shell spans the full viewport on every view. The per-view caps that
      used to size .app (and .app > main) now cap the content column only —
      these overrides beat the older .app:has(){max-width} rules above since
      they land later in the cascade at equal specificity. */
@@ -4177,6 +4439,9 @@ button:not(:disabled):active,
 
 .dash-cols { display: grid; grid-template-columns: 1fr; gap: 0.8rem; align-items: start; }
 @media (min-width: 900px) { .dash-cols { grid-template-columns: 1.05fr 0.95fr; } }
+/* Insights runs three columns of figures; the dashboard's two-column split is
+   an asymmetric pair and stays that way. */
+@media (min-width: 900px) { .dash-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; } }
 .dash-col { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
 
 /* The dashboard content card (.dash-card, its lead/click variants, and the
@@ -4186,12 +4451,66 @@ button:not(:disabled):active,
    shell + heading, not the card contents. */
 
 .dash-funnel { display: flex; flex-direction: column; gap: 0.3rem; }
-.dash-fn { display: grid; grid-template-columns: 5.4rem 1fr 1.6rem; align-items: center; gap: 0.5rem; }
-.dash-fl { font-family: var(--mono); font-size: var(--text-chrome); letter-spacing: var(--track-chrome); text-transform: uppercase; color: var(--muted); }
-.dash-fbar { height: 8px; border-radius: 5px; background: var(--track); overflow: hidden; }
-.dash-fbar > i { display: block; height: 100%; border-radius: 5px; background: var(--sc, var(--accent)); }
+/* Each figure is a card, the bar beneath the line it belongs to (#535
+   shell): the label and its count read as a sentence, and the bar is the
+   evidence under it rather than a third column competing with both. */
+.dash-funnel { display: flex; flex-direction: column; gap: 0.5rem; }
+.dash-fn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.75rem;
+}
+.dash-fl { min-width: 0; font-family: var(--mono); font-size: var(--text-chrome); letter-spacing: var(--track-chrome); text-transform: uppercase; color: var(--ink); }
+/* The conversion rides on the stage it converted into, so the number is
+   read where it is explained. */
+.dash-fconv { color: var(--faint); }
+.dash-fconv::before { content: " "; }
+.dash-fbar { grid-column: 1 / -1; height: 6px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; }
+.dash-fbar > i { display: block; height: 100%; border-radius: var(--radius-full); background: var(--sc, var(--accent)); }
 .dash-fn-n { font-family: var(--serif); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; font-size: var(--text-body); }
-.dash-conv-line { margin-top: 0.5rem; }
+
+/* The figures band: one rule above and below, hairlines between the cells. */
+.dash-kpiband {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--rule);
+}
+.dash-col-empty { margin: 0; }
+
+/* In a column of cards the offer rows are cards too, so the three columns
+   read as one register rather than two. */
+.dash-offers-cards > li + li { margin-top: 0.5rem; }
+.dash-offers-cards .dash-orow {
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 0.6rem 0.75rem;
+}
+
+/* Outcome breakdown (#381) — the funnel's bar recipe, reused. Two deliberate
+   differences: the label column is wider because a reason is a phrase rather
+   than a one-word stage, and no stage-* class is applied, so `--sc` stays
+   unset and the bar falls back to --accent. That fallback is the point: an
+   outcome is not pipeline state, and the stage hues are reserved for it.
+   Below 520px the label takes its own line — 9.5rem of a 390px screen left
+   the bar too short to read as a proportion. */
+/* What is left over gets a dashed card rather than a line of muted text: it
+   belongs to the column, but it is not one of its figures. */
+.dash-outcome-rest {
+  margin: 0.5rem 0 0;
+  padding: 0.7rem;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: var(--text-meta);
+  color: var(--muted);
+}
 
 .dash-offers { list-style: none; margin: 0; padding: 0; }
 .dash-orow {
@@ -4223,6 +4542,7 @@ button:not(:disabled):active,
 
 @media (max-width: 600px) {
   .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-kpiband { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-band { grid-template-columns: 1fr; }
 }
 
@@ -4372,7 +4692,7 @@ button:not(:disabled):active,
 }
 .board-sort::after {
   content: "\25BE";
-  font-size: 0.6rem;
+  font-size: var(--text-glyph);
   color: var(--faint);
 }
 .board-sort select {
@@ -4425,9 +4745,140 @@ button:not(:disabled):active,
 /* The archived-filter tab (.archived-tabs .chip) moved to the owned FilterTab
    component (src/components/FilterTab.css). The .archived-tabs container stays. */
 
+/* Folded rail (#535 shell): a stage you are not working in turns its label
+   on its side so the horizontal room goes to the stages you are. It stays a
+   drop target, so a card can be filed into a folded stage without opening
+   it first. The rail sits on the page ground — only the count circle carries
+   the stage colour, and as a ring rather than a fill: no ink clears 4.5:1 on
+   all five hues, so a number inside a filled circle cannot be legible across
+   the palette. */
+.bcol-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.3rem 0 0.6rem;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  min-width: 0;
+}
+
+/* Filled, not a ring: white clears 4.5:1 on every --sc-ink (5.11:1 at the
+   worst, screening). It does NOT clear it on the lighter --sc field colours
+   — 3.62:1 on interview — so the fill has to be the ink tone. */
+.bcol-rail .n {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  background: var(--sc-ink, var(--muted));
+  color: #fff;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Upright, not rotated: the letters stack and stay readable head-on, which
+   is what the approved mockup shows. Rotated text asks the reader to tilt. */
+.bcol-rail .vlabel {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.bcol-rail:hover,
+.bcol-rail:focus-visible {
+  background: var(--hover);
+}
+
+.bcol-rail:hover .vlabel,
+.bcol-rail:focus-visible .vlabel {
+  color: var(--ink);
+}
+
+/* The archive is a rail on the board but not a stage, so it takes the
+   structural hairline rather than a hue — pipeline colour stays reserved for
+   pipeline state. */
+.bcol-rail.rail-archived,
+.bcol.rail-archived {
+  --sc: var(--rule);
+  --sc-ink: var(--muted);
+}
+
+/* An open column's header is centred over its cards, the stage name in its
+   own ink and the count beside it — the header is the whole affordance, so
+   the flanking marks say it can be closed. */
+.bcol > .bcol-head {
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bcol > .bcol-head::before {
+  display: none;
+}
+
+.bcol-fold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--sc-ink, var(--muted));
+  cursor: pointer;
+}
+
+.bcol-fold svg {
+  color: var(--faint);
+}
+
+.bcol-fold:hover,
+.bcol-fold:focus-visible {
+  color: var(--ink);
+}
+
+/* The count rides beside the name here rather than being the column's
+   display figure — the header is centred, so a figure pushed to the far
+   right would break the centre line it sits on. */
+.bcol > .bcol-head > .n {
+  margin-left: 0;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--faint);
+}
+
+/* Each open live stage leads with its add block, so adding lands in the
+   stage you are looking at. Closed stages and the archive get none: nothing
+   is created straight into them. */
+.bcol-add {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.7rem;
+  padding: 1rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
 /* column header funnel proportion */
-.bcol-prop { height: 3px; border-radius: 2px; background: var(--track); overflow: hidden; margin: 0 0.1rem 0.55rem; }
-.bcol-prop > i { display: block; height: 100%; border-radius: 2px; }
+.bcol-prop { height: 3px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; margin: 0 0.1rem 0.55rem; }
+.bcol-prop > i { display: block; height: 100%; border-radius: var(--radius-full); }
 .bcol-prop .s-interested { background: var(--st-interested); }
 .bcol-prop .s-applied { background: var(--st-applied); }
 .bcol-prop .s-screening { background: var(--st-screening); }
@@ -4437,13 +4888,130 @@ button:not(:disabled):active,
 /* card: edge = urgency, position for the ⋯ menu */
 .bcard { position: relative; border-left-color: var(--u-edge, var(--border)); }
 .bcard .bcard-body { padding-right: 1.1rem; }
-.baction { font-size: var(--text-meta); color: var(--u-edge, var(--muted)); font-weight: 560; }
+.baction {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--u-edge, var(--muted));
+}
 .bbadge {
   align-self: flex-start;
   font-family: var(--mono); font-size: var(--text-chrome);
   text-transform: uppercase; letter-spacing: var(--track-eyebrow);
   padding: 0.05rem 0.4rem; border-radius: var(--radius-full);
   color: var(--u-edge); background: color-mix(in srgb, var(--u-edge) 14%, transparent);
+}
+
+/* Board card (#535 shell): an identity strip flush to the top edge, the
+   title on its own, then one line of state. The strip is the only part that
+   carries stage colour — the card ground stays paper so a column of them
+   reads as a list rather than a block of tint. */
+.bcard {
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  gap: 0;
+}
+
+.bcard .bcard-body {
+  gap: 0;
+  padding-right: 0;
+}
+
+.bstrip {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: var(--text-glyph);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+  /* Room for the ⋯ trigger, which sits over the top-right corner. */
+  padding-right: 1.3rem;
+  min-width: 0;
+}
+
+.bstrip > span {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bstrip > span:first-child {
+  border-left: 0;
+}
+
+/* The leading cell takes the stage tint, so the card's state is legible from
+   the strip alone once a column holds more than one stage (dragging, the
+   narrow carousel). */
+.bstrip .bwhen {
+  background: color-mix(in srgb, var(--sc, var(--muted)) 16%, var(--surface));
+  color: var(--sc-ink, var(--ink));
+  flex: 0 0 auto;
+}
+
+.bstrip .bco {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.btitle {
+  margin: 0;
+  padding: 0.6rem 0.75rem 0.35rem;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.bfoot {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0 0.75rem 0.6rem;
+  min-width: 0;
+}
+
+.bfoot .dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 0.3em;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--u-edge, var(--sc, var(--muted)));
+}
+
+.bfoot > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The next action is the one line here worth reading in full, and a board
+   column is narrow — so it wraps to two lines rather than being cut at the
+   first few words. The short variants (badge, comp, freshness) stay on one.  */
+.bfoot .baction {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* The fit rating rides at the end of the state line rather than in the
+   identity strip: in a board column the strip has room for two cells, and a
+   third pushed the company name down to four legible characters. */
+.bfoot .bfit {
+  margin-left: auto;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 /* ⋯ menu: extracted into the owned CardMenu component — see
@@ -4463,19 +5031,10 @@ button:not(:disabled):active,
 .archived-restore { border: none; background: none; color: var(--accent-ink); cursor: pointer; font-size: var(--text-meta); white-space: nowrap; }
 
 /* mobile: snap-scroll columns instead of stacking (#346) */
-@media (max-width: 899px) {
-  .board {
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    grid-auto-columns: 86%;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    gap: 0.6rem;
-    scroll-padding: 0 0.5rem;
-  }
-  .board > .bcol { scroll-snap-align: start; }
-}
+/* The narrow board's carousel lives with the rest of the board (search for
+   "one stage at a time"), not here: this band is for cascade repairs, and a
+   second copy of the rules silently won on source order — its 8px scroll
+   padding was what kept the left-hand peek from ever appearing. */
 
 /* Cascade repairs (#314 round 3) — must stay after the control-normalization
    layer: its generic hover and min-heights win source-order ties against
@@ -4505,7 +5064,6 @@ button:not(:disabled):active,
   .side,
   .top,
   .header,
-  .tabs,
   .quick-add-fab,
   .toast,
   .error-dismiss,
@@ -4515,8 +5073,8 @@ button:not(:disabled):active,
   }
 
   body {
-    background: #fff;
-    color: #000;
+    background: var(--print-ground);
+    color: var(--print-ink);
   }
 
   .content {

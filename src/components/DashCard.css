@@ -64,4 +64,28 @@
     font-size: 0.54rem;
     letter-spacing: 0.04em;
   }
+
+  /* Column variant (#535 shell): no surface of its own, because what sits
+     inside it is a stack of cards. The heading centres over the column and
+     the icon holds the right edge, so the centre line stays the column's. */
+  .zui-dashcard--column {
+    background: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .zui-dashcard--column .zui-dashcard-head {
+    position: relative;
+    justify-content: center;
+    color: var(--muted);
+    margin-bottom: 0.7rem;
+  }
+
+  .zui-dashcard-icon {
+    position: absolute;
+    right: 0;
+    display: inline-flex;
+    color: var(--faint);
+  }
 }

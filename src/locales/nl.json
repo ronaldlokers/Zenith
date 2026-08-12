@@ -34,6 +34,10 @@
     "sent_one": "{{count}} verstuurd",
     "sent_other": "{{count}} verstuurd",
     "vsLastWeek": "{{count}} vorige week",
+    "happened": "Vandaag gebeurd",
+    "happenedNone": "Er is vandaag niets veranderd.",
+    "happenedMoved": "{{title}} bereikte {{stage}}",
+    "happenedAdded": "Je hebt {{title}} toegevoegd",
     "moved": "Deze week verschoven",
     "movedTo": "naar",
     "noMoves": "Deze week is er niets van fase veranderd."
@@ -155,7 +159,6 @@
     "noPeople": "Nog geen contacten. Voeg recruiters en hiring managers toe om elk contactmoment te loggen.",
     "noPeopleMatch": "Geen contacten komen overeen met je zoekopdracht.",
     "boardEmpty": "leeg",
-    "boardKeepPushing": "blijf doorzetten",
     "noFollowUps": "Geen vervolgacties gepland.",
     "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op “Nu controleren”.",
     "pipelineNoJobs": "Nog niets bijgehouden."
@@ -176,8 +179,6 @@
     "languageEn": "English",
     "languageNl": "Nederlands",
     "cvLanguage": "CV-taal",
-    "theme": "Thema",
-    "themeAuto": "Automatisch (licht/donker)",
     "shareLink": "Openbare deel-link",
     "generateLink": "Link genereren",
     "regenerateLink": "Opnieuw genereren",
@@ -197,8 +198,6 @@
       "feed": "Feed-bronnen"
     },
     "keyShortcuts": "Enkele-toets sneltoetsen (n, /)",
-    "themeLight": "Licht",
-    "themeDark": "Donker",
     "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
     "timezone": "Tijdzone",
     "timezoneNow": "{{time}} op dit moment"
@@ -234,7 +233,13 @@
     "sortMatch": "Beste match",
     "fitLabel": "Min. match",
     "fitAny": "Alle",
-    "noFitMatch": "Geen vacatures voldoen aan dit matchfilter — verlaag het om meer te zien."
+    "noFitMatch": "Geen vacatures voldoen aan dit matchfilter — verlaag het om meer te zien.",
+    "band": {
+      "strong": "Sterk",
+      "look": "Het bekijken waard",
+      "weak": "Zwak"
+    },
+    "postedAge": "{{age}} geleden"
   },
   "stats": {
     "momentum": {
@@ -311,7 +316,10 @@
     "saved": "CV-versie opgeslagen",
     "empty": "Nog geen opgeslagen versies. Sla het huidige CV op om een variant te bewaren die je altijd kunt downloaden.",
     "download": "Downloaden",
-    "corrupt": "Deze versie kon niet worden gelezen."
+    "corrupt": "Deze versie kon niet worden gelezen.",
+    "live": "Live",
+    "newVariant": "+ Nieuwe variant",
+    "deleteAria": "Variant {{name}} verwijderen"
   },
   "goals": {
     "weeklyGoal": "Weekdoel",
@@ -589,7 +597,8 @@
       "fluent": "Vloeiend",
       "native": "Moedertaal"
     },
-    "itemMenu": "Acties voor {{title}}"
+    "itemMenu": "Acties voor {{title}}",
+    "editBelow": "Hieronder bewerken"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
@@ -792,17 +801,15 @@
     "sortFollowup": "Follow-up datum",
     "sortFit": "Fit-score",
     "sortUpdated": "Laatst bijgewerkt",
-    "archivedBtn": "Archief",
-    "archivedTitle": "Archief & gesloten",
     "restore": "Herstellen",
     "filterBtn": "Filter",
-    "reasonRejected": "afgewezen",
-    "reasonWithdrawn": "ingetrokken",
-    "reasonGhosted": "ghosted",
-    "reasonArchived": "opzij gezet",
-    "noArchived": "Nog niets gearchiveerd of gesloten.",
-    "archAll": "Alles",
-    "archActive": "Alleen actief"
+    "archActive": "Alleen actief",
+    "railArchived": "Gearchiveerd",
+    "addHere": "+ Sollicitatie toevoegen",
+    "foldRail": "{{stage}} inklappen",
+    "unfoldRail": "{{stage}} openen, {{count}} sollicitaties",
+    "showingClosed": "Gesloten sollicitaties worden getoond",
+    "backToLive": "Terug naar actief"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
@@ -884,8 +891,43 @@
     "addOpen": "Toevoegen & openen",
     "add": "Toevoegen"
   },
+  "outcome": {
+    "title": "Waarom is dit gestopt?",
+    "lead": "Gemarkeerd als {{stage}}. Vastleggen waarom maakt van afgesloten sollicitaties iets waar je van leert.",
+    "note": "Notitie (optioneel)",
+    "notePlaceholder": "Iets wat het onthouden waard is",
+    "skip": "Overslaan",
+    "detailHeading": "Waarom het stopte",
+    "detailEmpty": "Geen reden vastgelegd",
+    "detailEdit": "Reden vastleggen",
+    "detailChange": "Wijzigen",
+    "reason": {
+      "no_response": "Geen reactie",
+      "after_screening": "Na een screeningsgesprek",
+      "after_interview": "Na een interview",
+      "role_cancelled": "Functie is geschrapt",
+      "took_other_offer": "Ander aanbod aangenomen",
+      "comp_too_low": "Arbeidsvoorwaarden te laag",
+      "role_changed": "Functie of scope veranderd",
+      "bad_signal": "Slecht signaal tijdens het proces",
+      "no_reply_after_applying": "Geen reactie na het solliciteren",
+      "went_quiet_mid_process": "Stil gevallen tijdens het proces",
+      "other": "Anders"
+    },
+    "insightsTitle": "Waarom sollicitaties stoppen",
+    "insightsEmpty": "Nog geen afgesloten sollicitaties.",
+    "insightsUnrecorded_one": "{{count}} afgesloten zonder vastgelegde reden",
+    "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden"
+  },
+  "menu": {
+    "label": "Bestemmingen",
+    "open": "Menu openen",
+    "closedApplications": "Gesloten sollicitaties"
+  },
   "contacts": {
-    "view": "Weergave mensen"
+    "view": "Weergave mensen",
+    "owed": "Antwoord verschuldigd",
+    "everyoneElse": "Alle anderen"
   },
   "dashboard": {
     "kpiOpen": "Open sollicitaties",
@@ -902,7 +944,11 @@
     "noOffers": "Nog geen open aanbiedingen.",
     "thisFortnight": "Deze twee weken",
     "response": "Respons",
-    "toOffer": "Tot aanbod"
+    "toOffer": "Tot aanbod",
+    "kpiOpenShort": "Open",
+    "kpiResponseShort": "Respons",
+    "kpiResponseOf": "{{responded}} van {{applied}}",
+    "convFrom": "{{pct}}% vanaf {{stage}}"
   },
   "urgency": {
     "overdue": "te laat",

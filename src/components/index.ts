@@ -73,3 +73,7 @@ export { CoverLetterSection } from "./CoverLetterSection";
 export type { CoverLetterSectionProps } from "./CoverLetterSection";
 export { JdKeywordMatch } from "./JdKeywordMatch";
 export type { JdKeywordMatchProps } from "./JdKeywordMatch";
+export { WordmarkMenu } from "./WordmarkMenu";
+export type { MenuDestination, WordmarkMenuProps } from "./WordmarkMenu";
+export { OutcomeDialog } from "./OutcomeDialog";
+export type { OutcomeDialogProps } from "./OutcomeDialog";

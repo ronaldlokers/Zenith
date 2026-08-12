@@ -16,6 +16,9 @@ export interface CardMenuProps {
   onSetFollowUp: (date: string | null, text: string | null) => void;
   onOpenDetail: () => void;
   onArchive: () => void;
+  // The board carries an archive rail rather than an archive screen (#535),
+  // so a card that is already archived offers the way back instead.
+  onUnarchive?: () => void;
 }
 
 export function CardMenu({
@@ -24,6 +27,7 @@ export function CardMenu({
   onSetFollowUp,
   onOpenDetail,
   onArchive,
+  onUnarchive,
 }: CardMenuProps) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<null | "root" | "move" | "followup">(null);
@@ -78,16 +82,29 @@ export function CardMenu({
                 >
                   {t("common.open")}
                 </button>
-                <Button
-                  role="menuitem"
-                  variant="danger"
-                  onClick={() => {
-                    close();
-                    onArchive();
-                  }}
-                >
-                  {t("detail.archive")}
-                </Button>
+                {a.archived_at && onUnarchive ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      close();
+                      onUnarchive();
+                    }}
+                  >
+                    {t("board.restore")}
+                  </button>
+                ) : (
+                  <Button
+                    role="menuitem"
+                    variant="danger"
+                    onClick={() => {
+                      close();
+                      onArchive();
+                    }}
+                  >
+                    {t("detail.archive")}
+                  </Button>
+                )}
               </>
             )}
             {mode === "move" && (

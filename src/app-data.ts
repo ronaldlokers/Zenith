@@ -7,12 +7,14 @@ import type { TFunction } from "i18next";
 import { api } from "./api";
 import { isDead } from "./format";
 import {
+  isTerminalStatus,
   type Application,
   type Company,
   type Contact,
   type RoleTypeDef,
   type Stats,
   type Status,
+  type TerminalStatus,
 } from "./types";
 
 export interface Toast {
@@ -154,6 +156,13 @@ export function useAppData(
     [notify, reload, t],
   );
 
+  // Set when a move lands on a terminal stage (#381); App renders the
+  // outcome dialog off it. Null whenever nothing is being asked.
+  const [outcomePrompt, setOutcomePrompt] = useState<{
+    id: number;
+    status: TerminalStatus;
+  } | null>(null);
+
   // Optimistic status change: update locally, revert on API failure
   const setStatus = useCallback(
     (id: number, status: Status) => {
@@ -185,6 +194,12 @@ export function useAppData(
               () => navigate(`/board/${id}`),
               t("toast.setFollowUp"),
             );
+          } else if (isTerminalStatus(status)) {
+            // Ask why instead of the usual undo toast (#381). The two would
+            // compete for the same moment, and the dialog is the stronger
+            // surface: it is already about this move, and a mis-drop is
+            // undone by dragging the card back — one gesture either way.
+            setOutcomePrompt({ id, status });
           } else {
             notify(t("toast.statusChanged", { stage: t(`stages.${status}`) }), () =>
               api
@@ -200,6 +215,18 @@ export function useAppData(
         });
     },
     [applications, reload, refreshStats, notify, navigate, t],
+  );
+
+  // Writes the outcome onto the application's latest terminal transition and
+  // refreshes stats, since the Insights breakdown reads straight off the
+  // history rows. Shared by the prompt dialog and the detail-page edit.
+  const saveOutcome = useCallback(
+    (id: number, reason: string | null, note: string | null) =>
+      api
+        .setOutcome(id, reason, note)
+        .then(refreshStats)
+        .catch((e) => setError((e as Error).message)),
+    [refreshStats],
   );
 
   const visibleApps = applications.filter(
@@ -228,6 +255,9 @@ export function useAppData(
     reload,
     deleteWithUndo,
     setStatus,
+    outcomePrompt,
+    setOutcomePrompt,
+    saveOutcome,
     visibleApps,
     activeApps,
     visibleCompanies,
