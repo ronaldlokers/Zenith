@@ -110,10 +110,19 @@ Pinned does not get a column: it has its own bottom-bar slot.
 
 ### Destinations
 
-Seven: Today, Pipeline, Feed, People & companies, CV, Insights, Settings.
-Plus Archive, which is a real screen and not a menu stub. The first three are
-large tiles in the menu carrying icon, label, live count and shortcut; the
-rest are compact rows.
+Seven, and only seven: Today, Pipeline, Feed, People & companies, CV,
+Insights, Settings. The first three are large tiles in the menu carrying
+icon, label, live count and shortcut; the rest are compact rows.
+
+**There is no Archive screen.** A closed application is still in the
+pipeline — it has simply stopped moving — so the three terminal stages are
+stages on the board, folded by default. The menu's "Closed applications"
+row (`A`) folds the live stages and opens the closed ones; the toast offers
+"Back to live". A closed stage offers no add block and no watch toggle,
+because neither means anything there.
+
+The cost accepted: the board's narrow strip carries eight entries rather
+than five. It already scrolls, and the current stage is scrolled into view.
 
 ### Board
 

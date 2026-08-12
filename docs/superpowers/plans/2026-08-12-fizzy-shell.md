@@ -25,9 +25,12 @@ final ground. Doing it last would mean reworking all of them.
   the three-way control. Leave a static "Light" row.
 - Remove `data-theme` handling from the shell and from the theme effect in
   `src/hooks.ts`.
-- Migration: users with `theme = dark` or `automatic` stored — decide whether
-  to null the column or leave it inert. Prefer leaving the column and ignoring
-  it, so the decision is reversible without a second migration.
+- **Migration: none.** The `theme` column stays and the app stops reading it.
+  Reversing light-only then costs code and not a migration. Note SQLite column
+  drops rebuild the table — which is exactly how migration `0010` silently
+  killed `0005`'s `status_history` triggers — so not dropping it also avoids
+  that whole class of accident. Leave a comment in the code that reads the
+  profile explaining why the column is inert.
 
 **Verify:** `test-node/stage-palette.spec.ts` still passes unchanged (the
 light set was already the enforced one). Contrast-check `--on-stage` against
@@ -91,9 +94,13 @@ baseline in the same PR so later PRs still have a gate.
 
 ## PR 5 — Board
 
-- Manual fold/unfold per stage, persisted per user (a small `board_folded`
-  column on `profile`, or localStorage — prefer the column, it should follow
-  you between devices).
+- Manual fold/unfold per stage, persisted in a `board_folded` column on
+  `profile` — **not** localStorage. It should follow you between laptop and
+  phone and survive a browser wipe. Debounce the write, or fold it into the
+  existing profile `PUT` rather than adding an endpoint.
+- The board carries **all eight stages**: the five live ones plus rejected,
+  withdrawn and ghosted, folded by default. A closed stage renders no add
+  block and no watch toggle.
 - Folded rail: rotated label, stage-coloured count circle, still a drop
   target.
 - Add block at the head of each open column, with the watching state.
@@ -117,12 +124,14 @@ twice in the prototype.
 
 ---
 
-## PR 7 — Insights, CV, Archive
+## PR 7 — Insights and CV
 
-- Insights: figures on a hairline band, three columns.
+- Insights: figures on a hairline band, three columns. The "why applications
+  end" column is where the outcome data from #381 finally gets read.
 - CV: the detail page's plate with variants as the rail.
-- Archive: a real screen, columns by outcome, unrecorded reasons flagged —
-  this finally gives the outcome data from #381 somewhere to be read.
+
+No Archive screen — see PR 5. The menu's "Closed applications" row and `A`
+open the closed stages on the board instead.
 
 ---
 
@@ -143,11 +152,15 @@ twice in the prototype.
 - The zero-diff bar does **not** apply to this work — it is a deliberate
   visual change. Rebaseline in PR 3 and hold the new baseline after that.
 
-## Open questions to settle before PR 1
+## Settled
 
-1. **Does `theme` stay in the schema?** Recommend yes, inert — reversing a
-   dropped column costs a migration.
-2. **Where does fold state live?** Recommend `profile`, not localStorage.
-3. **Do the mobile bottom-bar slots need a fourth for Add?** The prototype
-   puts Add in the menu and in each column's add block; on a phone that may be
-   one tap too many.
+All four open questions were answered before this plan was scheduled:
+
+1. **`theme` stays in the schema, inert.** No migration.
+2. **Fold state lives on `profile`,** not localStorage.
+3. **The bottom bar keeps three slots.** No fourth for Add and no floating
+   button — the bar stays a navigation surface. Adding is two taps via the
+   menu, or one from a column's add block. Accepted cost: adding a job is the
+   most frequent write in a job tracker, and on a phone it has no one-tap
+   route. Worth revisiting after the shell has been used for a while.
+4. **Archive folds into the pipeline** as three stages rather than a screen.
