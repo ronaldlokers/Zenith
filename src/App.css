@@ -4969,6 +4969,40 @@ button:not(:disabled):active,
     margin: 0;
   }
 
+  /* The plate is a screen device: it mounts the card and carries the stage
+     as a wash. On paper it is a slab of ink around the content, and a tint
+     says nothing in monochrome. The tools and the action row go with it —
+     they are things to click. */
+  .detail-plate {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .detail-tools,
+  .detail-plate-actions {
+    display: none !important;
+  }
+
+  /* The CV's own plate and tools are described in @layer components
+     (src/cv/cv.css), which this layer cannot override at any specificity —
+     their print rules live there with them. */
+
+  /* The blanket `button` hide above took the stage rail with it, and with it
+     the one thing a printed application has to say: where it stands. The
+     current stage prints as a plain word; the seven it could move to do not,
+     because on paper they are not choices. */
+  .detail-rail button {
+    display: none !important;
+  }
+
+  .detail-rail button.current {
+    display: block !important;
+    background: none;
+    color: var(--print-ink);
+    padding: 0;
+  }
+
   /* Let a detail modal print as a normal full-width page instead of a
      small centered overlay box. */
   .modal-backdrop {
