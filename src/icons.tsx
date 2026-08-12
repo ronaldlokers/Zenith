@@ -244,6 +244,24 @@ export function ArchiveIcon() {
 
 // Matches the stroke-based hand-drawn style of the Empty*Icon set —
 // the error banner previously had no icon at all (#206).
+// Tools that hang against the detail plate (#535): the posting this
+// application came from, and the printable cheat sheet.
+export function ExternalLinkIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 4h6v6M20 4l-9 9" />
+      <path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+    </svg>
+  );
+}
+export function PrintIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 9V3h10v6" />
+      <path d="M5 9h14a1 1 0 0 1 1 1v6h-4v5H8v-5H4v-6a1 1 0 0 1 1-1z" />
+    </svg>
+  );
+}
 export function ErrorIcon() {
   return (
     <svg
