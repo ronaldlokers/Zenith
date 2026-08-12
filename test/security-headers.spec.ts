@@ -31,3 +31,56 @@ describe("security headers", () => {
     }
   });
 });
+
+describe("content security policy", () => {
+  it("refuses inline and injected script on a client route", async () => {
+    // The directive the whole policy is for. 'unsafe-inline' or 'unsafe-eval'
+    // creeping into script-src would leave the header in place while removing
+    // the only protection it offers, which is the failure this guards.
+    const res = await SELF.fetch(`${BASE}/board`, {
+      headers: { Accept: "text/html" },
+    });
+    const csp = res.headers.get("content-security-policy") ?? "";
+    const scriptSrc = csp.split(";").map((d) => d.trim())
+      .find((d) => d.startsWith("script-src"));
+    expect(scriptSrc, "no script-src in the policy").toBeTruthy();
+    expect(scriptSrc).toBe("script-src 'self'");
+  });
+
+  it("allows style attributes but not inline <style>", async () => {
+    // React writes this UI's geometry into style attributes. Dropping
+    // style-src-attr takes the funnel bars and the ascent strip with it;
+    // widening it to style-src would also readmit inline <style>.
+    const res = await SELF.fetch(`${BASE}/board`, {
+      headers: { Accept: "text/html" },
+    });
+    const csp = res.headers.get("content-security-policy") ?? "";
+    const directives = Object.fromEntries(
+      csp.split(";").map((d) => {
+        const [name, ...rest] = d.trim().split(/\s+/);
+        return [name, rest.join(" ")];
+      }),
+    );
+    expect(directives["style-src-attr"]).toBe("'unsafe-inline'");
+    expect(directives["style-src"]).toBe("'self'");
+  });
+
+  it("leaves the share page its own stricter policy", async () => {
+    // The middleware runs after the handler, so a blanket c.header() would
+    // overwrite the nonced policy the share page builds — silently, and only
+    // in production, where that page is the one thing served to strangers.
+    const { env } = await import("cloudflare:test");
+    const { authedFetch } = await import("./helpers");
+    const token = "csp-share-token";
+    await authedFetch(`${BASE}/api/profile/share-token`, { method: "POST" });
+    await env.DB.prepare("UPDATE profile SET share_token = ? WHERE user_id = ?")
+      .bind(token, "seed-admin")
+      .run();
+
+    const res = await SELF.fetch(`${BASE}/shared/${token}`);
+    expect(res.status).toBe(200);
+    const csp = res.headers.get("content-security-policy") ?? "";
+    expect(csp, "the app policy overwrote the share page's").toContain("nonce-");
+    expect(csp).toContain("default-src 'none'");
+  });
+});

@@ -49,16 +49,52 @@ const app = new Hono<AppEnv>();
 // links are unguessable tokens in a path, and a path is exactly what a
 // referrer carries.
 //
-// No Content-Security-Policy yet, deliberately. The share page renders its
-// own inline <style>, so a useful policy needs a scoped exception rather
-// than a blanket one, and getting it wrong takes the app down rather than
-// degrading it. It wants verifying against a deployment, not guessing at.
+// The app's Content-Security-Policy. script-src 'self' is the line that
+// matters: with no inline script allowed, an injected <script> or an onclick
+// smuggled through user text does not run, which is the whole XSS class this
+// app could plausibly meet (job titles, notes and company names are rendered
+// everywhere).
+//
+// style-src-attr is the one concession, and it is deliberate. React writes
+// the geometry this UI is made of into style attributes — funnel bar widths,
+// the ascent strip's flex growth, the board's grid track list — all
+// continuous values that cannot be a fixed class. Allowing inline *style
+// attributes* while still refusing inline <style> elements and inline script
+// is the narrow version of that concession: a style attribute cannot execute
+// anything, and the CSS injection it would leave open needs an HTML
+// injection first, which script-src already has to fail for.
+//
+// Verified rather than reasoned about. The production build was loaded from
+// a preview deployment under this policy with script-src 'self' and reported
+// no violations; the authenticated app was then loaded locally under it, and
+// the only violations were style-src-elem from Vite's HMR client, which the
+// production build does not ship. `npm run dev` is plain vite, so the worker
+// serves no HTML in dev and this never reaches that client anyway.
+const APP_CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self'",
+  "style-src-attr 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 app.use("*", async (c, next) => {
   await next();
   c.header("X-Frame-Options", "DENY");
   c.header("X-Content-Type-Options", "nosniff");
   c.header("Referrer-Policy", "strict-origin-when-cross-origin");
   c.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  // The share page builds a stricter, nonced policy of its own; this must not
+  // flatten it back to the app's. Anything that sets its own CSP keeps it.
+  if (!c.res.headers.get("Content-Security-Policy")) {
+    c.header("Content-Security-Policy", APP_CSP);
+  }
 });
 
 // Shared application write shape (#285) — the INSERT column list, the
