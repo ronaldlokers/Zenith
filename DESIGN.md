@@ -274,6 +274,12 @@ The desktop rail was the other Night surface, and it is gone with the Fizzy-phil
 
 **One theme.** Zenith is light-only. There is no `data-theme` attribute and no `prefers-color-scheme` branch anywhere in the stylesheets; the Automatic and Dark options were removed (see `docs/superpowers/specs/2026-08-12-fizzy-shell-design.md`). Adding a second ground back is a design decision, not a fix — it means re-deriving every token pair below, and re-running the palette suite against both grounds.
 
+### Glyph sizing
+
+`--text-glyph` is the optical size for a **solid** pseudo-element glyph. A filled triangle reads heavier than a stroked arrow at the same nominal size, so it is set smaller to match it — `.board-sort` sets `::before` (`↕`) at `--text-meta` and `::after` (`▾`) at `--text-glyph`, both written in the same commit, which is what marks the difference as an optical judgement rather than drift.
+
+It is **not a step on the reading ramp**. Nothing anyone reads should use it; if a glyph carries meaning it needs a label, and the label uses a real size.
+
 ### The printed page
 
 The CV preview (`.cv-doc`) is the one surface that is **not** app UI: it renders a simulated A4 sheet. It therefore runs on a second, deliberate unit system, named as the `--doc-*` family in `index.css`.

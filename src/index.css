@@ -187,6 +187,14 @@
   --text-title: 0.95rem;
   --text-body: 0.875rem;
   --text-meta: 0.75rem;
+  /* Optical size for a SOLID pseudo-element glyph. A filled triangle reads
+     heavier than a stroked arrow at the same nominal size, so it is set
+     smaller to match it — see .board-sort, where ::before (an up-down arrow)
+     takes --text-meta and ::after (a triangle) takes this. Both rules were
+     written in one commit (2904e2f), which is what marks the difference as
+     an optical judgement rather than drift. Not a step on the reading ramp:
+     nothing anyone reads should use it. */
+  --text-glyph: 0.6rem;
   --text-chrome: 0.64rem;
   /* Figures (#501). DESIGN.md's Figures-Speak Rule says numbers a user reads
      as a result take the display voice, tabular and tightly tracked — but it

@@ -4215,7 +4215,7 @@ button:not(:disabled):active,
 }
 .board-sort::after {
   content: "\25BE";
-  font-size: 0.6rem;
+  font-size: var(--text-glyph);
   color: var(--faint);
 }
 .board-sort select {
