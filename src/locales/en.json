@@ -929,7 +929,11 @@
     "noOffers": "No live offers yet.",
     "thisFortnight": "This fortnight",
     "response": "Response",
-    "toOffer": "To offer"
+    "toOffer": "To offer",
+    "kpiOpenShort": "Open",
+    "kpiResponseShort": "Response",
+    "kpiResponseOf": "{{responded}} of {{applied}}",
+    "convFrom": "{{pct}}% from {{stage}}"
   },
   "urgency": {
     "overdue": "overdue",

@@ -929,7 +929,11 @@
     "noOffers": "Nog geen open aanbiedingen.",
     "thisFortnight": "Deze twee weken",
     "response": "Respons",
-    "toOffer": "Tot aanbod"
+    "toOffer": "Tot aanbod",
+    "kpiOpenShort": "Open",
+    "kpiResponseShort": "Respons",
+    "kpiResponseOf": "{{responded}} van {{applied}}",
+    "convFrom": "{{pct}}% vanaf {{stage}}"
   },
   "urgency": {
     "overdue": "te laat",

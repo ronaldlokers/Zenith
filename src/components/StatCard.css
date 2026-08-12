@@ -85,4 +85,76 @@
     color: var(--accent-ink);
     font-weight: 600;
   }
+
+  /* Band cell (#535 shell): the figures sit on the page, divided by
+     hairlines, rather than each in its own tile. No chrome of its own — the
+     container draws the rules — so the figure and its label carry the whole
+     cell. */
+  .zui-statcard--band {
+    background: none;
+    border: 0;
+    /* The hero tile's gradient and 3px accent cap are tile chrome; in the
+       band the hero is marked by its figure's colour alone. */
+    background-image: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 1.1rem 0.9rem;
+    align-items: center;
+    text-align: center;
+    gap: 0.3rem;
+  }
+
+  .zui-statcard--band.zui-statcard--hero::before {
+    content: none;
+  }
+
+  /* The divider between cells belongs to the cell, not to the container that
+     lays them out: an app-layer rule cannot draw it, because this layer's
+     `border: 0` wins whatever the specificity. */
+  .zui-statcard--band + .zui-statcard--band {
+    border-left: 1px solid var(--border);
+  }
+
+  /* Wrapped onto a second row, the cell above it draws the rule instead. */
+  @media (max-width: 899px) {
+    .zui-statcard--band:nth-child(3) {
+      border-left: 0;
+    }
+
+    .zui-statcard--band:nth-child(n + 3) {
+      border-top: 1px solid var(--border);
+    }
+  }
+
+  .zui-statcard--band .zui-statcard-value {
+    font-family: var(--serif);
+    font-size: var(--text-display);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .zui-statcard--band.zui-statcard--hero .zui-statcard-value {
+    color: var(--accent-ink);
+  }
+
+  .zui-statcard--band .zui-statcard-label {
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    text-transform: uppercase;
+    letter-spacing: var(--track-eyebrow);
+    color: var(--muted);
+  }
+
+  .zui-statcard-sub {
+    font-size: var(--text-meta);
+    color: var(--faint);
+  }
+
+  .zui-statcard--band:hover,
+  .zui-statcard--band.zui-statcard--click:hover {
+    transform: none;
+    box-shadow: none;
+    color: var(--ink);
+  }
 }

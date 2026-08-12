@@ -15,6 +15,14 @@ export interface DashCardProps
   /** Accent left border (the dashboard's lead card). */
   lead?: boolean;
   /**
+   * Column variant (#535 shell): the panel drops its own surface and the
+   * heading centres over the column, because the content beneath it is a
+   * stack of cards rather than one card's body.
+   */
+  column?: boolean;
+  /** Trailing mark in the heading — what kind of figures these are. */
+  icon?: ReactNode;
+  /**
    * When present the panel is an interactive <button> with the hover lift;
    * otherwise a static <div>. Mirrors the dashboard, where only the funnel
    * card navigates on click.
@@ -27,6 +35,8 @@ export function DashCard({
   heading,
   win,
   lead = false,
+  column = false,
+  icon,
   onClick,
   className,
   children,
@@ -35,6 +45,7 @@ export function DashCard({
   const classes = [
     "zui-dashcard",
     lead ? "zui-dashcard--lead" : null,
+    column ? "zui-dashcard--column" : null,
     onClick ? "zui-dashcard--click" : null,
     className,
   ]
@@ -45,6 +56,7 @@ export function DashCard({
       <div className="zui-dashcard-head">
         {heading}
         {win != null && <span className="zui-dashcard-win">{win}</span>}
+        {icon != null && <span className="zui-dashcard-icon">{icon}</span>}
       </div>
     ) : null;
   return onClick ? (

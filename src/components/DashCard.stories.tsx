@@ -41,3 +41,22 @@ export const HeadingOnly: Story = {
     </DashCard>
   ),
 };
+
+// A column of cards rather than one card's body: the panel drops its own
+// surface, the heading centres, and the icon holds the right edge.
+export const Column: Story = {
+  render: () => (
+    <DashCard column heading="Funnel (26)" icon={<span aria-hidden="true">▲</span>}>
+      <div
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius-md)",
+          padding: "0.6rem 0.75rem",
+        }}
+      >
+        One of the cards that stack inside the column.
+      </div>
+    </DashCard>
+  ),
+};

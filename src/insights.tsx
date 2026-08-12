@@ -23,6 +23,7 @@ import {
   totalComp,
 } from "./format";
 import { ActivityTab, CalendarTab } from "./calendar";
+import { FlagIcon, FunnelIcon, OfferIcon } from "./icons";
 import { Button, DashCard, MomentumBand, Skeleton, StatCard } from "./components";
 
 export function InsightsTab({
@@ -81,32 +82,35 @@ export function InsightsTab({
 
   return (
     <section className="dash">
-      <div className="dash-kpis">
+      {/* The figures sit on one hairline band, divided rather than boxed:
+          four tiles read as four things, where this reads as one summary. */}
+      <div className="dash-kpiband">
         <StatCard
-          value={open.length}
-          label={t("dashboard.kpiOpen")}
-          onClick={onGoToJobs}
+          band
           hero
+          value={open.length}
+          label={t("dashboard.kpiOpenShort")}
+          onClick={onGoToJobs}
         />
         <StatCard
+          band
           value={`${Math.round(resp.rate * 100)}%`}
-          label={t("dashboard.kpiResponse", {
+          label={t("dashboard.kpiResponseShort")}
+          sub={t("dashboard.kpiResponseOf", {
             responded: resp.responded,
             applied: resp.applied,
           })}
           onClick={onGoToJobs}
         />
         <StatCard
+          band
           value={liveOffers.length}
-          label={
-            <>
-              {t("dashboard.kpiOffers")}
-              {topComp != null ? ` · ${fmtComp(topComp)}` : ""}
-            </>
-          }
+          label={t("dashboard.kpiOffers")}
+          sub={topComp != null ? fmtComp(topComp) : undefined}
           onClick={() => liveOffers[0] && onOpenJob(liveOffers[0].id)}
         />
         <StatCard
+          band
           value={t2o != null ? `~${Math.round(t2o)}d` : "—"}
           label={t("dashboard.kpiToOffer")}
         />
@@ -125,37 +129,87 @@ export function InsightsTab({
         }))}
       />
 
-      <div className="dash-cols">
+      <div className="dash-cols dash-cols-3">
+        {/* Each stage is its own card, and its conversion is stated on it
+            rather than as a row of bare percentages underneath — "35% from
+            applied" is the sentence those numbers were always making. */}
         <DashCard
-          heading={t("dashboard.funnelConv")}
-          win={t("dashboard.winLiveAllTime")}
-          onClick={onGoToJobs}
+          column
+          heading={`${t("dashboard.funnelConv")} (${counts[0] ?? 0})`}
+          icon={<FunnelIcon />}
         >
           <div className="dash-funnel">
             {FUNNEL_STAGES.map((st, i) => (
               <div className={`dash-fn stage-${st}`} key={st}>
-                <span className="dash-fl">{t(`stages.${st}`)}</span>
+                <span className="dash-fl">
+                  {t(`stages.${st}`)}
+                  {i > 0 && conv[i - 1] ? (
+                    <span className="dash-fconv">
+                      {t("dashboard.convFrom", {
+                        pct: Math.round(conv[i - 1].rate * 100),
+                        stage: t(`stages.${FUNNEL_STAGES[i - 1]}`),
+                      })}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="dash-fn-n">{counts[i]}</span>
                 <span className="dash-fbar">
                   <i style={{ width: `${(counts[i] / funnelMax) * 100}%` }} />
                 </span>
-                <span className="dash-fn-n">{counts[i]}</span>
               </div>
             ))}
           </div>
-          <div className="muted small mono dash-conv-line">
-            {conv.map((c) => `${Math.round(c.rate * 100)}%`).join(" · ")}{" "}
-            {t("dashboard.stageToStage")}
-          </div>
         </DashCard>
 
-        <DashCard heading={t("dashboard.offers")} win={t("dashboard.winOpen")}>
+        {/* A reason is a phrase, not a one-word stage, so its card carries
+            the label on its own line above the bar. */}
+        <DashCard
+          column
+          heading={`${t("outcome.insightsTitle")} (${outcomes.total})`}
+          icon={<FlagIcon />}
+        >
+          {outcomes.total === 0 ? (
+            <p className="muted small dash-col-empty">
+              {t("outcome.insightsEmpty")}
+            </p>
+          ) : (
+            <>
+              <div className="dash-funnel dash-outcome">
+                {outcomes.counts.map(({ reason, count }) => (
+                  <div className="dash-fn" key={reason}>
+                    <span className="dash-fl">
+                      {t(`outcome.reason.${reason}`)}
+                    </span>
+                    <span className="dash-fn-n">{count}</span>
+                    <span className="dash-fbar">
+                      <i style={{ width: `${(count / outcomeMax) * 100}%` }} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {outcomes.unrecorded > 0 && (
+                <p className="dash-outcome-rest">
+                  {t("outcome.insightsUnrecorded", {
+                    count: outcomes.unrecorded,
+                  })}
+                </p>
+              )}
+            </>
+          )}
+        </DashCard>
+
+        <DashCard
+          column
+          heading={`${t("dashboard.offers")} (${liveOffers.length})`}
+          icon={<OfferIcon />}
+        >
           {liveOffers.length === 0 ? (
             <p className="muted small" style={{ margin: 0 }}>
               {t("dashboard.noOffers")}
             </p>
           ) : (
             <>
-            <ul className="dash-offers">
+            <ul className="dash-offers dash-offers-cards">
               {liveOffers.slice(0, 3).map((o) => {
                 const tc = totalComp(o);
                 return (
@@ -193,37 +247,6 @@ export function InsightsTab({
         </DashCard>
       </div>
 
-      {/* Full width rather than a third cell in .dash-cols: that grid is two
-          columns at ≥900px, so a third card would sit lopsided in the left
-          one. A reason label is also a phrase, and wants the room. */}
-      <DashCard heading={t("outcome.insightsTitle")}>
-        {outcomes.total === 0 ? (
-          <p className="muted small" style={{ margin: 0 }}>
-            {t("outcome.insightsEmpty")}
-          </p>
-        ) : (
-          <>
-            <div className="dash-funnel dash-outcome">
-              {outcomes.counts.map(({ reason, count }) => (
-                <div className="dash-fn" key={reason}>
-                  <span className="dash-fl">{t(`outcome.reason.${reason}`)}</span>
-                  <span className="dash-fbar">
-                    <i style={{ width: `${(count / outcomeMax) * 100}%` }} />
-                  </span>
-                  <span className="dash-fn-n">{count}</span>
-                </div>
-              ))}
-            </div>
-            {outcomes.unrecorded > 0 && (
-              <p className="muted small dash-outcome-rest">
-                {t("outcome.insightsUnrecorded", {
-                  count: outcomes.unrecorded,
-                })}
-              </p>
-            )}
-          </>
-        )}
-      </DashCard>
 
       <Button
         variant="secondary"

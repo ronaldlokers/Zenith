@@ -4351,6 +4351,9 @@ button:not(:disabled):active,
 
 .dash-cols { display: grid; grid-template-columns: 1fr; gap: 0.8rem; align-items: start; }
 @media (min-width: 900px) { .dash-cols { grid-template-columns: 1.05fr 0.95fr; } }
+/* Insights runs three columns of figures; the dashboard's two-column split is
+   an asymmetric pair and stays that way. */
+@media (min-width: 900px) { .dash-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; } }
 .dash-col { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
 
 /* The dashboard content card (.dash-card, its lead/click variants, and the
@@ -4360,12 +4363,47 @@ button:not(:disabled):active,
    shell + heading, not the card contents. */
 
 .dash-funnel { display: flex; flex-direction: column; gap: 0.3rem; }
-.dash-fn { display: grid; grid-template-columns: 5.4rem 1fr 1.6rem; align-items: center; gap: 0.5rem; }
-.dash-fl { font-family: var(--mono); font-size: var(--text-chrome); letter-spacing: var(--track-chrome); text-transform: uppercase; color: var(--muted); }
-.dash-fbar { height: 8px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; }
+/* Each figure is a card, the bar beneath the line it belongs to (#535
+   shell): the label and its count read as a sentence, and the bar is the
+   evidence under it rather than a third column competing with both. */
+.dash-funnel { display: flex; flex-direction: column; gap: 0.5rem; }
+.dash-fn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.75rem;
+}
+.dash-fl { min-width: 0; font-family: var(--mono); font-size: var(--text-chrome); letter-spacing: var(--track-chrome); text-transform: uppercase; color: var(--ink); }
+/* The conversion rides on the stage it converted into, so the number is
+   read where it is explained. */
+.dash-fconv { color: var(--faint); }
+.dash-fconv::before { content: " "; }
+.dash-fbar { grid-column: 1 / -1; height: 6px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; }
 .dash-fbar > i { display: block; height: 100%; border-radius: var(--radius-full); background: var(--sc, var(--accent)); }
 .dash-fn-n { font-family: var(--serif); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; font-size: var(--text-body); }
-.dash-conv-line { margin-top: 0.5rem; }
+
+/* The figures band: one rule above and below, hairlines between the cells. */
+.dash-kpiband {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--rule);
+}
+.dash-col-empty { margin: 0; }
+
+/* In a column of cards the offer rows are cards too, so the three columns
+   read as one register rather than two. */
+.dash-offers-cards > li + li { margin-top: 0.5rem; }
+.dash-offers-cards .dash-orow {
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 0.6rem 0.75rem;
+}
 
 /* Outcome breakdown (#381) — the funnel's bar recipe, reused. Two deliberate
    differences: the label column is wider because a reason is a phrase rather
@@ -4374,12 +4412,16 @@ button:not(:disabled):active,
    outcome is not pipeline state, and the stage hues are reserved for it.
    Below 520px the label takes its own line — 9.5rem of a 390px screen left
    the bar too short to read as a proportion. */
-.dash-outcome .dash-fn { grid-template-columns: 9.5rem 1fr 1.6rem; }
-.dash-outcome-rest { margin: 0.6rem 0 0; }
-
-@media (max-width: 520px) {
-  .dash-outcome .dash-fn { grid-template-columns: 1fr 1.6rem; }
-  .dash-outcome .dash-fl { grid-column: 1 / -1; }
+/* What is left over gets a dashed card rather than a line of muted text: it
+   belongs to the column, but it is not one of its figures. */
+.dash-outcome-rest {
+  margin: 0.5rem 0 0;
+  padding: 0.7rem;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: var(--text-meta);
+  color: var(--muted);
 }
 
 .dash-offers { list-style: none; margin: 0; padding: 0; }
@@ -4412,6 +4454,7 @@ button:not(:disabled):active,
 
 @media (max-width: 600px) {
   .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-kpiband { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-band { grid-template-columns: 1fr; }
 }
 
