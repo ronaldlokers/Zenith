@@ -24,6 +24,20 @@ const USER_TABLES = [
   "role_types",
   "feed_sources",
   "feed_role_keywords",
+  // Everything below was missing. Three of them — cv_versions, user_goals and
+  // outreach_templates — have no FK to the user row either, so they were in
+  // neither this list nor the cascade behind it: deleting an account left
+  // them in the database permanently, CV snapshots and all.
+  "cv_versions",
+  "user_goals",
+  "outreach_templates",
+  "journal_entries",
+  "notifications",
+  "webhooks",
+  "feed_ats_boards",
+  "feed_company_blocklist",
+  "push_subscriptions",
+  "ai_credentials",
   "profile",
 ] as const;
 
