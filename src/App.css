@@ -2139,23 +2139,102 @@ select.status {
   margin-top: var(--space-3);
 }
 
+/* Narrow: one stage at a time, with its neighbours peeking in at the edges
+   so it is obvious there is more board either side. Nothing folds here — the
+   strip above is the navigation, and a rail folded on the laptop must not
+   hide a stage on the phone. */
 @media (max-width: 899px) {
   .board {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* One column wide, a folded rail is a full-width row, so the label lies
-     back down — vertical text in a horizontal strip reads as a rendering
-     fault. The narrow board gets its own treatment in its own PR. */
-  .bcol-rail {
-    flex-direction: row;
-    justify-content: flex-start;
+    display: flex;
     gap: 0.6rem;
-    padding: 0.45rem 0.1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    /* Full-bleed, so the peeking neighbours run to the screen edge rather
+       than stopping at the page gutter. */
+    margin-inline: calc(var(--gutter) * -1);
+    /* No side padding: with scroll-snap centring, the snap target aligns to
+       the scrollport, so padding here would shift every column off-centre
+       and eat the left-hand peek. The peek comes from the column width. */
+    padding-inline: 0;
+    /* start-aligned against an inset snapport rather than centre-aligned:
+       centring is computed against the scrollport and landed the column ~30px
+       off, which ate the left-hand peek entirely. This puts it exactly 9% in,
+       leaving the same sliver either side. */
+    scroll-padding-inline-start: 9%;
+    scrollbar-width: none;
   }
 
-  .bcol-rail .vlabel {
-    writing-mode: horizontal-tb;
+  .board::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Narrower than the track so both neighbours show a sliver — the peek is
+     the only thing saying there is more board either side. */
+  .board > .bcol {
+    flex: 0 0 82%;
+    scroll-snap-align: start;
+    min-width: 0;
+  }
+
+  /* The strip already carries the stage name and its count, and nothing
+     folds here, so the column header would be a second copy with a control
+     that does nothing. */
+  .board > .bcol > .bcol-head {
+    display: none;
+  }
+}
+
+/* The stage strip: every rail, the one you are on filled with its own ink.
+   White clears 4.5:1 on all of them (5.11:1 at the worst). */
+.stage-strip {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  margin: var(--space-3) calc(var(--gutter) * -1) 0;
+  padding-inline: var(--gutter);
+  scrollbar-width: none;
+  border-block: 1px solid var(--rule);
+}
+
+.stage-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.stage-chip {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.85rem;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.stage-chip:first-child {
+  border-left: 0;
+}
+
+.stage-chip .n {
+  color: var(--faint);
+}
+
+.stage-chip.active {
+  background: var(--sc-ink, var(--ink));
+  color: #fff;
+}
+
+.stage-chip.active .n {
+  color: #fff;
+}
+
+@media (min-width: 900px) {
+  .stage-strip {
+    display: none;
   }
 }
 
@@ -4477,13 +4556,130 @@ button:not(:disabled):active,
 /* card: edge = urgency, position for the ⋯ menu */
 .bcard { position: relative; border-left-color: var(--u-edge, var(--border)); }
 .bcard .bcard-body { padding-right: 1.1rem; }
-.baction { font-size: var(--text-meta); color: var(--u-edge, var(--muted)); font-weight: 560; }
+.baction {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--u-edge, var(--muted));
+}
 .bbadge {
   align-self: flex-start;
   font-family: var(--mono); font-size: var(--text-chrome);
   text-transform: uppercase; letter-spacing: var(--track-eyebrow);
   padding: 0.05rem 0.4rem; border-radius: var(--radius-full);
   color: var(--u-edge); background: color-mix(in srgb, var(--u-edge) 14%, transparent);
+}
+
+/* Board card (#535 shell): an identity strip flush to the top edge, the
+   title on its own, then one line of state. The strip is the only part that
+   carries stage colour — the card ground stays paper so a column of them
+   reads as a list rather than a block of tint. */
+.bcard {
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  gap: 0;
+}
+
+.bcard .bcard-body {
+  gap: 0;
+  padding-right: 0;
+}
+
+.bstrip {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: var(--text-glyph);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+  /* Room for the ⋯ trigger, which sits over the top-right corner. */
+  padding-right: 1.3rem;
+  min-width: 0;
+}
+
+.bstrip > span {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bstrip > span:first-child {
+  border-left: 0;
+}
+
+/* The leading cell takes the stage tint, so the card's state is legible from
+   the strip alone once a column holds more than one stage (dragging, the
+   narrow carousel). */
+.bstrip .bwhen {
+  background: color-mix(in srgb, var(--sc, var(--muted)) 16%, var(--surface));
+  color: var(--sc-ink, var(--ink));
+  flex: 0 0 auto;
+}
+
+.bstrip .bco {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.btitle {
+  margin: 0;
+  padding: 0.6rem 0.75rem 0.35rem;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.bfoot {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0 0.75rem 0.6rem;
+  min-width: 0;
+}
+
+.bfoot .dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 0.3em;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  background: var(--u-edge, var(--sc, var(--muted)));
+}
+
+.bfoot > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The next action is the one line here worth reading in full, and a board
+   column is narrow — so it wraps to two lines rather than being cut at the
+   first few words. The short variants (badge, comp, freshness) stay on one.  */
+.bfoot .baction {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* The fit rating rides at the end of the state line rather than in the
+   identity strip: in a board column the strip has room for two cells, and a
+   third pushed the company name down to four legible characters. */
+.bfoot .bfit {
+  margin-left: auto;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 /* ⋯ menu: extracted into the owned CardMenu component — see
@@ -4503,19 +4699,10 @@ button:not(:disabled):active,
 .archived-restore { border: none; background: none; color: var(--accent-ink); cursor: pointer; font-size: var(--text-meta); white-space: nowrap; }
 
 /* mobile: snap-scroll columns instead of stacking (#346) */
-@media (max-width: 899px) {
-  .board {
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    grid-auto-columns: 86%;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    gap: 0.6rem;
-    scroll-padding: 0 0.5rem;
-  }
-  .board > .bcol { scroll-snap-align: start; }
-}
+/* The narrow board's carousel lives with the rest of the board (search for
+   "one stage at a time"), not here: this band is for cascade repairs, and a
+   second copy of the rules silently won on source order — its 8px scroll
+   padding was what kept the left-hand peek from ever appearing. */
 
 /* Cascade repairs (#314 round 3) — must stay after the control-normalization
    layer: its generic hover and min-heights win source-order ties against

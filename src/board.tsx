@@ -20,6 +20,7 @@ import type { BoardRail, BoardSort, Urgency } from "./format";
 import {
   ageDays,
   BOARD_RAILS,
+  formatDate,
   DEFAULT_FOLDED,
   isDead,
   isOverdue,
@@ -36,6 +37,10 @@ import { Dialog } from "./ui";
 import { rowActivate } from "./hooks";
 import { ApplicationDetailModal } from "./detail";
 import { ActionBar, Button, CardMenu, StarRating } from "./components";
+
+// A stable empty set, so the narrow board does not allocate one per render
+// and re-run everything downstream of it.
+const EMPTY_FOLD: ReadonlySet<BoardRail> = new Set();
 
 function BoardCard({
   a,
@@ -80,41 +85,54 @@ function BoardCard({
         onUnarchive={onUnarchive}
       />
       <div className="bcard-body" {...rowActivate(onOpenDetail)}>
-        <strong>
-          {a.title}
+        {/* Identity strip, flush to the card edge: when it started, who it is
+            with, and what kind of role. Every cell is a block — padding on an
+            inline span does not indent what follows it. */}
+        <div className="bstrip">
+          <span className="bwhen">
+            {formatDate(a.applied_at ?? a.created_at)}
+          </span>
+          <span className="bco">
+            {a.company_name ?? "—"}
+            {a.contact_name ? ` · ${a.contact_name}` : ""}
+          </span>
+        </div>
+        <h3 className="btitle">{a.title}</h3>
+        <div className="bfoot">
+          <i className="dot" aria-hidden="true" />
+          {actionable ? (
+            <span
+              className="baction"
+              title={a.next_action ?? t("detail.followUpFallback")}
+            >
+              {a.next_action ?? t("detail.followUpFallback")}
+              {" · "}
+              {t(`urgency.${urgency}`)}
+            </span>
+          ) : urgency === "stale" || urgency === "quiet" ? (
+            <span className={`bbadge u-${urgency}`}>
+              {t(`attention.${urgency}`)}
+            </span>
+          ) : a.status === "offer" && totalComp(a) != null ? (
+            // Offer is the win state — surface the comp figure (serif, #464)
+            // rather than the generic freshness line.
+            <span className="comp">
+              ~{a.salary_currency ?? "\u20ac"}{" "}
+              {Math.round(totalComp(a)!).toLocaleString()}
+            </span>
+          ) : (
+            // Freshness at a glance (design review) — so every card carries a
+            // bottom metadata line, not just the actionable ones.
+            <span className="bmeta">
+              {t("board.updatedAge", { age: ageDays(a.updated_at) })}
+            </span>
+          )}
           {a.fit_score ? (
-            <span className="fit-stars" title={`${a.fit_score}/5`}>
-              {" "}
+            <span className="bfit" title={`${a.fit_score}/5`}>
               <StarRating value={a.fit_score} readOnly />
             </span>
           ) : null}
-        </strong>
-        <span className="co">
-          {a.company_name ?? "—"}
-          {a.contact_name ? ` · ${a.contact_name}` : ""}
-        </span>
-        {actionable ? (
-          <span className="baction">
-            → {a.next_action ?? t("detail.followUpFallback")}
-            {" · "}
-            {t(`urgency.${urgency}`)}
-          </span>
-        ) : urgency === "stale" || urgency === "quiet" ? (
-          <span className={`bbadge u-${urgency}`}>{t(`attention.${urgency}`)}</span>
-        ) : a.status === "offer" && totalComp(a) != null ? (
-          // Offer is the win state — surface the comp figure (serif, #464)
-          // rather than the generic freshness line.
-          <span className="comp">
-            ~{a.salary_currency ?? "€"}{" "}
-            {Math.round(totalComp(a)!).toLocaleString()}
-          </span>
-        ) : (
-          // Freshness at a glance (design review) — so every card carries a
-          // bottom metadata line, not just the actionable ones.
-          <span className="bmeta">
-            {t("board.updatedAge", { age: ageDays(a.updated_at) })}
-          </span>
-        )}
+        </div>
       </div>
     </article>
   );
@@ -152,7 +170,7 @@ function BoardTab({
   sort: BoardSort;
   initialDetailId?: number | null;
   onDetailIdChange?: (id: number | null) => void;
-  folded: Set<BoardRail>;
+  folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
   onAdd: (stage: Status) => void;
 }) {
@@ -202,6 +220,19 @@ function BoardTab({
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+  // Below 900px the board is a carousel of one stage at a time, so folding
+  // does not apply there: the strip is the navigation, and a rail folded on
+  // the laptop must not hide a stage on the phone.
+  const [isNarrow, setIsNarrow] = useState(
+    () => window.matchMedia("(max-width: 899px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 899px)");
+    const onChange = () => setIsNarrow(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverRail, setDragOverRail] = useState<BoardRail | null>(null);
   const [detailId, setDetailIdState] = useState<number | null>(
@@ -228,11 +259,82 @@ function BoardTab({
   // closed rails are not steps in it, so they carry no bar.
   const funnelBase = Math.max(1, ...PIPELINE.map(countOf));
 
+  const shownFolded = isNarrow ? EMPTY_FOLD : folded;
+
+  // Carousel plumbing for the narrow board. Scrolling is driven by
+  // scrollLeft rather than scrollIntoView: scrollIntoView also nudges every
+  // scrollable ancestor, which shifts the whole page sideways by a few
+  // pixels on the way.
+  const trackRef = useRef<HTMLDivElement>(null);
+  const colRefs = useRef(new Map<BoardRail, HTMLElement>());
+  const stripRef = useRef<HTMLDivElement>(null);
+  const chipRefs = useRef(new Map<BoardRail, HTMLElement>());
+  const [activeRail, setActiveRail] = useState<BoardRail>(BOARD_RAILS[0]);
+  const scrollToRail = useCallback((rail: BoardRail) => {
+    const track = trackRef.current;
+    const col = colRefs.current.get(rail);
+    if (!track || !col) return;
+    setActiveRail(rail);
+    // Matches the CSS snap inset, so a tap on the strip lands a column
+    // exactly where a swipe does.
+    track.scrollLeft = col.offsetLeft - track.clientWidth * 0.09;
+  }, []);
+  // Which stage you are on follows the scroll, so a swipe and a tap on the
+  // strip cannot disagree about it.
+  const onTrackScroll = () => {
+    const track = trackRef.current;
+    if (!track) return;
+    const mid = track.scrollLeft + track.clientWidth / 2;
+    let best: BoardRail = BOARD_RAILS[0];
+    let bestDist = Infinity;
+    for (const [rail, el] of colRefs.current) {
+      const d = Math.abs(el.offsetLeft + el.clientWidth / 2 - mid);
+      if (d < bestDist) {
+        bestDist = d;
+        best = rail;
+      }
+    }
+    setActiveRail(best);
+  };
+  // The strip follows the board, however the board was moved — a swipe that
+  // left the active chip off-screen would strand the navigation.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const chip = chipRefs.current.get(activeRail);
+    if (!strip || !chip) return;
+    strip.scrollLeft =
+      chip.offsetLeft - (strip.clientWidth - chip.clientWidth) / 2;
+  }, [activeRail, isNarrow]);
+
+  useEffect(() => {
+    if (!isNarrow) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      if (
+        el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable)
+      )
+        return;
+      const i = BOARD_RAILS.indexOf(activeRail);
+      const next = BOARD_RAILS[i + (e.key === "ArrowRight" ? 1 : -1)];
+      if (!next) return;
+      e.preventDefault();
+      scrollToRail(next);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isNarrow, activeRail, scrollToRail]);
+
   // The grid is data-driven — a folded rail is a fixed sliver and an open
   // column takes an equal share of what is left — so the track list cannot
   // live in the stylesheet.
   const trackList = BOARD_RAILS.map((r) =>
-    folded.has(r) ? "var(--rail-w)" : "minmax(0, 1fr)",
+    shownFolded.has(r) ? "var(--rail-w)" : "minmax(0, 1fr)",
   ).join(" ");
 
   const cardProps = (a: Application) => ({
@@ -247,9 +349,35 @@ function BoardTab({
 
   return (
     <>
-    <div className="board" style={{ gridTemplateColumns: trackList }}>
+    {isNarrow && (
+      <div className="stage-strip" role="tablist" ref={stripRef}>
+        {BOARD_RAILS.map((rail) => (
+          <button
+            key={rail}
+            ref={(el) => {
+              if (el) chipRefs.current.set(rail, el);
+              else chipRefs.current.delete(rail);
+            }}
+            type="button"
+            role="tab"
+            aria-selected={activeRail === rail}
+            className={`stage-chip stage-${rail} rail-${rail}${activeRail === rail ? " active" : ""}`}
+            onClick={() => scrollToRail(rail)}
+          >
+            {rail === "archived" ? t("board.railArchived") : t(`stages.${rail}`)}{" "}
+            <span className="n">{countOf(rail)}</span>
+          </button>
+        ))}
+      </div>
+    )}
+    <div
+      className="board"
+      ref={trackRef}
+      onScroll={isNarrow ? onTrackScroll : undefined}
+      style={isNarrow ? undefined : { gridTemplateColumns: trackList }}
+    >
       {BOARD_RAILS.map((rail) => {
-        const isFolded = folded.has(rail);
+        const isFolded = shownFolded.has(rail);
         const count = countOf(rail);
         const label =
           rail === "archived" ? t("board.railArchived") : t(`stages.${rail}`);
@@ -309,6 +437,10 @@ function BoardTab({
         return (
           <div
             key={rail}
+            ref={(el) => {
+              if (el) colRefs.current.set(rail, el);
+              else colRefs.current.delete(rail);
+            }}
             className={`bcol rail-${rail} stage-${rail}${over}`}
             {...dropProps}
           >

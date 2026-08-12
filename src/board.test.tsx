@@ -172,6 +172,31 @@ describe("board rails", () => {
     expect(headerFor("Archived")).toBeTruthy();
   });
 
+  test("nothing is folded below 900px — the strip is the navigation there", async () => {
+    // A rail folded on the laptop must not hide a stage on the phone: the
+    // fold state is shared between devices, but the narrow board has no way
+    // to unfold anything.
+    const narrow = ((query: string) => ({
+      matches: query.includes("max-width"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    const real = window.matchMedia;
+    window.matchMedia = narrow;
+    try {
+      profileFolded = "rejected,withdrawn,ghosted,archived";
+      renderBoard([]);
+      // Every rail is an open column here — the header is still in the DOM
+      // (CSS hides it at this width), but no rail is folded away.
+      await waitFor(() => expect(screen.getAllByRole("tab")).toHaveLength(9));
+      expect(railFor("Rejected")).toBeNull();
+      expect(headerFor("Rejected")).toBeTruthy();
+    } finally {
+      window.matchMedia = real;
+    }
+  });
+
   test("the add block opens on the stage it sits in, and closed stages get none", async () => {
     profileFolded = "";
     const opened: (Status | undefined)[] = [];
