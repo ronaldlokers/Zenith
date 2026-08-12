@@ -7,7 +7,7 @@
 // the layout. Presentation only; all state/wiring lives in App.
 import { useTranslation } from "react-i18next";
 import { Logo, SearchIcon, SettingsIcon } from "./icons";
-import { Avatar, Button, NotificationBell } from "./components";
+import { NotificationBell } from "./components";
 import { type Tab } from "./routing";
 import { type Toast } from "./app-data";
 
@@ -19,112 +19,17 @@ export interface NavItem {
   label: string;
 }
 
-// Signed-in user shape the sidebar reads (subset of Better Auth's session
-// user). name can be absent; email is the stable fallback label.
-interface ShellUser {
-  name?: string | null;
-  email: string;
-}
-
-// The Night rail (>=900px). Renders the primary destinations plus the pinned
-// settings + account foot; the onboarding checklist, when shown, is passed in
-// as a node so the shell doesn't have to know its props.
-export function Sidebar({
-  navItems,
-  settingsActive,
-  onNavigate,
-  onOpenSettings,
-  onboarding,
-  user,
-  userInitials,
-}: {
-  navItems: NavItem[];
-  settingsActive: boolean;
-  onNavigate: (to: Tab) => void;
-  onOpenSettings: () => void;
-  onboarding: React.ReactNode;
-  user: ShellUser | null | undefined;
-  userInitials: string;
-}) {
-  const { t } = useTranslation();
-  return (
-    <aside className="side">
-      <div className="side-brand">
-        <Logo size={24} />
-        <span>Zenith</span>
-      </div>
-      <nav className="side-nav" aria-label={t("tabs.overview")}>
-        {navItems.map((n) => (
-          <button
-            key={n.data}
-            className={`side-nav-item${n.active ? " on" : ""}`}
-            aria-current={n.active ? "page" : undefined}
-            data-tab={n.data}
-            onClick={() => onNavigate(n.to)}
-          >
-            {n.icon}
-            <span>{n.label}</span>
-          </button>
-        ))}
-      </nav>
-      <div className="side-foot">
-        {onboarding}
-        <button
-          className={`side-nav-item side-settings${settingsActive ? " on" : ""}`}
-          aria-current={settingsActive ? "page" : undefined}
-          onClick={onOpenSettings}
-        >
-          <SettingsIcon />
-          <span>{t("settings.title")}</span>
-        </button>
-        {user && (
-          <button
-            className="side-user"
-            onClick={onOpenSettings}
-            aria-label={t("account.signedInAs", { email: user.email })}
-            title={user.email}
-          >
-            <Avatar initials={userInitials} aria-hidden="true" />
-            <span className="u-info">
-              <span className="u-name">{user.name || user.email}</span>
-              <span className="u-email">{user.email}</span>
-            </span>
-            <span className="u-caret" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </span>
-          </button>
-        )}
-      </div>
-    </aside>
-  );
-}
-
-// The sticky top bar (chrome below the rail; carries the page title at
-// >=900px). Brand + title + search launcher + notifications + settings + add.
 export function TopBar({
   scrolled,
   pageTitle,
   settingsActive,
-  onSearch,
   onOpenSettings,
-  onQuickAdd,
   onOpenMenu,
 }: {
   scrolled: boolean;
   pageTitle: string;
   settingsActive: boolean;
-  onSearch: () => void;
   onOpenSettings: () => void;
-  onQuickAdd: () => void;
   /** Opens the destination menu (#535 shell). */
   onOpenMenu: () => void;
 }) {
@@ -144,17 +49,6 @@ export function TopBar({
       </button>
       <h1 className="top-title">{pageTitle}</h1>
       <button
-        className="cmdk"
-        onClick={onSearch}
-        title={t("header.search")}
-        aria-label={t("header.search")}
-      >
-        <SearchIcon />
-        <span className="cmdk-label">{t("header.search")}</span>
-        <kbd>{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl+K"}</kbd>
-      </button>
-      <NotificationBell />
-      <button
         className={`settings-btn top-settings${settingsActive ? " active" : ""}`}
         onClick={onOpenSettings}
         title={t("header.settings")}
@@ -163,15 +57,6 @@ export function TopBar({
       >
         <SettingsIcon />
       </button>
-      <Button
-        variant="primary"
-        className="top-add"
-        onClick={onQuickAdd}
-        aria-label={t("toolbar.addJob")}
-      >
-        <span aria-hidden="true">+</span>
-        <span className="top-add-label">{t("quickAdd.add")}</span>
-      </Button>
     </header>
   );
 }

@@ -137,10 +137,6 @@
 }
 
 /* The Night rail is desktop-only (≥900px; styled in the sidebar-shell band). */
-.side {
-  display: none;
-}
-
 /* 34px square, the documented control height (#499). These were 1.7rem —
    27px — which is the smallest target in the app and sits in the top bar
    where a thumb reaches most often. */
@@ -3611,191 +3607,22 @@ summary.bcol-head::after {
    ============================================================ */
 @media (min-width: 900px) {
   .app {
-    display: flex;
-    align-items: stretch;
-    max-width: none;
-    margin: 0;
-    /* The bottom bar is fixed at every width now (#535 shell), so the content
-       column has to clear it here too; at narrow widths .app's own 5rem
-       bottom padding already does. Folded into the shorthand rather than a
-       separate padding-bottom, which this rule would have overridden. */
-    padding: 0 0 4rem;
+    /* One child since the rail was removed (#535 shell), so this is a
+       centred content column rather than a two-column flex row. The width
+       cap is generous: the board wants room, and the screens that want a
+       reading measure cap themselves. */
+    max-width: 1120px;
+    margin: 0 auto;
+    /* The bottom bar is fixed at every width, so the column clears it here
+       too. Folded into the shorthand: a separate padding-bottom would be
+       overridden by this one. */
+    padding: 0 var(--gutter) 4rem;
     min-height: 100vh;
   }
 
-  /* The Night rail. It's always dark regardless of theme, so its text tones
-     can't be the app --ink/--muted tokens — but they were copy-pasted as raw
-     hex 10+ times (design review, #447). Define them once here; descendants
-     inherit these custom properties. */
-  .side {
-    --rail-ink: #e7e6f0;
-    --rail-text: #f4f2ec;
-    --rail-muted: #b9b8cc;
-    /* 4.28:1 on the Night rail; #8b8fa8 clears 4.5 (#496). */
-    --rail-faint: #8b8fa8;
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 210px;
-    width: 210px;
-    box-sizing: border-box;
-    padding: 20px 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-    background: var(--night);
-    color: var(--rail-ink);
-  }
-
-  .side-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 20px 22px;
-  }
-
-  .side-brand span {
-    font-family: var(--serif);
-    font-weight: 600;
-    font-size: var(--text-heading);
-    letter-spacing: -0.02em;
-    color: var(--rail-text);
-  }
-
-  .side-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 0 12px;
-  }
-
-  .side-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    width: 100%;
-    padding: 9px 12px;
-    border: none;
-    background: none;
-    border-radius: var(--radius-md);
-    font-family: inherit;
-    font-size: var(--text-body);
-    text-align: left;
-    color: var(--rail-muted);
-    cursor: pointer;
-  }
-
-  .side-nav-item:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--rail-text);
-  }
-
-  .side-nav-item.on {
-    background: rgba(214, 164, 65, 0.16);
-    color: var(--accent);
-  }
-
-  .side-nav-item svg {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 auto;
-  }
-
-  .side-foot {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 16px 12px 0;
-  }
-
-  /* Account block pinned to the rail foot — avatar, name, email, caret;
-     opens Settings (chrome kit). */
-  .side-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    margin-top: 4px;
-    padding: 10px;
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-md);
-    background: none;
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-  .side-user:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-  /* .side-user .avatar moved to the owned Avatar component
-     (src/components/Avatar.css, @layer components). */
-  .side-user .u-info {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .side-user .u-name {
-    font-size: var(--text-meta);
-    font-weight: 600;
-    color: var(--rail-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .side-user .u-email {
-    font-size: var(--text-chrome);
-    color: var(--rail-faint);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .side-user .u-caret {
-    margin-left: auto;
-    color: var(--rail-faint);
-    display: flex;
-  }
-  .side-user .u-caret svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  /* Onboarding recolored for the dark rail. Targets the .zui-onboarding*
-     classes emitted by the owned OnboardingChecklist component (moved out
-     to src/components/OnboardingChecklist.css) — these are ancestor-context
-     overrides, not part of the component's own recipe, so they stay here. */
-  .side .zui-onboarding {
-    margin: 0;
-    padding: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .side .zui-onboarding h3 {
-    color: var(--rail-text);
-  }
-
-  .side .zui-onboarding li button {
-    color: var(--rail-muted);
-  }
-
-  .side .zui-onboarding li.done button,
-  .side .zui-onboarding li.done span {
-    color: var(--rail-faint);
-  }
-
-  .side .zui-onboarding-dismiss {
-    color: #9a99ad;
-  }
-
-  .side .zui-onboarding-sample {
-    color: var(--accent-on-ink);
-  }
-
-  /* Content column with its per-page top bar. */
+  /* Content column with its per-page top bar. `flex: 1` is gone with the
+     rail it used to share a row with; the column is now .app itself. */
   .main {
-    flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;

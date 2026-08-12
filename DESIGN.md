@@ -266,7 +266,9 @@ Separation is on the blue↔orange axis, the one axis every dichromacy preserves
 
 **The Field / Ink Split.** Every stage publishes two tokens, exactly as the brand already does for `--accent` / `--accent-ink`: `--sc` is the **field** (washes, dots, funnel bars) and may be mid-chroma; `--sc-ink` is the **text** tone, the same hue moved until it is readable. Anything that renders a stage as words reads `--sc-ink`. One token cannot do both jobs — forcing it drives every hue toward near-black.
 
-**The Always-Night Rule.** The rail and the sign-in stage are Ink Indigo — a committed Night-ground brand moment on the paper canvas. Their text tones come from `--rail-ink` / `--rail-text` / `--rail-muted` / `--rail-faint`, declared once on `.side`. Never hardcode a rail hex, and never let `--ink` / `--muted` leak into rail descendants — those are paper-ground tones and the rail is not on the paper ground.
+**The Always-Night Rule.** The sign-in stage is Ink Indigo — a committed Night-ground brand moment on the paper canvas, so `--ink` / `--muted` must not leak into it: those are paper-ground tones and it is not on the paper ground.
+
+The desktop rail was the other Night surface, and it is gone with the Fizzy-philosophy shell; the `--rail-*` token family went with it. Any future Night surface needs its own declared tones rather than reaching for the app's.
 
 **The No-Fill Rule.** A stage colour is a tint, a ring or an edge — never a filled ground with type on it. Measured, no ink clears 4.5:1 on all five hues: the best available is white at a worst case of 3.62:1 on interview, Night ink is worse at 2.37:1, paper worse still. That is not a gap to close by picking a better ink. The hues are tuned to clear 4.5:1 *as label text* on paper, which makes them mid-tone by construction, and a mid-tone cannot also be a reliable ground for type. `--stage-tint` is the mechanism that already does this correctly.
 

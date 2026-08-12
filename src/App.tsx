@@ -64,7 +64,7 @@ import {
   useScrolled,
   useViewportBottomOffset,
 } from "./hooks";
-import { BottomBar, type NavItem, Sidebar, ToastStack, TopBar } from "./shell";
+import { BottomBar, type NavItem, ToastStack, TopBar } from "./shell";
 
 export default function App() {
   const { t } = useTranslation();
@@ -75,9 +75,6 @@ export default function App() {
   const { data: session } = useSession();
   const sessionUser = session?.user;
   const isAdmin = sessionUser?.role === "admin";
-  const userInitials = sessionUser?.name
-    ? sessionUser.name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase()
-    : (sessionUser?.email?.[0]?.toUpperCase() ?? "?");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -348,25 +345,12 @@ export default function App() {
           onClose={() => setMenuOpen(false)}
         />
       )}
-      <Sidebar
-        navItems={navItems}
-        settingsActive={tab === "settings"}
-        onNavigate={setTab}
-        onOpenSettings={() => setTab("settings")}
-        user={sessionUser}
-        userInitials={userInitials}
-        onboarding={
-          showOnboarding ? <OnboardingChecklist {...onboardingProps} /> : null
-        }
-      />
       <div className="main">
         <TopBar
           scrolled={scrolled}
           pageTitle={pageTitle}
           settingsActive={tab === "settings"}
-          onSearch={() => setShowPalette(true)}
           onOpenSettings={() => setTab("settings")}
-          onQuickAdd={() => setShowQuickAdd(true)}
           onOpenMenu={() => setMenuOpen(true)}
         />
 
