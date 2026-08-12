@@ -200,7 +200,8 @@
     "keyShortcuts": "Enkele-toets sneltoetsen (n, /)",
     "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
     "timezone": "Tijdzone",
-    "timezoneNow": "{{time}} op dit moment"
+    "timezoneNow": "{{time}} op dit moment",
+    "notSet": "Niet ingesteld"
   },
   "admin": {
     "title": "Beheer",
@@ -326,7 +327,9 @@
     "weeklyGoalLabel": "Wekelijks sollicitatiedoel",
     "searchStartLabel": "Zoektocht gestart",
     "searchWeek_one": "Week {{count}} van je zoektocht",
-    "searchWeek_other": "Week {{count}} van je zoektocht"
+    "searchWeek_other": "Week {{count}} van je zoektocht",
+    "weeklyGoalValue_one": "{{count}} per week",
+    "weeklyGoalValue_other": "{{count}} per week"
   },
   "templates": {
     "outreachHeading": "Contact opnemen",

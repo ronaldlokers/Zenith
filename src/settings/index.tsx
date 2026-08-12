@@ -8,6 +8,7 @@ import { signOut, useSession } from "../auth-client";
 import { requestConfirm } from "../hooks";
 import {
   CV_LANG_KEY,
+  formatDate,
   getCvLanguage,
   KEY_SHORTCUTS_KEY,
   keyShortcutsEnabled,
@@ -17,6 +18,7 @@ import { useLocation } from "react-router-dom";
 import { ActionBar, Button, SettingsNav } from "../components";
 import { FeedSettings } from "../feed";
 import { TimezoneField } from "./timezone-field";
+import { SettingsRow } from "./row";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
 import { DataExport, SampleDataSettings } from "./data";
 import { PublicApiSettings } from "./api";
@@ -220,76 +222,109 @@ export function SettingsPage({
         {apiError && <p className="login-error">{apiError}</p>}
         {section === "general" && (
           <>
-        <div className="settings-fieldgrid">
-        <label className="settings-field">
-          <span>{t("settings.language")}</span>
-          <select
-            value={i18n.resolvedLanguage}
-            onChange={(e) => {
-              const lang = e.target.value;
-              i18n.changeLanguage(lang);
-              void api.setLocale(lang).catch(() => {});
-            }}
-          >
-            {LANGUAGES.map(([code, labelKey]) => (
-              <option key={code} value={code}>
-                {t(`settings.${labelKey}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <TimezoneField
-          value={timezone}
-          onChange={(next) => {
-            // Update the surface first, then mirror it up — same shape as the
-            // Language field. The select must not wait on the request.
-            setTimezone(next);
-            void api.setTimezone(next).catch(() => {});
-          }}
-        />
-        <label className="settings-field">
-          <span>{t("settings.cvLanguage")}</span>
-          <select
-            value={cvLang}
-            onChange={(e) => {
-              setCvLang(e.target.value);
-              localStorage.setItem(CV_LANG_KEY, e.target.value);
-            }}
-          >
-            {LANGUAGES.map(([code, labelKey]) => (
-              <option key={code} value={code}>
-                {t(`settings.${labelKey}`)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="settings-field">
-          <span>{t("goals.weeklyGoalLabel")}</span>
-          <input
-            type="number"
-            min={0}
-            max={50}
-            value={weeklyGoal}
-            onChange={(e) => {
-              const v = Math.max(0, Math.min(50, Number(e.target.value) || 0));
-              setWeeklyGoal(v);
-              void saveGoals({ weekly_app_goal: v });
+        {/* Stated values with the control behind each row (#535 mockup):
+            settings are read far more often than they are changed, and a
+            page of controls answers the wrong question. */}
+        <div className="settings-rows">
+        <SettingsRow
+          label={t("settings.language")}
+          value={t(
+            `settings.${LANGUAGES.find(([c]) => c === i18n.resolvedLanguage)?.[1] ?? "langEnglish"}`,
+          )}
+        >
+          <label className="settings-field">
+            <span>{t("settings.language")}</span>
+            <select
+              value={i18n.resolvedLanguage}
+              onChange={(e) => {
+                const lang = e.target.value;
+                i18n.changeLanguage(lang);
+                void api.setLocale(lang).catch(() => {});
+              }}
+            >
+              {LANGUAGES.map(([code, labelKey]) => (
+                <option key={code} value={code}>
+                  {t(`settings.${labelKey}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </SettingsRow>
+        <SettingsRow label={t("settings.timezone")} value={timezone}>
+          <TimezoneField
+            value={timezone}
+            onChange={(next) => {
+              // Update the surface first, then mirror it up — same shape as
+              // the Language field. The select must not wait on the request.
+              setTimezone(next);
+              void api.setTimezone(next).catch(() => {});
             }}
           />
-        </label>
-        <label className="settings-field">
-          <span>{t("goals.searchStartLabel")}</span>
-          <input
-            type="date"
-            value={searchStart}
-            onChange={(e) => {
-              setSearchStart(e.target.value);
-              void saveGoals({ search_started_at: e.target.value || null });
-            }}
-          />
-        </label>
-        </div>
-        <label className="settings-field settings-check">
+        </SettingsRow>
+        <SettingsRow
+          label={t("settings.cvLanguage")}
+          value={t(
+            `settings.${LANGUAGES.find(([c]) => c === cvLang)?.[1] ?? "langEnglish"}`,
+          )}
+        >
+          <label className="settings-field">
+            <span>{t("settings.cvLanguage")}</span>
+            <select
+              value={cvLang}
+              onChange={(e) => {
+                setCvLang(e.target.value);
+                localStorage.setItem(CV_LANG_KEY, e.target.value);
+              }}
+            >
+              {LANGUAGES.map(([code, labelKey]) => (
+                <option key={code} value={code}>
+                  {t(`settings.${labelKey}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </SettingsRow>
+        <SettingsRow
+          label={t("goals.weeklyGoalLabel")}
+          value={t("goals.weeklyGoalValue", { count: weeklyGoal })}
+        >
+          <label className="settings-field">
+            <span>{t("goals.weeklyGoalLabel")}</span>
+            <input
+              type="number"
+              min={0}
+              max={50}
+              value={weeklyGoal}
+              onChange={(e) => {
+                const v = Math.max(0, Math.min(50, Number(e.target.value) || 0));
+                setWeeklyGoal(v);
+                void saveGoals({ weekly_app_goal: v });
+              }}
+            />
+          </label>
+        </SettingsRow>
+        <SettingsRow
+          label={t("goals.searchStartLabel")}
+          value={searchStart ? formatDate(searchStart) : t("settings.notSet")}
+        >
+          <label className="settings-field">
+            <span>{t("goals.searchStartLabel")}</span>
+            <input
+              type="date"
+              value={searchStart}
+              onChange={(e) => {
+                setSearchStart(e.target.value);
+                void saveGoals({ search_started_at: e.target.value || null });
+              }}
+            />
+          </label>
+        </SettingsRow>
+        {/* A switch states its own value, so it sits on the row rather than
+            behind it — the same shape the mockup gives its notification
+            toggles. */}
+        <label className="set-row set-row-toggle">
+          <span className="set-row-label">{t("settings.keyShortcuts")}</span>
+          <span className="set-row-leader" aria-hidden="true" />
           <input
             type="checkbox"
             checked={keyShortcuts}
@@ -301,8 +336,8 @@ export function SettingsPage({
               );
             }}
           />
-          <span>{t("settings.keyShortcuts")}</span>
         </label>
+        </div>
           </>
         )}
         {section === "feed" && (

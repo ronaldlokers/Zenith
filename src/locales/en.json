@@ -200,7 +200,8 @@
     "keyShortcuts": "Single-key shortcuts (n, /)",
     "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
     "timezone": "Time zone",
-    "timezoneNow": "{{time}} right now"
+    "timezoneNow": "{{time}} right now",
+    "notSet": "Not set"
   },
   "admin": {
     "title": "Admin",
@@ -326,7 +327,9 @@
     "weeklyGoalLabel": "Weekly application goal",
     "searchStartLabel": "Search started",
     "searchWeek_one": "Week {{count}} of your search",
-    "searchWeek_other": "Week {{count}} of your search"
+    "searchWeek_other": "Week {{count}} of your search",
+    "weeklyGoalValue_one": "{{count}} a week",
+    "weeklyGoalValue_other": "{{count}} a week"
   },
   "templates": {
     "outreachHeading": "Outreach",
