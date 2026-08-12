@@ -35,3 +35,29 @@ describe("page gutter", () => {
     expect(APP).toContain("margin: 0 calc(var(--gutter) * -1);");
   });
 });
+
+// The chrome has exactly one way into the destinations, and it is the
+// wordmark. A previous PR removed the rail but left the ≥900px rules that
+// hid the wordmark and settings — because the rail used to carry them —
+// which left desktop with no pointer route to the menu at all. Nothing in
+// CI could see that, so it is asserted here.
+describe("top bar chrome", () => {
+  it("never hides the wordmark or the corner buttons", () => {
+    const hidden = /\.(top-brand|top-icon)[^{]*\{[^}]*display:\s*none/;
+    expect(
+      hidden.test(APP),
+      "a rule hides the wordmark or a corner button",
+    ).toBe(false);
+  });
+
+  it("puts the wordmark on the centre line", () => {
+    const rule = APP.match(/\.top \{[^}]*\}/)![0];
+    expect(rule).toContain("grid-template-columns: 1fr auto 1fr");
+  });
+
+  it("runs the title rule through the line, not under the block", () => {
+    // ::before and ::after flank the words; a single bottom border would be
+    // an underline, which reads as a header rather than a chapter heading.
+    expect(APP).toMatch(/\.page-title::before,\s*\n\.page-title::after/);
+  });
+});

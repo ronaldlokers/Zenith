@@ -6,7 +6,7 @@
 // isolated @layer component, so these stay plain and App.css keeps owning
 // the layout. Presentation only; all state/wiring lives in App.
 import { useTranslation } from "react-i18next";
-import { Logo, SearchIcon, SettingsIcon } from "./icons";
+import { Logo, NavPipelineIcon, SearchIcon, SettingsIcon } from "./icons";
 import { NotificationBell } from "./components";
 import { type Tab } from "./routing";
 import { type Toast } from "./app-data";
@@ -25,6 +25,7 @@ export function TopBar({
   settingsActive,
   onOpenSettings,
   onOpenMenu,
+  onOpenBoard,
 }: {
   scrolled: boolean;
   pageTitle: string;
@@ -32,32 +33,67 @@ export function TopBar({
   onOpenSettings: () => void;
   /** Opens the destination menu (#535 shell). */
   onOpenMenu: () => void;
+  /** The left corner: straight to the pipeline. */
+  onOpenBoard: () => void;
 }) {
   const { t } = useTranslation();
   return (
-    <header className={`top${scrolled ? " scrolled" : ""}`}>
-      {/* The wordmark is the way into the destination menu (#535 shell).
-          It is still the brand mark — it has simply stopped being inert. */}
-      <button
-        className="top-brand"
-        onClick={onOpenMenu}
-        aria-haspopup="menu"
-        aria-label={t("menu.open")}
-      >
-        <Logo size={22} />
-        <span>Zenith</span>
-      </button>
-      <h1 className="top-title">{pageTitle}</h1>
-      <button
-        className={`settings-btn top-settings${settingsActive ? " active" : ""}`}
-        onClick={onOpenSettings}
-        title={t("header.settings")}
-        aria-label={t("header.settings")}
-        aria-current={settingsActive ? "page" : undefined}
-      >
-        <SettingsIcon />
-      </button>
-    </header>
+    <>
+      <header className={`top${scrolled ? " scrolled" : ""}`}>
+        <div className="top-corner">
+          <button
+            className="top-icon"
+            onClick={onOpenBoard}
+            title={t("tabs.pipeline")}
+            aria-label={t("tabs.pipeline")}
+          >
+            <NavPipelineIcon />
+          </button>
+        </div>
+        {/* The wordmark is the only navigation in the chrome, so it sits on
+            the centre line rather than in a corner. */}
+        <button
+          className="top-brand"
+          onClick={onOpenMenu}
+          aria-haspopup="menu"
+          aria-label={t("menu.open")}
+        >
+          <Logo size={22} />
+          <span>Zenith</span>
+          <svg
+            className="top-chev"
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <div className="top-corner end">
+          <button
+            className={`top-icon${settingsActive ? " active" : ""}`}
+            onClick={onOpenSettings}
+            title={t("header.settings")}
+            aria-label={t("header.settings")}
+            aria-current={settingsActive ? "page" : undefined}
+          >
+            <SettingsIcon />
+          </button>
+        </div>
+      </header>
+      {/* The rule runs THROUGH the title line rather than under the block:
+          the words are the break in the rule, which is what makes it read as
+          a chapter heading instead of a header underline. */}
+      <div className="page-title">
+        <h1>{pageTitle}</h1>
+      </div>
+    </>
   );
 }
 

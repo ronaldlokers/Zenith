@@ -352,6 +352,7 @@ export default function App() {
           settingsActive={tab === "settings"}
           onOpenSettings={() => setTab("settings")}
           onOpenMenu={() => setMenuOpen(true)}
+          onOpenBoard={() => setTab("board")}
         />
 
       {error && (
