@@ -200,7 +200,6 @@
      describe. */
   .cv-card-foot {
     display: flex;
-    flex-wrap: wrap;
     gap: 0.35rem 1.2rem;
     margin-top: 1rem;
     padding-top: 0.7rem;
@@ -218,6 +217,18 @@
 
   .cv-plate-actions {
     display: flex;
+    /* At 390px these three buttons are wider than the plate in both locales —
+       measured 382px of content in a 344px box — and nothing was shrinking
+       them, because none has anything to give up. English spilled over the
+       plate's padding and stayed on screen, so it read as a slightly wide
+       row; Dutch ("Vergelijk met vacature" against "Match to a posting")
+       pushed 45px past the viewport and took the whole document's horizontal
+       scroll with it.
+       Wrapping rather than trimming the labels: more locales are planned, and
+       the next one that does not fit should reflow instead of needing a copy
+       edit. This deliberately changes English mobile too, from one spilling
+       row to two contained ones. */
+    flex-wrap: wrap;
     justify-content: center;
     gap: var(--space-2);
     margin-top: 0.75rem;
