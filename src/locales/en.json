@@ -34,6 +34,10 @@
     "sent_one": "{{count}} sent",
     "sent_other": "{{count}} sent",
     "vsLastWeek": "{{count}} last week",
+    "happened": "Happened today",
+    "happenedNone": "Nothing has changed today.",
+    "happenedMoved": "{{title}} reached {{stage}}",
+    "happenedAdded": "You added {{title}}",
     "moved": "Moved this week",
     "movedTo": "to",
     "noMoves": "Nothing changed stage this week."

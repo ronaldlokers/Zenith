@@ -34,6 +34,10 @@
     "sent_one": "{{count}} verstuurd",
     "sent_other": "{{count}} verstuurd",
     "vsLastWeek": "{{count}} vorige week",
+    "happened": "Vandaag gebeurd",
+    "happenedNone": "Er is vandaag niets veranderd.",
+    "happenedMoved": "{{title}} bereikte {{stage}}",
+    "happenedAdded": "Je hebt {{title}} toegevoegd",
     "moved": "Deze week verschoven",
     "movedTo": "naar",
     "noMoves": "Deze week is er niets van fase veranderd."

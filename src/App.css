@@ -3259,10 +3259,73 @@ summary.bcol-head::after {
 
 /* One column until the rail's content has room for two (#492) — which is
    also what closes the dead canvas the 46rem cap used to leave at 1440. */
+/* Three columns at width, stacked below it (#535 landing): what needs you,
+   what happened, what has gone quiet. The actionable one is first in source
+   order as well as on screen, so it is what you meet on a phone too. */
 .today-cols {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 900px) {
+  .today-cols {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* A column heading: centred, with the count kept quieter than the words. */
+.col-h {
+  margin: 0 0 var(--space-2);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-weight: 400;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+.col-n {
+  color: var(--faint);
+}
+
+.today-happened-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: var(--space-1);
+}
+
+.today-happened-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  text-align: left;
+}
+
+.today-happened-row:hover {
+  border-color: var(--faint);
+}
+
+.today-happened-meta {
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+  letter-spacing: var(--track-chrome);
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.today-happened-say {
+  font-size: var(--text-body);
+  color: var(--ink);
 }
 .today-col {
   display: flex;
