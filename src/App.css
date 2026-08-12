@@ -147,42 +147,14 @@
 
 /* Search launcher — an icon-only button below 900px, a full ⌘K pill at rail
    widths. */
-/* The single add affordance (the FAB and the board's duplicate were removed —
-   design review). Full "+ Add" from 600px up; a compact "+" on phones. */
-@media (max-width: 599px) {
-}
-
-/* The Night rail is desktop-only (≥900px; styled in the sidebar-shell band). */
-/* 34px square, the documented control height (#499). These were 1.7rem —
-   27px — which is the smallest target in the app and sits in the top bar
-   where a thumb reaches most often. */
-.settings-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  border-radius: var(--radius-sm);
-  width: 34px;
-  height: 34px;
-  cursor: pointer;
-}
-
-@media (max-width: 600px) {
-  .settings-btn,
-    .settings-btn {
-    width: 40px;
-  }
-}
-
 /* .notification-bell/.notification-dot/.notification-backdrop/
    .notification-panel/.notification-panel-head/.notification-list/
    .notification-title/.notification-empty moved to the owned
    NotificationBell component (src/components/NotificationBell.css); its
    "mark all read" button is now <Button variant="secondary">, styled
-   entirely by Button.css. The .settings-btn trigger stays here — it's
-   shared with other buttons elsewhere in the app. */
+   entirely by Button.css. The .settings-btn trigger went with the top bar
+   the shell replaced: its corners are .top-icon buttons now, and nothing
+   had rendered .settings-btn since. */
 
 /* Section headings are centred and flanked by the rule rather than sitting on
    top of it (#535 shell) — the same treatment the page title gets, so a
@@ -2052,16 +2024,6 @@ select.status {
   border: 1px solid var(--border);
 }
 
-.weekly-goal {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.7rem 0.9rem;
-  margin-bottom: 1.2rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
 
 /* Agenda / calendar */
 .agenda {
@@ -4986,7 +4948,6 @@ button:not(:disabled):active,
    covers Ctrl/Cmd+P from any other view: the main tab content, or a
    detail modal if one happens to be open. */
 @media print {
-  .side,
   .top,
   .header,
   .toast,
