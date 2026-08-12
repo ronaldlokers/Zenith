@@ -33,8 +33,24 @@ const DOC = {
   "--doc-radius-fine": "1px",
 };
 
+// Printing the app is a third context: not app UI, and not the simulated
+// sheet the CV preview draws. Same values as the document today, different
+// meaning, so they get their own names.
+const PRINT = {
+  "--print-ground": "#ffffff",
+  "--print-ink": "#000000",
+};
+
 describe("the printed-page token family", () => {
   for (const [token, value] of Object.entries(DOC)) {
+    it(`${token} still renders ${value}`, () => {
+      const m = INDEX.match(new RegExp(`${token}:\\s*([^;]+);`));
+      expect(m, `${token} is declared`).toBeTruthy();
+      expect(m![1].trim()).toBe(value);
+    });
+  }
+
+  for (const [token, value] of Object.entries(PRINT)) {
     it(`${token} still renders ${value}`, () => {
       const m = INDEX.match(new RegExp(`${token}:\\s*([^;]+);`));
       expect(m, `${token} is declared`).toBeTruthy();

@@ -4189,8 +4189,8 @@ button:not(:disabled):active,
 .dash-funnel { display: flex; flex-direction: column; gap: 0.3rem; }
 .dash-fn { display: grid; grid-template-columns: 5.4rem 1fr 1.6rem; align-items: center; gap: 0.5rem; }
 .dash-fl { font-family: var(--mono); font-size: var(--text-chrome); letter-spacing: var(--track-chrome); text-transform: uppercase; color: var(--muted); }
-.dash-fbar { height: 8px; border-radius: 5px; background: var(--track); overflow: hidden; }
-.dash-fbar > i { display: block; height: 100%; border-radius: 5px; background: var(--sc, var(--accent)); }
+.dash-fbar { height: 8px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; }
+.dash-fbar > i { display: block; height: 100%; border-radius: var(--radius-full); background: var(--sc, var(--accent)); }
 .dash-fn-n { font-family: var(--serif); font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; font-size: var(--text-body); }
 .dash-conv-line { margin-top: 0.5rem; }
 
@@ -4442,8 +4442,8 @@ button:not(:disabled):active,
    component (src/components/FilterTab.css). The .archived-tabs container stays. */
 
 /* column header funnel proportion */
-.bcol-prop { height: 3px; border-radius: 2px; background: var(--track); overflow: hidden; margin: 0 0.1rem 0.55rem; }
-.bcol-prop > i { display: block; height: 100%; border-radius: 2px; }
+.bcol-prop { height: 3px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; margin: 0 0.1rem 0.55rem; }
+.bcol-prop > i { display: block; height: 100%; border-radius: var(--radius-full); }
 .bcol-prop .s-interested { background: var(--st-interested); }
 .bcol-prop .s-applied { background: var(--st-applied); }
 .bcol-prop .s-screening { background: var(--st-screening); }
@@ -4530,11 +4530,8 @@ button:not(:disabled):active,
   }
 
   body {
-    /* Print white, not the CV preview's paper: the two happen to share a
-       value but not a meaning, and tying them together would make a change
-       to the CV document silently alter every printed page. */
-    background: #fff;
-    color: #000;
+    background: var(--print-ground);
+    color: var(--print-ink);
   }
 
   .content {

@@ -244,6 +244,14 @@
   --doc-radius: 3px;
   --doc-radius-fine: 1px;
 
+  /* Printing the app itself is a third context, distinct from both the app
+     and the CV preview above. Paper is paper and toner is toner: these are
+     not --doc-ground / --doc-ink, which describe a simulated sheet on
+     screen. They share values today; tying them together would mean a change
+     to the CV preview silently altered every printed page. */
+  --print-ground: #ffffff;
+  --print-ink: #000000;
+
   /* Elevation — two levels: raised surfaces (cards/panels) and overlays
      (modals/dropdowns). Per-theme below since shadow needs the ground. */
   --shadow-1: 0 1px 2px rgba(20, 23, 58, 0.04),
