@@ -3,7 +3,7 @@
    button (both `<li> > <button class="danger">` inside `<ul
    className="settings-list">`, src/feed.tsx's FeedSettings) sits inside any
    of App.css's Recipe A/B containers (.card-actions/.detail-actions/
-   .settings-modal/.shortcut-help/.form-actions/.share-actions), so Button's
+   .settings-modal/.form-actions/.share-actions), so Button's
    danger variant — which models Recipe B plus the danger colour override —
    does not describe them. The old markup's `.danger` class is what drove
    App.css's `.settings-list .danger` (App.css:2098: border none,
