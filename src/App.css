@@ -4677,7 +4677,12 @@ button:not(:disabled):active,
    worst, screening). It does NOT clear it on the lighter --sc field colours
    — 3.62:1 on interview — so the fill has to be the ink tone. */
 .bcol-rail .n {
-  width: 22px;
+  /* A circle at two digits, a pill beyond that. The rail is 44px wide, so it
+     has room to grow — what it cannot do is clip the count, and a fold that
+     has been collecting rejections for a year is exactly where three digits
+     turn up. */
+  min-width: 22px;
+  padding: 0 0.3rem;
   height: 22px;
   flex: 0 0 auto;
   border-radius: var(--radius-full);

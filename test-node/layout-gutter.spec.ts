@@ -61,3 +61,16 @@ describe("top bar chrome", () => {
     expect(APP).toMatch(/\.page-title::before,\s*\n\.page-title::after/);
   });
 });
+
+describe("folded rail", () => {
+  it("lets its count grow instead of clipping it", () => {
+    // The count is a circle at one or two digits and a pill past that. A
+    // fixed `width` looks identical until someone has a year of rejections
+    // folded away, at which point the figure is clipped by its own badge —
+    // and a clipped number reads as a smaller one.
+    const rule = APP.slice(APP.indexOf(".bcol-rail .n {"));
+    const block = rule.slice(0, rule.indexOf("}"));
+    expect(block).toContain("min-width");
+    expect(block).not.toMatch(/[^-]width:\s*22px/);
+  });
+});
