@@ -1041,13 +1041,6 @@
 .detail-co {
   display: block;
 }
-.detail-posting-link {
-  color: var(--accent);
-  text-decoration: none;
-}
-.detail-posting-link:hover {
-  text-decoration: underline;
-}
 
 /* Status pill + fit stars, right-aligned in the header band. */
 .detail-head-right {
@@ -1060,20 +1053,6 @@
 
 /* Stage-coloured status pill (a <select>, so no leading dot). --sc comes from
    the .stage-{status} class; the accessibility-locked stage hue carries it. */
-.status-pill {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  font-weight: 600;
-  letter-spacing: var(--track-chrome);
-  text-transform: uppercase;
-  border: none;
-  border-radius: 100px;
-  padding: 0.3rem 0.7rem;
-  color: var(--sc-ink, var(--sc));
-  background: color-mix(in srgb, var(--sc) 12%, transparent);
-  cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
 
 /* .modal-close is now the Button "close" variant (src/components/Button.css). */
 
@@ -2629,12 +2608,6 @@ select.status {
 
 @media (min-width: 900px) {
 
-  /* NextUpPanel's .jobs-side is display:none outside the >=1100px
-     Jobs layout — override here since Board shows it at its own,
-     wider-columns breakpoint instead. */
-  .board-summary .jobs-side {
-    display: block;
-  }
 }
 
 .bcol-head {
@@ -2879,10 +2852,6 @@ summary.bcol-head::after {
    desktop viewport (#74). Single column below 1100px, panel hidden
    entirely below that since it's desktop-space-usage, not core
    content. */
-
-.jobs-side {
-  display: none;
-}
 
 .cv-layout {
   display: block;
@@ -3173,15 +3142,8 @@ summary.bcol-head::after {
     align-items: start;
   }
 
-  .jobs-side {
-    display: block;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 0.9rem 1rem;
-    position: sticky;
-    top: 4.5rem;
-  }
+  /* The side panel this band positioned is gone: the CV's aside was its last
+     caller, and the CV is a plate with a rail now (#535). */
 }
 
 .side-h {
@@ -3417,73 +3379,9 @@ summary.bcol-head::after {
   text-decoration: underline;
 }
 
-/* CV versions library (#474) — side panel. */
-.cv-versions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: var(--space-3);
-}
-.cv-versions-add {
-  display: flex;
-  gap: 0.4rem;
-}
-.cv-versions-add input {
-  flex: 1;
-  min-width: 0;
-  font-family: inherit;
-  font-size: var(--text-body);
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--ink);
-}
-.cv-versions-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.cv-versions-list li {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "name actions" "date actions";
-  align-items: center;
-  column-gap: 0.5rem;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-.cv-version-name {
-  grid-area: name;
-  font-weight: 600;
-  font-size: var(--text-body);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cv-version-date {
-  grid-area: date;
-}
-.cv-version-actions {
-  grid-area: actions;
-  display: flex;
-  gap: 0.3rem;
-  flex-shrink: 0;
-}
-.cv-version-actions button {
-  font-size: var(--text-meta);
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-}
+/* The CV versions library (#474) had a side panel of its own. It is the rail
+   on the CV plate now (#535), which the owned component describes — see
+   src/cv/cv.css. */
 /* Felt momentum (#484) — gone-quiet close-out on Today. */
 .today-quiet {
   background: var(--surface);
@@ -4435,17 +4333,10 @@ button:not(:disabled):active,
    Cards click through; motivation widgets dropped. */
 .dash { display: flex; flex-direction: column; gap: 0.8rem; }
 
-.dash-kpis {
-  display: grid;
-  /* The hero KPI (first) gets a wider column so it reads as the anchor (#458).
-     minmax(0,…) lets a wide value (e.g. "~EUR 127,000") shrink with the column
-     instead of forcing the grid past the viewport on mobile (#455). */
-  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-/* The KPI tile itself (.dash-kpi / -n / -k) now lives in the owned StatCard
-   component (src/components/StatCard.css, @layer components). .dash-kpis above
-   stays here — it is only the grid that lays the tiles out. */
+/* The KPI tile itself lives in the owned StatCard component
+   (src/components/StatCard.css, @layer components). The grid that laid the
+   tiles out went with the tiles: Insights puts the same figures on one band
+   (.dash-kpiband), and the dashboard's own KPI sits alone. */
 
 /* .dash-band (+ eyebrow/verdict/spark) moved to the owned MomentumBand component (src/components/MomentumBand.css). */
 
@@ -4553,7 +4444,6 @@ button:not(:disabled):active,
 .dash-offers-pdf { margin-top: var(--space-2); }
 
 @media (max-width: 600px) {
-  .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-kpiband { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-band { grid-template-columns: 1fr; }
 }
@@ -4753,9 +4643,6 @@ button:not(:disabled):active,
 }
 
 /* Archived modal: reason tabs + list rows (#346). */
-.archived-tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
-/* The archived-filter tab (.archived-tabs .chip) moved to the owned FilterTab
-   component (src/components/FilterTab.css). The .archived-tabs container stays. */
 
 /* Folded rail (#535 shell): a stage you are not working in turns its label
    on its side so the horizontal room goes to the stages you are. It stays a
@@ -5029,18 +4916,6 @@ button:not(:disabled):active,
 /* ⋯ menu: extracted into the owned CardMenu component — see
    src/components/CardMenu.css (.zui-cardmenu*). */
 
-/* archived modal */
-.archived-modal { max-width: 30rem; }
-.archived-head { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.7rem; }
-.archived-head h2 { margin: 0; font-size: var(--text-title); }
-.archived-list { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow-y: auto; }
-.archived-list li { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0; border-top: 1px solid var(--border); }
-.archived-list li:first-child { border-top: none; }
-.archived-open { flex: 1; min-width: 0; text-align: left; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; }
-.archived-title { font-weight: 560; font-size: var(--text-body); color: var(--ink); }
-.archived-co { font-size: var(--text-meta); }
-.archived-reason { font-family: var(--mono); font-size: var(--text-chrome); text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--muted); white-space: nowrap; }
-.archived-restore { border: none; background: none; color: var(--accent-ink); cursor: pointer; font-size: var(--text-meta); white-space: nowrap; }
 
 /* mobile: snap-scroll columns instead of stacking (#346) */
 /* The narrow board's carousel lives with the rest of the board (search for
