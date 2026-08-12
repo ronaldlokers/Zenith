@@ -283,7 +283,13 @@ function BoardTab({
   // closed rails are not steps in it, so they carry no bar.
   const funnelBase = Math.max(1, ...PIPELINE.map(countOf));
 
-  const shownFolded = isNarrow ? EMPTY_FOLD : folded;
+  // Nothing is folded while the Pinned filter is on, for the same reason
+  // nothing is folded below 900px: the fold is a way to give room to the
+  // stage you are working in, and this view is already down to a handful.
+  // Without it a pinned card on a folded rail — archived, rejected,
+  // withdrawn, ghosted — is counted by the bottom bar and shown by nothing,
+  // so pressing Pinned gives a blank board that looks broken.
+  const shownFolded = isNarrow || pinnedOnly ? EMPTY_FOLD : folded;
 
   // Carousel plumbing for the narrow board. Scrolling is driven by
   // scrollLeft rather than scrollIntoView: scrollIntoView also nudges every
