@@ -292,7 +292,8 @@ export interface Profile {
   // these two are all Settings has to identify an existing key by.
   api_key_hint: string | null;
   api_key_created_at: string | null;
-  // Comma-separated stage slugs (#535 shell). NULL means never set, so the
+  // Comma-separated board-rail slugs — the eight stages plus "archived"
+  // (#535 shell). NULL means never set, so the
   // client applies its default; the empty string means explicitly nothing
   // folded, which is a different thing.
   board_folded: string | null;

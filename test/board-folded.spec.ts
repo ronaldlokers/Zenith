@@ -47,7 +47,14 @@ describe("board fold state", () => {
     expect((await stored())?.board_folded).toBe("offer");
   });
 
-  it("rejects a stage that does not exist", async () => {
+  it("accepts the manual archive, which is a rail but not a stage", async () => {
+    // Archiving is a separate flag from status, but on the board it is one
+    // more rail that folds and unfolds like the rest.
+    await setFolded(["archived", "interested"]);
+    expect((await stored())?.board_folded).toBe("interested,archived");
+  });
+
+  it("rejects a rail that does not exist", async () => {
     const res = await setFolded(["interested", "banana"]);
     expect(res.status).toBe(400);
     expect((await res.json<{ error: string }>()).error).toContain("banana");

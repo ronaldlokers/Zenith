@@ -1305,21 +1305,27 @@ app.post("/api/profile/share-token", async (c) => {
 // Validated against the real stage list: the column is read straight back
 // into layout state, and an unrecognised slug there would fold a column that
 // does not exist while leaving a real one open.
+// What the board can fold: the eight stages, plus the manual archive, which
+// is not a status but is a rail on the board that folds and unfolds exactly
+// like one. Ordered as the board orders them, since that is the order the
+// stored value is canonicalized into.
+const BOARD_RAILS = [...ALL_STATUSES, "archived"] as readonly string[];
+
 app.put("/api/profile/board-folded", async (c) => {
   const body = await c.req.json<{ folded?: unknown }>();
   if (!Array.isArray(body.folded)) {
-    return c.json({ error: "folded must be an array of stage slugs" }, 400);
+    return c.json({ error: "folded must be an array of rail slugs" }, 400);
   }
   const sent: unknown[] = body.folded;
   const unknown = sent.filter(
-    (v) => typeof v !== "string" || !(ALL_STATUSES as readonly string[]).includes(v),
+    (v) => typeof v !== "string" || !BOARD_RAILS.includes(v),
   );
   if (unknown.length) {
-    return c.json({ error: `unknown stage: ${unknown.join(", ")}` }, 400);
+    return c.json({ error: `unknown rail: ${unknown.join(", ")}` }, 400);
   }
-  // Deduplicated and stored in the canonical stage order, so the round trip
+  // Deduplicated and stored in the canonical rail order, so the round trip
   // is stable no matter what order the client sent.
-  const folded = ALL_STATUSES.filter((s) => sent.includes(s));
+  const folded = BOARD_RAILS.filter((s) => sent.includes(s));
   await c.env.DB.prepare(
     `INSERT INTO profile (user_id, board_folded) VALUES (?, ?)
      ON CONFLICT (user_id) DO UPDATE SET board_folded = excluded.board_folded`,
