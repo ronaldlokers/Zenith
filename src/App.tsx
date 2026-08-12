@@ -352,7 +352,10 @@ export default function App() {
               // the closed stages on the board instead of a separate list.
               id: "closed",
               label: t("menu.closedApplications"),
-              shortcut: "a",
+              // Not "a": the feed has answered to that since #144 and it is
+              // documented on the feed's own help line. A global fallback
+              // that steals a screen's key is worse than an unmemorable one.
+              shortcut: "c",
               icon: <ArchiveIcon />,
               active: false,
             },

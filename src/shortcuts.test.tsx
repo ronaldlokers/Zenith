@@ -8,7 +8,11 @@ import { KEY_SHORTCUTS_KEY } from "./format";
 import { useGlobalShortcuts } from "./hooks";
 
 function press(key: string, init: KeyboardEventInit = {}) {
-  window.dispatchEvent(new KeyboardEvent("keydown", { key, ...init }));
+  // cancelable, so a listener can call preventDefault and a later one can
+  // see that it did — which is the whole point of the yield test below.
+  window.dispatchEvent(
+    new KeyboardEvent("keydown", { key, cancelable: true, ...init }),
+  );
 }
 
 function handlers() {
@@ -18,6 +22,7 @@ function handlers() {
     onGoToIndex: vi.fn(),
     onOpenSettings: vi.fn(),
     onToggleMenu: vi.fn(),
+    onShowClosed: vi.fn(),
   };
 }
 
@@ -44,6 +49,35 @@ describe("global shortcuts", () => {
     press("m");
     expect(h.onOpenSettings).toHaveBeenCalledTimes(1);
     expect(h.onToggleMenu).toHaveBeenCalledTimes(1);
+  });
+
+  test("c opens the closed applications, and it is not the feed's a", () => {
+    // The feed has answered to "a" since #144 and prints it on its own help
+    // line. A global fallback that steals a screen's key sends someone to
+    // another page mid-triage — which is exactly what shipped in #555.
+    const h = handlers();
+    renderHook(() => useGlobalShortcuts(h));
+    press("c");
+    press("a");
+    expect(h.onShowClosed).toHaveBeenCalledTimes(1);
+  });
+
+  test("yields a key that a screen already claimed", () => {
+    // Registration order decides which window listener runs first, and that
+    // depends on which mounted when. A fallback that acts on an event
+    // someone already handled is a race with the router.
+    const h = handlers();
+    renderHook(() => useGlobalShortcuts(h));
+    const claimer = (e: KeyboardEvent) => e.preventDefault();
+    window.addEventListener("keydown", claimer, { capture: true });
+    try {
+      press("c");
+      press("3");
+      expect(h.onShowClosed).not.toHaveBeenCalled();
+      expect(h.onGoToIndex).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener("keydown", claimer, { capture: true });
+    }
   });
 
   test("a modifier means the key belongs to the browser, not to us", () => {
