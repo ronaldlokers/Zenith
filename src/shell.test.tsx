@@ -33,6 +33,40 @@ describe("top bar", () => {
     expect(Number(mark?.getAttribute("width"))).toBeGreaterThanOrEqual(25);
   });
 
+  test("moves focus to the heading when the page changes, but not on load", () => {
+    // Every destination lives behind the menu, so navigating always happens
+    // through a control that unmounts — leaving focus on <body>, where a
+    // screen reader announces nothing and the next Tab restarts from the top
+    // of the document. Focusing the heading says where you are.
+    const { rerender, container } = render(
+      <TopBar
+        scrolled={false}
+        pageTitle="Today"
+        settingsActive={false}
+        onOpenSettings={() => {}}
+        onOpenMenu={() => {}}
+        onOpenBoard={() => {}}
+      />,
+    );
+    const h1 = container.querySelector("h1")!;
+    // Nobody navigated yet: stealing focus here moves a reader off the page
+    // it just started reading.
+    expect(document.activeElement).not.toBe(h1);
+
+    rerender(
+      <TopBar
+        scrolled={false}
+        pageTitle="Pipeline"
+        settingsActive={false}
+        onOpenSettings={() => {}}
+        onOpenMenu={() => {}}
+        onOpenBoard={() => {}}
+      />,
+    );
+    expect(document.activeElement).toBe(h1);
+    expect(h1.getAttribute("tabindex")).toBe("-1");
+  });
+
   test("the wordmark is a button that opens the menu, not a link home", () => {
     // Every destination lives behind it, which is the whole reason the rail
     // could go away.
