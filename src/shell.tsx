@@ -58,7 +58,10 @@ export function TopBar({
           aria-haspopup="menu"
           aria-label={t("menu.open")}
         >
-          <Logo size={22} />
+          {/* 25px, not the 22 it shipped at: the mark carries three rungs
+              and a peak-star, and below about 22 they collapse into a smudge.
+              22 was sitting exactly on that floor. */}
+          <Logo size={25} />
           <span>Zenith</span>
           <svg
             className="top-chev"
