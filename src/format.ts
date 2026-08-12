@@ -45,6 +45,18 @@ export function railOf(a: Application): BoardRail {
   return a.archived_at ? "archived" : a.status;
 }
 
+// How strongly a feed posting matches the CV (#535 shell). The thresholds are
+// the ones the feed's own fit filter already offers (any / 1+ / 2+ / 3+), so
+// the band and the filter cannot disagree about what "a strong match" means.
+export const MATCH_BANDS = ["strong", "look", "weak"] as const;
+
+export type MatchBand = (typeof MATCH_BANDS)[number];
+
+export function matchBand(count: number | null | undefined): MatchBand {
+  const n = count ?? 0;
+  return n >= 3 ? "strong" : n >= 1 ? "look" : "weak";
+}
+
 export const OUTREACH_STATUSES: OutreachStatus[] = [
   "not_contacted",
   "awaiting_reply",

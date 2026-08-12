@@ -233,7 +233,13 @@
     "sortMatch": "Best match",
     "fitLabel": "Min fit",
     "fitAny": "Any",
-    "noFitMatch": "No jobs match this fit filter — lower it to see more."
+    "noFitMatch": "No jobs match this fit filter — lower it to see more.",
+    "band": {
+      "strong": "Strong",
+      "look": "Worth a look",
+      "weak": "Weak"
+    },
+    "postedAge": "{{age}} ago"
   },
   "stats": {
     "momentum": {

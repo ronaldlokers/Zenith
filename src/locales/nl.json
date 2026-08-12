@@ -233,7 +233,13 @@
     "sortMatch": "Beste match",
     "fitLabel": "Min. match",
     "fitAny": "Alle",
-    "noFitMatch": "Geen vacatures voldoen aan dit matchfilter — verlaag het om meer te zien."
+    "noFitMatch": "Geen vacatures voldoen aan dit matchfilter — verlaag het om meer te zien.",
+    "band": {
+      "strong": "Sterk",
+      "look": "Het bekijken waard",
+      "weak": "Zwak"
+    },
+    "postedAge": "{{age}} geleden"
   },
   "stats": {
     "momentum": {
