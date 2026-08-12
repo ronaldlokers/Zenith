@@ -1098,7 +1098,10 @@
    scattered label/bare-line mix. */
 .detail-defs {
   display: grid;
-  grid-template-columns: auto 1fr;
+  /* Term column sized to content, value column takes the rest — but neither
+     track will drop below its own content unless told, and at 200% both are
+     long Dutch words. */
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   gap: 0.5rem 0.9rem;
   align-items: baseline;
   margin: 0;
@@ -1189,6 +1192,12 @@
 /* .detail-actions moved to the owned ActionBar component (variant="detail"). */
 
 .detail-sub {
+  /* "Interviewvoorbereiding" is one token, and at 200% text resize it is
+     340px wide in a 231px column — no wrapping opportunity exists, so the
+     word pushed the whole page sideways. break-word takes effect only when a
+     word cannot fit at all; at ordinary sizes nothing changes. Not hyphens:
+     those were tried on the ascent strip and rejected. */
+  overflow-wrap: break-word;
   font-family: var(--mono);
   font-size: var(--text-chrome);
   /* Mono ships 400-500 only; an unset weight here inherits the UA heading

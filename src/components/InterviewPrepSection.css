@@ -37,6 +37,10 @@
      line rather than dropping to one of their own. */
   .zui-prep-checklist li label {
     min-width: 0;
+    /* The question is an anonymous flex item beside the checkbox. Wrapping
+       the label would move it to its own line at every size; this lets its
+       text wrap inside the line it already has. */
+    overflow-wrap: break-word;
   }
 
   .zui-prep-checklist li label {
