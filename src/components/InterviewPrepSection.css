@@ -29,6 +29,20 @@
     font-size: var(--text-body);
   }
 
+  /* The question shrinks; the controls beside it do not. Without this the
+     label's min-content (a whole sentence at whatever the text size is) is
+     the row's floor, and at 200% text resize that floor is wider than a
+     phone. Letting it shrink wraps the sentence instead, which is what the
+     row already does at ordinary sizes — the controls stay on its first
+     line rather than dropping to one of their own. */
+  .zui-prep-checklist li label {
+    min-width: 0;
+    /* The question is an anonymous flex item beside the checkbox. Wrapping
+       the label would move it to its own line at every size; this lets its
+       text wrap inside the line it already has. */
+    overflow-wrap: break-word;
+  }
+
   .zui-prep-checklist li label {
     display: flex;
     align-items: center;
@@ -58,7 +72,12 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
+    /* flex-shrink: 0 keeps the reorder arrows and the remove control their
+       own size next to a question that can be long — which is right until the
+       text size doubles and the row itself has nowhere left to give. Wrapping
+       lets the trio drop under the question instead of off the screen. */
     flex-shrink: 0;
+    flex-wrap: wrap;
   }
 
   .zui-prep-item-actions button:disabled {
@@ -68,12 +87,22 @@
 
   .zui-prep-add {
     display: flex;
+    /* A text field and its button. The field has a width and the button has
+       words, so at 200% text resize the pair measured past the edge of a
+       phone and pushed the page with it. Wrapping puts the button under the
+       field, which is what the row does at any width once it cannot fit. */
+    flex-wrap: wrap;
     gap: 0.4rem;
     margin-top: 0.4rem;
   }
 
   .zui-prep-add input {
     flex: 1;
+    /* An <input> carries a default size attribute worth about 20 characters,
+       and that becomes its min-content width — `flex: 1` grows it but never
+       shrinks it past that floor. At 200% text resize the floor is wider than
+       the phone, so the field alone pushed the page sideways. */
+    min-width: 0;
     padding: 0.4rem 0.6rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);

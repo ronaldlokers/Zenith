@@ -48,7 +48,15 @@
        way. */
     border-radius: var(--radius-md);
     cursor: pointer;
-    white-space: nowrap;
+    /* Not nowrap. A button's label is words, and words get wider with the
+       text size while the phone does not — at 200% text resize "Cv afstemmen
+       op deze functie" is 429px on a 390px screen, and nowrap made that the
+       button's minimum width, so it pushed the page sideways instead of
+       taking a second line. Wrapping happens at spaces only: no hyphenation,
+       which was tried on the ascent strip and rejected. At ordinary text
+       sizes nothing wraps, which is checked by render rather than asserted —
+       14 captures, AE = 0. */
+    white-space: normal;
     transition:
       background 120ms ease,
       border-color 120ms ease,

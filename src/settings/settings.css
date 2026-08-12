@@ -169,6 +169,11 @@
 
   .set-row-line {
     display: flex;
+    /* Label · leader · value. The value can be a long unbroken token — a
+       timezone like Europe/Amsterdam — and at 200% text resize it ran 7px
+       past the edge. Wrapping drops it under its label rather than breaking
+       the word, which was tried on the ascent strip and rejected. */
+    flex-wrap: wrap;
     align-items: baseline;
     gap: 0.5rem;
     width: 100%;

@@ -184,7 +184,7 @@
       "admin": "Admin",
       "feed": "Feed sources"
     },
-    "keyShortcuts": "Single-key shortcuts (n, /)",
+    "keyShortcuts": "Single-key shortcuts (no modifier)",
     "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
     "timezone": "Time zone",
     "timezoneNow": "{{time}} right now",
@@ -769,6 +769,7 @@
     "showingClosed": "Showing closed applications",
     "pin": "Pin",
     "unpin": "Unpin",
+    "nothingPinned": "Nothing pinned yet. Pin an application from its \u22ef menu to keep it here.",
     "showingPinned": "Showing pinned applications",
     "showAll": "Show all",
     "backToLive": "Back to live",

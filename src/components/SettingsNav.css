@@ -12,6 +12,13 @@
     gap: 0.15rem;
     position: sticky;
     top: 4.5rem;
+    /* This nav is a grid item, and a grid item's min-width defaults to auto:
+       it will not shrink below its widest tab. At normal text that never
+       shows, because the tabs are narrower than the column. At 200% text
+       resize the widest one is wider than the phone, and the nav dragged the
+       whole page sideways with it. min-width:0 lets it shrink; the row
+       variant below then wraps, and the column variant is already vertical. */
+    min-width: 0;
   }
 
   .zui-settingsnav button {
