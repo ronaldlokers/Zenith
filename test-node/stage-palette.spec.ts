@@ -182,6 +182,37 @@ describe("stage palette", () => {
     }
   });
 
+  // The shell fills small surfaces with the ink tone and prints white on
+  // them. That is only defensible while the ink tones stay dark enough, and
+  // a hue retune would silently take it away.
+  it("keeps white readable on a stage's ink tone, which the shell fills with", () => {
+    for (const { name, vars } of themes) {
+      for (const s of STAGES) {
+        const c = contrast(hex(vars[`st-${s}-ink`]), hex("#ffffff"));
+        expect(
+          c,
+          `${name}: white on --st-${s}-ink is ${c.toFixed(2)}:1`,
+        ).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+      }
+    }
+  });
+
+  // The counterpart, pinned so the distinction cannot quietly collapse: the
+  // field colours are NOT safe grounds, which is why the fills use the ink
+  // tone rather than --sc. If a retune ever made a field colour safe, this
+  // fails and the rule gets rewritten deliberately rather than by accident.
+  it("still cannot print type on a stage's field colour", () => {
+    for (const { name, vars } of themes) {
+      const worst = Math.min(
+        ...STAGES.map((s) => contrast(hex(vars[`st-${s}`]), hex("#ffffff"))),
+      );
+      expect(
+        worst,
+        `${name}: white on the worst field colour is ${worst.toFixed(2)}:1`,
+      ).toBeLessThan(MIN_TEXT_CONTRAST);
+    }
+  });
+
   it("keeps the brass text tone readable, since its name promises it", () => {
     const light = CSS.slice(CSS.indexOf(":root {"), CSS.indexOf("color-scheme: light dark;"));
     const ink = light.match(/--accent-ink:\s*(#[0-9a-f]{6})/i)?.[1];
@@ -192,9 +223,17 @@ describe("stage palette", () => {
   });
 });
 
-// There is deliberately no "text on a stage fill" case here: measured, no
-// ink clears 4.5:1 on all five hues (best is white at 3.62:1 on interview).
-// The hues are tuned to be readable AS text, which makes them mid-tone, and
-// a mid-tone cannot also be a safe ground for type. Stage colour is a tint,
-// a ring or an edge — the tinted-field contrast that IS used is covered by
-// the label-readability test above.
+// The rule about filled grounds is narrower than it first read, and the
+// difference is which tone is doing the filling:
+//
+//   - The FIELD colours (--st-*) cannot be grounds for type. White is the
+//     best ink available and it manages only 3.62:1 on interview. That is
+//     what "never a filled ground with type on it" is about, and it still
+//     holds.
+//   - The INK tones (--st-*-ink) can. White clears 4.5:1 on every one of
+//     them, 5.11:1 at the worst (screening).
+//
+// The shell (#535) uses the second: the folded rail's count circle, the
+// detail page's current stage, and the narrow board's active stage chip are
+// all white on the ink tone. The test below is what stops that becoming
+// unreadable if a hue is ever retuned.
