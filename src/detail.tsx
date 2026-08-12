@@ -850,6 +850,22 @@ export function ApplicationDetailModal({
               <Button variant="secondary" onClick={() => setEditing(true)}>
                 {t("common.edit")}
               </Button>
+              {/* Pinning is reachable from both places the card is (#535
+                  shell): the board's ⋯ menu and here. Same toggle, so the
+                  way back is the same control. */}
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  (a.pinned_at
+                    ? api.unpinApplication(a.id)
+                    : api.pinApplication(a.id)
+                  )
+                    .then(onChanged)
+                    .catch((e) => onError((e as Error).message))
+                }
+              >
+                {a.pinned_at ? t("board.unpin") : t("board.pin")}
+              </Button>
               <Button
                 variant="secondary"
                 onClick={() =>

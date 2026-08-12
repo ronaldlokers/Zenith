@@ -767,6 +767,10 @@
     "foldRail": "{{stage}} inklappen",
     "unfoldRail": "{{stage}} openen, {{count}} sollicitaties",
     "showingClosed": "Gesloten sollicitaties worden getoond",
+    "pin": "Vastzetten",
+    "unpin": "Losmaken",
+    "showingPinned": "Vastgezette sollicitaties",
+    "showAll": "Alles tonen",
     "backToLive": "Terug naar actief",
     "stageStrip": "Fases"
   },
@@ -872,6 +876,9 @@
     "insightsEmpty": "Nog geen afgesloten sollicitaties.",
     "insightsUnrecorded_one": "{{count}} afgesloten zonder vastgelegde reden",
     "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden"
+  },
+  "bottomBar": {
+    "pinned": "Vastgezet"
   },
   "menu": {
     "label": "Bestemmingen",

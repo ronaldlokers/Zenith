@@ -267,6 +267,8 @@ export interface Application {
   next_action_at: string | null;
   deadline_at: string | null;
   archived_at: string | null;
+  // Set when pinned, NULL when not — see migrations/0057_pinned.sql.
+  pinned_at: string | null;
   fit_score: number | null;
   cover_letter: string | null;
   job_description: string | null;

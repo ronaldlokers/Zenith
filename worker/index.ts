@@ -663,9 +663,43 @@ app.post("/api/applications", async (c) => {
   return c.json(result, 201);
 });
 
+// Archiving clears the pin. The two states contradict each other — a pin is
+// "one of the handful I am working", archiving is "I am done with this" — and
+// leaving both set showed the bar counting a pinned application that the
+// board could not show, because an archived card sits on a rail that is
+// folded by default. Unarchiving does not restore the pin: if the work
+// resumes, pinning it again is the same click that unarchived it.
 app.post("/api/applications/:id/archive", async (c) => {
   const result = await c.env.DB.prepare(
-    `UPDATE applications SET archived_at = datetime('now'), updated_at = datetime('now')
+    `UPDATE applications SET archived_at = datetime('now'), pinned_at = NULL,
+       updated_at = datetime('now')
+     WHERE id = ? AND user_id = ? RETURNING *`,
+  )
+    .bind(c.req.param("id"), c.get("userId"))
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
+// Pinning is orthogonal to the pipeline (#535 shell): an application keeps
+// its stage and its column, and the bottom bar's first slot filters the board
+// down to the pinned set rather than moving anything into a place of its own.
+// Same shape as archive/unarchive above, including RETURNING * so the client
+// can replace its row without a refetch.
+app.post("/api/applications/:id/pin", async (c) => {
+  const result = await c.env.DB.prepare(
+    `UPDATE applications SET pinned_at = datetime('now'), updated_at = datetime('now')
+     WHERE id = ? AND user_id = ? RETURNING *`,
+  )
+    .bind(c.req.param("id"), c.get("userId"))
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
+app.post("/api/applications/:id/unpin", async (c) => {
+  const result = await c.env.DB.prepare(
+    `UPDATE applications SET pinned_at = NULL, updated_at = datetime('now')
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(c.req.param("id"), c.get("userId"))

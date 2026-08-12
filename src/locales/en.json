@@ -767,6 +767,10 @@
     "foldRail": "Fold {{stage}}",
     "unfoldRail": "Open {{stage}}, {{count}} applications",
     "showingClosed": "Showing closed applications",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "showingPinned": "Showing pinned applications",
+    "showAll": "Show all",
     "backToLive": "Back to live",
     "stageStrip": "Stages"
   },
@@ -872,6 +876,9 @@
     "insightsEmpty": "No closed applications yet.",
     "insightsUnrecorded_one": "{{count}} closed with no reason recorded",
     "insightsUnrecorded_other": "{{count}} closed with no reason recorded"
+  },
+  "bottomBar": {
+    "pinned": "Pinned"
   },
   "menu": {
     "label": "Destinations",

@@ -97,6 +97,31 @@ export function SearchIcon() {
   );
 }
 
+// The bottom bar's first slot (#535 shell). A drawing pin seen head-on: the
+// pin's head, its shaft, and the point — line art in the app's own style
+// rather than the filled 📌 the prototype used, which reads as an emoji next
+// to the stroked search glyph beside it.
+export function PinIcon() {
+  return (
+    <svg
+      className="settings-icon"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        d="M9 4h6l-1 5 3 3v2H7v-2l3-3-1-5Z"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M12 14v6" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // Bottom-nav glyphs (#346) — 24x24, currentColor, strokeWidth 2, matching
 // SettingsIcon. Shown only on the mobile bottom bar (icon over label); the
 // desktop sidebar keeps its text labels.

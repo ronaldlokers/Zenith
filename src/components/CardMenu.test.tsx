@@ -35,6 +35,7 @@ const mockApplication: Application = {
   next_action_at: "2026-08-01",
   deadline_at: null,
   archived_at: null,
+  pinned_at: null,
   fit_score: null,
   cover_letter: null,
   job_description: null,
@@ -55,6 +56,7 @@ describe("CardMenu", () => {
         onSetFollowUp={noop}
         onOpenDetail={noop}
         onArchive={noop}
+        onTogglePin={() => {}}
       />,
     );
     expect(
@@ -70,6 +72,7 @@ describe("CardMenu", () => {
         onSetFollowUp={noop}
         onOpenDetail={noop}
         onArchive={noop}
+        onTogglePin={() => {}}
       />,
     );
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -87,6 +90,7 @@ describe("CardMenu", () => {
         onSetFollowUp={noop}
         onOpenDetail={noop}
         onArchive={noop}
+        onTogglePin={() => {}}
       />,
     );
     fireEvent.click(
@@ -115,6 +119,7 @@ describe("CardMenu", () => {
         onSetFollowUp={noop}
         onOpenDetail={noop}
         onArchive={noop}
+        onTogglePin={() => {}}
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Actions for Staff Engineer" }));
@@ -131,6 +136,7 @@ describe("CardMenu", () => {
         onSetFollowUp={noop}
         onOpenDetail={noop}
         onArchive={noop}
+        onTogglePin={() => {}}
       />,
     );
     fireEvent.click(
