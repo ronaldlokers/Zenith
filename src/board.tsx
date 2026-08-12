@@ -149,6 +149,7 @@ function BoardCard({
 }
 function BoardTab({
   applications,
+  pinnedOnly,
   attention,
   sort,
   companies,
@@ -169,6 +170,8 @@ function BoardTab({
   showAddBlocks,
 }: CrudTabProps & {
   applications: Application[];
+  /** True when the bottom bar's Pinned slot is filtering the board. */
+  pinnedOnly: boolean;
   companies: Company[];
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
@@ -1049,6 +1052,7 @@ export function PipelineTab({
 
       <BoardTab
         applications={filtered}
+        pinnedOnly={pinnedOnly}
         attention={attention}
         sort={sort}
         companies={companies}
