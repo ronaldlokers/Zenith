@@ -199,6 +199,9 @@ export default function App() {
     { data: "overview", to: "overview", active: tab === "overview", icon: <NavOverviewIcon />, label: t("tabs.overview") },
     { data: "pipeline", to: "board", active: tab === "board", icon: <NavPipelineIcon />, label: t("tabs.pipeline") },
     { data: "feed", to: "feed", active: tab === "feed", icon: <NavFeedIcon />, label: t("tabs.feed") },
+    // Named for what it holds rather than for the abstraction: the shell spec
+    // lists this destination as "People & companies", and the menu row and the
+    // page title both read this label.
     { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
     { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
     { data: "insights", to: "insights", active: tab === "insights", icon: <NavInsightsIcon />, label: t("tabs.insights") },
@@ -349,7 +352,10 @@ export default function App() {
               // the closed stages on the board instead of a separate list.
               id: "closed",
               label: t("menu.closedApplications"),
-              shortcut: "a",
+              // Not "a": the feed has answered to that since #144 and it is
+              // documented on the feed's own help line. A global fallback
+              // that steals a screen's key is worse than an unmemorable one.
+              shortcut: "c",
               icon: <ArchiveIcon />,
               active: false,
             },

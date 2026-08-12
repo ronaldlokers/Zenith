@@ -115,13 +115,14 @@ describe("detail page structure", () => {
 
   test("every stage is on the rail, with the current one marked", () => {
     const container = renderDetail();
-    // Scoped to the rail: the fit rating is a radio group too.
+    // Buttons, not radios: each one performs a move, and a radio group's
+    // arrows would select as they move — writing a stage change per keypress.
     const steps = [
-      ...container.querySelectorAll<HTMLElement>(".detail-rail [role=radio]"),
+      ...container.querySelectorAll<HTMLElement>(".detail-rail button"),
     ];
     expect(steps).toHaveLength(8);
-    const checked = steps.filter((s) => s.getAttribute("aria-checked") === "true");
-    expect(checked).toHaveLength(1);
-    expect(checked[0].textContent).toBe("Interview");
+    const pressed = steps.filter((s) => s.getAttribute("aria-pressed") === "true");
+    expect(pressed).toHaveLength(1);
+    expect(pressed[0].textContent).toBe("Interview");
   });
 });

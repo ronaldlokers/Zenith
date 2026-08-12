@@ -5,6 +5,7 @@
 // by .app:has(...) per-view rules. That context can't be reproduced in an
 // isolated @layer component, so these stay plain and App.css keeps owning
 // the layout. Presentation only; all state/wiring lives in App.
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Logo, NavPipelineIcon, SearchIcon, SettingsIcon } from "./icons";
 import { NotificationBell } from "./components";
@@ -37,6 +38,22 @@ export function TopBar({
   onOpenBoard: () => void;
 }) {
   const { t } = useTranslation();
+  // Every destination now lives behind the menu, so navigating always happens
+  // through a control that then unmounts — leaving focus on <body>. A screen
+  // reader announced nothing about the new page, and the next Tab restarted
+  // from the top of the document. Moving focus to the heading says where you
+  // are and puts the keyboard at the start of the content. The rail used to
+  // do this by simply staying mounted under the focused tab.
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  // Compare the title rather than counting renders: a "skip the first effect"
+  // flag fires anyway under StrictMode's double mount, and stealing focus on
+  // load moves a screen reader off the page it has just started reading.
+  const lastTitle = useRef(pageTitle);
+  useEffect(() => {
+    if (lastTitle.current === pageTitle) return;
+    lastTitle.current = pageTitle;
+    titleRef.current?.focus();
+  }, [pageTitle]);
   return (
     <>
       <header className={`top${scrolled ? " scrolled" : ""}`}>
@@ -58,7 +75,10 @@ export function TopBar({
           aria-haspopup="menu"
           aria-label={t("menu.open")}
         >
-          <Logo size={22} />
+          {/* 25px, not the 22 it shipped at: the mark carries three rungs
+              and a peak-star, and below about 22 they collapse into a smudge.
+              22 was sitting exactly on that floor. */}
+          <Logo size={25} />
           <span>Zenith</span>
           <svg
             className="top-chev"
@@ -91,7 +111,9 @@ export function TopBar({
           the words are the break in the rule, which is what makes it read as
           a chapter heading instead of a header underline. */}
       <div className="page-title">
-        <h1>{pageTitle}</h1>
+        <h1 ref={titleRef} tabIndex={-1}>
+          {pageTitle}
+        </h1>
       </div>
     </>
   );

@@ -181,6 +181,7 @@
    heading reads the same wherever it appears. Grid rather than a border on
    the text: the rules have to run to the panel's edges and meet the label,
    which an underline cannot do. */
+.ruled-h,
 .settings-modal h2,
 .settings-content h3 {
   display: grid;
@@ -196,6 +197,8 @@
   color: var(--muted);
 }
 
+.ruled-h::before,
+.ruled-h::after,
 .settings-modal h2::before,
 .settings-modal h2::after,
 .settings-content h3::before,
@@ -1029,6 +1032,7 @@
 /* Refined refresh (#463): the title takes the display voice (--serif,
    the app's display face — NOT a literal serif). */
 .detail-head h2 {
+  overflow-wrap: anywhere;
   margin: 0 0 0.15rem;
   font-family: var(--serif);
   font-weight: 600;
@@ -1040,13 +1044,6 @@
 /* Company · contact · job-posting link, directly under the title. */
 .detail-co {
   display: block;
-}
-.detail-posting-link {
-  color: var(--accent);
-  text-decoration: none;
-}
-.detail-posting-link:hover {
-  text-decoration: underline;
 }
 
 /* Status pill + fit stars, right-aligned in the header band. */
@@ -1060,20 +1057,6 @@
 
 /* Stage-coloured status pill (a <select>, so no leading dot). --sc comes from
    the .stage-{status} class; the accessibility-locked stage hue carries it. */
-.status-pill {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  font-weight: 600;
-  letter-spacing: var(--track-chrome);
-  text-transform: uppercase;
-  border: none;
-  border-radius: 100px;
-  padding: 0.3rem 0.7rem;
-  color: var(--sc-ink, var(--sc));
-  background: color-mix(in srgb, var(--sc) 12%, transparent);
-  cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
 
 /* .modal-close is now the Button "close" variant (src/components/Button.css). */
 
@@ -1801,8 +1784,10 @@ button.primary:hover {
     letter-spacing: var(--track-chrome);
     color: var(--muted);
   }
-  /* Focused-item title takes the display voice (--serif, #468). */
-  .feed-detail h3 {
+  /* Focused-item title takes the display voice (--serif, #468). An h2 as of
+     the heading-order fix: the pane is a region of the page, not a
+     subsection of the list beside it. */
+  .feed-detail h2 {
     margin: 0.1rem 0 0;
     font-family: var(--serif);
     font-weight: 600;
@@ -2629,15 +2614,14 @@ select.status {
 
 @media (min-width: 900px) {
 
-  /* NextUpPanel's .jobs-side is display:none outside the >=1100px
-     Jobs layout — override here since Board shows it at its own,
-     wider-columns breakpoint instead. */
-  .board-summary .jobs-side {
-    display: block;
-  }
 }
 
 .bcol-head {
+  /* An h2 as of #535's heading fix — the UA's own margin and size would
+     otherwise redraw the column header. */
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
@@ -2880,8 +2864,13 @@ summary.bcol-head::after {
    entirely below that since it's desktop-space-usage, not core
    content. */
 
-.jobs-side {
-  display: none;
+/* The plate's inset from the content edge: a tool rail plus the gap it sits
+   across. Declared here because two files need it — cv.css sizes the tools
+   from it, and the builder below the plate aligns to it. A literal in either
+   would stop agreeing the moment the tools change size. */
+.cv-tab {
+  --cv-tool: 34px;
+  --cv-tool-gap: 0.5rem;
 }
 
 .cv-layout {
@@ -3165,23 +3154,25 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .jobs-layout,
-  .cv-layout {
+  .jobs-layout {
     display: grid;
     grid-template-columns: 2.2fr 1fr;
     gap: 1.25rem;
     align-items: start;
   }
 
-  .jobs-side {
-    display: block;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 0.9rem 1rem;
-    position: sticky;
-    top: 4.5rem;
+  /* The CV's second track held the side panel — completeness, versions, the
+     live preview. All three are on the plate now (#535), so the builder was
+     left filling two thirds of a row and sitting narrower than the plate
+     above it, with a column of nothing beside it. It spans the row now, inset
+     to the plate's own edges: the tools hang in the margin, and sections that
+     start outside them read as a second, wider page. */
+  .cv-layout {
+    margin-inline: calc(var(--cv-tool) + var(--cv-tool-gap));
   }
+
+  /* The side panel this band positioned is gone: the CV's aside was its last
+     caller, and the CV is a plate with a rail now (#535). */
 }
 
 .side-h {
@@ -3417,73 +3408,9 @@ summary.bcol-head::after {
   text-decoration: underline;
 }
 
-/* CV versions library (#474) — side panel. */
-.cv-versions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: var(--space-3);
-}
-.cv-versions-add {
-  display: flex;
-  gap: 0.4rem;
-}
-.cv-versions-add input {
-  flex: 1;
-  min-width: 0;
-  font-family: inherit;
-  font-size: var(--text-body);
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  color: var(--ink);
-}
-.cv-versions-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.cv-versions-list li {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "name actions" "date actions";
-  align-items: center;
-  column-gap: 0.5rem;
-  padding: 0.4rem 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-.cv-version-name {
-  grid-area: name;
-  font-weight: 600;
-  font-size: var(--text-body);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cv-version-date {
-  grid-area: date;
-}
-.cv-version-actions {
-  grid-area: actions;
-  display: flex;
-  gap: 0.3rem;
-  flex-shrink: 0;
-}
-.cv-version-actions button {
-  font-size: var(--text-meta);
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-}
+/* The CV versions library (#474) had a side panel of its own. It is the rail
+   on the CV plate now (#535), which the owned component describes — see
+   src/cv/cv.css. */
 /* Felt momentum (#484) — gone-quiet close-out on Today. */
 .today-quiet {
   background: var(--surface);
@@ -3563,19 +3490,30 @@ summary.bcol-head::after {
   background: var(--bg);
 }
 
-/* Calendar folded into Insights (#481) — section heading. Mono eyebrow to
-   match the funnel/offers card headings, so Insights uses one heading voice
-   throughout (#486). */
+/* Calendar folded into Insights (#481). Its heading takes the app-wide
+   ruled treatment (.ruled-h) now — the screen above it is all centred,
+   flanked headings, and a left-aligned label below them read as a section
+   that had been missed. Only the spacing is local. */
 .insights-cal-h {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  /* Mono ships 400-500 only; an unset weight here inherits the UA heading
-     bold and the browser synthesises it, smearing the outlines (#501). */
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  color: var(--muted);
   margin: var(--space-5) 0 var(--space-3);
+}
+
+/* The activity disclosure sat as a full-width secondary button, which is a
+   shape nothing else in the shell uses. It is a section like the ones around
+   it: a ruled heading, and a plain control under it. */
+.insights-activity {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The heading has to span the column: centring the flex items shrink-wraps
+   it, and a ruled heading whose 1fr tracks have collapsed to nothing is just
+   a centred label. */
+.insights-activity > .ruled-h {
+  align-self: stretch;
 }
 
 /* Today home (#480, rebuilt #492) — the blocks rank by how much they ask of
@@ -3728,13 +3666,13 @@ summary.bcol-head::after {
   .dash.today {
     max-width: none;
   }
-  .today-cols {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: 1.25rem;
-    align-items: start;
-  }
 }
+
+/* The landing screen's own two-column rule used to live here and, sitting
+   later in the file, silently beat the three-column rule above it — so the
+   third column wrapped under the first and "Happened today" fell below the
+   fold it was moved onto the landing screen to stay above. The column count
+   is declared once now (search "today-cols"). */
 
 /* The ascent strip — where the climb stands right now, at a glance. Segment
    width is the stage's share of live applications; the count and the stage
@@ -3745,10 +3683,25 @@ summary.bcol-head::after {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* The segments carry a max-content floor, so the strip has a minimum width
+     of its own. When that does not fit — a narrow phone, or a reader who has
+     doubled their font size — it scrolls rather than forcing the column
+     wider or letting the labels overlap each other. */
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.today-ascent::-webkit-scrollbar {
+  display: none;
 }
 .today-ascent li {
   flex-basis: 0;
-  min-width: 3.6rem;
+  /* At least as wide as its own label. Segments are sized by how many
+     applications each stage holds, so a short stage can be handed less room
+     than its name needs — which is how "Gesolliciteerd" came to overlap
+     "Screening". The proportions still decide the space beyond this floor. */
+  min-width: max-content;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -3786,6 +3739,10 @@ summary.bcol-head::after {
   .today-ascent {
     gap: 0.55rem;
   }
+
+  /* Five stage names side by side never fit a phone whatever the gutter, so
+     the scroll declared above is doing the work here. The gesture is the one
+     the board below already uses at this width. */
   .today-ascent-l {
     letter-spacing: 0.01em;
   }
@@ -4142,10 +4099,22 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .app:has(.dash) .content,
   .app:has(.company-grid) .content,
   .app:has(.job-page) .content {
     max-width: 1000px;
+  }
+
+  .app:has(.dash) .content {
+    max-width: 1000px;
+  }
+
+  /* The landing screen runs three columns of text (#535), so it takes a
+     wider measure than the rest of .dash. At 1000px each column was 300px —
+     enough to lay out, not enough to read a sentence in. Two classes rather
+     than one so it beats the .dash rule above on specificity, not on being
+     written after it. Insights keeps its figures at the narrower measure. */
+  .app:has(.dash.today) .content {
+    max-width: 1240px;
   }
 }
 
@@ -4423,17 +4392,10 @@ button:not(:disabled):active,
    Cards click through; motivation widgets dropped. */
 .dash { display: flex; flex-direction: column; gap: 0.8rem; }
 
-.dash-kpis {
-  display: grid;
-  /* The hero KPI (first) gets a wider column so it reads as the anchor (#458).
-     minmax(0,…) lets a wide value (e.g. "~EUR 127,000") shrink with the column
-     instead of forcing the grid past the viewport on mobile (#455). */
-  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-/* The KPI tile itself (.dash-kpi / -n / -k) now lives in the owned StatCard
-   component (src/components/StatCard.css, @layer components). .dash-kpis above
-   stays here — it is only the grid that lays the tiles out. */
+/* The KPI tile itself lives in the owned StatCard component
+   (src/components/StatCard.css, @layer components). The grid that laid the
+   tiles out went with the tiles: Insights puts the same figures on one band
+   (.dash-kpiband), and the dashboard's own KPI sits alone. */
 
 /* .dash-band (+ eyebrow/verdict/spark) moved to the owned MomentumBand component (src/components/MomentumBand.css). */
 
@@ -4541,7 +4503,6 @@ button:not(:disabled):active,
 .dash-offers-pdf { margin-top: var(--space-2); }
 
 @media (max-width: 600px) {
-  .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-kpiband { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dash-band { grid-template-columns: 1fr; }
 }
@@ -4597,6 +4558,15 @@ button:not(:disabled):active,
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
   border-radius: var(--radius-md);
   padding: 0.5rem;
+}
+
+/* The offer column's plate is there to hold offers. With none it drew an
+   empty gold pill under one header and nothing under the other four, which
+   on a first-run board reads as a control someone forgot to fill in. */
+.bcol.stage-offer .bcol-cards:empty {
+  background: none;
+  border: 0;
+  padding: 0;
 }
 .bcol.stage-offer .bcol-head .n {
   color: var(--accent-ink);
@@ -4741,9 +4711,142 @@ button:not(:disabled):active,
 }
 
 /* Archived modal: reason tabs + list rows (#346). */
-.archived-tabs { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
-/* The archived-filter tab (.archived-tabs .chip) moved to the owned FilterTab
-   component (src/components/FilterTab.css). The .archived-tabs container stays. */
+
+/* Folded rail (#535 shell): a stage you are not working in turns its label
+   on its side so the horizontal room goes to the stages you are. It stays a
+   drop target, so a card can be filed into a folded stage without opening
+   it first. The rail sits on the page ground — only the count circle carries
+   the stage colour, and as a ring rather than a fill: no ink clears 4.5:1 on
+   all five hues, so a number inside a filled circle cannot be legible across
+   the palette. */
+.bcol-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.3rem 0 0.6rem;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  min-width: 0;
+}
+
+/* Filled, not a ring: white clears 4.5:1 on every --sc-ink (5.11:1 at the
+   worst, screening). It does NOT clear it on the lighter --sc field colours
+   — 3.62:1 on interview — so the fill has to be the ink tone. */
+.bcol-rail .n {
+  /* A circle at two digits, a pill beyond that. The rail is 44px wide, so it
+     has room to grow — what it cannot do is clip the count, and a fold that
+     has been collecting rejections for a year is exactly where three digits
+     turn up. */
+  min-width: 22px;
+  padding: 0 0.3rem;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  background: var(--sc-ink, var(--muted));
+  color: #fff;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Upright, not rotated: the letters stack and stay readable head-on, which
+   is what the approved mockup shows. Rotated text asks the reader to tilt. */
+.bcol-rail .vlabel {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.bcol-rail:hover,
+.bcol-rail:focus-visible {
+  background: var(--hover);
+}
+
+.bcol-rail:hover .vlabel,
+.bcol-rail:focus-visible .vlabel {
+  color: var(--ink);
+}
+
+/* The archive is a rail on the board but not a stage, so it takes the
+   structural hairline rather than a hue — pipeline colour stays reserved for
+   pipeline state. */
+.bcol-rail.rail-archived,
+.bcol.rail-archived {
+  --sc: var(--rule);
+  --sc-ink: var(--muted);
+}
+
+/* An open column's header is centred over its cards, the stage name in its
+   own ink and the count beside it — the header is the whole affordance, so
+   the flanking marks say it can be closed. */
+.bcol > .bcol-head {
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bcol > .bcol-head::before {
+  display: none;
+}
+
+.bcol-fold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--sc-ink, var(--muted));
+  cursor: pointer;
+}
+
+.bcol-fold svg {
+  color: var(--faint);
+}
+
+.bcol-fold:hover,
+.bcol-fold:focus-visible {
+  color: var(--ink);
+}
+
+/* The count rides beside the name here rather than being the column's
+   display figure — the header is centred, so a figure pushed to the far
+   right would break the centre line it sits on. */
+.bcol > .bcol-head > .n {
+  margin-left: 0;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--faint);
+}
+
+/* Each open live stage leads with its add block, so adding lands in the
+   stage you are looking at. Closed stages and the archive get none: nothing
+   is created straight into them. */
+.bcol-add {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.7rem;
+  padding: 1rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
 
 /* Folded rail (#535 shell): a stage you are not working in turns its label
    on its side so the horizontal room goes to the stages you are. It stays a
@@ -4962,6 +5065,11 @@ button:not(:disabled):active,
 }
 
 .btitle {
+  /* Titles get pasted, and a pasted job-board URL has no space in it to
+     break at. Without this it runs 110px past the card and the card clips
+     it mid-word. No hyphens: a broken URL is normal, a hyphenated one is
+     wrong. */
+  overflow-wrap: anywhere;
   margin: 0;
   padding: 0.6rem 0.75rem 0.35rem;
   font-size: var(--text-body);
@@ -5017,18 +5125,6 @@ button:not(:disabled):active,
 /* ⋯ menu: extracted into the owned CardMenu component — see
    src/components/CardMenu.css (.zui-cardmenu*). */
 
-/* archived modal */
-.archived-modal { max-width: 30rem; }
-.archived-head { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.7rem; }
-.archived-head h2 { margin: 0; font-size: var(--text-title); }
-.archived-list { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow-y: auto; }
-.archived-list li { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0; border-top: 1px solid var(--border); }
-.archived-list li:first-child { border-top: none; }
-.archived-open { flex: 1; min-width: 0; text-align: left; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; }
-.archived-title { font-weight: 560; font-size: var(--text-body); color: var(--ink); }
-.archived-co { font-size: var(--text-meta); }
-.archived-reason { font-family: var(--mono); font-size: var(--text-chrome); text-transform: uppercase; letter-spacing: var(--track-eyebrow); color: var(--muted); white-space: nowrap; }
-.archived-restore { border: none; background: none; color: var(--accent-ink); cursor: pointer; font-size: var(--text-meta); white-space: nowrap; }
 
 /* mobile: snap-scroll columns instead of stacking (#346) */
 /* The narrow board's carousel lives with the rest of the board (search for
@@ -5080,6 +5176,40 @@ button:not(:disabled):active,
   .content {
     padding: 0;
     margin: 0;
+  }
+
+  /* The plate is a screen device: it mounts the card and carries the stage
+     as a wash. On paper it is a slab of ink around the content, and a tint
+     says nothing in monochrome. The tools and the action row go with it —
+     they are things to click. */
+  .detail-plate {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .detail-tools,
+  .detail-plate-actions {
+    display: none !important;
+  }
+
+  /* The CV's own plate and tools are described in @layer components
+     (src/cv/cv.css), which this layer cannot override at any specificity —
+     their print rules live there with them. */
+
+  /* The blanket `button` hide above took the stage rail with it, and with it
+     the one thing a printed application has to say: where it stands. The
+     current stage prints as a plain word; the seven it could move to do not,
+     because on paper they are not choices. */
+  .detail-rail button {
+    display: none !important;
+  }
+
+  .detail-rail button.current {
+    display: block !important;
+    background: none;
+    color: var(--print-ink);
+    padding: 0;
   }
 
   /* Let a detail modal print as a normal full-width page instead of a

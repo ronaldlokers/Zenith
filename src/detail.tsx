@@ -303,17 +303,21 @@ export function ApplicationDetailModal({
               {/* The stage rail lives inside the card, level with the title:
                   where this stands is the first thing the page answers, and a
                   dropdown hides seven of the eight answers behind a click. */}
+              {/* Buttons that each perform a move, not radios. A radio group
+                  is one tab stop where the arrows move focus AND select — here
+                  that would write a stage change to the history on every
+                  keypress. These are individually tabbable and say which one
+                  is current instead. */}
               <div
                 className="detail-rail"
-                role="radiogroup"
+                role="group"
                 aria-label={t("detail.status")}
               >
                 {STATUSES.map((sName) => (
                   <button
                     key={sName}
                     type="button"
-                    role="radio"
-                    aria-checked={a.status === sName}
+                    aria-pressed={a.status === sName}
                     className={`detail-rail-step stage-${sName}${a.status === sName ? " current" : ""}`}
                     onClick={() => onStatus(a.id, sName)}
                   >
@@ -678,7 +682,7 @@ export function ApplicationDetailModal({
                 <Chip key={tg.id}>
                   <button
                     className="chip-move"
-                    aria-label={t("cv.moveUp")}
+                    aria-label={t("cv.moveUpNamed", { name: tg.name })}
                     disabled={i === 0}
                     onClick={() => moveTag(i, -1)}
                   >
@@ -686,7 +690,7 @@ export function ApplicationDetailModal({
                   </button>
                   <button
                     className="chip-move"
-                    aria-label={t("cv.moveDown")}
+                    aria-label={t("cv.moveDownNamed", { name: tg.name })}
                     disabled={i === a.tags.length - 1}
                     onClick={() => moveTag(i, 1)}
                   >
@@ -707,6 +711,7 @@ export function ApplicationDetailModal({
                 </Chip>
               ))}
               <input
+                aria-label={t("detail.addTag")}
                 placeholder={t("detail.addTag")}
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
@@ -844,11 +849,6 @@ export function ApplicationDetailModal({
             <ActionBar variant="detail">
               <Button variant="secondary" onClick={() => setEditing(true)}>
                 {t("common.edit")}
-              </Button>
-              <Button variant="secondary" disabled={printingCheatSheet} onClick={printCheatSheet}>
-                {printingCheatSheet
-                  ? t("detail.cheatSheet.printing")
-                  : t("detail.cheatSheet.print")}
               </Button>
               <Button
                 variant="secondary"

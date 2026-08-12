@@ -587,7 +587,7 @@ export function FeedTab({
           {t("feed.pulledFrom")}
         </p>
         <Button variant="secondary" onClick={onOpenSettings}>
-          {t("feed.settings")}
+          {t("feed.settingsBtn")}
         </Button>
         <Button variant="primary" disabled={refreshing} onClick={refresh}>
           {refreshing ? t("feed.checking") : t("feed.checkNow")}
@@ -683,7 +683,7 @@ export function FeedTab({
                   ? ` · ${formatDate(focusedItem.posted_at)}`
                   : ""}
               </span>
-              <h3>{focusedItem.title}</h3>
+              <h2>{focusedItem.title}</h2>
               <p className="feed-detail-co muted">
                 {[focusedItem.company, focusedItem.location]
                   .filter(Boolean)

@@ -94,13 +94,14 @@ export function TailorPanel({
   };
 
   return (
-    <section className="cv-tailor">
+    <section className="cv-tailor" id="cv-tailor">
       <h3>{t("cv.tailorTitle")}</h3>
       <p className="muted small">{t("cv.tailorHint")}</p>
       <AiKeyGate>
       <textarea
         className="cv-tailor-input"
         rows={4}
+        aria-label={t("cv.tailorPlaceholder")}
         placeholder={t("cv.tailorPlaceholder")}
         value={jd}
         onChange={(e) => setJd(e.target.value)}

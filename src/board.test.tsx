@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Application, Profile, Status } from "./types";
 import { PipelineTab } from "./board";
 // Side-effect: initializes i18next so `t()` renders real copy instead of keys.
@@ -13,11 +13,13 @@ import "./i18n";
 // gate.
 let savedFolded: string[] | null = null;
 let profileFolded: string | null = null;
+let saveFails = false;
 
 vi.mock("./api", () => ({
   api: {
     profile: () => Promise.resolve({ board_folded: profileFolded } as Profile),
     setBoardFolded: (folded: string[]) => {
+      if (saveFails) return Promise.reject(new Error("nope"));
       savedFolded = folded;
       return Promise.resolve({ board_folded: folded });
     },
@@ -74,6 +76,7 @@ function renderBoard(
   applications: Application[],
   over: {
     onOpenQuickAdd?: (stage?: Status) => void;
+    onError?: (message: string | null) => void;
     notify?: (m: string, undo?: () => void, label?: string) => void;
     // Router state, so the "Closed applications" entry point can be exercised.
     state?: unknown;
@@ -87,7 +90,7 @@ function renderBoard(
       contacts={[]}
       roleTypes={[]}
       onChanged={() => Promise.resolve()}
-      onError={() => {}}
+      onError={over.onError ?? (() => {})}
       notify={over.notify ?? (() => {})}
       onDelete={() => {}}
       onStatus={() => {}}
@@ -111,6 +114,13 @@ const headerFor = (stage: string) =>
   screen.queryByRole("button", { name: `Fold ${stage}` });
 
 describe("board rails", () => {
+  // The fold cache is a paint cache; a test that does not care about it must
+  // start without one, or it inherits the previous test's board.
+  beforeEach(() => {
+    localStorage.removeItem("zenith_board_folded");
+    saveFails = false;
+  });
+
   test("carries all eight stages plus the archive", async () => {
     profileFolded = null;
     renderBoard([]);
@@ -146,6 +156,7 @@ describe("board rails", () => {
   });
 
   test("opening a rail persists the whole folded set", async () => {
+    localStorage.removeItem("zenith_board_folded");
     profileFolded = null;
     savedFolded = null;
     renderBoard([]);
@@ -196,8 +207,14 @@ describe("board rails", () => {
       profileFolded = "rejected,withdrawn,ghosted,archived";
       renderBoard([]);
       // Every rail is an open column here — the header is still in the DOM
-      // (CSS hides it at this width), but no rail is folded away.
-      await waitFor(() => expect(screen.getAllByRole("tab")).toHaveLength(9));
+      // (CSS hides it at this width), but no rail is folded away. The strip
+      // is a group of buttons rather than a tablist: every column is
+      // rendered, so nothing here selects a panel.
+      const strip = await screen.findByRole("group", { name: "Stages" });
+      expect(strip.querySelectorAll("button")).toHaveLength(9);
+      expect(
+        strip.querySelectorAll("[aria-current=true]"),
+      ).toHaveLength(1);
       expect(railFor("Rejected")).toBeNull();
       expect(headerFor("Rejected")).toBeTruthy();
     } finally {
@@ -232,10 +249,178 @@ describe("board rails", () => {
     await waitFor(() => expect(headerFor("Interested")).toBeTruthy());
   });
 
+  test("paints from the last known fold state, not the defaults", async () => {
+    // The server copy is authoritative but arrives on a request. Painting
+    // the defaults first meant the board rearranged itself a second after it
+    // appeared — and a click in that window lands on the wrong column.
+    localStorage.setItem("zenith_board_folded", "interested,applied");
+    profileFolded = "interested,applied";
+    renderBoard([]);
+    // Synchronous first paint: no waitFor, because the point is that this is
+    // true before anything resolves.
+    expect(railFor("Interested")).toBeTruthy();
+    expect(railFor("Applied")).toBeTruthy();
+    expect(headerFor("Rejected")).toBeTruthy();
+  });
+
+  test("caches what the server says, so the next visit paints it", async () => {
+    localStorage.removeItem("zenith_board_folded");
+    profileFolded = "ghosted";
+    renderBoard([]);
+    await waitFor(() =>
+      expect(localStorage.getItem("zenith_board_folded")).toBe("ghosted"),
+    );
+  });
+
+  // Drag-and-drop is the board's headline interaction and had no coverage at
+  // all: "a folded rail still accepts a dropped card" was asserted in the
+  // design doc, in a code comment and in a PR body, and never once run.
+  // Driving it through a real browser is possible but fragile — Playwright's
+  // dragTo silently declined to arm HTML5 drag on one of the two paths and
+  // reported the feature broken — so the contract is pinned here instead.
+  function drop(target: Element, id: number) {
+    const data = new Map([["text/plain", String(id)]]);
+    const dataTransfer = {
+      getData: (k: string) => data.get(k) ?? "",
+      setData: (k: string, v: string) => void data.set(k, v),
+      effectAllowed: "move",
+    };
+    const ev = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(ev, "dataTransfer", { value: dataTransfer });
+    fireEvent(target, ev);
+  }
+
+  test("a folded rail accepts a dropped card", async () => {
+    profileFolded = null;
+    const moves: [number, string][] = [];
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/board" }]}>
+        <PipelineTab
+          applications={[app({ id: 4, status: "interested" })]}
+          companies={[]}
+          contacts={[]}
+          roleTypes={[]}
+          onChanged={() => Promise.resolve()}
+          onError={() => {}}
+          notify={() => {}}
+          onDelete={() => {}}
+          onStatus={(id, status) => moves.push([id, status])}
+          lastInteractions={[]}
+          history={[]}
+          onSaveOutcome={() => {}}
+          onOpenJob={() => {}}
+          onOpenQuickAdd={() => {}}
+          onOpenSampleData={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    const rail = await waitFor(() => railFor("Rejected")!);
+    drop(rail, 4);
+    expect(moves).toEqual([[4, "rejected"]]);
+  });
+
+  test("dropping a card on the rail it already sits on does nothing", async () => {
+    profileFolded = "";
+    const moves: [number, string][] = [];
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/board" }]}>
+        <PipelineTab
+          applications={[app({ id: 5, status: "applied" })]}
+          companies={[]}
+          contacts={[]}
+          roleTypes={[]}
+          onChanged={() => Promise.resolve()}
+          onError={() => {}}
+          notify={() => {}}
+          onDelete={() => {}}
+          onStatus={(id, status) => moves.push([id, status])}
+          lastInteractions={[]}
+          history={[]}
+          onSaveOutcome={() => {}}
+          onOpenJob={() => {}}
+          onOpenQuickAdd={() => {}}
+          onOpenSampleData={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    const header = await waitFor(() => headerFor("Applied")!);
+    drop(header.closest(".bcol")!, 5);
+    expect(moves).toEqual([]);
+  });
+
+  test("arrow keys walk the stage strip, but not while typing", async () => {
+    // The narrow board is a carousel; the arrows are how it is worked from a
+    // keyboard. Verified in a browser (the board scrolls 0 → 312 → 661), but
+    // the guard is the part worth pinning: without it, typing "→" in the
+    // search box would scroll the board out from under the search.
+    const narrow = ((query: string) => ({
+      matches: query.includes("max-width"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    const real = window.matchMedia;
+    window.matchMedia = narrow;
+    try {
+      profileFolded = "";
+      const { container } = renderBoard([]);
+      const current = () =>
+        container.querySelector(".stage-chip[aria-current=true]")?.textContent?.trim();
+      await waitFor(() => expect(current()).toContain("Interested"));
+
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+      expect(current()).toContain("Applied");
+      fireEvent.keyDown(window, { key: "ArrowLeft" });
+      expect(current()).toContain("Interested");
+
+      const search = container.querySelector("input.search")!;
+      search.dispatchEvent(new FocusEvent("focus"));
+      Object.defineProperty(document, "activeElement", {
+        value: search,
+        configurable: true,
+      });
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+      expect(current()).toContain("Interested");
+    } finally {
+      window.matchMedia = real;
+    }
+  });
+
+  test("puts the board back when the save is refused", async () => {
+    // A fold that stays on screen after the server refused it reverts on the
+    // next load with no explanation — and the paint cache, whose whole job is
+    // to predict what the server will say, is left holding a value the server
+    // refused.
+    profileFolded = "";
+    const errors: (string | null)[] = [];
+    saveFails = true;
+    renderBoard([], { onError: (m) => errors.push(m) });
+    await waitFor(() => expect(headerFor("Offer")).toBeTruthy());
+
+    fireEvent.click(headerFor("Offer")!);
+    await waitFor(() => expect(errors).toEqual(["nope"]));
+    expect(headerFor("Offer"), "the fold should have been undone").toBeTruthy();
+    expect(localStorage.getItem("zenith_board_folded")).toBe("");
+  });
+
+  test("an empty board offers one way in, not one per stage", async () => {
+    // Five identical primary buttons and no cards is a first-run screen
+    // saying the same thing five times. The add blocks are for filing into a
+    // particular stage, which needs a board to be working in first.
+    profileFolded = "";
+    renderBoard([]);
+    await waitFor(() => expect(headerFor("Interested")).toBeTruthy());
+    expect(
+      screen.queryAllByRole("button", { name: "+ Add an application" }),
+    ).toHaveLength(0);
+  });
+
   test("the add block opens on the stage it sits in, and closed stages get none", async () => {
     profileFolded = "";
     const opened: (Status | undefined)[] = [];
-    renderBoard([], { onOpenQuickAdd: (s) => opened.push(s) });
+    renderBoard([app({ id: 7, status: "applied" })], {
+      onOpenQuickAdd: (s) => opened.push(s),
+    });
     await waitFor(() => expect(headerFor("Screening")).toBeTruthy());
     const adds = screen.getAllByRole("button", { name: "+ Add an application" });
     // One per live stage: nothing is created straight into a closed stage or

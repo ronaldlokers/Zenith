@@ -76,3 +76,16 @@ export const WithIcon: Story = {
     </div>
   ),
 };
+
+// A label that can outgrow its column. Off by default: a button that changes
+// height is usually a layout bug — but at 200% text a nowrap label ran past
+// the viewport, which WCAG 1.4.4 counts as lost content.
+export const Wrapping: Story = {
+  render: () => (
+    <div style={{ width: "12rem", border: "1px dashed var(--rule)" }}>
+      <Button variant="secondary" wrap>
+        Download offer comparison (PDF)
+      </Button>
+    </div>
+  ),
+};

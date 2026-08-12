@@ -158,6 +158,11 @@ export function useGlobalShortcuts(handlers: {
   ref.current = handlers;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // A screen that owns a key gets to keep it. These are app-wide
+      // fallbacks, and a feature handler that already called preventDefault
+      // has said the keystroke was for it — acting anyway is how the feed's
+      // "a" started navigating people off the feed mid-triage.
+      if (e.defaultPrevented) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         ref.current.onTogglePalette();
@@ -187,7 +192,7 @@ export function useGlobalShortcuts(handlers: {
             ref.current.onOpenSettings();
             return;
           }
-          if (e.key === "a" && ref.current.onShowClosed) {
+          if (e.key === "c" && ref.current.onShowClosed) {
             e.preventDefault();
             ref.current.onShowClosed();
             return;

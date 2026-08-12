@@ -21,6 +21,8 @@ import type { BoardRail, BoardSort, Urgency } from "./format";
 import {
   ageDays,
   BOARD_RAILS,
+  readFoldCache,
+  writeFoldCache,
   formatDate,
   DEFAULT_FOLDED,
   isDead,
@@ -157,6 +159,7 @@ function BoardTab({
   folded,
   onToggleFold,
   onAdd,
+  showAddBlocks,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -174,6 +177,11 @@ function BoardTab({
   folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
   onAdd: (stage: Status) => void;
+  // False on a board with nothing on it yet: the add blocks are for filing
+  // into a particular stage, which only means something once there is a
+  // board to work. Five identical primary buttons and no cards is a
+  // first-run screen shouting the same thing five times.
+  showAddBlocks: boolean;
 }) {
   const { t } = useTranslation();
   const move = (a: Application, status: string) =>
@@ -350,8 +358,18 @@ function BoardTab({
 
   return (
     <>
+    {/* A group of buttons, not a tablist. Every column is rendered and the
+        neighbours are deliberately visible at the edges, so nothing here
+        selects a panel and hides the rest — the strip says where the board is
+        scrolled to and scrolls it somewhere else. Announcing "tab 4 of 9,
+        selected" would promise a panel that does not exist. */}
     {isNarrow && (
-      <div className="stage-strip" role="tablist" ref={stripRef}>
+      <div
+        className="stage-strip"
+        role="group"
+        aria-label={t("board.stageStrip")}
+        ref={stripRef}
+      >
         {BOARD_RAILS.map((rail) => (
           <button
             key={rail}
@@ -360,8 +378,7 @@ function BoardTab({
               else chipRefs.current.delete(rail);
             }}
             type="button"
-            role="tab"
-            aria-selected={activeRail === rail}
+            aria-current={activeRail === rail ? "true" : undefined}
             className={`stage-chip stage-${rail} rail-${rail}${activeRail === rail ? " active" : ""}`}
             onClick={() => scrollToRail(rail)}
           >
@@ -445,7 +462,10 @@ function BoardTab({
             className={`bcol rail-${rail} stage-${rail}${over}`}
             {...dropProps}
           >
-            <div className="bcol-head">
+            {/* The stage is a heading: without it the board hands a screen
+                reader fifteen card titles and no structure to hang them on,
+                and the outline skips h1 straight to h3. */}
+            <h2 className="bcol-head">
               <button
                 type="button"
                 className="bcol-fold"
@@ -457,7 +477,7 @@ function BoardTab({
                 {label}
               </button>
               <span className="n">{count}</span>
-            </div>
+            </h2>
             {live && (
               <div className="bcol-prop" aria-hidden="true">
                 <i
@@ -467,7 +487,7 @@ function BoardTab({
               </div>
             )}
             <div className="bcol-cards">
-              {live && (
+              {live && showAddBlocks && (
                 <div className="bcol-add">
                   <Button variant="primary" onClick={() => onAdd(rail as Status)}>
                     {t("board.addHere")}
@@ -568,9 +588,13 @@ export function PipelineTab({
   // Which rails are folded (#535 shell). Kept on profile so it follows you
   // between devices; the defaults stand in until that lands, which is what
   // someone who has never folded anything would see anyway.
-  const [folded, setFolded] = useState<Set<BoardRail>>(
-    () => new Set(DEFAULT_FOLDED),
-  );
+  // Paint from the last known answer, not from the defaults: the server copy
+  // is authoritative but arrives on a request, and a board that rearranges
+  // itself a second after it appears is worse than one that starts stale.
+  const [folded, setFolded] = useState<Set<BoardRail>>(() => {
+    const cached = readFoldCache();
+    return new Set((cached ?? DEFAULT_FOLDED) as BoardRail[]);
+  });
   // Set once "Closed applications" has rearranged the board: the profile
   // read resolves after it, and without this it would put the live stages
   // straight back.
@@ -584,7 +608,9 @@ export function PipelineTab({
         // NULL means never set, so the defaults apply; the empty string
         // means someone deliberately unfolded everything.
         if (p.board_folded == null) return;
-        setFolded(new Set(p.board_folded.split(",").filter(Boolean) as BoardRail[]));
+        const next = p.board_folded.split(",").filter(Boolean);
+        writeFoldCache(next);
+        setFolded(new Set(next as BoardRail[]));
       })
       .catch(() => {
         // A failed read leaves the defaults in place — the board is still
@@ -595,19 +621,27 @@ export function PipelineTab({
     };
   }, []);
   const applyFold = useCallback(
-    (next: Set<BoardRail>) => {
+    (next: Set<BoardRail>, previous: Set<BoardRail>) => {
       overridden.current = true;
       setFolded(next);
-      api
-        .setBoardFolded(BOARD_RAILS.filter((r) => next.has(r)))
-        .catch((e) => onError((e as Error).message));
+      const ordered = BOARD_RAILS.filter((r) => next.has(r));
+      writeFoldCache(ordered);
+      api.setBoardFolded(ordered).catch((e) => {
+        // Put the board back. A rejected save that leaves the fold on screen
+        // reverts on the next load with no explanation, and the cache — whose
+        // whole job is to predict what the server will say — is left holding
+        // a value the server refused.
+        setFolded(previous);
+        writeFoldCache(BOARD_RAILS.filter((r) => previous.has(r)));
+        onError((e as Error).message);
+      });
     },
     [onError],
   );
   const toggleFold = (rail: BoardRail) => {
     const next = new Set(folded);
     if (!next.delete(rail)) next.add(rail);
-    applyFold(next);
+    applyFold(next, folded);
   };
 
   // "Closed applications" from the menu (A) — there is no Archive screen, so
@@ -620,8 +654,12 @@ export function PipelineTab({
   useEffect(() => {
     if (!showClosed) return;
     const before = new Set(folded);
-    applyFold(new Set<BoardRail>(PIPELINE));
-    notify(t("board.showingClosed"), () => applyFold(before), t("board.backToLive"));
+    applyFold(new Set<BoardRail>(PIPELINE), before);
+    notify(
+      t("board.showingClosed"),
+      () => applyFold(before, new Set<BoardRail>(PIPELINE)),
+      t("board.backToLive"),
+    );
     // Consume it, or every later visit to the board reopens the closed view.
     navigate("/board", { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -996,6 +1034,7 @@ export function PipelineTab({
         folded={folded}
         onToggleFold={toggleFold}
         onAdd={onOpenQuickAdd}
+        showAddBlocks={applications.length > 0}
       />
 
 

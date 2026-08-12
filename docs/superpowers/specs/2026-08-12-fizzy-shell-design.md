@@ -92,7 +92,10 @@ keystroke away. They ship together or the change does not ship.
 - **Top:** one circular icon button per corner (all applications, settings),
   centred wordmark with the real mark from `public/logo.svg` at 25px — it
   carries three rungs and a star and is mush below about 22px.
-- **Title:** centred, `2rem` at ≥900px, with the hairline flanking it.
+- **Title:** centred, with the hairline flanking it. It takes `--text-display`
+  (2.125rem at ≥900px) rather than the `2rem` this doc first said: the size
+  comes off the type ramp, and a literal here would be the only figure on the
+  page that does not.
 - **Bottom bar:** fixed, three slots — Pinned · Search · Notifications. Labels
   and keycaps at ≥700px; icons and a count badge below that.
 
@@ -117,8 +120,13 @@ icon, label, live count and shortcut; the rest are compact rows.
 **There is no Archive screen.** A closed application is still in the
 pipeline — it has simply stopped moving — so the three terminal stages are
 stages on the board, folded by default. The menu's "Closed applications"
-row (`A`) folds the live stages and opens the closed ones; the toast offers
-"Back to live". A closed stage offers no add block and no watch toggle,
+row folds the live stages and opens the closed ones; the toast offers
+"Back to live".
+
+The key is `C`, not the `A` this doc first proposed: the feed has answered
+to `a` since #144 and prints it on its own help line, so the global
+shortcut was navigating people off the feed mid-triage. A global fallback
+that takes a screen's key is worse than one that is harder to remember. A closed stage offers no add block and no watch toggle,
 because neither means anything there.
 
 The cost accepted: the board's narrow strip carries eight entries rather

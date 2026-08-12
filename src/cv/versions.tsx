@@ -40,11 +40,13 @@ export function CvVariantRail({
   };
 
   return (
-    <div className="cv-rail" role="radiogroup" aria-label={t("cvVersions.title")}>
+    // Buttons rather than radios, for the same reason the detail page's stage
+    // rail is: a radio group is one tab stop whose arrows move focus and
+    // select together, and these are individually tabbable actions.
+    <div className="cv-rail" role="group" aria-label={t("cvVersions.title")}>
       <button
         type="button"
-        role="radio"
-        aria-checked={activeId === null}
+        aria-pressed={activeId === null}
         className={`cv-rail-step${activeId === null ? " current" : ""}`}
         onClick={() => onSelect(null)}
       >
@@ -54,8 +56,7 @@ export function CvVariantRail({
         <span className="cv-rail-row" key={v.id}>
           <button
             type="button"
-            role="radio"
-            aria-checked={activeId === v.id}
+            aria-pressed={activeId === v.id}
             className={`cv-rail-step${activeId === v.id ? " current" : ""}`}
             onClick={() => onSelect(v.id)}
           >

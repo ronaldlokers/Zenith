@@ -9,8 +9,9 @@
     "companies": "Bedrijven",
     "people": "Contacten",
     "cv": "CV",
-    "network": "Netwerk",
-    "pipeline": "Pijplijn"
+    "network": "Mensen & bedrijven",
+    "pipeline": "Pijplijn",
+    "activity": "Activiteit"
   },
   "today": {
     "needYou_one": "taak wacht op je vandaag",
@@ -200,7 +201,8 @@
     "keyShortcuts": "Enkele-toets sneltoetsen (n, /)",
     "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
     "timezone": "Tijdzone",
-    "timezoneNow": "{{time}} op dit moment"
+    "timezoneNow": "{{time}} op dit moment",
+    "notSet": "Niet ingesteld"
   },
   "admin": {
     "title": "Beheer",
@@ -239,7 +241,8 @@
       "look": "Het bekijken waard",
       "weak": "Zwak"
     },
-    "postedAge": "{{age}} geleden"
+    "postedAge": "{{age}} geleden",
+    "settingsBtn": "Feedbronnen"
   },
   "stats": {
     "momentum": {
@@ -326,7 +329,9 @@
     "weeklyGoalLabel": "Wekelijks sollicitatiedoel",
     "searchStartLabel": "Zoektocht gestart",
     "searchWeek_one": "Week {{count}} van je zoektocht",
-    "searchWeek_other": "Week {{count}} van je zoektocht"
+    "searchWeek_other": "Week {{count}} van je zoektocht",
+    "weeklyGoalValue_one": "{{count}}",
+    "weeklyGoalValue_other": "{{count}}"
   },
   "templates": {
     "outreachHeading": "Contact opnemen",
@@ -598,7 +603,11 @@
       "native": "Moedertaal"
     },
     "itemMenu": "Acties voor {{title}}",
-    "editBelow": "Hieronder bewerken"
+    "editBelow": "Hieronder bewerken",
+    "matchPosting": "Vergelijk met vacature",
+    "moveUpNamed": "{{name}} omhoog",
+    "moveDownNamed": "{{name}} omlaag",
+    "proficiencyLabel": "Niveau"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
@@ -809,7 +818,8 @@
     "foldRail": "{{stage}} inklappen",
     "unfoldRail": "{{stage}} openen, {{count}} sollicitaties",
     "showingClosed": "Gesloten sollicitaties worden getoond",
-    "backToLive": "Terug naar actief"
+    "backToLive": "Terug naar actief",
+    "stageStrip": "Fases"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

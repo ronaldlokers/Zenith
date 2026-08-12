@@ -9,8 +9,9 @@
     "companies": "Companies",
     "people": "People",
     "cv": "CV",
-    "network": "Network",
-    "pipeline": "Pipeline"
+    "network": "People & companies",
+    "pipeline": "Pipeline",
+    "activity": "Activity"
   },
   "today": {
     "needYou_one": "thing needs you today",
@@ -200,7 +201,8 @@
     "keyShortcuts": "Single-key shortcuts (n, /)",
     "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
     "timezone": "Time zone",
-    "timezoneNow": "{{time}} right now"
+    "timezoneNow": "{{time}} right now",
+    "notSet": "Not set"
   },
   "admin": {
     "title": "Admin",
@@ -239,7 +241,8 @@
       "look": "Worth a look",
       "weak": "Weak"
     },
-    "postedAge": "{{age}} ago"
+    "postedAge": "{{age}} ago",
+    "settingsBtn": "Feed sources"
   },
   "stats": {
     "momentum": {
@@ -326,7 +329,9 @@
     "weeklyGoalLabel": "Weekly application goal",
     "searchStartLabel": "Search started",
     "searchWeek_one": "Week {{count}} of your search",
-    "searchWeek_other": "Week {{count}} of your search"
+    "searchWeek_other": "Week {{count}} of your search",
+    "weeklyGoalValue_one": "{{count}}",
+    "weeklyGoalValue_other": "{{count}}"
   },
   "templates": {
     "outreachHeading": "Outreach",
@@ -598,7 +603,11 @@
       "native": "Native"
     },
     "itemMenu": "Actions for {{title}}",
-    "editBelow": "Edit below"
+    "editBelow": "Edit below",
+    "matchPosting": "Match to a posting",
+    "moveUpNamed": "Move {{name}} up",
+    "moveDownNamed": "Move {{name}} down",
+    "proficiencyLabel": "Proficiency"
   },
   "posting": {
     "staleHint": "This posting may no longer be live — worth a quick check."
@@ -809,7 +818,8 @@
     "foldRail": "Fold {{stage}}",
     "unfoldRail": "Open {{stage}}, {{count}} applications",
     "showingClosed": "Showing closed applications",
-    "backToLive": "Back to live"
+    "backToLive": "Back to live",
+    "stageStrip": "Stages"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
