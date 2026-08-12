@@ -78,6 +78,11 @@
   --faint: #6f6c7a;
   --danger-text: #ffffff;
   --border: #e7e4db;
+  /* Structural hairline, distinct from --border. The Fizzy-philosophy shell
+     is carried by 1px rules on the paper ground, and #e7e4db disappears at
+     that weight — this is the one that has to be seen (see
+     docs/superpowers/specs/2026-08-12-fizzy-shell-design.md). */
+  --rule: #cfc9b9;
   --line: #efece4;
   --track: #efece4;
   --hover: color-mix(in srgb, var(--ink) 6%, var(--surface));
@@ -99,7 +104,16 @@
   --info: #4a6ea3;
   --scrim: rgba(20, 23, 58, 0.45);
 
-  /* Stage state renders as a tinted field, not an edge (#494): the row is
+  /* No token exists for "text on a stage FILL", and none can. Measured
+     against all five Ascent hues, the best available ink is white at a worst
+     case of 3.62:1 (interview) — Night ink is worse at 2.37:1, paper worse
+     still. That is not a gap to close: the hues are tuned to clear 4.5:1 as
+     label TEXT on paper, which makes them mid-tone by construction, and a
+     mid-tone cannot also be a reliable ground for either a light or a dark
+     ink. So stage colour is a tint, a ring or an edge — never a filled
+     ground with type on it. See the Fizzy-shell design doc.
+
+     Stage state renders as a tinted field, not an edge (#494): the row is
      washed in its stage hue instead of carrying a 3px bar on its leading
      side. Two strengths — rest and hover — so no rule has to do arithmetic
      inside color-mix(). The uppercase stage label stays in every row, so
@@ -204,131 +218,7 @@
   --shadow-2: 0 4px 14px -3px rgba(20, 23, 58, 0.12),
     0 16px 40px -10px rgba(20, 23, 58, 0.2);
 
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0f1130;
-    --surface: #191c40;
-    --surface-sunken: #14173a;
-    --ink: #ecebf4;
-    --muted: #9a9db8;
-    /* Lightened from #7f83a0 (#494): it measured 3.74:1 on a tinted card and
-       4.41:1 even on a plain one — the dark twin of the light-theme --faint
-       fix from #447, which was never applied here. #9296b0 clears 4.5:1 on
-       surface, bg, sunken and every stage-tinted ground. */
-    --faint: #9296b0;
-    --danger-text: #14173a;
-    --border: #2a2f5a;
-    --line: #242851;
-    --track: #242851;
-    --accent: #d6a441;
-    --accent-text: #14173a;
-    --accent-soft: rgba(214, 164, 65, 0.16);
-    --accent-ink: #e8c072;
-    --accent-on-ink: #e8c072;
-    /* Lightened from #d76a60 (#494): danger text sits on stage-tinted rows
-       now, where the old value measured 4.05:1. #e07d73 clears 4.5:1 on
-       surface, bg and every tinted ground. */
-    --danger: #e07d73;
-    --scrim: rgba(0, 0, 0, 0.6);
-
-    /* Lower than light on purpose: the dark stage hues are LIGHT, so the
-       wash raises the card's luminance and squeezes --muted text against it.
-       9% keeps the field readable and holds muted above 4.5:1 (measured). */
-    --stage-tint: 9%;
-    --stage-tint-hover: 16%;
-    --st-interested: #a4a8dd;
-    --st-applied: #6489a1;
-    --st-screening: #45b9ab;
-    --st-interview: #d1886f;
-    --st-offer: #efc17b;
-    --st-dead: #b3ada0;
-    --st-interested-ink: #a4a8dd;
-    --st-applied-ink: #7398af;
-    --st-screening-ink: #45b9ab;
-    --st-interview-ink: #d1886f;
-    --st-offer-ink: #efc17b;
-    --st-dead-ink: #b3ada0;
-
-    --success-ink: #6cc9a1;
-    --attention: #d9930a;
-    --attention-ink: #f0c070;
-  --heat-quiet: #e0a54a;
-    --heat-quiet-text: #f0c070;
-    --ev-touch: #9c82cf;
-
-    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35),
-      0 2px 10px -3px rgba(0, 0, 0, 0.45);
-    --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55),
-      0 18px 44px -10px rgba(0, 0, 0, 0.65);
-  }
-}
-
-:root[data-theme="light"] {
   color-scheme: light;
-}
-
-:root[data-theme="dark"] {
-  /* Explicit Dark — same palette as the OS-dark auto theme, so the two never
-     diverge. Wins over prefers-color-scheme via the attribute. */
-  --bg: #0f1130;
-  --surface: #191c40;
-  --surface-sunken: #14173a;
-  --ink: #ecebf4;
-  --muted: #9a9db8;
-  /* Lightened from #7f83a0 (#494): it measured 3.74:1 on a tinted card and
-     4.41:1 even on a plain one — the dark twin of the light-theme --faint
-     fix from #447, which was never applied here. #9296b0 clears 4.5:1 on
-     surface, bg, sunken and every stage-tinted ground. */
-  --faint: #9296b0;
-  --danger-text: #14173a;
-  --border: #2a2f5a;
-  --line: #242851;
-  --track: #242851;
-  --accent: #d6a441;
-  --accent-text: #14173a;
-  --accent-soft: rgba(214, 164, 65, 0.16);
-  --accent-ink: #e8c072;
-  --accent-on-ink: #e8c072;
-  /* Lightened from #d76a60 (#494): danger text sits on stage-tinted rows
-     now, where the old value measured 4.05:1. #e07d73 clears 4.5:1 on
-     surface, bg and every tinted ground. */
-  --danger: #e07d73;
-  --scrim: rgba(0, 0, 0, 0.6);
-
-  /* Lower than light on purpose: the dark stage hues are LIGHT, so the wash
-     raises the card's luminance and squeezes --muted text against it. 9%
-     keeps the field readable and holds muted above 4.5:1 (measured). */
-  --stage-tint: 9%;
-  --stage-tint-hover: 16%;
-  --st-interested: #a4a8dd;
-  --st-applied: #6489a1;
-  --st-screening: #45b9ab;
-  --st-interview: #d1886f;
-  --st-offer: #efc17b;
-  --st-dead: #b3ada0;
-  --st-interested-ink: #a4a8dd;
-  --st-applied-ink: #7398af;
-  --st-screening-ink: #45b9ab;
-  --st-interview-ink: #d1886f;
-  --st-offer-ink: #efc17b;
-  --st-dead-ink: #b3ada0;
-
-  --success-ink: #6cc9a1;
-  --attention: #d9930a;
-  --attention-ink: #f0c070;
-  --heat-quiet: #e0a54a;
-  --heat-quiet-text: #f0c070;
-  --ev-touch: #9c82cf;
-
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35),
-    0 2px 10px -3px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 6px 20px -4px rgba(0, 0, 0, 0.55),
-    0 18px 44px -10px rgba(0, 0, 0, 0.65);
-
-  color-scheme: dark;
 }
 
 * {
@@ -353,15 +243,6 @@ body {
    1px. It was global, so the light theme paid for the dark theme's benefit
    (#501). Scoped to the night ground; light renders with the platform
    default. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body {
-    -webkit-font-smoothing: antialiased;
-  }
-}
-:root[data-theme="dark"] body {
-  -webkit-font-smoothing: antialiased;
-}
-
 button,
 input,
 select,

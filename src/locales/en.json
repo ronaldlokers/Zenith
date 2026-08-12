@@ -176,8 +176,6 @@
     "languageEn": "English",
     "languageNl": "Nederlands",
     "cvLanguage": "CV output language",
-    "theme": "Theme",
-    "themeAuto": "Automatic (light/dark)",
     "shareLink": "Public share link",
     "generateLink": "Generate link",
     "regenerateLink": "Regenerate",
@@ -197,8 +195,6 @@
       "feed": "Feed sources"
     },
     "keyShortcuts": "Single-key shortcuts (n, /)",
-    "themeLight": "Light",
-    "themeDark": "Dark",
     "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
     "timezone": "Time zone",
     "timezoneNow": "{{time}} right now"

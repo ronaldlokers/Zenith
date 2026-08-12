@@ -1175,15 +1175,6 @@
   max-width: 11rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .filters select {
-    color: var(--muted);
-  }
-}
-:root[data-theme="dark"] .filters select {
-  color: var(--muted);
-}
-
 /* .toolbar select moved to the Toolbar component. */
 
 button.primary {
@@ -2208,16 +2199,6 @@ select.status {
   background: var(--sc);
   flex-shrink: 0;
   align-self: center;
-}
-
-@media (prefers-color-scheme: dark) {
-  /* Stage-color dots lose edge definition against the dark surface (#119) */
-  :root:not([data-theme="light"]) .bcol-head::before {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
-  }
-}
-:root[data-theme="dark"] .bcol-head::before {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 /* Toggle affordance (chevron, pointer cursor) only applies where the

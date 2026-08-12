@@ -176,8 +176,6 @@
     "languageEn": "English",
     "languageNl": "Nederlands",
     "cvLanguage": "CV-taal",
-    "theme": "Thema",
-    "themeAuto": "Automatisch (licht/donker)",
     "shareLink": "Openbare deel-link",
     "generateLink": "Link genereren",
     "regenerateLink": "Opnieuw genereren",
@@ -197,8 +195,6 @@
       "feed": "Feed-bronnen"
     },
     "keyShortcuts": "Enkele-toets sneltoetsen (n, /)",
-    "themeLight": "Licht",
-    "themeDark": "Donker",
     "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
     "timezone": "Tijdzone",
     "timezoneNow": "{{time}} op dit moment"

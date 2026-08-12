@@ -15,7 +15,8 @@ Personal job-hunt tracker. Invite-only, multi-user, ambition is a polished publi
 - **Responsive parity** — mobile is first-class, not an afterthought.
 - **Invite-only, no limits** — no sign-up form; no rate-limits/quotas for now.
 - **Stage colours are locked by property, not by value** — any five hues may ship provided every pair holds ΔE2000 ≥ 10 under normal vision and all three dichromacies, and each stage's `--sc-ink` clears 4.5:1 as label text on both grounds. `test-node/stage-palette.spec.ts` enforces it; don't hand-edit a stage token without running it. Stage hues stay reserved for pipeline state.
-- **Three themes:** Automatic (follows OS), Light, Dark (`data-theme` on the root; auto = no attribute). No other themes.
+- **Light only.** Automatic and Dark were removed (spec: `docs/superpowers/specs/2026-08-12-fizzy-shell-design.md`). There is no `data-theme` attribute and no `prefers-color-scheme` branch anywhere in the CSS; adding one back is a design decision, not a fix.
+- **Stage colour is a tint, a ring or an edge — never a filled ground with type on it.** Measured, no ink clears 4.5:1 on all five Ascent hues (best is white at 3.62:1 on interview). The hues are tuned to be readable *as* label text, which makes them mid-tone, and a mid-tone cannot also be a safe ground for type. `src/index.css` carries the numbers.
 
 ## Design: follow the mockup
 When a change has an approved mockup/artifact, **reproduce it faithfully** — match containers, radius, spacing, per-control size and shape, icons, where colour is spent (muted text vs coloured accents), full-bleed vs inset, and every state shown. **Do not assume the existing implementation already matches** — diff each element against the mockup and change what differs. Icons are line-art SVGs in the app's own style (24×24, `currentColor`, `strokeWidth` 2) — not emoji.

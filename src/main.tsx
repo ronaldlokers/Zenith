@@ -7,17 +7,11 @@ import App from './App.tsx'
 import { AuthGate } from './AuthGate.tsx'
 import { AiStatusProvider } from './ai-status.tsx'
 
-// Applied here (before React renders) rather than in a useEffect, so a
-// persisted theme choice doesn't flash the default theme first (#146).
-// Legacy "control-room" choices fold into explicit Dark (#346).
-{
-  const saved = localStorage.getItem('zenith_theme')
-  const theme = saved === 'control-room' ? 'dark' : saved
-  if (saved === 'control-room') localStorage.setItem('zenith_theme', 'dark')
-  if (theme === 'light' || theme === 'dark') {
-    document.documentElement.dataset.theme = theme
-  }
-}
+// Zenith is light-only (see docs/superpowers/specs/2026-08-12-fizzy-shell-design.md),
+// so there is no theme to apply before first paint. The legacy
+// `zenith_theme` key is deliberately left in localStorage rather than
+// cleared: nothing reads it, and leaving it costs nothing while making the
+// decision reversible without having to reconstruct anyone's preference.
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
