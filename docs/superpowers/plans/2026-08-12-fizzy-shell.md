@@ -70,7 +70,8 @@ loses its rail column.
 - Page title component with the flanking hairline.
 - **Shortcuts ship here, not later:** 1–6, `,`, C, S, P, N, A, Esc. They are
   what makes hiding the destinations defensible.
-- Route table loses `activity`; keeps `archive`.
+- Route table has seven entries. No `activity` route (merged into Today) and
+  no `archive` route (folded into the board).
 
 **Verify:** a keyboard test asserting every shortcut reaches its destination
 and `Esc` unwinds overlays then detail. Note this is the harness issue #517
