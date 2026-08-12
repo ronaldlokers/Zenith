@@ -266,6 +266,82 @@ describe("board rails", () => {
     );
   });
 
+  // Drag-and-drop is the board's headline interaction and had no coverage at
+  // all: "a folded rail still accepts a dropped card" was asserted in the
+  // design doc, in a code comment and in a PR body, and never once run.
+  // Driving it through a real browser is possible but fragile — Playwright's
+  // dragTo silently declined to arm HTML5 drag on one of the two paths and
+  // reported the feature broken — so the contract is pinned here instead.
+  function drop(target: Element, id: number) {
+    const data = new Map([["text/plain", String(id)]]);
+    const dataTransfer = {
+      getData: (k: string) => data.get(k) ?? "",
+      setData: (k: string, v: string) => void data.set(k, v),
+      effectAllowed: "move",
+    };
+    const ev = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(ev, "dataTransfer", { value: dataTransfer });
+    fireEvent(target, ev);
+  }
+
+  test("a folded rail accepts a dropped card", async () => {
+    profileFolded = null;
+    const moves: [number, string][] = [];
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/board" }]}>
+        <PipelineTab
+          applications={[app({ id: 4, status: "interested" })]}
+          companies={[]}
+          contacts={[]}
+          roleTypes={[]}
+          onChanged={() => Promise.resolve()}
+          onError={() => {}}
+          notify={() => {}}
+          onDelete={() => {}}
+          onStatus={(id, status) => moves.push([id, status])}
+          lastInteractions={[]}
+          history={[]}
+          onSaveOutcome={() => {}}
+          onOpenJob={() => {}}
+          onOpenQuickAdd={() => {}}
+          onOpenSampleData={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    const rail = await waitFor(() => railFor("Rejected")!);
+    drop(rail, 4);
+    expect(moves).toEqual([[4, "rejected"]]);
+  });
+
+  test("dropping a card on the rail it already sits on does nothing", async () => {
+    profileFolded = "";
+    const moves: [number, string][] = [];
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/board" }]}>
+        <PipelineTab
+          applications={[app({ id: 5, status: "applied" })]}
+          companies={[]}
+          contacts={[]}
+          roleTypes={[]}
+          onChanged={() => Promise.resolve()}
+          onError={() => {}}
+          notify={() => {}}
+          onDelete={() => {}}
+          onStatus={(id, status) => moves.push([id, status])}
+          lastInteractions={[]}
+          history={[]}
+          onSaveOutcome={() => {}}
+          onOpenJob={() => {}}
+          onOpenQuickAdd={() => {}}
+          onOpenSampleData={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    const header = await waitFor(() => headerFor("Applied")!);
+    drop(header.closest(".bcol")!, 5);
+    expect(moves).toEqual([]);
+  });
+
   test("an empty board offers one way in, not one per stage", async () => {
     // Five identical primary buttons and no cards is a first-run screen
     // saying the same thing five times. The add blocks are for filing into a
