@@ -42,6 +42,21 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  /* Now a button (#535 shell) — it opens the destination menu. Strip the UA
+     chrome so the wordmark still reads as the brand rather than a control,
+     and cancel the new padding with a matching negative margin so its
+     optical position on the bar is unchanged. */
+  padding: 0.2rem 0.35rem;
+  margin-inline-start: -0.35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  cursor: pointer;
+}
+
+.top-brand:hover {
+  border-color: var(--border);
+  background: var(--hover);
 }
 
 .top-brand span {

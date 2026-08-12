@@ -13,6 +13,7 @@ import {
   NavOverviewIcon,
   NavPipelineIcon,
   RemoveIcon,
+  SettingsIcon,
 } from "./icons";
 import { ConfirmHost } from "./ui";
 import { type Tab, TAB_PATHS, canonicalPath, parsePath } from "./routing";
@@ -54,6 +55,7 @@ import {
   PillTabs,
   QuickAddDialog,
   Skeleton,
+  WordmarkMenu,
 } from "./components";
 import { useAppData, useToasts } from "./app-data";
 import {
@@ -79,6 +81,7 @@ export default function App() {
     : (sessionUser?.email?.[0]?.toUpperCase() ?? "?");
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [jumpQuery, setJumpQuery] = useState("");
   const [onboardingProfile, setOnboardingProfile] = useState<Profile | null>(
     null,
@@ -123,6 +126,21 @@ export default function App() {
   useGlobalShortcuts({
     onTogglePalette: () => setShowPalette((v) => !v),
     onQuickAdd: () => setShowQuickAdd(true),
+    // 1-based, matching the keycaps the menu prints. Out-of-range keys are
+    // ignored rather than clamped: pressing 9 with six destinations should
+    // do nothing, not land on the last one.
+    onGoToIndex: (i) => {
+      const target = navItems[i - 1];
+      if (target) {
+        setTab(target.to);
+        setMenuOpen(false);
+      }
+    },
+    onOpenSettings: () => {
+      setTab("settings");
+      setMenuOpen(false);
+    },
+    onToggleMenu: () => setMenuOpen((v) => !v),
   });
 
   useEffect(() => {
@@ -294,6 +312,44 @@ export default function App() {
           ]}
         />
       )}
+      {menuOpen && (
+        <WordmarkMenu
+          destinations={navItems.map((n, i) => ({
+            id: n.data,
+            label: n.label,
+            shortcut: String(i + 1),
+            icon: n.icon,
+            active: n.active,
+          }))}
+          actions={[
+            {
+              id: "settings",
+              label: t("settings.title"),
+              // The keycaps print what the app actually answers to, not what
+              // the spec proposed: quick-add has been "n" since #285 and is
+              // documented in the shortcuts help, so the menu says "n".
+              shortcut: ",",
+              icon: <SettingsIcon />,
+              active: tab === "settings",
+            },
+            {
+              id: "quick-add",
+              label: t("toolbar.addJob"),
+              shortcut: "n",
+              icon: <span aria-hidden="true">+</span>,
+              active: false,
+            },
+          ]}
+          onSelect={(id) => {
+            setMenuOpen(false);
+            if (id === "settings") return setTab("settings");
+            if (id === "quick-add") return setShowQuickAdd(true);
+            const target = navItems.find((n) => n.data === id);
+            if (target) setTab(target.to);
+          }}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
       <Sidebar
         navItems={navItems}
         settingsActive={tab === "settings"}
@@ -313,6 +369,7 @@ export default function App() {
           onSearch={() => setShowPalette(true)}
           onOpenSettings={() => setTab("settings")}
           onQuickAdd={() => setShowQuickAdd(true)}
+          onOpenMenu={() => setMenuOpen(true)}
         />
         <MobileTabs
           navItems={navItems}

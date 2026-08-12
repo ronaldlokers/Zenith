@@ -117,6 +117,7 @@ export function TopBar({
   onSearch,
   onOpenSettings,
   onQuickAdd,
+  onOpenMenu,
 }: {
   scrolled: boolean;
   pageTitle: string;
@@ -124,14 +125,23 @@ export function TopBar({
   onSearch: () => void;
   onOpenSettings: () => void;
   onQuickAdd: () => void;
+  /** Opens the destination menu (#535 shell). */
+  onOpenMenu: () => void;
 }) {
   const { t } = useTranslation();
   return (
     <header className={`top${scrolled ? " scrolled" : ""}`}>
-      <span className="top-brand">
+      {/* The wordmark is the way into the destination menu (#535 shell).
+          It is still the brand mark — it has simply stopped being inert. */}
+      <button
+        className="top-brand"
+        onClick={onOpenMenu}
+        aria-haspopup="menu"
+        aria-label={t("menu.open")}
+      >
         <Logo size={22} />
         <span>Zenith</span>
-      </span>
+      </button>
       <h1 className="top-title">{pageTitle}</h1>
       <button
         className="cmdk"

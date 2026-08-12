@@ -145,6 +145,10 @@ export function useViewportBottomOffset() {
 export function useGlobalShortcuts(handlers: {
   onTogglePalette: () => void;
   onQuickAdd: () => void;
+  /** Jump to the nth destination (1-based, as the keycaps read). */
+  onGoToIndex?: (index: number) => void;
+  onOpenSettings?: () => void;
+  onToggleMenu?: () => void;
 }) {
   // Keep the listener bound once (like the original App effect): stash the
   // latest handlers in a ref so fresh closures from each render don't force
@@ -156,7 +160,41 @@ export function useGlobalShortcuts(handlers: {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         ref.current.onTogglePalette();
-      } else if (
+        return;
+      }
+
+      // Destination shortcuts (#535 shell). Same guards as the quick-add key
+      // below: no modifiers, not while typing, and off entirely when the
+      // single-key setting is disabled for speech-input and single-switch
+      // users (WCAG 2.1.4).
+      if (!e.metaKey && !e.ctrlKey && !e.altKey && keyShortcutsEnabled()) {
+        const el = document.activeElement as HTMLElement | null;
+        const typing =
+          !!el &&
+          (el.tagName === "INPUT" ||
+            el.tagName === "TEXTAREA" ||
+            el.tagName === "SELECT" ||
+            el.isContentEditable);
+        if (!typing) {
+          if (e.key >= "1" && e.key <= "9" && ref.current.onGoToIndex) {
+            e.preventDefault();
+            ref.current.onGoToIndex(Number(e.key));
+            return;
+          }
+          if (e.key === "," && ref.current.onOpenSettings) {
+            e.preventDefault();
+            ref.current.onOpenSettings();
+            return;
+          }
+          if (e.key === "m" && ref.current.onToggleMenu) {
+            e.preventDefault();
+            ref.current.onToggleMenu();
+            return;
+          }
+        }
+      }
+
+      if (
         e.key === "n" &&
         !e.metaKey &&
         !e.ctrlKey &&
