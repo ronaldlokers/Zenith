@@ -2,6 +2,17 @@ import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
 
+// Whole-account work needs more than the default 5000ms on CI. The erasure
+// spec ran 5978ms there against that budget and took a build down, while the
+// same test takes about 250ms locally — a loaded runner with a cold workerd
+// is roughly twenty times slower, so local timings predict nothing here.
+//
+// The timeout is worth a name rather than a number because of what happens
+// when it fires: vitest moves on but the in-flight work does not stop, so it
+// lands during the next test and that test reports the failure.
+const WHOLE_ACCOUNT = 20_000;
+
+
 // Own file (#285): deleting the account removes the seed-admin user other
 // tests depend on. Storage is isolated per file.
 const BASE = "http://zenith.test";
@@ -29,5 +40,5 @@ describe("account deletion", () => {
       "SELECT COUNT(*) AS n FROM applications",
     ).first<{ n: number }>();
     expect(apps!.n).toBe(0);
-  });
+  }, WHOLE_ACCOUNT);
 });
