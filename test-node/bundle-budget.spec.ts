@@ -18,6 +18,18 @@ import { describe, expect, it } from "vitest";
 //   entry CSS  18.52 kB gzipped   (the whole redesign added 1.28 kB)
 //   entry JS   61.13 kB gzipped   (the whole redesign added 1.44 kB)
 //
+// Gzip is a proxy here, not the shipped figure. Cloudflare serves these
+// brotli — checked against a preview deployment, which returns
+// content-encoding: br — and brotli comes out about 15% smaller:
+//
+//   entry CSS  18.08 kB gzip  →  15.38 kB brotli
+//   entry JS   59.35 kB gzip  →  51.09 kB brotli
+//
+// The budget stays in gzip anyway: it exists to catch growth, both formats
+// move together, and gzipSync is in node's standard library while brotli at
+// quality 11 costs a second per file. What the number must not do is get
+// quoted as "what the user downloads", which is smaller.
+//
 // Vendor chunks are deliberately not budgeted here. react/i18n are split so
 // they cache across deploys, and their size is a dependency decision rather
 // than something this app's own changes move.

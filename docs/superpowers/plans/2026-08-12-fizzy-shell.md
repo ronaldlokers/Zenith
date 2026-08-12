@@ -302,7 +302,10 @@ of stylesheet that had lost their markup.
 "The first paint on mobile is a locked first-class target" had no number
 attached to it, so nothing would have noticed the day it grew by a third.
 `test-node/bundle-budget.spec.ts` now holds one, set about 12% above the
-measured size. Raising it is fine; it just has to be a decision someone
+measured size. Those figures are gzip; Cloudflare serves brotli, which a
+preview deployment confirms (`content-encoding: br`) and which comes out
+about 15% smaller again — 15.38 kB of CSS and 51.09 kB of script. The budget
+stays in gzip because it exists to catch growth and both move together. Raising it is fine; it just has to be a decision someone
 makes rather than a drift nobody sees.
 
 ### The screenshot rig

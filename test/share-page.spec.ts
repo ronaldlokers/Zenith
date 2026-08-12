@@ -11,10 +11,18 @@ import { authedFetch } from "./helpers";
 //
 // A note for whoever verifies this by hand: in the Vite dev server a browser
 // navigation to /shared/:token is intercepted by the SPA middleware and
-// renders the login screen instead. `curl` gets the real page. It is a dev
-// artifact — in production the Worker owns the route — but it makes a manual
-// check say whatever you were afraid of, in either direction. This spec runs
+// renders the login screen instead. `curl` gets the real page. This spec runs
 // against the Worker, which is the thing that actually serves it.
+//
+// That it is only a dev artifact is now measured rather than assumed. Against
+// a preview deployment, with a browser's own Accept header:
+//
+//   /shared/<unknown token>  404, empty body   — the Worker answering
+//   /board                   200, SPA shell    — the assets fallback
+//   /nope-not-a-route        200, SPA shell
+//
+// The 404 is the route rejecting a token it does not know, not the SPA
+// shell being served in its place, which is what the dev server does.
 const BASE = "http://zenith.test";
 const TOKEN = "share-page-spec-token";
 
