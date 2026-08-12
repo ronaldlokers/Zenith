@@ -1548,13 +1548,23 @@ app.get("/shared/:token", async (c) => {
 
   const rows = funnel
     .map(
-      (f) => `
+      // The width is a class rather than a style attribute so this page can
+      // carry a Content-Security-Policy with no unsafe-inline in it at all
+      // (see the nonce below). It is the only unauthenticated surface here.
+      (f, i) => `
       <div class="row">
         <span class="lbl">${f.stage}</span>
-        <span class="track"><span class="fill" style="width:${(f.count / funnelMax) * 100}%"></span></span>
+        <span class="track"><span class="fill fill-${i}"></span></span>
         <span class="n">${f.count}</span>
       </div>`,
     )
+    .join("");
+
+  // One nonce per response, so the policy below can name this exact style
+  // block without opening the page to any other inline content.
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  const barWidths = funnel
+    .map((f, i) => `.fill-${i}{width:${(f.count / funnelMax) * 100}%}`)
     .join("");
 
   const html = `<!doctype html>
@@ -1564,7 +1574,8 @@ app.get("/shared/:token", async (c) => {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Zenith — shared pipeline</title>
-<style>
+<style nonce="${nonce}">
+${barWidths}
   /* This page is the only Zenith surface someone who is not a user ever sees,
      so it carries the brand rather than a generic dark theme (#528). It is a
      standalone document with no access to src/index.css, so the tokens are
@@ -1611,6 +1622,24 @@ app.get("/shared/:token", async (c) => {
 </body>
 </html>`;
 
+  // The strictest policy this page can carry, which is very strict: it has no
+  // scripts at all, loads nothing from anywhere, and its one style block is
+  // named by nonce. Nothing here is unsafe-inline.
+  //
+  // Only this route. The app itself is a React bundle whose policy needs
+  // working out against a deployment; this page is server-rendered HTML whose
+  // every byte is known here, so it can have the policy today rather than
+  // waiting for that.
+  c.header(
+    "Content-Security-Policy",
+    [
+      "default-src 'none'",
+      `style-src 'nonce-${nonce}'`,
+      "base-uri 'none'",
+      "form-action 'none'",
+      "frame-ancestors 'none'",
+    ].join("; "),
+  );
   return c.html(html);
 });
 
