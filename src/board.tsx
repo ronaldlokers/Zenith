@@ -462,7 +462,10 @@ function BoardTab({
             className={`bcol rail-${rail} stage-${rail}${over}`}
             {...dropProps}
           >
-            <div className="bcol-head">
+            {/* The stage is a heading: without it the board hands a screen
+                reader fifteen card titles and no structure to hang them on,
+                and the outline skips h1 straight to h3. */}
+            <h2 className="bcol-head">
               <button
                 type="button"
                 className="bcol-fold"
@@ -474,7 +477,7 @@ function BoardTab({
                 {label}
               </button>
               <span className="n">{count}</span>
-            </div>
+            </h2>
             {live && (
               <div className="bcol-prop" aria-hidden="true">
                 <i

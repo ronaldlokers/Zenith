@@ -711,6 +711,7 @@ export function ApplicationDetailModal({
                 </Chip>
               ))}
               <input
+                aria-label={t("detail.addTag")}
                 placeholder={t("detail.addTag")}
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}

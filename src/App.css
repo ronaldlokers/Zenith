@@ -1783,8 +1783,10 @@ button.primary:hover {
     letter-spacing: var(--track-chrome);
     color: var(--muted);
   }
-  /* Focused-item title takes the display voice (--serif, #468). */
-  .feed-detail h3 {
+  /* Focused-item title takes the display voice (--serif, #468). An h2 as of
+     the heading-order fix: the pane is a region of the page, not a
+     subsection of the list beside it. */
+  .feed-detail h2 {
     margin: 0.1rem 0 0;
     font-family: var(--serif);
     font-weight: 600;
@@ -2614,6 +2616,11 @@ select.status {
 }
 
 .bcol-head {
+  /* An h2 as of #535's heading fix — the UA's own margin and size would
+     otherwise redraw the column header. */
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
   display: flex;
   align-items: baseline;
   gap: var(--space-2);

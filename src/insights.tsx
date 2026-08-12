@@ -252,7 +252,7 @@ export function InsightsTab({
       {/* Activity is a section of this screen like the ones above it, not a
           full-width button floating under them. */}
       <div className="insights-activity">
-        <h3 className="ruled-h">{t("tabs.activity")}</h3>
+        <h2 className="ruled-h">{t("tabs.activity")}</h2>
         <Button
           variant="secondary"
           onClick={() => setShowActivity((v) => !v)}
@@ -267,12 +267,12 @@ export function InsightsTab({
           and applied dates in one place; the ICS feed stays in Settings. */}
       {wide ? (
         <>
-          <h3 className="ruled-h insights-cal-h">{t("tabs.calendar")}</h3>
+          <h2 className="ruled-h insights-cal-h">{t("tabs.calendar")}</h2>
           <CalendarTab onError={onError} onJump={onJump} />
         </>
       ) : (
         <div className="insights-activity">
-          <h3 className="ruled-h">{t("tabs.calendar")}</h3>
+          <h2 className="ruled-h">{t("tabs.calendar")}</h2>
           <Button
             variant="secondary"
             onClick={() => setShowCalendar((v) => !v)}

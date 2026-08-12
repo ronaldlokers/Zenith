@@ -344,6 +344,7 @@ export function WorkExperienceSection({
                 </Chip>
               ))}
               <input
+                aria-label={t("cv.addSkill")}
                 placeholder={t("cv.addSkill")}
                 value={newSkill[w.id] ?? ""}
                 onChange={(e) =>
@@ -628,11 +629,13 @@ export function LanguagesSection({
       </ul>
       <form className="settings-add" onSubmit={addLanguage}>
         <input
+          aria-label={t("cv.languageName")}
           placeholder={t("cv.languageName")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <select
+          aria-label={t("cv.proficiencyLabel")}
           value={proficiency}
           onChange={(e) =>
             setProficiency(e.target.value as Language["proficiency"])

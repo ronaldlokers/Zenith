@@ -149,6 +149,7 @@ export function InterviewPrepSection({
       </ul>
       <div className="zui-prep-add">
         <input
+          aria-label={t("prep.addItemPlaceholder")}
           placeholder={t("prep.addItemPlaceholder")}
           value={newText}
           onChange={(e) => setNewText(e.target.value)}

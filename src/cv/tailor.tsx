@@ -101,6 +101,7 @@ export function TailorPanel({
       <textarea
         className="cv-tailor-input"
         rows={4}
+        aria-label={t("cv.tailorPlaceholder")}
         placeholder={t("cv.tailorPlaceholder")}
         value={jd}
         onChange={(e) => setJd(e.target.value)}
