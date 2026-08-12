@@ -2,6 +2,17 @@ import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { buildFullExport } from "../worker/index";
 
+// Whole-account work needs more than the default 5000ms on CI. The erasure
+// spec ran 5978ms there against that budget and took a build down, while the
+// same test takes about 250ms locally — a loaded runner with a cold workerd
+// is roughly twenty times slower, so local timings predict nothing here.
+//
+// The timeout is worth a name rather than a number because of what happens
+// when it fires: vitest moves on but the in-flight work does not stop, so it
+// lands during the next test and that test reports the failure.
+const WHOLE_ACCOUNT = 20_000;
+
+
 // The backup (#116) and the data export (#485) both walk a hand-written list
 // of tables. A table added to a migration and forgotten here is not exported
 // and not backed up, and nothing says so — the export still succeeds, just
@@ -55,7 +66,7 @@ describe("export coverage", () => {
       missing,
       "add these to EXPORT_TABLES, or to this spec's exclusion list with a reason",
     ).toEqual([]);
-  });
+  }, WHOLE_ACCOUNT);
 
   it("does not name a table that no longer exists", async () => {
     // The other direction: a renamed or dropped table leaves the export
