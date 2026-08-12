@@ -241,7 +241,8 @@
       "look": "Worth a look",
       "weak": "Weak"
     },
-    "postedAge": "{{age}} ago"
+    "postedAge": "{{age}} ago",
+    "settingsBtn": "Feed sources"
   },
   "stats": {
     "momentum": {
@@ -603,7 +604,9 @@
     },
     "itemMenu": "Actions for {{title}}",
     "editBelow": "Edit below",
-    "matchPosting": "Match to a posting"
+    "matchPosting": "Match to a posting",
+    "moveUpNamed": "Move {{name}} up",
+    "moveDownNamed": "Move {{name}} down"
   },
   "posting": {
     "staleHint": "This posting may no longer be live — worth a quick check."

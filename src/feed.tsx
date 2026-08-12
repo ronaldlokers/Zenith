@@ -587,7 +587,7 @@ export function FeedTab({
           {t("feed.pulledFrom")}
         </p>
         <Button variant="secondary" onClick={onOpenSettings}>
-          {t("feed.settings")}
+          {t("feed.settingsBtn")}
         </Button>
         <Button variant="primary" disabled={refreshing} onClick={refresh}>
           {refreshing ? t("feed.checking") : t("feed.checkNow")}

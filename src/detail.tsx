@@ -682,7 +682,7 @@ export function ApplicationDetailModal({
                 <Chip key={tg.id}>
                   <button
                     className="chip-move"
-                    aria-label={t("cv.moveUp")}
+                    aria-label={t("cv.moveUpNamed", { name: tg.name })}
                     disabled={i === 0}
                     onClick={() => moveTag(i, -1)}
                   >
@@ -690,7 +690,7 @@ export function ApplicationDetailModal({
                   </button>
                   <button
                     className="chip-move"
-                    aria-label={t("cv.moveDown")}
+                    aria-label={t("cv.moveDownNamed", { name: tg.name })}
                     disabled={i === a.tags.length - 1}
                     onClick={() => moveTag(i, 1)}
                   >
@@ -848,11 +848,6 @@ export function ApplicationDetailModal({
             <ActionBar variant="detail">
               <Button variant="secondary" onClick={() => setEditing(true)}>
                 {t("common.edit")}
-              </Button>
-              <Button variant="secondary" disabled={printingCheatSheet} onClick={printCheatSheet}>
-                {printingCheatSheet
-                  ? t("detail.cheatSheet.printing")
-                  : t("detail.cheatSheet.print")}
               </Button>
               <Button
                 variant="secondary"

@@ -122,14 +122,14 @@ export function InterviewPrepSection({
             </label>
             <span className="zui-prep-item-actions">
               <button
-                aria-label={t("cv.moveUp")}
+                aria-label={t("cv.moveUpNamed", { name: item.text })}
                 disabled={i === 0}
                 onClick={() => moveItem(i, -1)}
               >
                 ↑
               </button>
               <button
-                aria-label={t("cv.moveDown")}
+                aria-label={t("cv.moveDownNamed", { name: item.text })}
                 disabled={i === items.length - 1}
                 onClick={() => moveItem(i, 1)}
               >

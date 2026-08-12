@@ -241,7 +241,8 @@
       "look": "Het bekijken waard",
       "weak": "Zwak"
     },
-    "postedAge": "{{age}} geleden"
+    "postedAge": "{{age}} geleden",
+    "settingsBtn": "Feedbronnen"
   },
   "stats": {
     "momentum": {
@@ -603,7 +604,9 @@
     },
     "itemMenu": "Acties voor {{title}}",
     "editBelow": "Hieronder bewerken",
-    "matchPosting": "Vergelijk met vacature"
+    "matchPosting": "Vergelijk met vacature",
+    "moveUpNamed": "{{name}} omhoog",
+    "moveDownNamed": "{{name}} omlaag"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
