@@ -181,8 +181,15 @@
     color: inherit;
   }
 
+  /* If anything has to give at 320px it is the label, not the value: the
+     row exists to say what the setting is set to, and the label is repeated
+     on the control it opens. */
   .set-row-label {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: var(--text-body);
     font-weight: 600;
     color: var(--ink);
@@ -203,7 +210,7 @@
   }
 
   .set-row-value {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     min-width: 0;
     font-family: var(--mono);
     font-size: var(--text-chrome);

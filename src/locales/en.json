@@ -329,8 +329,8 @@
     "searchStartLabel": "Search started",
     "searchWeek_one": "Week {{count}} of your search",
     "searchWeek_other": "Week {{count}} of your search",
-    "weeklyGoalValue_one": "{{count}} a week",
-    "weeklyGoalValue_other": "{{count}} a week"
+    "weeklyGoalValue_one": "{{count}}",
+    "weeklyGoalValue_other": "{{count}}"
   },
   "templates": {
     "outreachHeading": "Outreach",

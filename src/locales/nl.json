@@ -329,8 +329,8 @@
     "searchStartLabel": "Zoektocht gestart",
     "searchWeek_one": "Week {{count}} van je zoektocht",
     "searchWeek_other": "Week {{count}} van je zoektocht",
-    "weeklyGoalValue_one": "{{count}} per week",
-    "weeklyGoalValue_other": "{{count}} per week"
+    "weeklyGoalValue_one": "{{count}}",
+    "weeklyGoalValue_other": "{{count}}"
   },
   "templates": {
     "outreachHeading": "Contact opnemen",
