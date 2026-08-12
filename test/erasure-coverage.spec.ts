@@ -26,6 +26,16 @@ async function userScopedTables(): Promise<string[]> {
 }
 
 describe("erasure coverage", () => {
+  // Deleting an account walks every table this app has, twice — the cascade
+  // and then wipeUserData's belt-and-braces pass — and then this test reads
+  // all of them back. It ran 5978ms against the default 5000 on CI and took
+  // the build down; the work was finished and correct, the budget was not.
+  //
+  // Same trap as sample-data.spec.ts: when the timeout fires vitest moves on
+  // but the in-flight delete does not stop, so the damage surfaces in
+  // whatever test runs next rather than in this one.
+  const WALKS_EVERY_TABLE = 20_000;
+
   it("leaves nothing behind for a deleted account", async () => {
     // Give the user a row in as many tables as the API reaches easily, then
     // delete the account and look for survivors in every user-scoped table.
@@ -54,5 +64,5 @@ describe("erasure coverage", () => {
       if (row) survivors.push(table);
     }
     expect(survivors, "rows left behind after deleting the account").toEqual([]);
-  });
+  }, WALKS_EVERY_TABLE);
 });
