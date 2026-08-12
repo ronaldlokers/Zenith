@@ -1,6 +1,6 @@
 /* Owns three settings/admin controls' overrides so Button.css can stay
    call-site-agnostic. None of App.css's Recipe A/B containers
-   (.card-actions/.detail-actions/.settings-modal/.shortcut-help/
+   (.card-actions/.detail-actions/.settings-modal/
    .form-actions/.share-actions) wrap these controls — .admin-invite,
    .session-list, .settings-fieldgrid and .admin-user-actions never joined
    that normalization layer — so the raw markup they replace rendered

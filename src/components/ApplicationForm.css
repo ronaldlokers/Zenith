@@ -4,7 +4,7 @@
    have been winning a property on this button by source order (as happened
    with .cal-nav padding vs .btn-secondary): none matches — the button
    carries no class and isn't inside .card-actions/.settings-modal/
-   .shortcut-help/.tabs/etc., so .url-row button was already the effective
+   .tabs/etc., so .url-row button was already the effective
    rule in App.css and stays effective here unchanged.
 
    .zui-appform* below reproduces the shared App.css "form" recipe
