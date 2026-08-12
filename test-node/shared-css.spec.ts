@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+// Two things this file guards, both of the same kind: a rule that has to
+// exist in exactly one place, where writing a second copy would look right
+// and quietly win or lose on order.
+//
 // Printing is the one output nobody looks at while building, and the shell
 // broke it twice over: the plate printed as a slab of ink, and the blanket
 // `button { display: none }` in the print band took the stage rail with it —
@@ -47,5 +51,17 @@ describe("print band", () => {
     // to live beside the component. This caught a real miss.
     expect(band).not.toContain(".cv-plate");
     expect(printBand(CV)).toContain(".cv-plate");
+  });
+});
+
+describe("ruled headings", () => {
+  it("are one recipe, not a copy per screen", () => {
+    // Settings, Insights and anything after them share the flanked-heading
+    // treatment. Three copies of the same declarations is how the landing
+    // screen ended up with two column counts, one of them stale.
+    const heads = APP.match(/^\.ruled-h,\n\.settings-modal h2,\n\.settings-content h3 \{/m);
+    expect(heads, "the ruled heading is declared somewhere else too").toBeTruthy();
+    // The rules are pseudo-elements on the same selector list.
+    expect(APP).toContain(".ruled-h::before,");
   });
 });

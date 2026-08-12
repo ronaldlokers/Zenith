@@ -10,7 +10,8 @@
     "people": "People",
     "cv": "CV",
     "network": "People & companies",
-    "pipeline": "Pipeline"
+    "pipeline": "Pipeline",
+    "activity": "Activity"
   },
   "today": {
     "needYou_one": "thing needs you today",

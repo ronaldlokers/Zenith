@@ -248,35 +248,39 @@ export function InsightsTab({
       </div>
 
 
-      <Button
-        variant="secondary"
-        className="insights-toggle"
-        onClick={() => setShowActivity((v) => !v)}
-        aria-expanded={showActivity}
-      >
-        {showActivity ? t("overview.hideActivity") : t("overview.showActivity")}
-      </Button>
+      {/* Activity is a section of this screen like the ones above it, not a
+          full-width button floating under them. */}
+      <div className="insights-activity">
+        <h3 className="ruled-h">{t("tabs.activity")}</h3>
+        <Button
+          variant="secondary"
+          onClick={() => setShowActivity((v) => !v)}
+          aria-expanded={showActivity}
+        >
+          {showActivity ? t("overview.hideActivity") : t("overview.showActivity")}
+        </Button>
+      </div>
       {showActivity && <ActivityTab onError={onError} onOpenJob={onOpenJob} />}
 
       {/* Calendar folded in from its own tab (#481) — deadlines, interviews
           and applied dates in one place; the ICS feed stays in Settings. */}
       {wide ? (
         <>
-          <h3 className="insights-cal-h">{t("tabs.calendar")}</h3>
+          <h3 className="ruled-h insights-cal-h">{t("tabs.calendar")}</h3>
           <CalendarTab onError={onError} onJump={onJump} />
         </>
       ) : (
-        <>
+        <div className="insights-activity">
+          <h3 className="ruled-h">{t("tabs.calendar")}</h3>
           <Button
             variant="secondary"
-            className="insights-toggle"
             onClick={() => setShowCalendar((v) => !v)}
             aria-expanded={showCalendar}
           >
             {showCalendar ? t("calendar.hide") : t("calendar.show")}
           </Button>
           {showCalendar && <CalendarTab onError={onError} onJump={onJump} />}
-        </>
+        </div>
       )}
     </section>
   );

@@ -181,6 +181,7 @@
    heading reads the same wherever it appears. Grid rather than a border on
    the text: the rules have to run to the panel's edges and meet the label,
    which an underline cannot do. */
+.ruled-h,
 .settings-modal h2,
 .settings-content h3 {
   display: grid;
@@ -196,6 +197,8 @@
   color: var(--muted);
 }
 
+.ruled-h::before,
+.ruled-h::after,
 .settings-modal h2::before,
 .settings-modal h2::after,
 .settings-content h3::before,
@@ -3461,19 +3464,30 @@ summary.bcol-head::after {
   background: var(--bg);
 }
 
-/* Calendar folded into Insights (#481) — section heading. Mono eyebrow to
-   match the funnel/offers card headings, so Insights uses one heading voice
-   throughout (#486). */
+/* Calendar folded into Insights (#481). Its heading takes the app-wide
+   ruled treatment (.ruled-h) now — the screen above it is all centred,
+   flanked headings, and a left-aligned label below them read as a section
+   that had been missed. Only the spacing is local. */
 .insights-cal-h {
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  /* Mono ships 400-500 only; an unset weight here inherits the UA heading
-     bold and the browser synthesises it, smearing the outlines (#501). */
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  color: var(--muted);
   margin: var(--space-5) 0 var(--space-3);
+}
+
+/* The activity disclosure sat as a full-width secondary button, which is a
+   shape nothing else in the shell uses. It is a section like the ones around
+   it: a ruled heading, and a plain control under it. */
+.insights-activity {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The heading has to span the column: centring the flex items shrink-wraps
+   it, and a ruled heading whose 1fr tracks have collapsed to nothing is just
+   a centred label. */
+.insights-activity > .ruled-h {
+  align-self: stretch;
 }
 
 /* Today home (#480, rebuilt #492) — the blocks rank by how much they ask of
