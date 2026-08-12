@@ -108,6 +108,38 @@ describe("pinning", () => {
     expect(left.results.map((r) => r.id)).toEqual([ids[0], ids[2]]);
   });
 
+  it("clears the pin when the application is archived", async () => {
+    // The two states contradict each other, and leaving both set was visible
+    // in the UI rather than theoretical: the bar counted a pinned
+    // application the board could not show, because an archived card sits on
+    // a rail that is folded by default. Pressing Pinned then showed an empty
+    // board with nothing to explain it.
+    const id = await seedApp("Pinned then archived");
+    await pin(id);
+    const res = await authedFetch(`${BASE}/api/applications/${id}/archive`, {
+      method: "POST",
+    });
+    expect(res.status).toBe(200);
+    const row = await res.json<{ archived_at: string | null; pinned_at: string | null }>();
+    expect(row.archived_at).toBeTruthy();
+    expect(row.pinned_at, "an archived application cannot still be pinned").toBeNull();
+  });
+
+  it("does not restore the pin when unarchived", async () => {
+    // Deliberate: if the work resumes, pinning it again is the same click
+    // that unarchived it. Restoring a pin someone set weeks ago would put a
+    // stranger back in the handful they are working now.
+    const id = await seedApp("Back from the archive");
+    await pin(id);
+    await authedFetch(`${BASE}/api/applications/${id}/archive`, { method: "POST" });
+    const res = await authedFetch(`${BASE}/api/applications/${id}/unarchive`, {
+      method: "POST",
+    });
+    const row = await res.json<{ archived_at: string | null; pinned_at: string | null }>();
+    expect(row.archived_at).toBeNull();
+    expect(row.pinned_at).toBeNull();
+  });
+
   it("is carried by the export, so a pin survives a restore", async () => {
     const id = await seedApp("Exported pinned");
     await pin(id);
