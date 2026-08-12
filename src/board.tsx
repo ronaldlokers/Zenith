@@ -350,8 +350,18 @@ function BoardTab({
 
   return (
     <>
+    {/* A group of buttons, not a tablist. Every column is rendered and the
+        neighbours are deliberately visible at the edges, so nothing here
+        selects a panel and hides the rest — the strip says where the board is
+        scrolled to and scrolls it somewhere else. Announcing "tab 4 of 9,
+        selected" would promise a panel that does not exist. */}
     {isNarrow && (
-      <div className="stage-strip" role="tablist" ref={stripRef}>
+      <div
+        className="stage-strip"
+        role="group"
+        aria-label={t("board.stageStrip")}
+        ref={stripRef}
+      >
         {BOARD_RAILS.map((rail) => (
           <button
             key={rail}
@@ -360,8 +370,7 @@ function BoardTab({
               else chipRefs.current.delete(rail);
             }}
             type="button"
-            role="tab"
-            aria-selected={activeRail === rail}
+            aria-current={activeRail === rail ? "true" : undefined}
             className={`stage-chip stage-${rail} rail-${rail}${activeRail === rail ? " active" : ""}`}
             onClick={() => scrollToRail(rail)}
           >

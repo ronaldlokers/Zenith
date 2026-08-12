@@ -809,7 +809,8 @@
     "foldRail": "{{stage}} inklappen",
     "unfoldRail": "{{stage}} openen, {{count}} sollicitaties",
     "showingClosed": "Gesloten sollicitaties worden getoond",
-    "backToLive": "Terug naar actief"
+    "backToLive": "Terug naar actief",
+    "stageStrip": "Fases"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

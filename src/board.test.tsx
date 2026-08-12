@@ -196,8 +196,14 @@ describe("board rails", () => {
       profileFolded = "rejected,withdrawn,ghosted,archived";
       renderBoard([]);
       // Every rail is an open column here — the header is still in the DOM
-      // (CSS hides it at this width), but no rail is folded away.
-      await waitFor(() => expect(screen.getAllByRole("tab")).toHaveLength(9));
+      // (CSS hides it at this width), but no rail is folded away. The strip
+      // is a group of buttons rather than a tablist: every column is
+      // rendered, so nothing here selects a panel.
+      const strip = await screen.findByRole("group", { name: "Stages" });
+      expect(strip.querySelectorAll("button")).toHaveLength(9);
+      expect(
+        strip.querySelectorAll("[aria-current=true]"),
+      ).toHaveLength(1);
       expect(railFor("Rejected")).toBeNull();
       expect(headerFor("Rejected")).toBeTruthy();
     } finally {
