@@ -7,7 +7,7 @@
 // the layout. Presentation only; all state/wiring lives in App.
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Logo, NavPipelineIcon, SearchIcon, SettingsIcon } from "./icons";
+import { Logo, NavPipelineIcon, PinIcon, SearchIcon, SettingsIcon } from "./icons";
 import { NotificationBell } from "./components";
 import { type Tab } from "./routing";
 import { type Toast } from "./app-data";
@@ -130,21 +130,31 @@ export function TopBar({
 // prototype leaking into the product.
 export function BottomBar({
   onSearch,
-  onQuickAdd,
+  onPinned,
+  pinnedCount,
 }: {
   onSearch: () => void;
-  onQuickAdd: () => void;
+  onPinned: () => void;
+  pinnedCount: number;
 }) {
   const { t } = useTranslation();
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
   return (
     <nav className="bottombar" aria-label={t("menu.label")}>
-      <button className="bottombar-slot" onClick={onQuickAdd}>
-        <span aria-hidden="true" className="bottombar-glyph">
-          +
-        </span>
-        <span className="bottombar-label">{t("quickAdd.add")}</span>
-        <kbd className="bottombar-key">n</kbd>
+      {/* Pinned · Search · Notifications, as the shell spec has it. Add is
+          not here: it has the menu's own row and the add block at the head
+          of every open column, and the bar's three slots are meant to be the
+          things you reach for from anywhere rather than the things you do
+          most. */}
+      <button className="bottombar-slot" onClick={onPinned}>
+        <PinIcon />
+        <span className="bottombar-label">{t("bottomBar.pinned")}</span>
+        {pinnedCount > 0 && (
+          <span className="bottombar-count" aria-hidden="true">
+            {pinnedCount}
+          </span>
+        )}
+        <kbd className="bottombar-key">p</kbd>
       </button>
       <button className="bottombar-slot mid" onClick={onSearch}>
         <SearchIcon />
@@ -153,9 +163,17 @@ export function BottomBar({
       </button>
       {/* The real bell, not a link to it: it owns its own unread count and
           popover, and duplicating either here would give two sources of
-          truth for whether you have anything waiting. */}
+          truth for whether you have anything waiting. The label sits beside
+          it rather than inside it — NotificationBell is an owned component
+          and may not reach for App.css's .bottombar-label — and it is
+          aria-hidden because the trigger's own accessible name already says
+          "Notifications". No keycap: the bell has no shortcut, and printing
+          one that answers to nothing would be worse than printing none. */}
       <span className="bottombar-slot end">
         <NotificationBell />
+        <span className="bottombar-label" aria-hidden="true">
+          {t("header.notifications")}
+        </span>
       </span>
     </nav>
   );

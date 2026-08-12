@@ -652,6 +652,15 @@
   justify-self: end;
 }
 
+/* The pinned count, beside the bar's first slot. Reads as a quantity next to
+   the label rather than as a badge on an icon: the notification bell owns the
+   badge idiom in this bar, and two of them would compete. */
+.bottombar-count {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  color: var(--accent-ink);
+}
+
 .bottombar-glyph {
   font-family: var(--sans);
   font-size: var(--text-title);
@@ -2740,6 +2749,20 @@ summary.bcol-head::after {
   font-size: var(--text-meta);
   color: var(--faint);
   margin-bottom: 0.55rem;
+}
+
+/* A pinned card carries a small gold dot in the corner opposite its menu.
+   Not an edge or a tint: --u-edge already belongs to urgency and the stage
+   hues to the pipeline, so the one unspent affordance left is a mark. */
+.bcard.pinned::after {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
 }
 
 /* Forms */

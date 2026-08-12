@@ -145,6 +145,10 @@ export default function App() {
       setMenuOpen(false);
       navigate("/board", { state: { showClosed: true } });
     },
+    onShowPinned: () => {
+      setMenuOpen(false);
+      navigate("/board", { state: { showPinned: true } });
+    },
   });
 
   useEffect(() => {
@@ -223,6 +227,8 @@ export default function App() {
     () => visibleApps.filter((a) => !isDead(a.status)),
     [visibleApps],
   );
+  const pinnedCount = visibleApps.filter((a) => a.pinned_at).length;
+
   const tileCounts: Partial<Record<NavItem["data"], number>> = {
     overview: liveApps.filter((a) => isOverdue(a) || isDue(a)).length,
     pipeline: liveApps.length,
@@ -580,7 +586,8 @@ export default function App() {
 
       <BottomBar
         onSearch={() => setShowPalette(true)}
-        onQuickAdd={() => setShowQuickAdd(true)}
+        onPinned={() => navigate("/board", { state: { showPinned: true } })}
+        pinnedCount={pinnedCount}
       />
       <ConfirmHost />
       <ToastStack toasts={toasts} onDismiss={dismiss} />

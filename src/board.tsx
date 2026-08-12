@@ -57,6 +57,7 @@ function BoardCard({
   onSetFollowUp,
   onArchive,
   onUnarchive,
+  onTogglePin,
 }: {
   a: Application;
   urgency: Urgency;
@@ -69,16 +70,21 @@ function BoardCard({
   onSetFollowUp: (date: string | null, text: string | null) => void;
   onArchive: () => void;
   onUnarchive: () => void;
+  onTogglePin: () => void;
 }) {
   const { t } = useTranslation();
   const actionable = urgency === "overdue" || urgency === "today";
   return (
     <article
-      className={`bcard stage-${a.status} u-${urgency ?? "calm"}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}`}
+      className={`bcard stage-${a.status} u-${urgency ?? "calm"}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}${a.pinned_at ? " pinned" : ""}`}
       draggable={draggable}
       onDragStart={draggable ? onDragStart : undefined}
       onDragEnd={draggable ? onDragEnd : undefined}
     >
+      {/* The pinned state has to be legible on the card itself, not only in
+          the menu that toggles it. The dot is decorative — the text beside
+          it is what a screen reader gets. */}
+      {a.pinned_at && <span className="sr-only">{t("bottomBar.pinned")}</span>}
       <CardMenu
         a={a}
         onMove={onMove}
@@ -86,6 +92,7 @@ function BoardCard({
         onOpenDetail={onOpenDetail}
         onArchive={onArchive}
         onUnarchive={onUnarchive}
+        onTogglePin={onTogglePin}
       />
       <div className="bcard-body" {...rowActivate(onOpenDetail)}>
         {/* Identity strip, flush to the card edge: when it started, who it is
@@ -210,6 +217,11 @@ function BoardTab({
             .catch((e) => onError((e as Error).message)),
         ),
       )
+      .catch((e) => onError((e as Error).message));
+
+  const togglePin = (a: Application) =>
+    (a.pinned_at ? api.unpinApplication(a.id) : api.pinApplication(a.id))
+      .then(() => onChanged())
       .catch((e) => onError((e as Error).message));
 
   const unarchive = (id: number) =>
@@ -354,6 +366,7 @@ function BoardTab({
       setFollowUp(a.id, date, text),
     onArchive: () => archive(a.id),
     onUnarchive: () => unarchive(a.id),
+    onTogglePin: () => togglePin(a),
   });
 
   return (
@@ -649,8 +662,12 @@ export function PipelineTab({
   // The toast offers the way back, because this is a view someone lands in
   // and has to be able to leave without knowing what was folded before.
   const navigate = useNavigate();
-  const showClosed = (useLocation().state as { showClosed?: boolean } | null)
-    ?.showClosed;
+  const navState = useLocation().state as {
+    showClosed?: boolean;
+    showPinned?: boolean;
+  } | null;
+  const showClosed = navState?.showClosed;
+  const [pinnedOnly, setPinnedOnly] = useState(false);
   useEffect(() => {
     if (!showClosed) return;
     const before = new Set(folded);
@@ -664,6 +681,14 @@ export function PipelineTab({
     navigate("/board", { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showClosed]);
+
+  useEffect(() => {
+    if (!navState?.showPinned) return;
+    setPinnedOnly(true);
+    notify(t("board.showingPinned"), () => setPinnedOnly(false), t("board.showAll"));
+    navigate("/board", { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navState?.showPinned]);
 
   // One-shot: consume the jump query then clear it upstream, so a single
   // Calendar jump doesn't re-inject the search on every later visit (#314).
@@ -831,7 +856,8 @@ export function PipelineTab({
       (!q ||
         [a.title, a.company_name, a.contact_name, a.notes, a.source]
           .filter(Boolean)
-          .some((f) => (f as string).toLowerCase().includes(q))),
+          .some((f) => (f as string).toLowerCase().includes(q))) &&
+      (!pinnedOnly || !!a.pinned_at),
   );
 
   const searchRef = useRef<HTMLInputElement>(null);

@@ -175,6 +175,8 @@ export function useGlobalShortcuts(handlers: {
   onOpenSettings?: () => void;
   onToggleMenu?: () => void;
   onShowClosed?: () => void;
+  /** The bottom bar's first slot prints a "p" keycap; this is what it does. */
+  onShowPinned?: () => void;
 }) {
   // Keep the listener bound once (like the original App effect): stash the
   // latest handlers in a ref so fresh closures from each render don't force
@@ -220,6 +222,11 @@ export function useGlobalShortcuts(handlers: {
           if (e.key === "c" && ref.current.onShowClosed) {
             e.preventDefault();
             ref.current.onShowClosed();
+            return;
+          }
+          if (e.key === "p" && ref.current.onShowPinned) {
+            e.preventDefault();
+            ref.current.onShowPinned();
             return;
           }
           if (e.key === "m" && ref.current.onToggleMenu) {

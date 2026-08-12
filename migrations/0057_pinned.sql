@@ -1,0 +1,15 @@
+-- Pinned applications (#535 shell). The Fizzy-philosophy shell gives the
+-- bottom bar three slots and the first one is Pinned: the handful you are
+-- actively working, reachable from anywhere without hunting the board for
+-- them.
+--
+-- pinned_at rather than a boolean, mirroring archived_at on this same table:
+-- NULL means not pinned, and a timestamp says when — so the pinned set can
+-- be ordered most-recently-pinned first without a second column. A 0/1 flag
+-- would need one the first time anyone asks "what did I pin today".
+--
+-- Deliberately not a status. Pinning is orthogonal to the pipeline: an
+-- application keeps its stage, keeps its column, and the stage hues stay
+-- reserved for pipeline state. It is also why Pinned gets no board column of
+-- its own — it is a filter over the board, not a place on it.
+ALTER TABLE applications ADD COLUMN pinned_at TEXT;

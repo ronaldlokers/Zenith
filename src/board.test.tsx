@@ -61,6 +61,7 @@ function app(over: Partial<Application> & { id: number }): Application {
     next_action_at: null,
     deadline_at: null,
     archived_at: null,
+    pinned_at: null,
     fit_score: null,
     cover_letter: null,
     job_description: null,

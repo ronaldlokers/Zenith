@@ -16,6 +16,10 @@ export interface CardMenuProps {
   onSetFollowUp: (date: string | null, text: string | null) => void;
   onOpenDetail: () => void;
   onArchive: () => void;
+  // Pinning is orthogonal to the pipeline (#535 shell): the card keeps its
+  // stage and its column, and the bottom bar's first slot filters the board
+  // down to the pinned set. One entry that flips, like restore/archive below.
+  onTogglePin: () => void;
   // The board carries an archive rail rather than an archive screen (#535),
   // so a card that is already archived offers the way back instead.
   onUnarchive?: () => void;
@@ -28,6 +32,7 @@ export function CardMenu({
   onOpenDetail,
   onArchive,
   onUnarchive,
+  onTogglePin,
 }: CardMenuProps) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<null | "root" | "move" | "followup">(null);
@@ -71,6 +76,16 @@ export function CardMenu({
                   onClick={() => setMode("followup")}
                 >
                   {t("detail.setFollowUp")}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    close();
+                    onTogglePin();
+                  }}
+                >
+                  {a.pinned_at ? t("board.unpin") : t("board.pin")}
                 </button>
                 <button
                   type="button"

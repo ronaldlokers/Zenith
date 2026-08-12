@@ -359,6 +359,14 @@ export const api = {
       `/api/applications/${id}/unarchive`,
       { method: "POST" },
     ),
+  pinApplication: (id: number) =>
+    request<import("./types").Application>(`/api/applications/${id}/pin`, {
+      method: "POST",
+    }),
+  unpinApplication: (id: number) =>
+    request<import("./types").Application>(`/api/applications/${id}/unpin`, {
+      method: "POST",
+    }),
   generateShareToken: () =>
     request<{ share_token: string }>("/api/profile/share-token", {
       method: "POST",
