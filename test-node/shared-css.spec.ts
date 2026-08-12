@@ -65,3 +65,17 @@ describe("ruled headings", () => {
     expect(APP).toContain(".ruled-h::before,");
   });
 });
+
+describe("CV plate inset", () => {
+  it("is one number, read by both files that need it", () => {
+    // The tools hang in the margin either side of the plate, and the builder
+    // below aligns to the plate's edges. That is the same measurement in two
+    // stylesheets — cv.css sizes the tools, App.css insets the builder — so a
+    // literal in either stops agreeing the moment the tools change size.
+    expect(APP).toMatch(/--cv-tool:\s*\d+px/);
+    expect(APP).toContain("calc(var(--cv-tool) + var(--cv-tool-gap))");
+    expect(CV).toContain("width: var(--cv-tool)");
+    // And the declaration lives in exactly one of them.
+    expect(CV).not.toMatch(/--cv-tool:\s*\d/);
+  });
+});

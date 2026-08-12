@@ -2856,6 +2856,15 @@ summary.bcol-head::after {
    entirely below that since it's desktop-space-usage, not core
    content. */
 
+/* The plate's inset from the content edge: a tool rail plus the gap it sits
+   across. Declared here because two files need it — cv.css sizes the tools
+   from it, and the builder below the plate aligns to it. A literal in either
+   would stop agreeing the moment the tools change size. */
+.cv-tab {
+  --cv-tool: 34px;
+  --cv-tool-gap: 0.5rem;
+}
+
 .cv-layout {
   display: block;
 }
@@ -3137,12 +3146,21 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .jobs-layout,
-  .cv-layout {
+  .jobs-layout {
     display: grid;
     grid-template-columns: 2.2fr 1fr;
     gap: 1.25rem;
     align-items: start;
+  }
+
+  /* The CV's second track held the side panel — completeness, versions, the
+     live preview. All three are on the plate now (#535), so the builder was
+     left filling two thirds of a row and sitting narrower than the plate
+     above it, with a column of nothing beside it. It spans the row now, inset
+     to the plate's own edges: the tools hang in the margin, and sections that
+     start outside them read as a second, wider page. */
+  .cv-layout {
+    margin-inline: calc(var(--cv-tool) + var(--cv-tool-gap));
   }
 
   /* The side panel this band positioned is gone: the CV's aside was its last

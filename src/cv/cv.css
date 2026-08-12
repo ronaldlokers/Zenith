@@ -16,7 +16,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--cv-tool-gap);
     margin-bottom: var(--space-4);
   }
 
@@ -46,8 +46,10 @@
   .cv-tool {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    /* Sized from the same property the builder below the plate insets by, so
+       the two cannot drift apart — see .cv-tab in App.css. */
+    width: var(--cv-tool);
+    height: var(--cv-tool);
     padding: 0;
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
