@@ -4848,6 +4848,137 @@ button:not(:disabled):active,
   background: var(--surface);
 }
 
+/* Folded rail (#535 shell): a stage you are not working in turns its label
+   on its side so the horizontal room goes to the stages you are. It stays a
+   drop target, so a card can be filed into a folded stage without opening
+   it first. The rail sits on the page ground — only the count circle carries
+   the stage colour, and as a ring rather than a fill: no ink clears 4.5:1 on
+   all five hues, so a number inside a filled circle cannot be legible across
+   the palette. */
+.bcol-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.3rem 0 0.6rem;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  min-width: 0;
+}
+
+/* Filled, not a ring: white clears 4.5:1 on every --sc-ink (5.11:1 at the
+   worst, screening). It does NOT clear it on the lighter --sc field colours
+   — 3.62:1 on interview — so the fill has to be the ink tone. */
+.bcol-rail .n {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  background: var(--sc-ink, var(--muted));
+  color: #fff;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Upright, not rotated: the letters stack and stay readable head-on, which
+   is what the approved mockup shows. Rotated text asks the reader to tilt. */
+.bcol-rail .vlabel {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.bcol-rail:hover,
+.bcol-rail:focus-visible {
+  background: var(--hover);
+}
+
+.bcol-rail:hover .vlabel,
+.bcol-rail:focus-visible .vlabel {
+  color: var(--ink);
+}
+
+/* The archive is a rail on the board but not a stage, so it takes the
+   structural hairline rather than a hue — pipeline colour stays reserved for
+   pipeline state. */
+.bcol-rail.rail-archived,
+.bcol.rail-archived {
+  --sc: var(--rule);
+  --sc-ink: var(--muted);
+}
+
+/* An open column's header is centred over its cards, the stage name in its
+   own ink and the count beside it — the header is the whole affordance, so
+   the flanking marks say it can be closed. */
+.bcol > .bcol-head {
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bcol > .bcol-head::before {
+  display: none;
+}
+
+.bcol-fold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--sc-ink, var(--muted));
+  cursor: pointer;
+}
+
+.bcol-fold svg {
+  color: var(--faint);
+}
+
+.bcol-fold:hover,
+.bcol-fold:focus-visible {
+  color: var(--ink);
+}
+
+/* The count rides beside the name here rather than being the column's
+   display figure — the header is centred, so a figure pushed to the far
+   right would break the centre line it sits on. */
+.bcol > .bcol-head > .n {
+  margin-left: 0;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--faint);
+}
+
+/* Each open live stage leads with its add block, so adding lands in the
+   stage you are looking at. Closed stages and the archive get none: nothing
+   is created straight into them. */
+.bcol-add {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.7rem;
+  padding: 1rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
 /* column header funnel proportion */
 .bcol-prop { height: 3px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; margin: 0 0.1rem 0.55rem; }
 .bcol-prop > i { display: block; height: 100%; border-radius: var(--radius-full); }
