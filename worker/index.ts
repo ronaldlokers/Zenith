@@ -64,16 +64,32 @@ const app = new Hono<AppEnv>();
 // anything, and the CSS injection it would leave open needs an HTML
 // injection first, which script-src already has to fail for.
 //
-// Verified rather than reasoned about. The production build was loaded from
-// a preview deployment under this policy with script-src 'self' and reported
-// no violations; the authenticated app was then loaded locally under it, and
-// the only violations were style-src-elem from Vite's HMR client, which the
-// production build does not ship. `npm run dev` is plain vite, so the worker
-// serves no HTML in dev and this never reaches that client anyway.
+// Verified rather than reasoned about: the production build was loaded from a
+// preview deployment under this policy and reported no violations on any
+// route.
+//
+// The dev relaxation is not a nicety. @cloudflare/vite-plugin runs this
+// Worker in front of the dev server, so the policy applies to `npm run dev`
+// too — and Vite injects React Refresh's preamble as an *inline* script,
+// which script-src 'self' blocks. The result is a blank page and one console
+// line ("@vitejs/plugin-react can't detect preamble"), which reads like a
+// broken app rather than a header. Its HMR client also injects inline
+// <style>, hence the style-src half.
+//
+// Keyed on MODE, not DEV. The Worker test runner is a Vite build too and sets
+// DEV — so a DEV check would hand the tests the relaxed policy and leave the
+// shipped one asserted by nothing. MODE separates the three: "development"
+// for the dev server, "test" under vitest, "production" in the build. Only
+// the first relaxes, and the substitution is at build time, so the deployed
+// bundle carries the strict string and no branch (test-node/shipped-csp).
+const DEV =
+  (import.meta as unknown as { env?: { MODE?: string } }).env?.MODE ===
+  "development";
+
 const APP_CSP = [
   "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self'",
+  DEV ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'",
+  DEV ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'",
   "style-src-attr 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
