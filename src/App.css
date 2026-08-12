@@ -611,6 +611,11 @@
   position: fixed;
   left: 0;
   right: 0;
+  /* Pinned to the viewport, not to the document. A fixed element with left/
+     right:0 resolves against the initial containing block, and once anything
+     has scrolled the page sideways that block is the wider one — so the bar
+     grew to match the overflow it was sitting in and then sustained it. */
+  max-width: 100vw;
   bottom: var(--vv-bottom-offset, 0px);
   z-index: 20;
   display: grid;
@@ -620,14 +625,27 @@
      text resize on a 390px phone this bar measured 578px wide. */
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-4);
-  padding: 0.4rem var(--gutter) calc(0.4rem + env(safe-area-inset-bottom));
+  /* Capped in px, not left in rem. This bar is chrome: three glyphs and their
+     labels, whose job is to stay out of the way. A rem gap grows with the
+     text size, and at 200% the gaps and padding alone were most of a phone's
+     width — the bar measured 605px inside 390px. Text still scales; the space
+     around it stops at a size that was already generous. */
+  gap: min(var(--space-4), 20px);
+  /* Horizontal padding capped for the same reason as the gap above: this bar
+     is chrome, and its inset should not grow with the text inside it. At 200%
+     the gutter alone was a quarter of a phone's width on each side. */
+  padding: 0.4rem min(var(--gutter), 18px)
+    calc(0.4rem + env(safe-area-inset-bottom));
   background: var(--surface);
   border-top: 1px solid var(--rule);
 }
 
 .bottombar-slot {
   display: inline-flex;
+  /* The tracks are minmax(0, 1fr), but a flex container still refuses to go
+     below its own content's min-content width unless told to. At 200% text
+     resize the three slots' floors added up to more than a phone. */
+  min-width: 0;
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.2rem;
@@ -3937,7 +3955,12 @@ summary.bcol-head::after {
 
 .settings-page {
   display: grid;
-  grid-template-columns: 170px 1fr;
+  /* minmax(0, 1fr), not 1fr: a grid track will not shrink below its content's
+     max-content width, and the section nav is a wrapping flex row whose
+     max-content is every tab on one line. At ordinary text that is narrower
+     than the column and never shows; at 200% text resize the nav measured
+     619px inside a 342px column and took the page sideways with it. */
+  grid-template-columns: 170px minmax(0, 1fr);
   gap: var(--space-5);
   align-items: start;
   /* Wide two-pane (#386 #10) — the block fills typical desktops and only caps
@@ -3967,7 +3990,7 @@ summary.bcol-head::after {
 
 @media (max-width: 700px) {
   .settings-page {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

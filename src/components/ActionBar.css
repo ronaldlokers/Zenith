@@ -13,6 +13,12 @@
 @layer components {
   .zui-actionbar {
     display: flex;
+    /* Wrap rather than run off the screen. Buttons in these rows carry words,
+       and words get wider with the text size while the phone does not: at
+       200% text resize the detail bar measured 788px inside a 390px viewport.
+       Wrapping costs a line at ordinary sizes only when the row genuinely
+       does not fit, which is the same trade the CV plate's action row makes. */
+    flex-wrap: wrap;
     gap: var(--space-2);
   }
 
