@@ -4500,6 +4500,15 @@ button:not(:disabled):active,
   border-radius: var(--radius-md);
   padding: 0.5rem;
 }
+
+/* The offer column's plate is there to hold offers. With none it drew an
+   empty gold pill under one header and nothing under the other four, which
+   on a first-run board reads as a control someone forgot to fill in. */
+.bcol.stage-offer .bcol-cards:empty {
+  background: none;
+  border: 0;
+  padding: 0;
+}
 .bcol.stage-offer .bcol-head .n {
   color: var(--accent-ink);
 }

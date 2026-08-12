@@ -157,6 +157,7 @@ function BoardTab({
   folded,
   onToggleFold,
   onAdd,
+  showAddBlocks,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -174,6 +175,11 @@ function BoardTab({
   folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
   onAdd: (stage: Status) => void;
+  // False on a board with nothing on it yet: the add blocks are for filing
+  // into a particular stage, which only means something once there is a
+  // board to work. Five identical primary buttons and no cards is a
+  // first-run screen shouting the same thing five times.
+  showAddBlocks: boolean;
 }) {
   const { t } = useTranslation();
   const move = (a: Application, status: string) =>
@@ -476,7 +482,7 @@ function BoardTab({
               </div>
             )}
             <div className="bcol-cards">
-              {live && (
+              {live && showAddBlocks && (
                 <div className="bcol-add">
                   <Button variant="primary" onClick={() => onAdd(rail as Status)}>
                     {t("board.addHere")}
@@ -1005,6 +1011,7 @@ export function PipelineTab({
         folded={folded}
         onToggleFold={toggleFold}
         onAdd={onOpenQuickAdd}
+        showAddBlocks={applications.length > 0}
       />
 
 

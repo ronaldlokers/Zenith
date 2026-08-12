@@ -238,10 +238,24 @@ describe("board rails", () => {
     await waitFor(() => expect(headerFor("Interested")).toBeTruthy());
   });
 
+  test("an empty board offers one way in, not one per stage", async () => {
+    // Five identical primary buttons and no cards is a first-run screen
+    // saying the same thing five times. The add blocks are for filing into a
+    // particular stage, which needs a board to be working in first.
+    profileFolded = "";
+    renderBoard([]);
+    await waitFor(() => expect(headerFor("Interested")).toBeTruthy());
+    expect(
+      screen.queryAllByRole("button", { name: "+ Add an application" }),
+    ).toHaveLength(0);
+  });
+
   test("the add block opens on the stage it sits in, and closed stages get none", async () => {
     profileFolded = "";
     const opened: (Status | undefined)[] = [];
-    renderBoard([], { onOpenQuickAdd: (s) => opened.push(s) });
+    renderBoard([app({ id: 7, status: "applied" })], {
+      onOpenQuickAdd: (s) => opened.push(s),
+    });
     await waitFor(() => expect(headerFor("Screening")).toBeTruthy());
     const adds = screen.getAllByRole("button", { name: "+ Add an application" });
     // One per live stage: nothing is created straight into a closed stage or
