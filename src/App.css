@@ -176,16 +176,39 @@
    entirely by Button.css. The .settings-btn trigger stays here — it's
    shared with other buttons elsewhere in the app. */
 
-/* Refined refresh (#465): section title takes the display voice (--serif, the display
-   voice) over a hairline, matching the detail header band. */
-.settings-modal h2 {
+/* Section headings are centred and flanked by the rule rather than sitting on
+   top of it (#535 shell) — the same treatment the page title gets, so a
+   heading reads the same wherever it appears. Grid rather than a border on
+   the text: the rules have to run to the panel's edges and meet the label,
+   which an underline cannot do. */
+.settings-modal h2,
+.settings-content h3 {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
   margin: 0 0 1.1rem;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid var(--border);
-  font-family: var(--serif);
-  font-weight: 600;
-  font-size: var(--text-heading);
-  letter-spacing: -0.01em;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+
+.settings-modal h2::before,
+.settings-modal h2::after,
+.settings-content h3::before,
+.settings-content h3::after {
+  content: "";
+  height: 1px;
+  background: var(--rule);
+}
+
+/* A subsection heading sits inside the panel, so it takes the space above it
+   that the section title does not need. */
+.settings-content h3 {
+  margin-top: var(--space-4);
 }
 
 .settings-field {
@@ -1563,6 +1586,30 @@ button.primary:hover {
 
 .feed-match-n {
   flex: 0 0 auto;
+}
+
+/* People, banded (#535 shell): the ones the ball is with, then everyone
+   else. Same device as the feed's match bands — a heading that is a list item,
+   so the list stays one list. */
+.people-band {
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: var(--space-3) 0 0.1rem;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--muted);
+}
+
+.people-band:first-child {
+  margin-top: 0;
+}
+
+.people-band-n {
+  color: var(--faint);
 }
 
 /* Band heading inside the one list: the cards are grouped by how well they

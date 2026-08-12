@@ -1,6 +1,6 @@
 // People (contacts) tab, its add/edit form, and the contact detail modal.
 // Split out of the former network.tsx (#451) alongside companies.tsx.
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import { Dialog } from "./ui";
@@ -65,6 +65,17 @@ export function ContactsTab({
         .filter(Boolean)
         .some((f) => (f as string).toLowerCase().includes(q)),
   );
+
+  // Who the ball is with (#535 shell). Two ways it lands back on you: they
+  // answered and you have not, or a follow-up you set has come due. Everyone
+  // else is a person you know rather than a thing to do, so the screen leads
+  // with the first group and says how many are in it.
+  const owed = visible.filter(
+    (c) =>
+      c.outreach_status === "replied" ||
+      (c.follow_up_at != null && (isFollowUpDue(c) || isFollowUpOverdue(c))),
+  );
+  const rest = visible.filter((c) => !owed.includes(c));
 
   const run = (fn: () => Promise<unknown>) =>
     fn()
@@ -155,33 +166,46 @@ export function ContactsTab({
         </ul>
       ) : (
       <ul className="cards">
-        {visible.map((c) => (
-          <Row
-            key={c.id}
-            {...rowActivate(() => setDetailId(c.id))}
-          >
-            <div className="l1">
-              <strong>{c.name}</strong>
-              <span className="co">
-                {[c.role, c.company_name].filter(Boolean).join(" · ")}
-              </span>
-            </div>
-            <div className="l2">
-              <span className="co">{c.email ?? c.phone ?? ""}</span>
-              {c.outreach_status !== "not_contacted" && (
-                <span className={`outreach-pill ${c.outreach_status}`}>
-                  {t(`outreach.statuses.${c.outreach_status}`)}
+        {owed.length > 0 && (
+          <li className="people-band">
+            <span className="people-band-h">{t("contacts.owed")}</span>
+            <span className="people-band-n">({owed.length})</span>
+          </li>
+        )}
+        {[...owed, ...rest].map((c, i) => (
+          <Fragment key={c.id}>
+            {owed.length > 0 && i === owed.length && (
+              <li className="people-band">
+                <span className="people-band-h">
+                  {t("contacts.everyoneElse")}
                 </span>
-              )}
-              {c.follow_up_at && (isFollowUpDue(c) || isFollowUpOverdue(c)) && (
-                <span
-                  className={`due${isFollowUpOverdue(c) ? " late" : " today"}`}
-                >
-                  {t("outreach.followUpDue")}: {formatDate(c.follow_up_at)}
+                <span className="people-band-n">({rest.length})</span>
+              </li>
+            )}
+            <Row {...rowActivate(() => setDetailId(c.id))}>
+              <div className="l1">
+                <strong>{c.name}</strong>
+                <span className="co">
+                  {[c.role, c.company_name].filter(Boolean).join(" · ")}
                 </span>
-              )}
-            </div>
-          </Row>
+              </div>
+              <div className="l2">
+                <span className="co">{c.email ?? c.phone ?? ""}</span>
+                {c.outreach_status !== "not_contacted" && (
+                  <span className={`outreach-pill ${c.outreach_status}`}>
+                    {t(`outreach.statuses.${c.outreach_status}`)}
+                  </span>
+                )}
+                {c.follow_up_at && (isFollowUpDue(c) || isFollowUpOverdue(c)) && (
+                  <span
+                    className={`due${isFollowUpOverdue(c) ? " late" : " today"}`}
+                  >
+                    {t("outreach.followUpDue")}: {formatDate(c.follow_up_at)}
+                  </span>
+                )}
+              </div>
+            </Row>
+          </Fragment>
         ))}
         {visible.length === 0 && (
           <EmptyState as="li">

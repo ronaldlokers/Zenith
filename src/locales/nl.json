@@ -922,7 +922,9 @@
     "open": "Menu openen"
   },
   "contacts": {
-    "view": "Weergave mensen"
+    "view": "Weergave mensen",
+    "owed": "Antwoord verschuldigd",
+    "everyoneElse": "Alle anderen"
   },
   "dashboard": {
     "kpiOpen": "Open sollicitaties",

@@ -922,7 +922,9 @@
     "open": "Open the menu"
   },
   "contacts": {
-    "view": "People view"
+    "view": "People view",
+    "owed": "Owe a reply",
+    "everyoneElse": "Everyone else"
   },
   "dashboard": {
     "kpiOpen": "Open applications",
