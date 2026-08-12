@@ -1,4 +1,4 @@
-import { env, SELF } from "cloudflare:test";
+import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { wipeUserData } from "../worker/demo";
 import { authedFetch } from "./helpers";
