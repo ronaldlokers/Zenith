@@ -908,6 +908,10 @@
     "insightsUnrecorded_one": "{{count}} closed with no reason recorded",
     "insightsUnrecorded_other": "{{count}} closed with no reason recorded"
   },
+  "menu": {
+    "label": "Destinations",
+    "open": "Open the menu"
+  },
   "contacts": {
     "view": "People view"
   },

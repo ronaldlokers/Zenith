@@ -908,6 +908,10 @@
     "insightsUnrecorded_one": "{{count}} afgesloten zonder vastgelegde reden",
     "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden"
   },
+  "menu": {
+    "label": "Bestemmingen",
+    "open": "Menu openen"
+  },
   "contacts": {
     "view": "Weergave mensen"
   },
