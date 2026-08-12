@@ -159,7 +159,6 @@
     "noPeople": "Nog geen contacten. Voeg recruiters en hiring managers toe om elk contactmoment te loggen.",
     "noPeopleMatch": "Geen contacten komen overeen met je zoekopdracht.",
     "boardEmpty": "leeg",
-    "boardKeepPushing": "blijf doorzetten",
     "noFollowUps": "Geen vervolgacties gepland.",
     "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op “Nu controleren”.",
     "pipelineNoJobs": "Nog niets bijgehouden."
@@ -792,17 +791,13 @@
     "sortFollowup": "Follow-up datum",
     "sortFit": "Fit-score",
     "sortUpdated": "Laatst bijgewerkt",
-    "archivedBtn": "Archief",
-    "archivedTitle": "Archief & gesloten",
     "restore": "Herstellen",
     "filterBtn": "Filter",
-    "reasonRejected": "afgewezen",
-    "reasonWithdrawn": "ingetrokken",
-    "reasonGhosted": "ghosted",
-    "reasonArchived": "opzij gezet",
-    "noArchived": "Nog niets gearchiveerd of gesloten.",
-    "archAll": "Alles",
-    "archActive": "Alleen actief"
+    "archActive": "Alleen actief",
+    "railArchived": "Gearchiveerd",
+    "addHere": "+ Sollicitatie toevoegen",
+    "foldRail": "{{stage}} inklappen",
+    "unfoldRail": "{{stage}} openen, {{count}} sollicitaties"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

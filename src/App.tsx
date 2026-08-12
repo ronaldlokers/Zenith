@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
-import { type Profile } from "./types";
+import { type Profile, type Status } from "./types";
 import {
   AdminIcon,
   ErrorIcon,
@@ -76,6 +76,9 @@ export default function App() {
   const sessionUser = session?.user;
   const isAdmin = sessionUser?.role === "admin";
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  // Which stage a board add block opened the dialog for (#535). Every other
+  // entry point leaves it unset and the dialog picks its own default.
+  const [quickAddStage, setQuickAddStage] = useState<Status | undefined>();
   const [showPalette, setShowPalette] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [jumpQuery, setJumpQuery] = useState("");
@@ -230,6 +233,7 @@ export default function App() {
       {showQuickAdd && (
         <QuickAddDialog
           companies={visibleCompanies}
+          initialStatus={quickAddStage}
           onClose={() => setShowQuickAdd(false)}
           onError={setError}
           onCreated={(a, open) => {
@@ -457,7 +461,10 @@ export default function App() {
                 onOpenJob={(id: number | null) =>
                   navigate(id ? `/board/${id}` : "/board")
                 }
-                onOpenQuickAdd={() => setShowQuickAdd(true)}
+                onOpenQuickAdd={(stage) => {
+                  setQuickAddStage(stage);
+                  setShowQuickAdd(true);
+                }}
                 onOpenSampleData={() => navigate("/settings?s=data")}
               />
             )}

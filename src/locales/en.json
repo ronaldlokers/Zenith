@@ -159,7 +159,6 @@
     "noPeople": "No people yet. Add recruiters and hiring managers so you can log every touchpoint.",
     "noPeopleMatch": "No people match your search.",
     "boardEmpty": "empty",
-    "boardKeepPushing": "keep pushing",
     "noFollowUps": "No follow-ups scheduled.",
     "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit “Check now”.",
     "pipelineNoJobs": "Nothing tracked yet."
@@ -792,17 +791,13 @@
     "sortFollowup": "Follow-up date",
     "sortFit": "Fit score",
     "sortUpdated": "Last updated",
-    "archivedBtn": "Archived",
-    "archivedTitle": "Archived & closed",
     "restore": "Restore",
     "filterBtn": "Filter",
-    "reasonRejected": "rejected",
-    "reasonWithdrawn": "withdrawn",
-    "reasonGhosted": "ghosted",
-    "reasonArchived": "set aside",
-    "noArchived": "Nothing archived or closed yet.",
-    "archAll": "All",
-    "archActive": "Active only"
+    "archActive": "Active only",
+    "railArchived": "Archived",
+    "addHere": "+ Add an application",
+    "foldRail": "Fold {{stage}}",
+    "unfoldRail": "Open {{stage}}, {{count}} applications"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."

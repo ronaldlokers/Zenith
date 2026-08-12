@@ -35,3 +35,21 @@ if (typeof localStorage === "undefined") {
     },
   });
 }
+
+// jsdom implements no CSS layout, so it ships no matchMedia at all. The board
+// asks it whether the pointer is coarse (drag-and-drop is off on touch), and
+// an absent global throws before the component renders. Answering "no match"
+// gives every query the desktop branch, which is what a component test is
+// exercising; a test that needs the other answer overrides this itself.
+if (typeof window !== "undefined" && !window.matchMedia) {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}

@@ -15,16 +15,19 @@ import type {
   Status,
   StatusHistoryRow,
 } from "./types";
-import { ArchiveIcon, FilterIcon, SearchIcon } from "./icons";
-import type { BoardSort, Urgency } from "./format";
+import { FilterIcon, FoldIcon, SearchIcon } from "./icons";
+import type { BoardRail, BoardSort, Urgency } from "./format";
 import {
   ageDays,
+  BOARD_RAILS,
+  DEFAULT_FOLDED,
   isDead,
   isOverdue,
   keyShortcutsEnabled,
   median,
   parseSqlDate,
   PIPELINE,
+  railOf,
   sortCards,
   today,
   totalComp,
@@ -32,7 +35,7 @@ import {
 import { Dialog } from "./ui";
 import { rowActivate } from "./hooks";
 import { ApplicationDetailModal } from "./detail";
-import { ActionBar, Button, CardMenu, FilterTab, StarRating } from "./components";
+import { ActionBar, Button, CardMenu, StarRating } from "./components";
 
 function BoardCard({
   a,
@@ -45,6 +48,7 @@ function BoardCard({
   onMove,
   onSetFollowUp,
   onArchive,
+  onUnarchive,
 }: {
   a: Application;
   urgency: Urgency;
@@ -56,6 +60,7 @@ function BoardCard({
   onMove: (status: string) => void;
   onSetFollowUp: (date: string | null, text: string | null) => void;
   onArchive: () => void;
+  onUnarchive: () => void;
 }) {
   const { t } = useTranslation();
   const actionable = urgency === "overdue" || urgency === "today";
@@ -72,6 +77,7 @@ function BoardCard({
         onSetFollowUp={onSetFollowUp}
         onOpenDetail={onOpenDetail}
         onArchive={onArchive}
+        onUnarchive={onUnarchive}
       />
       <div className="bcard-body" {...rowActivate(onOpenDetail)}>
         <strong>
@@ -129,6 +135,9 @@ function BoardTab({
   onSaveOutcome,
   initialDetailId,
   onDetailIdChange,
+  folded,
+  onToggleFold,
+  onAdd,
 }: CrudTabProps & {
   applications: Application[];
   companies: Company[];
@@ -143,6 +152,9 @@ function BoardTab({
   sort: BoardSort;
   initialDetailId?: number | null;
   onDetailIdChange?: (id: number | null) => void;
+  folded: Set<BoardRail>;
+  onToggleFold: (rail: BoardRail) => void;
+  onAdd: (stage: Status) => void;
 }) {
   const { t } = useTranslation();
   const move = (a: Application, status: string) =>
@@ -173,7 +185,11 @@ function BoardTab({
       )
       .catch((e) => onError((e as Error).message));
 
-  const open = applications.filter((a) => !isDead(a.status));
+  const unarchive = (id: number) =>
+    api
+      .unarchiveApplication(id)
+      .then(() => onChanged())
+      .catch((e) => onError((e as Error).message));
 
   // Drag-and-drop is gated off on touch (#54); on touch the ⋯ menu's
   // "Move to stage" reclassifies a card instead.
@@ -187,7 +203,7 @@ function BoardTab({
     return () => mq.removeEventListener("change", onChange);
   }, []);
   const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [dragOverStage, setDragOverStage] = useState<Status | null>(null);
+  const [dragOverRail, setDragOverRail] = useState<BoardRail | null>(null);
   const [detailId, setDetailIdState] = useState<number | null>(
     initialDetailId ?? null,
   );
@@ -200,12 +216,24 @@ function BoardTab({
   };
   const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
-  // Column counts + funnel proportion — headers carry the funnel now that
-  // the ring is gone (#346).
-  const stageCounts = PIPELINE.map(
-    (stage) => open.filter((a) => a.status === stage).length,
+  // One bucket per rail, filled in a single pass. Every application lands on
+  // exactly one rail (railOf resolves archived-and-rejected), so the counts
+  // add up to the filtered set no matter which rails are folded.
+  const byRail = new Map<BoardRail, Application[]>(
+    BOARD_RAILS.map((r) => [r, [] as Application[]]),
   );
-  const funnelBase = Math.max(1, ...stageCounts);
+  for (const a of applications) byRail.get(railOf(a))?.push(a);
+  const countOf = (rail: BoardRail) => byRail.get(rail)?.length ?? 0;
+  // The funnel proportion compares the live stages against each other; the
+  // closed rails are not steps in it, so they carry no bar.
+  const funnelBase = Math.max(1, ...PIPELINE.map(countOf));
+
+  // The grid is data-driven — a folded rail is a fixed sliver and an open
+  // column takes an equal share of what is left — so the track list cannot
+  // live in the stylesheet.
+  const trackList = BOARD_RAILS.map((r) =>
+    folded.has(r) ? "var(--rail-w)" : "minmax(0, 1fr)",
+  ).join(" ");
 
   const cardProps = (a: Application) => ({
     urgency: urgencyOf(a),
@@ -214,51 +242,105 @@ function BoardTab({
     onSetFollowUp: (date: string | null, text: string | null) =>
       setFollowUp(a.id, date, text),
     onArchive: () => archive(a.id),
+    onUnarchive: () => unarchive(a.id),
   });
 
   return (
     <>
-    <div className="board">
-      {PIPELINE.map((stage, i) => {
-        const cards = sortCards(
-          open.filter((a) => a.status === stage),
-          sort,
-          urgencyOf,
-        );
-        const className = `bcol stage-${stage}${dragOverStage === stage ? " drag-over" : ""}`;
-        const handleDragOver = (e: React.DragEvent) => {
-          if (draggingId === null) return;
-          e.preventDefault();
-          setDragOverStage(stage);
-        };
-        const handleDragLeave = () =>
-          setDragOverStage((sName) => (sName === stage ? null : sName));
+    <div className="board" style={{ gridTemplateColumns: trackList }}>
+      {BOARD_RAILS.map((rail) => {
+        const isFolded = folded.has(rail);
+        const count = countOf(rail);
+        const label =
+          rail === "archived" ? t("board.railArchived") : t(`stages.${rail}`);
+        // Dropping onto the archive rail archives; dragging back out of it
+        // restores. Both are the same gesture as a stage change, so neither
+        // gets a confirmation the stage move does not have.
         const handleDrop = (e: React.DragEvent) => {
           e.preventDefault();
-          const id = Number(e.dataTransfer.getData("text/plain"));
-          if (id) onStatus(id, stage);
           setDraggingId(null);
-          setDragOverStage(null);
+          setDragOverRail(null);
+          const id = Number(e.dataTransfer.getData("text/plain"));
+          if (!id) return;
+          const dragged = applications.find((a) => a.id === id);
+          if (!dragged || railOf(dragged) === rail) return;
+          if (rail === "archived") return void archive(id);
+          if (dragged.archived_at) void unarchive(id);
+          if (dragged.status !== rail) onStatus(id, rail);
         };
+        const dropProps = {
+          onDragOver: (e: React.DragEvent) => {
+            if (draggingId === null) return;
+            e.preventDefault();
+            setDragOverRail(rail);
+          },
+          onDragLeave: () =>
+            setDragOverRail((cur) => (cur === rail ? null : cur)),
+          onDrop: handleDrop,
+        };
+        const over = dragOverRail === rail ? " drag-over" : "";
+
+        // A folded rail is still a drop target: the label turns on its side
+        // so the horizontal room goes to the stages being worked in, but the
+        // stage stays reachable without unfolding it first.
+        if (isFolded) {
+          return (
+            <button
+              key={rail}
+              type="button"
+              className={`bcol-rail rail-${rail} stage-${rail}${over}`}
+              aria-expanded="false"
+              aria-label={t("board.unfoldRail", { stage: label, count })}
+              onClick={() => onToggleFold(rail)}
+              {...dropProps}
+            >
+              <span className="n" aria-hidden="true">
+                {count}
+              </span>
+              <span className="vlabel" aria-hidden="true">
+                {label}
+              </span>
+            </button>
+          );
+        }
+
+        const cards = sortCards(byRail.get(rail) ?? [], sort, urgencyOf);
+        const live = !isDead(rail as Status) && rail !== "archived";
         return (
           <div
-            key={stage}
-            className={className}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            key={rail}
+            className={`bcol rail-${rail} stage-${rail}${over}`}
+            {...dropProps}
           >
             <div className="bcol-head">
-              {t(`stages.${stage}`)}
-              <span className="n">{stageCounts[i]}</span>
+              <button
+                type="button"
+                className="bcol-fold"
+                aria-expanded="true"
+                aria-label={t("board.foldRail", { stage: label })}
+                onClick={() => onToggleFold(rail)}
+              >
+                <FoldIcon />
+                {label}
+              </button>
+              <span className="n">{count}</span>
             </div>
-            <div className="bcol-prop" aria-hidden="true">
-              <i
-                className={`s-${stage}`}
-                style={{ width: `${(stageCounts[i] / funnelBase) * 100}%` }}
-              />
-            </div>
+            {live && (
+              <div className="bcol-prop" aria-hidden="true">
+                <i
+                  className={`s-${rail}`}
+                  style={{ width: `${(count / funnelBase) * 100}%` }}
+                />
+              </div>
+            )}
             <div className="bcol-cards">
+              {live && (
+                <div className="bcol-add">
+                  <Button variant="primary" onClick={() => onAdd(rail as Status)}>
+                    {t("board.addHere")}
+                  </Button>
+                </div>
+              )}
               {cards.map((a) => (
                 <BoardCard
                   key={a.id}
@@ -272,17 +354,13 @@ function BoardTab({
                   }}
                   onDragEnd={() => {
                     setDraggingId(null);
-                    setDragOverStage(null);
+                    setDragOverRail(null);
                   }}
                   {...cardProps(a)}
                 />
               ))}
-              {cards.length === 0 && (
-                <div className="bempty">
-                  {stage === "offer"
-                    ? t("empty.boardKeepPushing")
-                    : t("empty.boardEmpty")}
-                </div>
+              {cards.length === 0 && !live && (
+                <div className="bempty">{t("empty.boardEmpty")}</div>
               )}
             </div>
           </div>
@@ -341,7 +419,7 @@ export function PipelineTab({
   onSaveOutcome: (id: number, reason: string | null, note: string | null) => void;
   lastInteractions: { application_id: number; last_at: string }[];
   onOpenJob: (id: number | null) => void;
-  onOpenQuickAdd: () => void;
+  onOpenQuickAdd: (stage?: Status) => void;
   onOpenSampleData: () => void;
 }) {
   const { t } = useTranslation();
@@ -354,10 +432,39 @@ export function PipelineTab({
   // Filters behind a Filter button; the Archived modal replaces the old
   // Closed drawer (#346).
   const [showFilters, setShowFilters] = useState(false);
-  const [showArchivedModal, setShowArchivedModal] = useState(false);
-  const [archivedFilter, setArchivedFilter] = useState<
-    "all" | "rejected" | "ghosted" | "withdrawn" | "archived"
-  >("all");
+  // Which rails are folded (#535 shell). Kept on profile so it follows you
+  // between devices; the defaults stand in until that lands, which is what
+  // someone who has never folded anything would see anyway.
+  const [folded, setFolded] = useState<Set<BoardRail>>(
+    () => new Set(DEFAULT_FOLDED),
+  );
+  useEffect(() => {
+    let live = true;
+    api
+      .profile()
+      .then((p) => {
+        if (!live) return;
+        // NULL means never set, so the defaults apply; the empty string
+        // means someone deliberately unfolded everything.
+        if (p.board_folded == null) return;
+        setFolded(new Set(p.board_folded.split(",").filter(Boolean) as BoardRail[]));
+      })
+      .catch(() => {
+        // A failed read leaves the defaults in place — the board is still
+        // usable, and the next toggle writes a full set anyway.
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+  const toggleFold = (rail: BoardRail) => {
+    const next = new Set(folded);
+    if (!next.delete(rail)) next.add(rail);
+    setFolded(next);
+    api
+      .setBoardFolded(BOARD_RAILS.filter((r) => next.has(r)))
+      .catch((e) => onError((e as Error).message));
+  };
 
   // One-shot: consume the jump query then clear it upstream, so a single
   // Calendar jump doesn't re-inject the search on every later visit (#314).
@@ -518,7 +625,6 @@ export function PipelineTab({
   const q = query.trim().toLowerCase();
   const filtered = applications.filter(
     (a) =>
-      !a.archived_at &&
       (roleFilter === "all" || a.role_type === roleFilter) &&
       (companyFilter === "all" || String(a.company_id) === companyFilter) &&
       (tagFilter === "all" ||
@@ -554,31 +660,12 @@ export function PipelineTab({
     (roleFilter !== "all" ? 1 : 0) +
     (companyFilter !== "all" ? 1 : 0) +
     (tagFilter !== "all" ? 1 : 0);
-  // Inactive jobs (closed statuses + manually archived) — the Archived
-  // modal's contents, off the board entirely (#346).
-  const inactive = applications
-    .filter((a) => isDead(a.status) || a.archived_at)
-    .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-  const reasonOf = (a: Application) =>
-    isDead(a.status) ? (a.status as "rejected" | "withdrawn" | "ghosted") : "archived";
-  const archivedTabs = [
-    { key: "all" as const, n: inactive.length },
-    { key: "rejected" as const, n: inactive.filter((a) => reasonOf(a) === "rejected").length },
-    { key: "ghosted" as const, n: inactive.filter((a) => reasonOf(a) === "ghosted").length },
-    { key: "withdrawn" as const, n: inactive.filter((a) => reasonOf(a) === "withdrawn").length },
-    { key: "archived" as const, n: inactive.filter((a) => reasonOf(a) === "archived").length },
-  ].filter((tobj) => tobj.key === "all" || tobj.n > 0);
-  const shownArchived =
-    archivedFilter === "all"
-      ? inactive
-      : inactive.filter((a) => reasonOf(a) === archivedFilter);
-
   return (
     <section>
       {applications.length === 0 && (
         <p className="pipeline-empty-hint">
           {t("empty.pipelineNoJobs")}{" "}
-          <Button variant="link" onClick={onOpenQuickAdd}>
+          <Button variant="link" onClick={() => onOpenQuickAdd()}>
             {t("toolbar.addJob")}
           </Button>
           {" · "}
@@ -621,15 +708,6 @@ export function PipelineTab({
             <option value="updated">{t("board.sortUpdated")}</option>
           </select>
         </label>
-        <button
-          type="button"
-          className="board-bar-btn"
-          onClick={() => setShowArchivedModal(true)}
-        >
-          <ArchiveIcon />
-          {t("board.archivedBtn")}
-          {inactive.length ? ` · ${inactive.length}` : ""}
-        </button>
       </div>
 
       {showFilters && (
@@ -754,81 +832,11 @@ export function PipelineTab({
         onSaveOutcome={onSaveOutcome}
         initialDetailId={null}
         onDetailIdChange={onOpenJob}
+        folded={folded}
+        onToggleFold={toggleFold}
+        onAdd={onOpenQuickAdd}
       />
 
-      {showArchivedModal && (
-        <Dialog
-          label={t("board.archivedTitle")}
-          onClose={() => setShowArchivedModal(false)}
-          className="archived-modal"
-        >
-          <div className="archived-head">
-            <h2>{t("board.archivedTitle")}</h2>
-            <span className="mono small muted">{inactive.length}</span>
-          </div>
-          {inactive.length === 0 ? (
-            <p className="muted small">{t("board.noArchived")}</p>
-          ) : (
-            <>
-            <div className="archived-tabs">
-              {archivedTabs.map((tobj) => (
-                <FilterTab
-                  key={tobj.key}
-                  active={archivedFilter === tobj.key}
-                  count={tobj.n}
-                  onClick={() => setArchivedFilter(tobj.key)}
-                >
-                  {tobj.key === "all"
-                    ? t("board.archAll")
-                    : t(
-                        `board.reason${tobj.key[0].toUpperCase()}${tobj.key.slice(1)}`,
-                      )}
-                </FilterTab>
-              ))}
-            </div>
-            <ul className="archived-list">
-              {shownArchived.map((a) => {
-                const reasonKey =
-                  reasonOf(a) === "rejected"
-                    ? "reasonRejected"
-                    : reasonOf(a) === "withdrawn"
-                      ? "reasonWithdrawn"
-                      : reasonOf(a) === "ghosted"
-                        ? "reasonGhosted"
-                        : "reasonArchived";
-                const restore = () =>
-                  (a.archived_at
-                    ? api.unarchiveApplication(a.id).then(() => onChanged())
-                    : Promise.resolve(onStatus(a.id, "interested"))
-                  )
-                    .then(() => setShowArchivedModal(false))
-                    .catch((e) => onError((e as Error).message));
-                return (
-                  <li key={a.id}>
-                    <button
-                      className="archived-open"
-                      onClick={() => {
-                        setShowArchivedModal(false);
-                        onOpenJob(a.id);
-                      }}
-                    >
-                      <span className="archived-title">{a.title}</span>
-                      <span className="archived-co muted">
-                        {a.company_name ?? "—"}
-                      </span>
-                    </button>
-                    <span className="archived-reason">{t(`board.${reasonKey}`)}</span>
-                    <button className="archived-restore" onClick={restore}>
-                      {t("board.restore")} ›
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            </>
-          )}
-        </Dialog>
-      )}
 
     </section>
   );

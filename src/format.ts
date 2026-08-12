@@ -15,6 +15,36 @@ export const PIPELINE: Status[] = [
   "offer",
 ];
 
+// Rails on the board (#535 shell): the eight stages in pipeline order, plus
+// the manual archive at the end. Archiving is a flag rather than a status,
+// but on the board it is one more rail that folds and unfolds like the rest,
+// which is why there is no Archive screen any more.
+export type BoardRail = Status | "archived";
+
+export const BOARD_RAILS: BoardRail[] = [
+  ...PIPELINE,
+  "rejected",
+  "withdrawn",
+  "ghosted",
+  "archived",
+];
+
+// What is folded before you have said otherwise — the rails nothing moves
+// out of. Only the default: folding is a choice, so once a rail has been
+// unfolded it stays that way until it is folded again.
+export const DEFAULT_FOLDED: BoardRail[] = [
+  "rejected",
+  "withdrawn",
+  "ghosted",
+  "archived",
+];
+
+// Manual archiving wins over status: an archived rejection belongs on the
+// archive rail, not on the rejected one, or it would appear twice.
+export function railOf(a: Application): BoardRail {
+  return a.archived_at ? "archived" : a.status;
+}
+
 export const OUTREACH_STATUSES: OutreachStatus[] = [
   "not_contacted",
   "awaiting_reply",

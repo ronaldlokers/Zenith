@@ -224,6 +224,15 @@ export function FilterIcon() {
     </svg>
   );
 }
+// Two chevrons pointing at each other: the board header's fold affordance
+// (#535). Sized to the mono chrome it sits in rather than the 13px chip size.
+export function FoldIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 6l6 6-6 6M20 6l-6 6 6 6" />
+    </svg>
+  );
+}
 export function ArchiveIcon() {
   return (
     <svg className="chip-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
