@@ -37,6 +37,12 @@ baseline*/
 after*/
 control/
 
+# An ad-hoc capture script run without its output variable set writes to a
+# directory literally named "undefined" — three PNGs reached this branch that
+# way. The repo's own scripts default OUT_DIR, so this only guards the
+# throwaway ones written while debugging.
+undefined/
+
 # scripts/storybook-shots.mjs OUT_DIR captures (default storybook-shots/,
 # same throwaway-diff pattern as the baseline/after*/control/ app captures
 # above) — regenerated per run, never commit.
