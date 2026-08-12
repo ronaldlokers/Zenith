@@ -200,6 +200,12 @@
      describe. */
   .cv-card-foot {
     display: flex;
+    /* The two-value gap is the tell: a row gap does nothing unless the line
+       wraps, so wrapping was always the intent here and was simply never
+       switched on. Below about 340px the four counts overflow the card and
+       take the document's horizontal scroll with them — 320px is the width
+       WCAG reflow is measured at, and the one this failed. */
+    flex-wrap: wrap;
     gap: 0.35rem 1.2rem;
     margin-top: 1rem;
     padding-top: 0.7rem;
