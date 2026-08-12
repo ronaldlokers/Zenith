@@ -3728,13 +3728,13 @@ summary.bcol-head::after {
   .dash.today {
     max-width: none;
   }
-  .today-cols {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: 1.25rem;
-    align-items: start;
-  }
 }
+
+/* The landing screen's own two-column rule used to live here and, sitting
+   later in the file, silently beat the three-column rule above it — so the
+   third column wrapped under the first and "Happened today" fell below the
+   fold it was moved onto the landing screen to stay above. The column count
+   is declared once now (search "today-cols"). */
 
 /* The ascent strip — where the climb stands right now, at a glance. Segment
    width is the stage's share of live applications; the count and the stage
@@ -4142,10 +4142,22 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .app:has(.dash) .content,
   .app:has(.company-grid) .content,
   .app:has(.job-page) .content {
     max-width: 1000px;
+  }
+
+  .app:has(.dash) .content {
+    max-width: 1000px;
+  }
+
+  /* The landing screen runs three columns of text (#535), so it takes a
+     wider measure than the rest of .dash. At 1000px each column was 300px —
+     enough to lay out, not enough to read a sentence in. Two classes rather
+     than one so it beats the .dash rule above on specificity, not on being
+     written after it. Insights keeps its figures at the narrower measure. */
+  .app:has(.dash.today) .content {
+    max-width: 1240px;
   }
 }
 
