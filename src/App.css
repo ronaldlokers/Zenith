@@ -2590,19 +2590,19 @@ summary.bcol-head::after {
 .cv-doc {
   min-height: 100%;
   box-sizing: border-box;
-  background: #fff;
-  color: #1b1d2e;
+  background: var(--doc-ground);
+  color: var(--doc-ink);
   font-family: var(--sans);
-  font-size: 8.5px;
+  font-size: var(--doc-text);
   line-height: 1.42;
   padding: 16px 18px;
-  border-radius: 3px;
+  border-radius: var(--doc-radius);
   box-shadow: var(--shadow-1);
 }
 
 .cv-doc-name {
   margin: 0 0 3px;
-  font-size: 15px;
+  font-size: var(--doc-name);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -2614,8 +2614,8 @@ summary.bcol-head::after {
 .cv-doc-contact,
 .cv-doc-links {
   margin: 0 0 2px;
-  color: #4a4d63;
-  font-size: 8px;
+  color: var(--doc-muted);
+  font-size: var(--doc-small);
 }
 
 .cv-doc-summary {
@@ -2629,12 +2629,12 @@ summary.bcol-head::after {
 .cv-doc-sec > h2 {
   margin: 0 0 4px;
   padding-bottom: 2px;
-  border-bottom: 1px solid #d8d5cc;
-  font-size: 8px;
+  border-bottom: 1px solid var(--doc-rule);
+  font-size: var(--doc-small);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #14173a;
+  color: var(--doc-heading);
 }
 
 .cv-doc-item {
@@ -2654,8 +2654,8 @@ summary.bcol-head::after {
 
 .cv-doc-item-range {
   flex: 0 0 auto;
-  color: #6b675e;
-  font-size: 7.5px;
+  color: var(--doc-faint);
+  font-size: var(--doc-fine);
   white-space: nowrap;
 }
 
@@ -2665,7 +2665,7 @@ summary.bcol-head::after {
 
 .cv-doc-item-skills {
   margin: 1px 0 0;
-  color: #6b675e;
+  color: var(--doc-faint);
   font-style: italic;
 }
 
@@ -2683,12 +2683,12 @@ summary.bcol-head::after {
 }
 
 .cv-doc-2col .cv-doc-aside {
-  background: #f2f0ea;
+  background: var(--doc-aside);
   padding: 16px 12px;
 }
 
 .cv-doc-2col .cv-doc-aside .cv-doc-name {
-  font-size: 13px;
+  font-size: var(--doc-name-aside);
 }
 
 .cv-doc-2col .cv-doc-aside-links {
@@ -2697,8 +2697,8 @@ summary.bcol-head::after {
 
 .cv-doc-2col .cv-doc-aside-links p {
   margin: 0 0 1px;
-  color: #4a4d63;
-  font-size: 8px;
+  color: var(--doc-muted);
+  font-size: var(--doc-small);
   word-break: break-word;
 }
 
@@ -2709,18 +2709,18 @@ summary.bcol-head::after {
 .cv-doc-2col .cv-doc-aside-sec h3 {
   margin: 0 0 3px;
   padding-bottom: 2px;
-  border-bottom: 1px solid #d8d5cc;
-  font-size: 7.5px;
+  border-bottom: 1px solid var(--doc-rule);
+  font-size: var(--doc-fine);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #14173a;
+  color: var(--doc-heading);
 }
 
 .cv-doc-2col .cv-doc-aside-sec p {
   margin: 0;
-  color: #4a4d63;
-  font-size: 8px;
+  color: var(--doc-muted);
+  font-size: var(--doc-small);
 }
 
 .cv-doc-2col .cv-doc-main {
@@ -2903,7 +2903,7 @@ summary.bcol-head::after {
 .cv-t-line {
   display: block;
   height: 2px;
-  border-radius: 1px;
+  border-radius: var(--doc-radius-fine);
   background: var(--faint);
 }
 
@@ -4539,6 +4539,9 @@ button:not(:disabled):active,
   }
 
   body {
+    /* Print white, not the CV preview's paper: the two happen to share a
+       value but not a meaning, and tying them together would make a change
+       to the CV document silently alter every printed page. */
     background: #fff;
     color: #000;
   }

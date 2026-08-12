@@ -219,6 +219,31 @@
   --radius-lg: 14px;
   --radius-full: 999px;
 
+  /* ── The printed page ────────────────────────────────────────────────
+     The CV preview (.cv-doc) is not app UI — it renders a simulated A4
+     sheet, so it is laid out at a physical scale rather than on the app's
+     rem ramp, and its ink is the document's rather than Zenith's. That is
+     deliberate, but it was carried as ~17 literals, which reads as drift
+     and hides real drift in the noise.
+     Named here so the second unit system is explicit and reviewable. The
+     values are unchanged from what the preview already rendered.
+     Sizes are px on purpose: they are fractions of a sheet, not of the
+     reader's text size, and must not scale with the app's type. */
+  --doc-ground: #ffffff;
+  --doc-aside: #f2f0ea;
+  --doc-ink: #1b1d2e;
+  --doc-heading: #14173a;
+  --doc-muted: #4a4d63;
+  --doc-faint: #6b675e;
+  --doc-rule: #d8d5cc;
+  --doc-text: 8.5px;
+  --doc-small: 8px;
+  --doc-fine: 7.5px;
+  --doc-name: 15px;
+  --doc-name-aside: 13px;
+  --doc-radius: 3px;
+  --doc-radius-fine: 1px;
+
   /* Elevation — two levels: raised surfaces (cards/panels) and overlays
      (modals/dropdowns). Per-theme below since shadow needs the ground. */
   --shadow-1: 0 1px 2px rgba(20, 23, 58, 0.04),

@@ -272,6 +272,16 @@ Separation is on the blue↔orange axis, the one axis every dichromacy preserves
 
 **One theme.** Zenith is light-only. There is no `data-theme` attribute and no `prefers-color-scheme` branch anywhere in the stylesheets; the Automatic and Dark options were removed (see `docs/superpowers/specs/2026-08-12-fizzy-shell-design.md`). Adding a second ground back is a design decision, not a fix — it means re-deriving every token pair below, and re-running the palette suite against both grounds.
 
+### The printed page
+
+The CV preview (`.cv-doc`) is the one surface that is **not** app UI: it renders a simulated A4 sheet. It therefore runs on a second, deliberate unit system, named as the `--doc-*` family in `index.css`.
+
+- **Sizes are px, not rem.** They are fractions of a sheet, not of the reader's text size, and must not scale with the app's type ramp — a CV that reflows when someone changes their browser font is no longer a preview of what will print.
+- **Ink is the document's, not Zenith's.** `--doc-ink`, `--doc-heading`, `--doc-muted`, `--doc-faint` and `--doc-rule` describe a printed page; they are not `--ink` / `--muted` and must not be swapped for them.
+- **`--doc-radius` is paper**, not a control corner, so it sits outside the `--radius-*` scale.
+
+`test-node/doc-tokens.spec.ts` pins every value and fails if a literal reappears in the document styles. Print output (`@media print`) is a *third* context and shares none of these tokens: the values coincide, the meanings do not.
+
 ## Typography
 
 **Display Font:** Atkinson Hyperlegible Next 600 (`--serif`, with `-apple-system`, `BlinkMacSystemFont`, `system-ui` fallbacks)
