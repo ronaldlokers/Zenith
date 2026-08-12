@@ -3166,13 +3166,6 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .jobs-layout {
-    display: grid;
-    grid-template-columns: 2.2fr 1fr;
-    gap: 1.25rem;
-    align-items: start;
-  }
-
   /* The CV's second track held the side panel — completeness, versions, the
      live preview. All three are on the plate now (#535), so the builder was
      left filling two thirds of a row and sitting narrower than the plate
@@ -3542,15 +3535,6 @@ summary.bcol-head::after {
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.2rem 0.6rem;
-}
-/* The route's only <h1>: page structure starts here rather than at a stray
-   panel heading, and it carries the date the screen is named after. */
-.today-h1 {
-  margin: 0;
-  font-family: var(--serif);
-  font-size: var(--text-heading);
-  font-weight: 600;
-  letter-spacing: -0.01em;
 }
 /* A sentence, so it takes the body voice (#502). It was mono, uppercase and
    tracked at 0.64rem — chrome dress on prose, which DESIGN.md's
@@ -4382,8 +4366,7 @@ button:not(:disabled):active,
 .settings-add input,
 .tl-add input,
 .tl-add select,
-.tl-retro input,
-.weekly-goal-edit input {
+.tl-retro input {
   font-size: var(--text-body);
   padding: 0.4rem 0.6rem;
   border-radius: var(--radius-md);
@@ -4394,8 +4377,7 @@ button:not(:disabled):active,
    is an inline <span>.) */
 /* Chip baseline alignment (toolbar control-height moved to the Toolbar
    component). */
-.outreach-pill,
-.tag-chip {
+.outreach-pill {
   min-height: 36px;
 }
 
