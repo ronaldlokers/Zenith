@@ -237,6 +237,7 @@ export function InsightsTab({
                 already on this screen, so it moves onto the offers card. */}
             <Button
               variant="secondary"
+              wrap
               className="dash-offers-pdf"
               onClick={() => downloadOfferComparisonPdf(liveOffers, t)}
             >

@@ -280,4 +280,13 @@
     line-height: 1;
     flex-shrink: 0;
   }
+
+  /* Opt-in wrapping. The base is nowrap because a button that changes height
+     is usually a layout bug — but at 200% text a long label ran past the
+     viewport, losing content, which WCAG 1.4.4 counts as a failure. Callers
+     whose label can outgrow its column ask for this. */
+  .zui-btn--wrap {
+    white-space: normal;
+    max-width: 100%;
+  }
 }

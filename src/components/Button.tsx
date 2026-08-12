@@ -26,6 +26,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
    *    App.css's .modal-close, retired in the same commit (568b29d) — this
    *    file is now the only definition.
    */
+  /**
+   * Let a long label wrap instead of running past its container. Off by
+   * default because a button that changes height is usually a layout bug —
+   * but a label that leaves the viewport at 200% text is a worse one, and
+   * WCAG 1.4.4 says so.
+   */
+  wrap?: boolean;
   variant?:
     | "default"
     | "primary"
@@ -43,6 +50,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 export function Button({
   variant = "default",
+  wrap = false,
   size = "md",
   icon,
   type = "button",
@@ -60,6 +68,7 @@ export function Button({
     // gap: 4px), making them wider. Only opt in when an icon is actually
     // rendered.
     icon ? "zui-btn--with-icon" : null,
+    wrap ? "zui-btn--wrap" : null,
     className,
   ]
     .filter(Boolean)
