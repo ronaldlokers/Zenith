@@ -590,20 +590,6 @@
   cursor: pointer;
 }
 
-/* Radial pipeline ring (#143) — replaces the old Jobs-tab stage histogram */
-
-.ring-legend .lbl {
-  /* Count sits right beside its label (#346) — flex:1 stranded the number
-     at the container's far edge, reading as two unrelated columns. */
-  text-transform: none;
-  color: var(--sc-ink, var(--ink));
-}
-
-.ring-legend .n {
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
 /* Stage color hooks */
 /* Each stage class publishes two custom properties (#496): --sc is the field
    colour (washes, dots, bars) and --sc-ink is the same hue at a tone that
@@ -1467,16 +1453,9 @@ button.primary:hover {
 
 /* The `.card`/`.card.row2` list-row element (base, kb-focused, archived, and
    the 2-line row2 layout) now lives in the owned Row component
-   (src/components/Row.css). The separate .card-body / .card-main classes
-   are unrelated and stay (.card-menu moved out too — see
-   src/components/CardMenu.css). */
-.card-body {
-  padding: 0.75rem 0.85rem 0.6rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 0.6rem;
-  justify-content: space-between;
-}
+   (src/components/Row.css), and .card-menu moved to
+   src/components/CardMenu.css. The .card-body / .card-main pair that this
+   note used to say "stays" went with them: nothing rendered either. */
 
 .company-logo {
   width: 36px;
@@ -1533,10 +1512,6 @@ button.primary:hover {
   font-size: var(--text-body);
   font-weight: 600;
   line-height: 1.25;
-}
-
-.card-main.clickable {
-  cursor: pointer;
 }
 
 .card-actions {
@@ -2092,15 +2067,6 @@ select.status {
   background: var(--surface);
 }
 
-.weekly-goal .htrack {
-  flex: 1;
-}
-
-.weekly-goal.met .weekly-goal-label {
-  color: var(--success-ink);
-  font-weight: 600;
-}
-
 /* Agenda / calendar */
 .agenda {
   margin-top: var(--space-3);
@@ -2614,10 +2580,6 @@ select.status {
 
 /* .board-group-toggle moved to the owned SegmentedControl component
    (src/components/SegmentedControl.css). */
-
-.lane-label .n {
-  color: var(--faint);
-}
 
 /* Board's columns already fill the full grid width at >=900px, so
    there's no room for a side panel the way Jobs got one — the actual
@@ -3233,15 +3195,8 @@ summary.bcol-head::after {
    week", shares the .today-rows recipe with Next Up (Today home band below). */
 
 /* The pre-#480 overview headline block was deleted (#501): .overview-number,
-   .overview-headline and .overview-label had zero call sites in any tsx. */
-
-.overview .jobs-side {
-  display: block;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 0.9rem 1rem;
-}
+   .overview-headline and .overview-label had zero call sites in any tsx.
+   .overview .jobs-side followed it — same story, one scan later. */
 
 /* CV builder (#69) */
 .cv-tab {
@@ -4121,15 +4076,6 @@ summary.bcol-head::after {
   }
 }
 
-/* Mobile: pipeline filters + saved views behind one disclosure (#314). */
-
-@media (max-width: 600px) {
-
-  .pipeline-filters.open {
-    display: block;
-  }
-}
-
 @media (min-width: 1000px) {
   .app:has(.overview) > main {
     max-width: 1000px;
@@ -4398,7 +4344,6 @@ button:not(:disabled):active,
 /* Insights runs three columns of figures; the dashboard's two-column split is
    an asymmetric pair and stays that way. */
 @media (min-width: 900px) { .dash-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; } }
-.dash-col { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
 
 /* The dashboard content card (.dash-card, its lead/click variants, and the
    .dash-ch heading + .dash-win pill) now lives in the owned DashCard component
@@ -5023,7 +4968,6 @@ button:not(:disabled):active,
   .side,
   .top,
   .header,
-  .quick-add-fab,
   .toast,
   .error-dismiss,
   button,
