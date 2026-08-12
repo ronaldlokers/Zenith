@@ -1,0 +1,15 @@
+-- Which pipeline stages are folded on the board (#535 shell). Folding is a
+-- choice, not a rule about emptiness: a stage stays folded while it still
+-- holds applications, so the width goes to the stage being worked in.
+--
+-- On profile rather than localStorage so it follows you between laptop and
+-- phone and survives clearing site data. It is a preference, not a device
+-- setting: the stages you are not working in are the same ones wherever you
+-- open the board.
+--
+-- Stored as a comma-separated list of stage slugs rather than a column per
+-- stage or a JSON blob. The set is small and fixed, D1 has no array type,
+-- and a blob would invite storing more than this here later. NULL means
+-- "never set" and the client applies its own default, which is not the same
+-- as the empty string, which means "explicitly nothing folded".
+ALTER TABLE profile ADD COLUMN board_folded TEXT;

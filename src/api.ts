@@ -307,6 +307,14 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  // Which board stages are folded (#535 shell). Sent whole rather than as a
+  // toggle: the server stores the canonical set, so there is nothing to
+  // reconcile if two tabs disagree.
+  setBoardFolded: (folded: string[]) =>
+    request<{ board_folded: string[] }>("/api/profile/board-folded", {
+      method: "PUT",
+      body: JSON.stringify({ folded }),
+    }),
   goals: () => request<import("./types").UserGoal>("/api/goals"),
   setGoals: (data: {
     weekly_app_goal: number;

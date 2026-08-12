@@ -21,7 +21,7 @@ import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "
 // identical on both sides (the client renders it, the worker validates against
 // it), and a second copy would drift into a silent validation bug. Type-only
 // plus a const table — no DOM, nothing browser-specific comes with it.
-import { OUTCOME_REASONS, type TerminalStatus } from "../src/types.js";
+import { OUTCOME_REASONS, STATUSES as ALL_STATUSES, type TerminalStatus } from "../src/types.js";
 
 export type AppEnv = {
   Bindings: Env;
@@ -1295,6 +1295,38 @@ app.post("/api/profile/share-token", async (c) => {
     .bind(userId, token)
     .run();
   return c.json({ share_token: token });
+});
+
+// Which board stages are folded (#535 shell). A preference rather than CV
+// data, so it gets its own route instead of riding on PUT /api/profile —
+// which sets an explicit column list and would otherwise have to be taught
+// about a field the CV form knows nothing about.
+//
+// Validated against the real stage list: the column is read straight back
+// into layout state, and an unrecognised slug there would fold a column that
+// does not exist while leaving a real one open.
+app.put("/api/profile/board-folded", async (c) => {
+  const body = await c.req.json<{ folded?: unknown }>();
+  if (!Array.isArray(body.folded)) {
+    return c.json({ error: "folded must be an array of stage slugs" }, 400);
+  }
+  const sent: unknown[] = body.folded;
+  const unknown = sent.filter(
+    (v) => typeof v !== "string" || !(ALL_STATUSES as readonly string[]).includes(v),
+  );
+  if (unknown.length) {
+    return c.json({ error: `unknown stage: ${unknown.join(", ")}` }, 400);
+  }
+  // Deduplicated and stored in the canonical stage order, so the round trip
+  // is stable no matter what order the client sent.
+  const folded = ALL_STATUSES.filter((s) => sent.includes(s));
+  await c.env.DB.prepare(
+    `INSERT INTO profile (user_id, board_folded) VALUES (?, ?)
+     ON CONFLICT (user_id) DO UPDATE SET board_folded = excluded.board_folded`,
+  )
+    .bind(c.get("userId"), folded.join(","))
+    .run();
+  return c.json({ board_folded: folded });
 });
 
 app.delete("/api/profile/share-token", async (c) => {
