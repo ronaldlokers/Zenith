@@ -1032,6 +1032,7 @@
 /* Refined refresh (#463): the title takes the display voice (--serif,
    the app's display face — NOT a literal serif). */
 .detail-head h2 {
+  overflow-wrap: anywhere;
   margin: 0 0 0.15rem;
   font-family: var(--serif);
   font-weight: 600;
@@ -4933,6 +4934,11 @@ button:not(:disabled):active,
 }
 
 .btitle {
+  /* Titles get pasted, and a pasted job-board URL has no space in it to
+     break at. Without this it runs 110px past the card and the card clips
+     it mid-word. No hyphens: a broken URL is normal, a hyphenated one is
+     wrong. */
+  overflow-wrap: anywhere;
   margin: 0;
   padding: 0.6rem 0.75rem 0.35rem;
   font-size: var(--text-body);
