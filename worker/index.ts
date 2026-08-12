@@ -30,6 +30,37 @@ export type AppEnv = {
 
 const app = new Hono<AppEnv>();
 
+// Security headers on every response. A deployment was sending none of
+// these, on an app that holds CVs, salary figures and private notes behind
+// a session cookie.
+//
+// The one that mattered most is framing. Nothing stopped another site
+// putting this app in an invisible iframe over its own buttons, and the
+// destructive actions here are single clicks — delete an application,
+// delete the account. DENY rather than SAMEORIGIN: nothing here is meant to
+// be framed at all.
+//
+// nosniff is belt-and-braces for uploaded documents. They already download
+// with Content-Disposition: attachment rather than rendering, which is the
+// real protection; this stops a browser second-guessing the type anyway.
+//
+// Referrer-Policy keeps a full URL from travelling to a third party when
+// someone follows a job posting out of the app — the share and calendar
+// links are unguessable tokens in a path, and a path is exactly what a
+// referrer carries.
+//
+// No Content-Security-Policy yet, deliberately. The share page renders its
+// own inline <style>, so a useful policy needs a scoped exception rather
+// than a blanket one, and getting it wrong takes the app down rather than
+// degrading it. It wants verifying against a deployment, not guessing at.
+app.use("*", async (c, next) => {
+  await next();
+  c.header("X-Frame-Options", "DENY");
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  c.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+});
+
 // Shared application write shape (#285) — the INSERT column list, the
 // UPDATE SET clause, and the bound values all derive from this one ordered
 // list, so POST and PUT can't drift out of sync. Column names are constants
