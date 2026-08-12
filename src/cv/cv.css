@@ -3,7 +3,7 @@
    #535 rail replaced the versions list — the control is .cv-rail-del now,
    and both the class and the App.css rule the override fought are gone.)
    None of App.css's Recipe A/B containers
-   (.card-actions/.detail-actions/.settings-modal/.shortcut-help/
+   (.card-actions/.detail-actions/.settings-modal/
    .form-actions/.share-actions) wrap either of these controls, so their
    raw markup never rendered as plain Recipe A/B and Button's secondary/
    danger variants need call-site help here. sections.tsx's other two

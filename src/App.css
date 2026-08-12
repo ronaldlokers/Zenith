@@ -761,46 +761,6 @@
    under the .zui-commandpalette/.zui-palette-* names. The .cmdk* trigger
    button above stays here (App.tsx's top bar). */
 
-.shortcut-help h2 {
-  margin: 0 0 0.2rem;
-  font-size: var(--text-heading);
-}
-
-.shortcut-help ul {
-  list-style: none;
-  margin: 0.8rem 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.shortcut-help li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-body);
-}
-
-.shortcut-help kbd {
-  font-family: var(--mono);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.15rem 0.45rem;
-  min-width: 2.4rem;
-  text-align: center;
-}
-
-.shortcut-help button {
-  margin-top: 0.4rem;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  cursor: pointer;
-}
-
 .detail-modal {
   max-width: 34rem;
   max-height: 85vh;
@@ -4293,8 +4253,7 @@ button:not(:disabled):active,
    they target plain `button`, not a class, so they still apply to any
    raw <button> a container wraps. */
 .card-actions button,
-.settings-modal > button,
-.shortcut-help button {
+.settings-modal > button {
   padding: 0.4rem 0.8rem;
   font-size: var(--text-body);
   border: 1px solid var(--border);
@@ -4306,8 +4265,7 @@ button:not(:disabled):active,
 }
 
 .card-actions button:hover,
-.settings-modal > button:hover,
-.shortcut-help button:hover {
+.settings-modal > button:hover {
   background: var(--bg);
 }
 
