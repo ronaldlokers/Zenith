@@ -54,9 +54,18 @@ One consequence is not optional: **the hairline has to step darker than
 entire layout is carried by hairlines. The prototype uses `#cfc9b9` for the
 structural hairline and keeps `#e3dfd4` for the softer internal divider.
 
-A second consequence: the Ascent hues are **dark** on paper, so anything
-sitting *on* a stage colour needs a light foreground. That is a new token,
-`--on-stage`, distinct from `--accent-text`.
+A second consequence, found while implementing PR 1 and **corrected from the
+prototype**: there is no ink that can sit on a stage fill. Measured against
+all five Ascent hues the best is white at a worst case of 3.62:1
+(interview); Night ink is worse at 2.37:1, paper worse still. The hues are
+tuned to clear 4.5:1 *as label text* on paper, which makes them mid-tone by
+construction, and a mid-tone cannot also be a reliable ground for type.
+
+So **stage colour is a tint, a ring or an edge — never a filled ground with
+type on it.** That is what `--stage-tint` already did before this work
+started. Two places in the prototype get this wrong and must not be copied:
+the folded rail's count circle and the current-stage chip both fill with the
+hue. Both become a ring or a tint with ink text.
 
 **Cost being accepted:** removing Dark removes the option people use in low
 light, and that some need for photophobia or migraine. This is a deliberate
@@ -131,8 +140,10 @@ folded while it still holds cards, and that is the point — the room goes to
 the stage you are working in. Click a header to fold, a rail to open. A
 folded rail still accepts a dropped card.
 
-The count circle on a folded rail carries the stage colour; the rail itself
-stays on the page ground.
+The count circle on a folded rail carries the stage colour **as a ring**,
+with the count in ink — not as a fill. The rail itself stays on the page
+ground. (The prototype fills it; see the light-only section for why that
+cannot ship.)
 
 Each open column leads with an add block: the primary action, then the
 watching state stated plainly beneath it rather than buried in a menu.
@@ -145,8 +156,10 @@ horizontal segmented strip, and arrow keys.
 The most Fizzy-signature screen, and the one most easily got wrong:
 
 - The card is **mounted on a plate tinted with the current stage** — that is
-  how state is shown without labelling it.
-- The **stage rail lives inside the card**, level with the title.
+  how state is shown without labelling it. A tint, not a fill: nothing on the
+  plate is type sitting directly on a stage colour.
+- The **stage rail lives inside the card**, level with the title. The current
+  stage is marked with a tinted field and a coloured edge, not a filled chip.
 - The **primary actions sit on the plate**, under the card.
 - Secondary tools **hang tight against the plate**, two per side, as circular
   buttons — they belong to the card, not to the viewport.

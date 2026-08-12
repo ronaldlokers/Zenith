@@ -19,8 +19,9 @@ final ground. Doing it last would mean reworking all of them.
 - Step the structural hairline darker than `--border` (spec: `#cfc9b9`); keep
   `--border` for the softer internal divider. Both stay named tokens — no
   literals at call sites.
-- Add `--on-stage` (light foreground for text on a stage fill) and
-  `--on-accent`. The Ascent hues are dark on paper, so this is not cosmetic.
+- ~~Add `--on-stage`~~ — **shipped without it.** Writing its test proved the
+  token cannot exist: no ink clears 4.5:1 on all five hues. Stage colour stays
+  a tint, a ring or an edge. See the design doc and PR #536.
 - `src/settings/appearance.tsx` (or wherever the theme control lives): remove
   the three-way control. Leave a static "Light" row.
 - Remove `data-theme` handling from the shell and from the theme effect in
@@ -102,8 +103,8 @@ baseline in the same PR so later PRs still have a gate.
 - The board carries **all eight stages**: the five live ones plus rejected,
   withdrawn and ghosted, folded by default. A closed stage renders no add
   block and no watch toggle.
-- Folded rail: rotated label, stage-coloured count circle, still a drop
-  target.
+- Folded rail: rotated label, count circle **ringed** in the stage colour
+  with the count in ink (not filled — see PR #536), still a drop target.
 - Add block at the head of each open column, with the watching state.
 - Narrow: one stage, edge peeks, segmented strip, arrow keys.
 
@@ -113,8 +114,9 @@ baseline in the same PR so later PRs still have a gate.
 
 ## PR 6 — Application detail
 
-- Stage-tinted plate, card mounted on it, rail inside the card, actions on the
-  plate, tools hanging tight against it.
+- Stage-tinted plate (a tint, never a fill with type on it), card mounted on
+  it, rail inside the card with the current stage marked by a tinted field
+  and a coloured edge, actions on the plate, tools hanging tight against it.
 - Hatched history entries.
 - Identity pill inside the card.
 
