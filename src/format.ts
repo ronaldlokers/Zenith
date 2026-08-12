@@ -39,6 +39,31 @@ export const DEFAULT_FOLDED: BoardRail[] = [
   "archived",
 ];
 
+// Where the fold state is cached for painting (#535). The server copy on
+// profile stays the source of truth — it is what makes the board look the
+// same on your laptop and your phone — but it arrives on a request, and
+// until it does the board has to draw something. Drawing the defaults meant
+// a board that rearranged itself a second after it appeared, which is worse
+// than a stale guess: a click in that window lands on the wrong column.
+export const BOARD_FOLDED_KEY = "zenith_board_folded";
+
+export function readFoldCache(): string[] | null {
+  try {
+    const raw = localStorage.getItem(BOARD_FOLDED_KEY);
+    return raw === null ? null : raw.split(",").filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
+export function writeFoldCache(folded: readonly string[]): void {
+  try {
+    localStorage.setItem(BOARD_FOLDED_KEY, folded.join(","));
+  } catch {
+    // A browser with storage disabled just pays the reshuffle.
+  }
+}
+
 // Manual archiving wins over status: an archived rejection belongs on the
 // archive rail, not on the rejected one, or it would appear twice.
 export function railOf(a: Application): BoardRail {

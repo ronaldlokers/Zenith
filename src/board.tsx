@@ -21,6 +21,8 @@ import type { BoardRail, BoardSort, Urgency } from "./format";
 import {
   ageDays,
   BOARD_RAILS,
+  readFoldCache,
+  writeFoldCache,
   formatDate,
   DEFAULT_FOLDED,
   isDead,
@@ -583,9 +585,13 @@ export function PipelineTab({
   // Which rails are folded (#535 shell). Kept on profile so it follows you
   // between devices; the defaults stand in until that lands, which is what
   // someone who has never folded anything would see anyway.
-  const [folded, setFolded] = useState<Set<BoardRail>>(
-    () => new Set(DEFAULT_FOLDED),
-  );
+  // Paint from the last known answer, not from the defaults: the server copy
+  // is authoritative but arrives on a request, and a board that rearranges
+  // itself a second after it appears is worse than one that starts stale.
+  const [folded, setFolded] = useState<Set<BoardRail>>(() => {
+    const cached = readFoldCache();
+    return new Set((cached ?? DEFAULT_FOLDED) as BoardRail[]);
+  });
   // Set once "Closed applications" has rearranged the board: the profile
   // read resolves after it, and without this it would put the live stages
   // straight back.
@@ -599,7 +605,9 @@ export function PipelineTab({
         // NULL means never set, so the defaults apply; the empty string
         // means someone deliberately unfolded everything.
         if (p.board_folded == null) return;
-        setFolded(new Set(p.board_folded.split(",").filter(Boolean) as BoardRail[]));
+        const next = p.board_folded.split(",").filter(Boolean);
+        writeFoldCache(next);
+        setFolded(new Set(next as BoardRail[]));
       })
       .catch(() => {
         // A failed read leaves the defaults in place — the board is still
@@ -613,8 +621,10 @@ export function PipelineTab({
     (next: Set<BoardRail>) => {
       overridden.current = true;
       setFolded(next);
+      const ordered = BOARD_RAILS.filter((r) => next.has(r));
+      writeFoldCache(ordered);
       api
-        .setBoardFolded(BOARD_RAILS.filter((r) => next.has(r)))
+        .setBoardFolded(ordered)
         .catch((e) => onError((e as Error).message));
     },
     [onError],

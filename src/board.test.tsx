@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Application, Profile, Status } from "./types";
 import { PipelineTab } from "./board";
 // Side-effect: initializes i18next so `t()` renders real copy instead of keys.
@@ -111,6 +111,10 @@ const headerFor = (stage: string) =>
   screen.queryByRole("button", { name: `Fold ${stage}` });
 
 describe("board rails", () => {
+  // The fold cache is a paint cache; a test that does not care about it must
+  // start without one, or it inherits the previous test's board.
+  beforeEach(() => localStorage.removeItem("zenith_board_folded"));
+
   test("carries all eight stages plus the archive", async () => {
     profileFolded = null;
     renderBoard([]);
@@ -146,6 +150,7 @@ describe("board rails", () => {
   });
 
   test("opening a rail persists the whole folded set", async () => {
+    localStorage.removeItem("zenith_board_folded");
     profileFolded = null;
     savedFolded = null;
     renderBoard([]);
@@ -236,6 +241,29 @@ describe("board rails", () => {
     expect(toasts[0].label).toBe("Back to live");
     toasts[0].undo!();
     await waitFor(() => expect(headerFor("Interested")).toBeTruthy());
+  });
+
+  test("paints from the last known fold state, not the defaults", async () => {
+    // The server copy is authoritative but arrives on a request. Painting
+    // the defaults first meant the board rearranged itself a second after it
+    // appeared — and a click in that window lands on the wrong column.
+    localStorage.setItem("zenith_board_folded", "interested,applied");
+    profileFolded = "interested,applied";
+    renderBoard([]);
+    // Synchronous first paint: no waitFor, because the point is that this is
+    // true before anything resolves.
+    expect(railFor("Interested")).toBeTruthy();
+    expect(railFor("Applied")).toBeTruthy();
+    expect(headerFor("Rejected")).toBeTruthy();
+  });
+
+  test("caches what the server says, so the next visit paints it", async () => {
+    localStorage.removeItem("zenith_board_folded");
+    profileFolded = "ghosted";
+    renderBoard([]);
+    await waitFor(() =>
+      expect(localStorage.getItem("zenith_board_folded")).toBe("ghosted"),
+    );
   });
 
   test("an empty board offers one way in, not one per stage", async () => {
