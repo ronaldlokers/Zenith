@@ -876,6 +876,7 @@
   "menu": {
     "label": "Destinations",
     "open": "Open the menu",
+    "addJob": "Add job",
     "closedApplications": "Closed applications"
   },
   "contacts": {

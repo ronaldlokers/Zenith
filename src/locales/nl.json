@@ -876,6 +876,7 @@
   "menu": {
     "label": "Bestemmingen",
     "open": "Menu openen",
+    "addJob": "Vacature toevoegen",
     "closedApplications": "Gesloten sollicitaties"
   },
   "contacts": {
