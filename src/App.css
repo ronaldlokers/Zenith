@@ -14,7 +14,7 @@
 .app {
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 0.75rem 5rem;
+  padding: 0 var(--gutter) 5rem;
 }
 
 /* App-shell top bar (chrome) — replaces the old .header. The brand shows
@@ -28,8 +28,11 @@
   align-items: center;
   gap: 0.5rem;
   /* Break out of the .app side padding so the bar is full-bleed on mobile;
-     reset to 0 at rail widths (≥900px), where .app has no side padding. */
-  margin: 0 -0.75rem;
+     reset to 0 at rail widths (≥900px), where .app has no side padding.
+     Tied to --gutter rather than repeating the number: the two have to
+     cancel exactly, and a literal here would silently stop cancelling the
+     moment the gutter changes. */
+  margin: 0 calc(var(--gutter) * -1);
   padding: 0.5rem 0.9rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);

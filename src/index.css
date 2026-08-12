@@ -205,6 +205,14 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
+  /* The page gutter — the distance from the viewport edge to content, used
+     by the app shell and by anything that has to line up with it. Named
+     separately from --space-3 because it is a layout decision that changes
+     with the shell, not a spacing step that changes with a component. The
+     Fizzy-philosophy shell widens it at ≥900px; until that lands it is the
+     0.75rem the app has always used.
+     Spec: docs/superpowers/specs/2026-08-12-fizzy-shell-design.md */
+  --gutter: var(--space-3);
   /* 10px (--radius-md) is the dominant control corner; 14px (lg) for cards. */
   --radius-sm: 8px;
   --radius-md: 10px;
