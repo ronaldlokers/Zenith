@@ -165,3 +165,75 @@ All four open questions were answered before this plan was scheduled:
    most frequent write in a job tracker, and on a phone it has no one-tap
    route. Worth revisiting after the shell has been used for a while.
 4. **Archive folds into the pipeline** as three stages rather than a screen.
+
+---
+
+## What shipped
+
+The eight planned PRs became eleven, all stacked on each other and none
+merged into `main` while the series was in flight. Splits happened where a
+PR grew two distinct halves (persistence vs the UI that consumes it,
+Insights vs CV), and one PR was added at the end for a behaviour the plan's
+own numbering had left homeless.
+
+| PR | Scope |
+|---|---|
+| #536–#546 | PRs 1–4: tokens, chrome, wordmark menu, shortcuts, landing screen |
+| #547 | PR 5a — board fold state: migration, API, tests |
+| #548 | PR 5b — board fold + the archive as a rail |
+| #549 | PR 5c — board card + the narrow carousel |
+| #550 | PR 6 — application detail on a stage-tinted plate |
+| #551 | PR 7a — Insights: figures band, three columns |
+| #552 | PR 7b — CV plate, variants as the rail |
+| #553 | PR 8a — Feed banded by match strength |
+| #554 | PR 8b — People "Owe a reply" + Settings headings |
+| #555 | "Closed applications" (`A`) — see below |
+
+### Deviations from the mockups, and why
+
+Each of these is a place where the approved mockup and the shipped app
+differ. They are recorded here rather than left to be re-discovered as
+bugs.
+
+- **The feed is banded, not columned.** The mockup shows three columns by
+  match strength. The feed has a two-pane triage the mockup did not model:
+  `j`/`k` navigation, a focused-card detail pane, swipe on touch. Three
+  columns means three focus rings and no single flat index for the detail
+  pane to read. The bands are headings inside the one list instead, which
+  keeps the keyboard flow and says the same thing.
+
+- **Settings has no dotted leaders.** Leaders pair a label with a stated
+  value. Zenith's settings are editable controls, so a leader running from
+  "Language" to a dropdown is decoration rather than a reading aid.
+  Converting the panel to read-rows-that-open-editors is a behavioural
+  change, not a restyle, and wants its own decision.
+
+- **People and Companies were not merged into one screen.** They are
+  separate tabs with their own detail routes, search and list/grid state;
+  merging them is a routing and IA change. The part the plan actually asked
+  for — leading with "Owe a reply" — landed without it.
+
+- **The detail page's stage rail is two columns, not one.** Eight stages in
+  a single column left a block of dead space beside the title. The split is
+  where the pipeline splits: the five stages an application moves through,
+  then the three it stops at.
+
+- **The folded rail's count circle is filled, not a ring.** The design doc
+  said filled; an earlier reading of the contrast rule said that was
+  impossible. Both were half right: white fails on the lighter `--sc` field
+  colours (3.62:1 on interview) and clears on every `--sc-ink` (5.11:1 at
+  the worst). The fill is the ink tone.
+
+### One behaviour the numbering lost
+
+The doc's Destinations section specifies a menu row and an `A` shortcut that
+fold the live stages and open the closed ones. It could not be built before
+the board could fold (PR 5), and PR 8 did not come back to it. #555 closes
+it: the toast offers "Back to live" and carries the previous fold set,
+because someone who lands in that view has no way of knowing what was
+folded before it.
+
+### Also corrected
+
+The destination the spec calls "People & companies" shipped as "Network" —
+the label the menu row and the page title both read. Renamed to match.

@@ -199,6 +199,9 @@ export default function App() {
     { data: "overview", to: "overview", active: tab === "overview", icon: <NavOverviewIcon />, label: t("tabs.overview") },
     { data: "pipeline", to: "board", active: tab === "board", icon: <NavPipelineIcon />, label: t("tabs.pipeline") },
     { data: "feed", to: "feed", active: tab === "feed", icon: <NavFeedIcon />, label: t("tabs.feed") },
+    // Named for what it holds rather than for the abstraction: the shell spec
+    // lists this destination as "People & companies", and the menu row and the
+    // page title both read this label.
     { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
     { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
     { data: "insights", to: "insights", active: tab === "insights", icon: <NavInsightsIcon />, label: t("tabs.insights") },
