@@ -113,6 +113,11 @@ const railFor = (stage: string) =>
   screen.queryByRole("button", { name: new RegExp(`^Open ${stage},`) });
 const headerFor = (stage: string) =>
   screen.queryByRole("button", { name: `Fold ${stage}` });
+// The four closed outcomes collapse into one rail while they are all folded,
+// which is the default. It is the only rail that stands for more than one
+// stage, so it has its own accessible name.
+const closedGroup = () =>
+  screen.queryByRole("button", { name: /^Open closed applications,/ });
 
 describe("board rails", () => {
   // The fold cache is a paint cache; a test that does not care about it must
@@ -130,9 +135,13 @@ describe("board rails", () => {
       expect(headerFor(live)).toBeTruthy();
     }
     // Closed and archived are folded out of the way by default, not absent —
-    // there is no Archive screen to send them to.
+    // there is no Archive screen to send them to. Folded, all four are one
+    // rail: they are outcomes rather than places work happens, and four
+    // slabs spelling their names one letter per line held 17% of the board
+    // for the part of it that only ever grows.
+    expect(closedGroup()).toBeTruthy();
     for (const closed of ["Rejected", "Withdrawn", "Ghosted", "Archived"]) {
-      expect(railFor(closed)).toBeTruthy();
+      expect(railFor(closed)).toBeNull();
       expect(headerFor(closed)).toBeNull();
     }
   });
@@ -143,28 +152,33 @@ describe("board rails", () => {
       app({ id: 1, status: "rejected" }),
       app({ id: 2, status: "rejected" }),
     ]);
-    await waitFor(() => expect(railFor("Rejected")).toBeTruthy());
-    expect(railFor("Rejected")!.textContent).toContain("2");
+    // The count on the group is every closed application, not one stage's.
+    await waitFor(() => expect(closedGroup()).toBeTruthy());
+    expect(closedGroup()!.textContent).toContain("2");
   });
 
   test("an archived application sits on the archive rail, not its stage", async () => {
     profileFolded = null;
     renderBoard([app({ id: 3, status: "screening", archived_at: iso(-1) })]);
-    await waitFor(() => expect(railFor("Archived")).toBeTruthy());
+    await waitFor(() => expect(closedGroup()).toBeTruthy());
     // Otherwise it would show up twice — once under its status, once here.
-    expect(railFor("Archived")!.textContent).toContain("1");
+    expect(closedGroup()!.textContent).toContain("1");
     expect(screen.queryByText("Role 3")).toBeNull();
   });
 
-  test("opening a rail persists the whole folded set", async () => {
+  test("opening the closed group unfolds all four in one save", async () => {
+    // One save, not four: four toggles would be four requests and four
+    // chances to end up half-open.
     localStorage.removeItem("zenith_board_folded");
     profileFolded = null;
     savedFolded = null;
     renderBoard([]);
-    await waitFor(() => expect(railFor("Rejected")).toBeTruthy());
-    fireEvent.click(railFor("Rejected")!);
-    expect(headerFor("Rejected")).toBeTruthy();
-    expect(savedFolded).toEqual(["withdrawn", "ghosted", "archived"]);
+    await waitFor(() => expect(closedGroup()).toBeTruthy());
+    fireEvent.click(closedGroup()!);
+    for (const closed of ["Rejected", "Withdrawn", "Ghosted", "Archived"]) {
+      expect(headerFor(closed)).toBeTruthy();
+    }
+    expect(savedFolded).toEqual([]);
   });
 
   test("folding a live stage persists it", async () => {
@@ -312,13 +326,18 @@ describe("board rails", () => {
     fireEvent(target, ev);
   }
 
-  test("a folded rail accepts a dropped card", async () => {
-    profileFolded = null;
+  test("a folded live rail accepts a dropped card", async () => {
+    // A folded live stage, because the four closed outcomes are one rail
+    // now and that rail deliberately takes no drops: a card dropped on it
+    // could mean rejected, withdrawn, ghosted or archived, and guessing
+    // would be worse than declining. Open the group and each of the four
+    // accepts drops exactly as before.
+    profileFolded = "interested";
     const moves: [number, string][] = [];
     render(
       <MemoryRouter initialEntries={[{ pathname: "/board" }]}>
         <PipelineTab
-          applications={[app({ id: 4, status: "interested" })]}
+          applications={[app({ id: 4, status: "applied" })]}
           companies={[]}
           contacts={[]}
           roleTypes={[]}
@@ -336,9 +355,43 @@ describe("board rails", () => {
         />
       </MemoryRouter>,
     );
-    const rail = await waitFor(() => railFor("Rejected")!);
-    drop(rail, 4);
-    expect(moves).toEqual([[4, "rejected"]]);
+    // Asserted inside waitFor, not just returned from it: waitFor only
+    // retries when its callback throws, so returning a null query resolves
+    // immediately and the failure reads as "provide a DOM element".
+    await waitFor(() => expect(railFor("Interested")).toBeTruthy());
+    drop(railFor("Interested")!, 4);
+    expect(moves).toEqual([[4, "interested"]]);
+  });
+
+  test("the closed group is not a drop target", async () => {
+    // Deliberate, and the reason is in the component: four outcomes behind
+    // one rail cannot say which one a drop meant.
+    profileFolded = null;
+    const moves: [number, string][] = [];
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/board" }]}>
+        <PipelineTab
+          applications={[app({ id: 6, status: "applied" })]}
+          companies={[]}
+          contacts={[]}
+          roleTypes={[]}
+          onChanged={() => Promise.resolve()}
+          onError={() => {}}
+          notify={() => {}}
+          onDelete={() => {}}
+          onStatus={(id, status) => moves.push([id, status])}
+          lastInteractions={[]}
+          history={[]}
+          onSaveOutcome={() => {}}
+          onOpenJob={() => {}}
+          onOpenQuickAdd={() => {}}
+          onOpenSampleData={() => {}}
+        />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(closedGroup()).toBeTruthy());
+    drop(closedGroup()!, 6);
+    expect(moves, "the group guessed an outcome for a dropped card").toEqual([]);
   });
 
   test("dropping a card on the rail it already sits on does nothing", async () => {

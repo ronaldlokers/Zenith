@@ -4948,6 +4948,12 @@ button:not(:disabled):active,
   min-width: 0;
 }
 
+/* The combined closed rail. Neutral rather than stage-tinted: it stands for
+   four outcomes at once and none of their hues would be true of it. */
+.bcol-rail.rail-closed {
+  --sc: var(--rule);
+}
+
 /* Filled, not a ring: white clears 4.5:1 on every --sc-ink (5.11:1 at the
    worst, screening). It does NOT clear it on the lighter --sc field colours
    — 3.62:1 on interview — so the fill has to be the ink tone. */

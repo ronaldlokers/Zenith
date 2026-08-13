@@ -21,6 +21,7 @@ import type { BoardRail, BoardSort, Urgency } from "./format";
 import {
   ageDays,
   BOARD_RAILS,
+  CLOSED_RAILS,
   readFoldCache,
   writeFoldCache,
   formatDate,
@@ -193,6 +194,7 @@ function BoardTab({
   folded,
   onToggleFold,
   onUnfoldLive,
+  onOpenClosedGroup,
   onAdd,
   showAddBlocks,
 }: CrudTabProps & {
@@ -214,6 +216,7 @@ function BoardTab({
   folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
   onUnfoldLive: () => void;
+  onOpenClosedGroup: () => void;
   onAdd: (stage: Status) => void;
   // False on a board with nothing on it yet: the add blocks are for filing
   // into a particular stage, which only means something once there is a
@@ -391,9 +394,25 @@ function BoardTab({
   // The grid is data-driven — a folded rail is a fixed sliver and an open
   // column takes an equal share of what is left — so the track list cannot
   // live in the stylesheet.
-  const trackList = BOARD_RAILS.map((r) =>
-    shownFolded.has(r) ? "var(--rail-w)" : "minmax(0, 1fr)",
-  ).join(" ");
+  // The four closed rails collapse into one while they are all folded, which
+  // is the default. Derived rather than stored: the combined rail exists
+  // exactly when there is nothing open to show, so it cannot disagree with
+  // the columns beside it. Never on the narrow carousel, where nothing folds
+  // and each rail is a full page of its own.
+  const closedGrouped =
+    !isNarrow && !pinnedOnly && CLOSED_RAILS.every((r) => shownFolded.has(r));
+  const closedCount = CLOSED_RAILS.reduce((n, r) => n + countOf(r), 0);
+  // Opens all four in one save, the mirror of unfoldLive.
+  const openClosedGroup = () => onOpenClosedGroup();
+
+  const trackList = [
+    ...BOARD_RAILS.filter((r) => !(closedGrouped && CLOSED_RAILS.includes(r))).map(
+      (r) => (shownFolded.has(r) ? "var(--rail-w)" : "minmax(0, 1fr)"),
+    ),
+    // Last, where the four rails it replaces always sat: closed work is the
+    // end of the pipeline, not the front of it.
+    ...(closedGrouped ? ["var(--rail-w)"] : []),
+  ].join(" ");
 
   const cardProps = (a: Application) => ({
     urgency: urgencyOf(a),
@@ -469,6 +488,8 @@ function BoardTab({
       style={isNarrow ? undefined : { gridTemplateColumns: trackList }}
     >
       {BOARD_RAILS.map((rail) => {
+        // Folded into the combined rail above, so nothing to draw here.
+        if (closedGrouped && CLOSED_RAILS.includes(rail)) return null;
         const isFolded = shownFolded.has(rail);
         const count = countOf(rail);
         const label =
@@ -593,6 +614,34 @@ function BoardTab({
           </div>
         );
       })}
+      {closedGrouped && (
+        /* One rail instead of four. They are outcomes rather than places
+           work happens — the only part of the board that only ever grows —
+           and as four folded slabs they held 17% of the width permanently.
+           Opening it gives all four back, each its own column and its own
+           drop target; while it is closed, dropping a card on a specific
+           outcome means opening the group first or using the card's menu.
+           That is the cost, and it buys the width back for the five stages
+           the user actually works in. */
+        <button
+          type="button"
+          /* No drop target, deliberately: a card dropped here could mean
+             rejected, withdrawn, ghosted or archived, and guessing one would
+             be worse than not accepting the drop. Open the group and the
+             four rails take drops exactly as they did before. */
+          className="bcol-rail rail-closed"
+          aria-expanded="false"
+          aria-label={t("board.openClosedGroup", { count: closedCount })}
+          onClick={openClosedGroup}
+        >
+          <span className="n" aria-hidden="true">
+            {closedCount}
+          </span>
+          <span className="vlabel" aria-hidden="true">
+            {t("board.closedGroup")}
+          </span>
+        </button>
+      )}
       </div>
       {detailApp && (
         <ApplicationDetailModal
@@ -714,6 +763,12 @@ export function PipelineTab({
   );
   // Unfolds every live stage in one save. Five toggles would be five
   // requests and five chances to end up half-open.
+  const openClosedGroup = () =>
+    applyFold(
+      new Set([...folded].filter((r) => !CLOSED_RAILS.includes(r))),
+      new Set(folded),
+    );
+
   const unfoldLive = () =>
     applyFold(
       new Set([...folded].filter((r) => !isPipelineRail(r))),
@@ -1169,6 +1224,7 @@ export function PipelineTab({
         folded={folded}
         onToggleFold={toggleFold}
         onUnfoldLive={unfoldLive}
+        onOpenClosedGroup={openClosedGroup}
         onAdd={onOpenQuickAdd}
         showAddBlocks={applications.length > 0 && filtered.length > 0}
       />

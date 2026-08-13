@@ -798,7 +798,10 @@
     "clearFilters_one": "Wis {{count}} filter",
     "clearFilters_other": "Wis {{count}} filters",
     "unfoldRail_one": "{{stage}} openen, {{count}} sollicitatie",
-    "unfoldRail_other": "{{stage}} openen, {{count}} sollicitaties"
+    "unfoldRail_other": "{{stage}} openen, {{count}} sollicitaties",
+    "closedGroup": "Afgesloten",
+    "openClosedGroup_one": "Afgesloten sollicitaties openen, {{count}} sollicitatie",
+    "openClosedGroup_other": "Afgesloten sollicitaties openen, {{count}} sollicitaties"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

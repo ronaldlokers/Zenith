@@ -21,6 +21,19 @@ export const PIPELINE: Status[] = [
 // which is why there is no Archive screen any more.
 export type BoardRail = Status | "archived";
 
+// The four rails that only ever accumulate. They are outcomes, not places
+// work happens, and as four separate folded slabs they held 17% of the
+// board width permanently and spelled their names one letter per line each.
+// Collapsed into one "Closed" rail while they are all folded (approved
+// direction, this session) — Huntr, the closest comparable, ships six
+// stages with a single closed column.
+export const CLOSED_RAILS: BoardRail[] = [
+  "rejected",
+  "withdrawn",
+  "ghosted",
+  "archived",
+];
+
 export const BOARD_RAILS: BoardRail[] = [
   ...PIPELINE,
   "rejected",

@@ -798,7 +798,10 @@
     "clearFilters_one": "Clear {{count}} filter",
     "clearFilters_other": "Clear {{count}} filters",
     "unfoldRail_one": "Open {{stage}}, {{count}} application",
-    "unfoldRail_other": "Open {{stage}}, {{count}} applications"
+    "unfoldRail_other": "Open {{stage}}, {{count}} applications",
+    "closedGroup": "Closed",
+    "openClosedGroup_one": "Open closed applications, {{count}} application",
+    "openClosedGroup_other": "Open closed applications, {{count}} applications"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
