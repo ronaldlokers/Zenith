@@ -201,6 +201,7 @@
     "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
     "timezone": "Time zone",
     "timezoneNow": "{{time}} right now",
+    "timezoneHint": "Used by reminder emails, the weekly digest and the calendar feed, so they land on your day. Dates shown in the app follow whichever device you are on.",
     "notSet": "Not set"
   },
   "admin": {

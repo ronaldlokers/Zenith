@@ -201,6 +201,7 @@
     "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
     "timezone": "Tijdzone",
     "timezoneNow": "{{time}} op dit moment",
+    "timezoneHint": "Wordt gebruikt door herinneringsmails, het wekelijkse overzicht en de agendafeed, zodat die op jouw dag aankomen. Datums in de app volgen het apparaat waarop je zit.",
     "notSet": "Niet ingesteld"
   },
   "admin": {
