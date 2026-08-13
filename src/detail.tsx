@@ -47,6 +47,7 @@ import {
   isDue,
   isOverdue,
   median,
+  MIN_POOL_FOR_MEDIAN,
   safeHref,
   totalComp,
   totalCompBreakdown,
@@ -107,7 +108,16 @@ export function ApplicationDetailModal({
   // Three intent groups (#479) instead of six peer tabs: Track (timeline +
   // documents), Prep (interview prep + AI practice), Tailor (ATS + cover
   // letter). Clusters the tools by the question you're actually asking.
-  const [secTab, setSecTab] = useState<"track" | "prep" | "tailor">("prep");
+  // Prep is the right opener while the application is live, and nonsense once
+  // it is not: a rejected application opened on "Interview prep", offering a
+  // mock interview and a salary-negotiation rehearsal for a job that is gone.
+  // A closed application has one question left — what happened and when — so
+  // it opens on Track. Initial state rather than a derived value: the tab is
+  // the user's to change afterwards, and recomputing it would drag them back
+  // here every time the row refetched.
+  const [secTab, setSecTab] = useState<"track" | "prep" | "tailor">(
+    isTerminalStatus(application.status) ? "track" : "prep",
+  );
   const [inlineField, setInlineField] = useState<null | "followup" | "notes">(
     null,
   );
@@ -489,14 +499,25 @@ export function ApplicationDetailModal({
                   const med = median(pool.map((o) => totalComp(o)!));
                   if (med == null || med === 0) return null;
                   const diffPct = ((totalComp(a)! - med) / med) * 100;
+                  // "12% above your median tracked offer (1 others)" — a
+                  // median of one value is that value, and the parenthesis
+                  // gave the game away in bad grammar. The comparison is
+                  // still worth stating below three; only the word median
+                  // is not, so a second string states it as what it is.
                   return (
                     <span className="muted small">
-                      {t("offer.benchmark", {
-                        pct: Math.round(Math.abs(diffPct)),
-                        direction:
-                          diffPct >= 0 ? t("offer.above") : t("offer.below"),
-                        n: pool.length,
-                      })}
+                      {t(
+                        pool.length >= MIN_POOL_FOR_MEDIAN
+                          ? "offer.benchmark"
+                          : "offer.benchmarkFew",
+                        {
+                          pct: Math.round(Math.abs(diffPct)),
+                          direction:
+                            diffPct >= 0 ? t("offer.above") : t("offer.below"),
+                          n: pool.length,
+                          count: pool.length,
+                        },
+                      )}
                     </span>
                   );
                 })()}

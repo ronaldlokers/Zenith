@@ -144,12 +144,16 @@ export interface FeedItem {
   role_type: RoleType;
   posted_at: string | null;
   fetched_at: string;
-  status: "new" | "added" | "dismissed";
+  // "saved" is the feed's own third outcome — kept for later, never an
+  // application, so it does not touch any pipeline count.
+  status: "new" | "added" | "dismissed" | "saved";
   board_slug: string | null;
+  // The posting's opening, so the triage pane can show what the job actually
+  // says. The FULL description is still not shipped — it is up to 8000 chars
+  // a row and is carried into job_description only when the item is added.
+  description_snippet?: string | null;
   // How many of the user's CV-backed skills this posting mentions, computed
-  // server-side (#446). The full job description is captured on the row but
-  // not shipped in the feed list — it's carried into job_description only when
-  // the item is added to the pipeline.
+  // server-side (#446).
   match_count: number;
   // The matched skill names behind match_count (#471) — the "why it fits"
   // reasons shown in the feed detail pane.
@@ -299,6 +303,7 @@ export interface Profile {
   // client applies its default; the empty string means explicitly nothing
   // folded, which is a different thing.
   board_folded: string | null;
+  share_show_identity: number;
 }
 
 export interface Webhook {

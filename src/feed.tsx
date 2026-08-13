@@ -370,6 +370,7 @@ export function FeedTab({
   notify,
   roleTypes,
   onOpenSettings,
+  onGoToCv,
   onChanged,
   onOpenJob,
 }: {
@@ -377,6 +378,8 @@ export function FeedTab({
   notify: (message: string, undo?: () => void, label?: string) => void;
   roleTypes: RoleTypeDef[];
   onOpenSettings: () => void;
+  /** Where the skills that drive matching are edited. */
+  onGoToCv: () => void;
   onChanged: () => Promise<void>;
   onOpenJob: (id: number) => void;
 }) {
@@ -391,6 +394,16 @@ export function FeedTab({
   // sort applied inside each band. The list stays flat and in this order so
   // j/k keeps stepping through it — the bands are headings inside one list,
   // not three separate ones.
+  // Weak matches are folded away until asked for (approved direction, this
+  // session). The band rendered "0 matching skills" against an empty bar,
+  // repeatedly, at someone who is being rejected for a living — and it does
+  // it on a word-boundary keyword heuristic that is wrong often enough to
+  // make the verdict unfair. Surveys of job seekers put rejection first
+  // among the things that damage them and "finding the right jobs to apply
+  // to" second, so a screen that repeats a weak verdict costs on both
+  // counts. Nothing is removed: the count is stated and one press brings
+  // them back.
+  const [showWeak, setShowWeak] = useState(false);
   const visibleItems = useMemo(
     () => {
       const sorted = sortFilterFeed(
@@ -399,14 +412,36 @@ export function FeedTab({
         sortBy,
         minFit,
       );
+      const banded = showWeak
+        ? sorted
+        : sorted.filter((i) => matchBand(i.match_count) !== "weak");
       // A stable sort by band alone, so the chosen sort survives inside it.
-      return [...sorted].sort(
+      return [...banded].sort(
         (a, b) =>
           MATCH_BANDS.indexOf(matchBand(a.match_count)) -
           MATCH_BANDS.indexOf(matchBand(b.match_count)),
       );
     },
-    [items, sortBy, minFit],
+    [items, sortBy, minFit, showWeak],
+  );
+
+  // Counted off the same filtered set the list is built from, so the number
+  // offered cannot disagree with what pressing it reveals.
+  const weakShown = useMemo(
+    () =>
+      showWeak
+        ? (items ?? []).filter((i) => matchBand(i.match_count) === "weak").length
+        : 0,
+    [items, showWeak],
+  );
+
+  const weakHidden = useMemo(
+    () =>
+      showWeak
+        ? 0
+        : sortFilterFeed(items ?? [], (i) => i.match_count ?? 0, sortBy, minFit)
+            .filter((i) => matchBand(i.match_count) === "weak").length,
+    [items, sortBy, minFit, showWeak],
   );
 
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
@@ -426,6 +461,25 @@ export function FeedTab({
     const cards = cardsRef.current?.querySelectorAll<HTMLElement>(".feed-card");
     cards?.[focusedIndex]?.focus();
   }, [focusedIndex]);
+
+  // Triage removes the focused card from the DOM, and a removed element takes
+  // focus with it — measured, activeElement went from the card straight to
+  // <body>, so every add and every dismiss dropped a keyboard user at the top
+  // of the document and made them Tab back through eleven stops. The slot is
+  // what persists, not the element: focus whatever moved up into it, or the
+  // last card when the one destroyed was last.
+  const triaged = useRef(false);
+  const itemCount = visibleItems.length;
+  useEffect(() => {
+    if (!triaged.current) return;
+    triaged.current = false;
+    if (!itemCount) return;
+    const cards = cardsRef.current?.querySelectorAll<HTMLElement>(".feed-card");
+    if (!cards?.length) return;
+    const at = Math.min(focusedIndex, cards.length - 1);
+    setFocusedIndex(at);
+    cards[at]?.focus();
+  }, [itemCount, focusedIndex]);
 
   const load = useCallback(
     () => {
@@ -473,20 +527,92 @@ export function FeedTab({
       .finally(() => setRefreshing(false));
   };
 
-  const dismiss = (item: FeedItem) => {
-    setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
-    api.dismissFeedItem(item.id).catch((e) => {
-      // Optimistic removal must roll back (#346) — otherwise the card
-      // vanishes client-side while still active server-side.
-      setItems((prev) => (prev ? [item, ...prev] : [item]));
+  // Keep for later: the third door. It writes only to the feed's own status,
+  // so a maybe never becomes an application and no pipeline count moves.
+  const toggleSave = (item: FeedItem) => {
+    const saved = item.status === "saved";
+    setItems((prev) =>
+      (prev ?? []).map((i) =>
+        i.id === item.id ? { ...i, status: saved ? "new" : "saved" } : i,
+      ),
+    );
+    const call = saved ? api.unsaveFeedItem : api.saveFeedItem;
+    void call(item.id).catch((e) => {
+      setItems((prev) =>
+        (prev ?? []).map((i) =>
+          i.id === item.id ? { ...i, status: saved ? "saved" : "new" } : i,
+        ),
+      );
       onError((e as Error).message);
     });
+  };
+
+  const dismissingIds = useRef<Set<number>>(new Set());
+  const dismiss = (item: FeedItem) => {
+    // Same in-flight guard addToPipeline has. Without it a fast double-d
+    // fired twice, and the second one destroyed whatever had moved into the
+    // focused slot — a job the user never saw.
+    if (dismissingIds.current.has(item.id)) return;
+    dismissingIds.current.add(item.id);
+    triaged.current = true;
+    // Spliced back at its own index on failure, not prepended. Rolling back
+    // to position 1 teleported the job the user had just tried to get rid of
+    // to the top of the feed, which reads as the opposite of what happened.
+    const at = (items ?? []).findIndex((i) => i.id === item.id);
+    setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
+    api
+      .dismissFeedItem(item.id)
+      .then(() =>
+        // Dismiss is the majority action in triage and was the only one with
+        // no acknowledgement and no way back, on a surface whose whole
+        // anxiety is missing the one posting that mattered.
+        notify(
+          t("toast.dismissed", { title: item.title }),
+          () =>
+            api
+              .undismissFeedItem(item.id)
+              .then(() => {
+                setItems((prev) => {
+                  const rest = prev ?? [];
+                  const back = [...rest];
+                  back.splice(Math.max(0, Math.min(at, rest.length)), 0, item);
+                  return back;
+                });
+                // Put the caret back on the restored posting. Undo left
+                // focus on <body>, so a keyboard user got the job back and
+                // then had to tab through the whole shell to reach it.
+                setFocusedIndex(at);
+                triaged.current = true;
+              })
+              .catch((e) => onError((e as Error).message)),
+          t("toast.undo"),
+        ),
+      )
+      .catch((e) => {
+        // Optimistic removal must roll back (#346) — otherwise the card
+        // vanishes client-side while still active server-side.
+        setItems((prev) => {
+          const rest = prev ?? [];
+          const back = [...rest];
+          back.splice(Math.max(0, Math.min(at, rest.length)), 0, item);
+          return back;
+        });
+        // Re-arm the focus effect. It already ran on the way down, moving
+        // focus to whatever filled the vacated slot; putting the row back
+        // shifts that element one along, so the ring and the announcement
+        // ended up on a different posting from the one the pane was showing
+        // — and the next a/d would have hit the wrong job silently.
+        triaged.current = true;
+        onError((e as Error).message);
+      })
+      .finally(() => dismissingIds.current.delete(item.id));
   };
 
   const [addingIds, setAddingIds] = useState<Set<number>>(new Set());
   const addToPipeline = (item: FeedItem) => {
     if (addingIds.has(item.id)) return;
     setAddingIds((s) => new Set(s).add(item.id));
+    triaged.current = true;
     api
       .addFeedItem(item.id)
       .then((created) => {
@@ -531,6 +657,7 @@ export function FeedTab({
     focusedIndex,
     addToPipeline,
     dismiss,
+    toggleSave,
   });
   useEffect(() => {
     triageRef.current = {
@@ -538,20 +665,51 @@ export function FeedTab({
       focusedIndex,
       addToPipeline,
       dismiss,
+      toggleSave,
     };
   });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      const { items, focusedIndex, addToPipeline, dismiss } = triageRef.current;
+      // One press, one action. A held key repeats at ~30/second and each
+      // repeat lands on a *different* posting as the list shifts up, so the
+      // per-item in-flight guard cannot see it: measured, holding "d" fired
+      // ten dismisses in about a third of a second, took the list from
+      // twelve rows to two, and left three undo toasts for seven destroyed
+      // postings — on the screen whose whole anxiety is missing the one
+      // that mattered.
+      if (e.repeat) return;
+      // Bare keys only. Without this, Ctrl/Cmd-A added the focused job to the
+      // pipeline and swallowed select-all, and Ctrl/Cmd-D dismissed it and
+      // swallowed the bookmark dialog — both verified firing real POSTs. Both
+      // are muscle memory on a page of text, and dismiss is destructive.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement;
+      const tag = el.tagName;
+      // BUTTON too: the toolbar's own controls take focus, and "d" with the
+      // sort button focused dismissed a job.
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        tag === "BUTTON" ||
+        el.isContentEditable
+      )
+        return;
+      const { items, focusedIndex, addToPipeline, dismiss, toggleSave } =
+        triageRef.current;
       const list = items ?? [];
-      if (e.key === "j") {
+      // ArrowDown/ArrowUp alongside j/k. The cards carry a roving tabindex
+      // (0 on the focused one, -1 on the rest), which is the ARIA convention
+      // that promises arrow-key navigation — and the arrows did nothing, so
+      // cards 2..N were unreachable by Tab *and* by the keys the pattern
+      // told everyone to press. j/k stay: they are the documented ones and
+      // the muscle memory this screen was built around.
+      if (e.key === "j" || e.key === "ArrowDown") {
         e.preventDefault();
         kbNav.current = true;
         setFocusedIndex((i) => Math.min(i + 1, list.length - 1));
-      } else if (e.key === "k") {
+      } else if (e.key === "k" || e.key === "ArrowUp") {
         e.preventDefault();
         kbNav.current = true;
         setFocusedIndex((i) => Math.max(i - 1, 0));
@@ -560,6 +718,12 @@ export function FeedTab({
         if (target) {
           e.preventDefault();
           addToPipeline(target);
+        }
+      } else if (e.key === "s") {
+        const target = list[focusedIndex];
+        if (target) {
+          e.preventDefault();
+          toggleSave(target);
         }
       } else if (e.key === "d") {
         const target = list[focusedIndex];
@@ -581,7 +745,12 @@ export function FeedTab({
     : "";
 
   return (
-    <section>
+    /* A class that exists whether or not anything has loaded. The shell's
+       width was keyed on .feed-triage, which only renders once there are
+       items — so the page laid out at 760px during the fetch and jumped to
+       1100px when the data arrived, measured on every visit. Layout is a
+       property of the route, not of the query result. */
+    <section className="feed-page">
       <Toolbar>
         <p className="muted small" style={{ margin: 0 }}>
           {t("feed.pulledFrom")}
@@ -633,13 +802,58 @@ export function FeedTab({
         </div>
       )}
 
-      {items && items.length > 0 && visibleItems.length === 0 && (
-        <p className="muted small feed-nomatch">{t("feed.noFitMatch")}</p>
+      {items && items.length > 0 && visibleItems.length === 0 && weakHidden === 0 && (
+        /* The fit filter runs over the pages already loaded, not the whole
+           feed — matching is computed from each posting's description, which
+           only ships for the rows on the wire, so the server cannot order or
+           filter by it without scoring everything. The copy used to say "no
+           jobs match this fit filter", which is a claim about the feed that
+           this screen is in no position to make: page two may be full of
+           them. It says what it actually knows now, and offers both ways
+           forward. */
+        <div className="feed-nomatch">
+          <p className="muted small">
+            {cursor ? t("feed.noFitMatchPage") : t("feed.noFitMatch")}
+          </p>
+          <div className="feed-nomatch-actions">
+            {/* Only when there is a filter to clear. Offering "show any fit"
+                while the fit filter is already at zero is a remedy that
+                changes nothing — measured, rows before and after: 0. */}
+            {minFit > 0 && (
+              <Button variant="link" onClick={() => setMinFit(0)}>
+                {t("feed.clearFitFilter")}
+              </Button>
+            )}
+            {cursor && (
+              <Button variant="link" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? t("common.loading") : t("common.loadMore")}
+              </Button>
+            )}
+          </div>
+        </div>
       )}
 
       {visibleItems.length > 0 && (
         <div className="feed-triage">
-          <ul className="cards feed-list" ref={cardsRef}>
+          {/* Named, and explicitly a list. `list-style: none` drops list
+              semantics in Safari with VoiceOver, so the count of postings —
+              the one thing a screen-reader user wants before committing to
+              a triage session — silently disappears. aria-controls ties it
+              to the pane it drives: nothing else told anyone the pane
+              existed, let alone that stepping the list updates it.
+
+              Deliberately not role="listbox". That role is for static
+              options, and every row here holds Add and Dismiss buttons;
+              claiming the pattern would promise semantics the content
+              cannot honour, which is the same mistake the calendar's empty
+              role="grid" made. */}
+          <ul
+            className="cards feed-list"
+            ref={cardsRef}
+            role="list"
+            aria-label={t("feed.listLabel")}
+            aria-controls={focusedItem ? "feed-detail-pane" : undefined}
+          >
             {visibleItems.map((item, i) => (
               <FeedCard
                 key={item.id}
@@ -668,6 +882,7 @@ export function FeedTab({
                 adding={addingIds.has(item.id)}
                 onAdd={() => addToPipeline(item)}
                 onDismiss={() => dismiss(item)}
+                onToggleSave={() => toggleSave(item)}
                 onSelect={() => {
                   kbNav.current = false;
                   setFocusedIndex(i);
@@ -675,8 +890,20 @@ export function FeedTab({
               />
             ))}
           </ul>
+            {/* No aria-live. It sat on the whole pane, so every j/k
+                re-announced source, date, title, company, location, role,
+                salary, every skill chip, both button labels and the keyboard
+                hint — over the top of the focused card's own announcement.
+                The guidance on managing focus is explicit that the two
+                compete, and that the live region is the one to drop: the
+                card being focused already says which posting this is, and
+                the pane is what a user reads after arriving. */}
           {focusedItem && (
-            <aside className="feed-detail" aria-live="polite">
+            <aside
+              className="feed-detail"
+              id="feed-detail-pane"
+              aria-label={t("feed.detailLabel")}
+            >
               <span className="feed-detail-src">
                 {t("feed.viaSource", { source: focusedItem.source })}
                 {focusedItem.posted_at
@@ -709,6 +936,15 @@ export function FeedTab({
                   </div>
                 </div>
               )}
+              {/* What the job actually says. Everything above this line is
+                  metadata about the posting; this is the posting. Without it
+                  the accelerators — j/k/a/d and the swipe — were accelerating
+                  a decision made from the title. */}
+              {focusedItem.description_snippet && (
+                <p className="feed-detail-desc">
+                  {focusedItem.description_snippet}
+                </p>
+              )}
               {safeHref(focusedItem.url) && (
                 <a
                   href={safeHref(focusedItem.url)}
@@ -726,6 +962,21 @@ export function FeedTab({
                   disabled={addingIds.has(focusedItem.id)}
                 >
                   {t("feed.addToJobs")}
+                </Button>
+                {/* The pane carries the same three doors as the card. Above
+                    900px the row's own actions are hidden and this cluster
+                    is the only one a pointer user can reach, so a control
+                    that exists solely on the card would not exist at all on
+                    a desktop. */}
+                <Button
+                  variant={
+                    focusedItem.status === "saved" ? "primary" : "secondary"
+                  }
+                  onClick={() => toggleSave(focusedItem)}
+                >
+                  {focusedItem.status === "saved"
+                    ? t("feed.saved")
+                    : t("feed.save")}
                 </Button>
                 <Button
                   variant="secondary"
@@ -746,6 +997,44 @@ export function FeedTab({
             {t("empty.feedNothingNew")}
           </EmptyState>
         </ul>
+      )}
+      {visibleItems.length === 0 && weakHidden > 0 && (
+        /* The state a new account lands in. Matching needs skills on the CV,
+           so before one is filled in every posting scores zero, the weak
+           fold hides all of them, and the screen went blank under a message
+           about a fit filter that was not set — with a "show any fit" button
+           that did nothing. Names the real cause and points at the thing
+           that fixes it; the fold's own control below still offers to show
+           them anyway. */
+        <div className="feed-nomatch">
+          <p className="muted small">{t("feed.allWeak", { count: weakHidden })}</p>
+          <div className="feed-nomatch-actions">
+            <Button variant="link" onClick={onGoToCv}>
+              {t("feed.addSkills")}
+            </Button>
+          </div>
+        </div>
+      )}
+      {showWeak && weakShown > 0 && (
+        /* The way back. Showing the weaker matches was a one-way door: the
+           control disappeared once pressed, so a screen someone opened to
+           get away from a wall of "0 matching skills" could not be returned
+           to. */
+        <div className="feed-weak-more">
+          <Button variant="link" onClick={() => setShowWeak(false)}>
+            {t("feed.hideWeak", { count: weakShown })}
+          </Button>
+        </div>
+      )}
+      {weakHidden > 0 && (
+        /* Stated, not hidden: the count is the honest part, and one press
+           brings them back. Below the list rather than above it, so the
+           postings worth reading come first. */
+        <div className="feed-weak-more">
+          <Button variant="link" onClick={() => setShowWeak(true)}>
+            {t("feed.showWeak", { count: weakHidden })}
+          </Button>
+        </div>
       )}
       {cursor && (
         <div className="load-more">
@@ -771,6 +1060,7 @@ function FeedCard({
   adding,
   onAdd,
   onDismiss,
+  onToggleSave,
   onSelect,
   matched,
   band,
@@ -782,6 +1072,7 @@ function FeedCard({
   adding: boolean;
   onAdd: () => void;
   onDismiss: () => void;
+  onToggleSave: () => void;
   onSelect: () => void;
   matched: number | null;
   // Set only on the first card of a band, which draws the heading above
@@ -823,7 +1114,7 @@ function FeedCard({
       </li>
     )}
     <li
-      className={`feed-card feed-row band-${band ?? "cont"}${focused ? " kb-focused sel" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
+      className={`feed-card feed-row band-${band ?? "cont"}${focused ? " kb-focused sel" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}${Math.abs(dragX) > SWIPE_COMMIT_THRESHOLD ? " past-threshold" : ""}`}
       tabIndex={focused ? 0 : -1}
       aria-current={focused ? "true" : undefined}
       onClick={onSelect}
@@ -862,6 +1153,29 @@ function FeedCard({
             {t("feed.skillsMatch", { count: matched ?? 0 })}
           </span>
         </span>
+        {/* What the posting says, and why it fits, on the card itself.
+            Both live in the detail pane — which is display:none below
+            900px, so on every phone and on an 820px tablet the triage
+            accelerators were accelerating a decision made from a title and
+            a bar. A card that has to be clicked through to find out what it
+            is has failed at its one job. Rendered here and hidden from
+            900px up, where the pane says it instead. */}
+        {(item.description_snippet || item.match_skills.length > 0) && (
+          <div className="feed-row-brief">
+            {item.match_skills.length > 0 && (
+              <span className="feed-row-brief-skills">
+                {item.match_skills.slice(0, 4).map((name) => (
+                  <Chip key={name} matched>
+                    {name}
+                  </Chip>
+                ))}
+              </span>
+            )}
+            {item.description_snippet && (
+              <p className="feed-row-brief-desc">{item.description_snippet}</p>
+            )}
+          </div>
+        )}
         {safeHref(item.url) && (
           <a
             href={safeHref(item.url)}
@@ -875,6 +1189,19 @@ function FeedCard({
         )}
       </div>
       <div className="feed-row-actions">
+        {/* Keep for later. The third door triage never had: without it a
+            posting you were unsure about could only go into the pipeline,
+            which is the number the board, the funnel and the response rate
+            all read — so a maybe became an application you never sent. */}
+        <Button
+          variant={item.status === "saved" ? "primary" : "secondary"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSave();
+          }}
+        >
+          {item.status === "saved" ? t("feed.saved") : t("feed.save")}
+        </Button>
         <Button
           variant="primary"
           onClick={(e) => {

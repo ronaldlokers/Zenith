@@ -24,11 +24,20 @@ const DOC = {
   "--doc-muted": "#4a4d63",
   "--doc-faint": "#6b675e",
   "--doc-rule": "#d8d5cc",
-  "--doc-text": "8.5px",
-  "--doc-small": "8px",
-  "--doc-fine": "7.5px",
-  "--doc-name": "15px",
-  "--doc-name-aside": "13px",
+  // Typed out, because this was a deliberate redesign of the document: the
+  // preview is laid out at real A4 now and scaled as a whole, so its type is
+  // the export's own — 10pt body, 20pt name, read off generateCvPdf — rather
+  // than px fractions chosen to fit a narrow column. The old values showed
+  // roughly 3.5x more content per apparent page than the PDF they previewed,
+  // which made "does this fit on one page" unanswerable on the surface whose
+  // job is to answer it. The remaining two keep their old ratio to the body
+  // (8/8.5 and 13/15) so the two-column template's aside is unchanged in
+  // proportion.
+  "--doc-text": "10pt",
+  "--doc-small": "9.4pt",
+  "--doc-fine": "8.8pt",
+  "--doc-name": "20pt",
+  "--doc-name-aside": "17.3pt",
   "--doc-radius": "3px",
   "--doc-radius-fine": "1px",
 };

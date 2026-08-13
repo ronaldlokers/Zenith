@@ -176,6 +176,32 @@
     color: var(--danger);
   }
 
+  /* The one destructive control on this surface, and it measured 13x21px
+     sitting 3px from the 132px target that selects the variant — the two
+     things you can do to a variant were a thumb's width apart and one of
+     them was unrecoverable. Real separation, and a hit area like every
+     other control in the app has.
+
+     Unlike .cv-tool above, this one can take the full 44px: it sits at the
+     end of its row with the rail's gap beneath it, so the overlay has
+     nothing to steal presses from. */
+  @media (pointer: coarse) {
+    .cv-rail-del {
+      position: relative;
+      margin-inline-start: var(--space-2);
+    }
+
+    .cv-rail-del::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
+
   .cv-rail-add {
     border: 0;
     background: none;
@@ -399,6 +425,28 @@
       background: none;
       color: var(--print-ink);
       padding: 0;
+    }
+  }
+
+  /* The variant rail's circles are 34x34, under the 44px touch floor. The
+     rail is a column with an 8px gap and sits 8px from the plate, so 42 is
+     the whole budget: 4px on each side consumes the gap exactly, and 44
+     would have each overlay reach 1px past its neighbour's edge, making the
+     circle above answer for a press aimed at the one below. 42px of reliable
+     target beats 44px that steals its neighbour's presses. */
+  @media (pointer: coarse) {
+    .cv-tool {
+      position: relative;
+    }
+
+    .cv-tool::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 42px);
+      height: max(100%, 42px);
+      transform: translate(-50%, -50%);
     }
   }
 }

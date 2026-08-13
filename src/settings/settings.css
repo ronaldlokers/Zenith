@@ -7,67 +7,16 @@
    nothing like Recipe A/B, and Button's default/secondary/danger variants
    can't be used unmodified here. */
 @layer components {
-  /* account.tsx's delete-account/2FA-toggle/session-revoke/AI-key-remove
-     controls (all `<button class="danger">` or `<button class="">`, no
-     other class, inside .admin-invite/.session-list/.settings-fieldgrid —
-     none of which style buttons). App.css never gives any of them a
-     background, border or border-radius, only `button.danger`'s bare
-     `color` (App.css:1241) or nothing at all — so the element keeps
-     `appearance: auto` and Chromium paints its OWN native widget chrome
-     (the faint rounded pill visible on Settings > Account today), not
-     anything describable by App.css's box properties. Button.css's
-     default/danger variants explicitly set background/border/padding/
-     border-radius/min-height, and setting ANY of those to ANY value
-     (including "none"/0/transparent) suppresses native rendering outright
-     — there is no combination of ordinary values that gets the native
-     paint back. `revert` does: it discards the whole author cascade for
-     that property (this layer AND @layer app) and falls back to the
-     user-agent stylesheet, which is what actually produces the native
-     widget. `font: inherit` is re-declared because `revert` would also
-     discard index.css's own reset for it, falling back to the UA's bare
-     button font (~13px Arial) instead of the inherited body font. `color`
-     is deliberately left alone — `.zui-btn--danger`/`--default` already
-     resolve to the same colour the raw markup had (button.danger's
-     `color: var(--danger)`, or plain inheritance to `--ink` for the
-     unclassed default state) — reverting it too would just mean
-     re-declaring it per variant for no visible difference. Verified
-     pixel-identical (compare -metric AE = 0) against the raw pre-swap
-     markup — enabled, disabled, danger and default — at both viewports.
-
-     Specificity is (0,4,0), not the (0,3,0) three classes would give: both
-     `.zui-btn--danger:hover:not(:disabled)` and `.zui-btn--default:hover
-     :not(:disabled)` (Button.css) also compute to (0,3,0) — `:hover` and
-     `:not(:disabled)` each count as a class — which is an exact tie with
-     this rule on `background`, the one property both sides set. A tie
-     resolves by source order, i.e. by which file the bundler happens to
-     load last — exactly what the brief forbids. Confirmed empirically:
-     built a minimal two-rule test file and swapped which rule came last;
-     the winner flipped. `zui-settings-native` is repeated (a class doesn't
-     need to be a real state to count twice) to clear that tie outright,
-     the same trick used below for the other two override groups. Checked
-     every other pseudo-class rule in Button.css for a same-specificity
-     collision on a property this block touches: `.zui-btn:not(:disabled)
-     :active` (filter — not overridden here), `.zui-btn:focus-visible`
-     (outline/outline-offset — not overridden here) and `.zui-btn:disabled`
-     ((0,2,0), cursor/opacity — already beaten even at three classes) are
-     not contested. */
-  .zui-btn.zui-btn--danger.zui-settings-native.zui-settings-native,
-  .zui-btn.zui-btn--default.zui-settings-native.zui-settings-native {
-    display: revert;
-    align-items: revert;
-    justify-content: revert;
-    font: inherit;
-    border-radius: revert;
-    cursor: revert;
-    white-space: revert;
-    transition: revert;
-    background: revert;
-    border: revert;
-    padding: revert;
-    min-height: revert;
-    font-weight: revert;
-    opacity: revert;
-  }
+  /* The block that used to sit here reverted Button's styling back to
+     Chromium's own widget chrome for account.tsx's four controls —
+     delete-account, the 2FA toggle, session-revoke and AI-key-remove — so a
+     component swap could be pixel-zero against markup that had never been
+     designed. The zero-diff discipline was right for the swap and wrong to
+     keep: it froze an un-designed state as a documented contract, and left
+     the screen where you delete your account rendering a 112x27px beveled
+     UA button while "Remove key" beside it ran 471px wide. Those four use
+     the owned variants now, so the overrides are gone rather than being
+     carried as dead rules. */
 
   /* admin.tsx's remove-user control, `<button class="danger">` inside
      `.admin-user-actions` inside `.settings-list li.admin-user`. Two
@@ -228,6 +177,24 @@
     white-space: nowrap;
   }
 
+  /* Pointing at the row says nothing about it being one. The row is a
+     disclosure — the control is behind it — and the only signal it gave was
+     the cursor, which a value list styled exactly like this one would not
+     have. No new chrome: the same two parts the row already has answer,
+     using the colour the open state already uses. */
+  .set-row-line:hover .set-row-value,
+  .set-row-line:focus-visible .set-row-value {
+    color: var(--accent-ink);
+  }
+
+  .set-row-line:hover .set-row-leader {
+    background-image: radial-gradient(
+      circle,
+      var(--muted) 0.5px,
+      transparent 0.5px
+    );
+  }
+
   .set-row.open .set-row-value {
     color: var(--accent-ink);
   }
@@ -266,5 +233,29 @@
     clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
+  }
+
+  /* The danger zone. Bordered in the danger tone rather than filled: the
+     block is a boundary, not an alarm — the alarm is the button inside it,
+     and a filled red panel would shout at someone who came to this page to
+     do something else entirely. */
+  .settings-danger {
+    margin-top: var(--space-5);
+    padding: var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--border));
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+
+  .settings-danger h3 {
+    color: var(--danger);
+  }
+
+  /* A button in this grid is a button, not a column. .settings-fieldgrid
+     gives every child a full auto-fit track, which stretched "Remove key" to
+     471px — four times the width of "Delete account" beside it, and the
+     opposite of what those two actions weigh. */
+  .settings-fieldgrid .zui-btn {
+    justify-self: start;
   }
 }

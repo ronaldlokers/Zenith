@@ -1,10 +1,11 @@
 // CV builder extracted from App.tsx (#285 split) — the CV tab and its
 // profile / work-experience / education / languages sections + forms.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { api } from "./api";
 import { Button, Skeleton } from "./components";
+import { requestConfirm } from "./hooks";
 import type {
   CvSnapshotData,
   CvVersion,
@@ -76,6 +77,40 @@ export function CVTab({
     load();
   }, [load]);
 
+  // The preview is laid out at real A4 (210mm wide) and scaled to whatever
+  // room the column has. Measured rather than guessed at, because the column
+  // width depends on the rail, the viewport and the template — and the whole
+  // point of this preview is that its proportions are true.
+  const docViewRef = useRef<HTMLDivElement>(null);
+  const [pages, setPages] = useState(1);
+  useEffect(() => {
+    const host = docViewRef.current;
+    if (!host) return;
+    const MM = 96 / 25.4; // CSS px per mm
+    const apply = () => {
+      const sheet = host.firstElementChild as HTMLElement | null;
+      if (!sheet) return;
+      const scale = Math.min(1, host.clientWidth / (210 * MM));
+      host.style.setProperty("--cv-scale", String(scale));
+      // scrollHeight, not the 297mm minimum: a CV that runs onto a second
+      // page has to make the wrapper taller, or the overflow is clipped.
+      host.style.setProperty(
+        "--cv-doc-height",
+        `${Math.ceil(sheet.scrollHeight * scale)}px`,
+      );
+      // How long the document actually is, in the unit a CV is judged in.
+      // One decimal on purpose: "1.6 pages" says something "2 pages" does
+      // not, and the half-empty second page is the length mistake this is
+      // here to surface.
+      setPages(Math.max(1, sheet.scrollHeight / (297 * MM)));
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(host);
+    if (host.firstElementChild) ro.observe(host.firstElementChild);
+    return () => ro.disconnect();
+  });
+
   if (!profile || !workExp || !education || !languages) {
     return <Skeleton />;
   }
@@ -98,15 +133,33 @@ export function CVTab({
     },
   };
 
+
   const active = versions.find((v) => v.id === activeId) ?? null;
   // A saved variant is a JSON snapshot; a corrupt one falls back to live
   // rather than blanking the page.
+  //
+  // The shape is checked, not just the syntax. try/catch alone caught only
+  // malformed JSON — a snapshot of "{}" parses perfectly and then throws on
+  // shown.workExperience.length, which took the whole app to a white screen
+  // with no way back but a reload. These blobs are long-lived and
+  // schema-coupled: they are written by whatever version of the app was
+  // running that day, so "parses" and "is a CV" are different questions.
   const shown: CvSnapshotData = (() => {
-    if (!active) return { profile, workExperience: workExp, education, languages };
+    const live = { profile, workExperience: workExp, education, languages };
+    if (!active) return live;
     try {
-      return JSON.parse(active.snapshot) as CvSnapshotData;
+      const parsed = JSON.parse(active.snapshot) as Partial<CvSnapshotData>;
+      const usable =
+        !!parsed &&
+        typeof parsed === "object" &&
+        !!parsed.profile &&
+        typeof parsed.profile === "object" &&
+        Array.isArray(parsed.workExperience) &&
+        Array.isArray(parsed.education) &&
+        Array.isArray(parsed.languages);
+      return usable ? (parsed as CvSnapshotData) : live;
     } catch {
-      return { profile, workExperience: workExp, education, languages };
+      return live;
     }
   })();
 
@@ -128,9 +181,17 @@ export function CVTab({
       .finally(() => setVersionBusy(false));
   };
 
-  const deleteVariant = (v: CvVersion) => {
+  const deleteVariant = async (v: CvVersion) => {
+    // A saved variant is a JSON blob with no history — deleting one is
+    // unrecoverable, and the control that did it was a 13x21px x sitting
+    // 3px from the 132px target that selects the variant, with no confirm
+    // and no undo. Every other destructive action in this app asks first
+    // (documents, role types, account data, the API key); this surface used
+    // neither the confirm nor the undo the app already has.
+    if (!(await requestConfirm(t("confirm.deleteCvVariant", { name: v.name }))))
+      return;
     setVersionBusy(true);
-    Promise.resolve(api.remove("cv-versions", v.id))
+    return Promise.resolve(api.remove("cv-versions", v.id))
       .then(() => {
         if (activeId === v.id) setActiveId(null);
         return loadVersions();
@@ -220,7 +281,11 @@ export function CVTab({
               </span>
             </div>
             <div className="cv-card-cols">
-              <div className="cv-doc-view" aria-label={t("cv.livePreview")}>
+              <div
+                className="cv-doc-view"
+                aria-label={t("cv.livePreview")}
+                ref={docViewRef}
+              >
                 <CvPreview
                   profile={shown.profile}
                   workExperience={shown.workExperience}
@@ -235,7 +300,7 @@ export function CVTab({
                 activeId={activeId}
                 onSelect={setActiveId}
                 onSave={saveVariant}
-                onDelete={deleteVariant}
+                onDelete={(v) => void deleteVariant(v)}
                 busy={versionBusy}
               />
             </div>
@@ -262,6 +327,13 @@ export function CVTab({
               <span>
                 {t("cv.languages")} <b>{shown.languages.length}</b>
               </span>
+              {/* The one count that is about the document rather than its
+                  contents. Everything else here says how much you have
+                  written; this says how long it is, which is the thing a
+                  reader notices first. */}
+              <span className="cv-card-pages">
+                {t("cv.pages", { count: Math.round(pages * 10) / 10 })}
+              </span>
             </div>
           </article>
 
@@ -273,7 +345,11 @@ export function CVTab({
               variant="secondary"
               onClick={() =>
                 document
-                  .getElementById("cv-builder")
+                  // The editor, not the top of the builder — which opens
+                  // with the tailor panel, so this button and "Match to a
+                  // posting" scrolled to the identical pixel and one of them
+                  // did not do what it said.
+                  .getElementById("cv-editor")
                   ?.scrollIntoView({ block: "start" })
               }
             >
@@ -313,12 +389,14 @@ export function CVTab({
             notify={notify}
             initialJd={tailorJd}
           />
-          <ProfileSection
-            profile={profile}
-            onChanged={load}
-            onError={onError}
-            notify={notify}
-          />
+          <div id="cv-editor">
+            <ProfileSection
+              profile={profile}
+              onChanged={load}
+              onError={onError}
+              notify={notify}
+            />
+          </div>
           <LinkedInOptimizer onError={onError} notify={notify} />
           <WorkExperienceSection
             items={workExp}

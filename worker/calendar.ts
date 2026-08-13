@@ -20,6 +20,38 @@ function icsEscape(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
+// RFC 5545 3.1: a content line MUST NOT be longer than 75 octets, excluding
+// the line break, and is folded by inserting CRLF followed by a single
+// whitespace character. Nothing here folded, and the limit is octets rather
+// than characters — "Follow up — Senior Platform Engineer, Site Reliability
+// at Northwind Cloud Systems International" measures 105. Tolerant parsers
+// (Google's included) accept the long line, which is why this survived; a
+// strict one is entitled to reject the whole calendar.
+//
+// Folded on byte boundaries that respect UTF-8, because the em dash the
+// summaries use is three octets and splitting it mid-sequence would put a
+// replacement character in the user's calendar. Unfolding happens before
+// escape processing, so a fold landing inside a "\," escape is legal.
+function icsFold(line: string): string {
+  const bytes = new TextEncoder().encode(line);
+  if (bytes.length <= 75) return line;
+  const parts: string[] = [];
+  let start = 0;
+  // 75 for the first line; 74 thereafter, since the continuation's leading
+  // space counts toward the limit.
+  let limit = 75;
+  while (start < bytes.length) {
+    let end = Math.min(start + limit, bytes.length);
+    while (end > start && end < bytes.length && (bytes[end] & 0xc0) === 0x80) {
+      end--;
+    }
+    parts.push(new TextDecoder().decode(bytes.slice(start, end)));
+    start = end;
+    limit = 74;
+  }
+  return parts.join("\r\n ");
+}
+
 function icsDate(d: string): string {
   return d.replace(/[-:]/g, "").slice(0, 8);
 }
@@ -29,6 +61,37 @@ interface IcsEvent {
   date: string;
   summary: string;
   description?: string;
+  /**
+   * Bumped whenever the underlying row changes, so a client that has already
+   * imported this event will replace it. Derived from the row's updated_at
+   * rather than kept anywhere: the feed is stateless, and a value that only
+   * moves forward is what the property means.
+   */
+  sequence: number;
+}
+
+// Whole minutes since the epoch. Seconds would overflow nothing but say more
+// than the data supports — SQLite timestamps here have second resolution and
+// a follow-up is not rescheduled twice in a minute.
+function icsSequence(updatedAt: string | null | undefined): number {
+  if (!updatedAt) return 0;
+  const t = Date.parse(updatedAt.replace(" ", "T") + "Z");
+  return Number.isNaN(t) ? 0 : Math.floor(t / 60000);
+}
+
+// SEQUENCE is whole minutes since the epoch (see icsSequence), so it is also
+// the row's last-change time. 0 means the row had no updated_at, and there is
+// nothing better to say than the generation stamp.
+function icsStamp(sequence: number): string {
+  if (!sequence) return nowStamp();
+  return (
+    new Date(sequence * 60000).toISOString().replace(/[-:]/g, "").split(".")[0] +
+    "Z"
+  );
+}
+
+function nowStamp(): string {
+  return new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 }
 
 function buildIcs(events: IcsEvent[]): string {
@@ -37,9 +100,20 @@ function buildIcs(events: IcsEvent[]): string {
     "VERSION:2.0",
     "PRODID:-//Zenith//Calendar Export//EN",
     "CALSCALE:GREGORIAN",
+    // NAME is the standard property (RFC 7986); X-WR-CALNAME is the
+    // pre-standard one most clients actually read. Both, because dropping
+    // the old one renames every existing subscription to the URL.
+    "NAME:Zenith",
     "X-WR-CALNAME:Zenith",
+    // How often to re-poll. REFRESH-INTERVAL is the standard property and
+    // X-PUBLISHED-TTL is the one Outlook honours; Google ignores both and
+    // polls on its own schedule (commonly 12-24h), which is why the app's
+    // own copy does not promise a refresh time. Costs two lines and helps
+    // the clients that do read them.
+    "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
+    "X-PUBLISHED-TTL:PT1H",
   ];
-  const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const stamp = nowStamp();
   for (const e of events) {
     lines.push(
       "BEGIN:VEVENT",
@@ -47,12 +121,34 @@ function buildIcs(events: IcsEvent[]): string {
       `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${icsDate(e.date)}`,
       `SUMMARY:${icsEscape(e.summary)}`,
+      // TRANSPARENT, because these are markers rather than commitments. The
+      // default is OPAQUE, so subscribing marked the user busy for the whole
+      // day on every follow-up — visible to anyone doing a free/busy lookup,
+      // which is precisely the exposure the app's own privacy warning about
+      // this feed is trying to prevent.
+      "TRANSP:TRANSPARENT",
+      // Keeps the detail out of shared views on clients that honour it. The
+      // feed names roles and companies, and a subscription lands in whatever
+      // calendar the person actually looks at.
+      "CLASS:PRIVATE",
+      // Without a SEQUENCE some clients will not move an event they have
+      // already imported, and this app has a control that pushes every late
+      // follow-up to a new date at once — so a rescheduled follow-up would
+      // sit on its old day in the user's calendar forever. Derived from the
+      // row's own last change rather than a counter: the feed is stateless.
+      `SEQUENCE:${e.sequence}`,
+      // The row's own last change, not this response's timestamp. Stamped
+      // with generation time it said every event had just changed on every
+      // poll, which is the opposite of what SEQUENCE beside it reports and
+      // enough to make some clients re-notify a follow-up that has not
+      // moved in weeks.
+      `LAST-MODIFIED:${icsStamp(e.sequence)}`,
     );
     if (e.description) lines.push(`DESCRIPTION:${icsEscape(e.description)}`);
     lines.push("END:VEVENT");
   }
   lines.push("END:VCALENDAR");
-  return lines.join("\r\n") + "\r\n";
+  return lines.map(icsFold).join("\r\n") + "\r\n";
 }
 
 export function registerCalendarRoutes(app: Hono<AppEnv>) {
@@ -90,12 +186,14 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
     )
       .bind(token)
       .first<{ user_id: string; timezone: string | null }>();
-    if (!profile) return c.text("Not found", 404);
+    if (!profile)
+      return c.text("Not found", 404, { "Referrer-Policy": "no-referrer" });
     const today = localDate(profile.timezone, new Date());
 
     const [followUps, deadlines, interviews] = await Promise.all([
       c.env.DB.prepare(
         `SELECT applications.id, applications.title, applications.next_action,
+                applications.updated_at,
                 applications.next_action_at AS date, companies.name AS company_name
          FROM applications
          LEFT JOIN companies ON companies.id = applications.company_id
@@ -104,9 +202,9 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
            AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
       )
         .bind(profile.user_id)
-        .all<{ id: number; title: string; next_action: string | null; date: string; company_name: string | null }>(),
+        .all<{ id: number; title: string; next_action: string | null; updated_at: string | null; date: string; company_name: string | null }>(),
       c.env.DB.prepare(
-        `SELECT applications.id, applications.title,
+        `SELECT applications.id, applications.title, applications.updated_at,
                 applications.deadline_at AS date, companies.name AS company_name
          FROM applications
          LEFT JOIN companies ON companies.id = applications.company_id
@@ -115,7 +213,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
            AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
       )
         .bind(profile.user_id)
-        .all<{ id: number; title: string; date: string; company_name: string | null }>(),
+        .all<{ id: number; title: string; updated_at: string | null; date: string; company_name: string | null }>(),
       c.env.DB.prepare(
         // Deliberately NOT selecting interactions.notes — raw interview notes
         // (candid, often blunt) must never reach an ICS feed that a user might
@@ -139,18 +237,23 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
         date: a.date,
         summary: `${a.next_action ?? "Follow up"}: ${a.title}`,
         description: a.company_name ?? undefined,
+        sequence: icsSequence(a.updated_at),
       })),
       ...deadlines.results.map((a) => ({
         uid: `deadline-${a.id}`,
         date: a.date,
         summary: `Deadline: ${a.title}`,
         description: a.company_name ?? undefined,
+        sequence: icsSequence(a.updated_at),
       })),
       ...interviews.results.map((i) => ({
         uid: `interview-${i.id}`,
         date: i.date,
         summary: `Interview: ${i.title ?? "Unknown"}`,
         description: i.company_name ?? undefined,
+        // interactions have no updated_at; the row is effectively immutable
+        // once logged, so a fixed 0 is honest here.
+        sequence: 0,
       })),
     ];
 
@@ -161,6 +264,10 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
       // minutes of staleness is fine for a subscribe feed and saves re-running
       // the joined queries on every poll (perf review, #446).
       "Cache-Control": "private, max-age=300",
+      // The token is in the URL, so it must not travel in a Referer. The
+      // app-wide default only withholds the path cross-origin; a tokenised
+      // feed should not depend on that distinction.
+      "Referrer-Policy": "no-referrer",
     });
   });
 }

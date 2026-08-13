@@ -15,13 +15,33 @@ import "./CalendarMonth.css";
 // stays in calendar.tsx.
 export interface CalendarMonthProps {
   entries: AgendaEntry[];
-  onJump: (title: string) => void;
+  onJump: (entry: AgendaEntry) => void;
 }
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
 // A compact chip label for the month grid: the company (or title) reads at a
 // glance; the full agenda text is the tooltip. Colour comes from the kind.
+// The chip's kind — follow-up, deadline, interview, applied — was carried by
+// its background tint and nothing else, so it did not exist for anyone who
+// cannot separate those hues. Stated in the accessible name instead, with the
+// tint kept as the at-a-glance signal: 1.4.1 allows colour to carry meaning,
+// never to carry it alone.
+//
+// Not prefixed when the sentence already opens with it — agendaText for an
+// applied date reads "Applied to X at Y", and "Applied: Applied to X" is the
+// kind of thing that only sounds fine to whoever wrote the template.
+function kindLabel(
+  e: AgendaEntry,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  const kind = t(`calendar.kind.${e.kind}`);
+  const text = agendaText(e, t);
+  return text.toLowerCase().startsWith(kind.toLowerCase())
+    ? text
+    : `${kind}: ${text}`;
+}
+
 function chipLabel(e: AgendaEntry): string {
   return e.company_name ?? e.title ?? "";
 }
@@ -125,7 +145,16 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
         </span>
       </div>
       <div className="zui-cal-body">
-        <div className="zui-cal-grid" role="grid">
+        {/* No role="grid". It declared one and provided none of what the
+            role promises — measured: 0 rows, 0 gridcells, 0 columnheaders,
+            no label — so a screen reader entered table-navigation mode and
+            found an empty table, with arrow keys doing nothing. That is
+            strictly worse than no role at all, because it overrides the
+            generic-container reading that did work. Reading as plain
+            content is honest; a real grid needs rows, cells, headers and
+            roving arrow-key navigation, which is a bigger piece of work
+            than a role attribute. */}
+        <div className="zui-cal-grid">
           <div className="zui-cal-dow">
             {dow.map((d) => (
               <span key={d}>{d}</span>
@@ -144,9 +173,25 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
                       key={`${e.kind}-${e.id}`}
                       className={`zui-cal-chip kind-${e.kind}`}
                       title={agendaText(e, t)}
-                      onClick={() => e.title && onJump(e.title)}
+                      // The kind — follow-up, deadline, interview, applied —
+                      // was carried by the chip's background tint and
+                      // nothing else, so it did not exist for anyone who
+                      // cannot separate those hues, and 8% of men cannot.
+                      // The accessible name states it; the tint stays as the
+                      // at-a-glance signal for everyone else.
+                      aria-label={kindLabel(e, t)}
+                      // The entry, not its title. Jumping by title string
+                      // sent you to whichever application matched first, and
+                      // "Senior Software Engineer" is not a rare name —
+                      // while every entry already carries the id of the row
+                      // it came from.
+                      onClick={() => onJump(e)}
                     >
-                      {chipLabel(e)}
+                      {/* An inner span, because text-overflow does not apply
+                          to a flex item: the chip is display:flex, so the
+                          ellipsis rule never fired and labels were sliced
+                          mid-word ("Brightpath Talent P"). */}
+                      <span className="zui-cal-chip-label">{chipLabel(e)}</span>
                     </button>
                   ))}
                   {c.events.length > MAX && (
@@ -161,14 +206,24 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
         </div>
         <aside className="zui-cal-rail">
           <p className="zui-cal-rail-h">{t("calendar.upcoming")}</p>
+          {/* "Nothing on the agenda yet" is true of an empty calendar and a
+              flat contradiction of a full one: this rail counts only future
+              dates, so with six overdue follow-ups on screen it printed
+              "nothing here" beside "6 events". Nothing scheduled ahead is a
+              different statement from nothing at all, and on a follow-up
+              tracker it is the more common one. */}
           {upcoming.length === 0 && (
-            <p className="muted small">{t("calendar.empty")}</p>
+            <p className="muted small">
+              {entries.length === 0
+                ? t("calendar.empty")
+                : t("calendar.noUpcoming", { count: entries.length })}
+            </p>
           )}
           {upcoming.map((e) => (
             <button
               key={`${e.kind}-${e.id}`}
               className="zui-cal-up"
-              onClick={() => e.title && onJump(e.title)}
+              onClick={() => onJump(e)}
             >
               <span className={`zui-cal-up-dot kind-${e.kind}`} aria-hidden="true" />
               <span className="zui-cal-up-body">

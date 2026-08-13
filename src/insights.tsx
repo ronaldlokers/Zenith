@@ -5,18 +5,22 @@
 // numbers" drawer is gone (#486) — it duplicated the cards above it and its
 // only unique piece, data export, now lives in Settings → Data (#485).
 import { useEffect, useState } from "react";
+import { api } from "./api";
 import { useTranslation } from "react-i18next";
-import type { Application, Stats } from "./types";
+import type { AgendaEntry, Application, Stats, UserGoal } from "./types";
 import {
   FUNNEL_STAGES,
   funnelConversions,
   funnelReachCounts,
   outcomeBreakdown,
+  MIN_CONVERSION_N,
   responseRate,
+  responseTime,
 } from "./stats";
 import {
   computePipelineMomentum,
   computeWeeklyMomentum,
+  searchWeekNumber,
   downloadOfferComparisonPdf,
   isDead,
   medianTimeToOffer,
@@ -24,12 +28,20 @@ import {
 } from "./format";
 import { ActivityTab, CalendarTab } from "./calendar";
 import { FlagIcon, FunnelIcon, OfferIcon } from "./icons";
-import { Button, DashCard, MomentumBand, Skeleton, StatCard } from "./components";
+import {
+  Button,
+  DashCard,
+  EmptyState,
+  MomentumBand,
+  Skeleton,
+  StatCard,
+} from "./components";
 
 export function InsightsTab({
   applications,
   onGoToJobs,
   onOpenJob,
+  onShowClosed,
   onError,
   onJump,
   stats,
@@ -37,12 +49,26 @@ export function InsightsTab({
   applications: Application[];
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
+  onShowClosed: () => void;
   onError: (message: string | null) => void;
   onJump: (title: string) => void;
   stats: Stats | null;
 }) {
   const { t } = useTranslation();
   const [showActivity, setShowActivity] = useState(false);
+  const [goal, setGoal] = useState<UserGoal | null>(null);
+  useEffect(() => {
+    let live = true;
+    void api
+      .goals()
+      .then((g) => live && setGoal(g))
+      // A missing goal is not an error state for this page: it just means
+      // there is no target to measure against, and the line is omitted.
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
   // The calendar only draws its month grid from 900px up; below that it falls
   // back to a full agenda list, which on a phone buried the numbers under a
   // scroll of every dated event. So on narrow screens it hides behind a
@@ -65,7 +91,26 @@ export function InsightsTab({
   const funnelMax = Math.max(1, counts[0] ?? 0);
   const conv = funnelConversions(history);
   const resp = responseRate(history);
+  // How long employers take to answer, and how many have not. See
+  // responseTime: the two numbers have to travel together, because the
+  // median is over answers received and says nothing on its own about the
+  // ones still out.
+  const rtime = responseTime(history, Date.now());
   const mom = computeWeeklyMomentum(stats.applications, history);
+  // Pace against the user's own target. This page judges how the search is
+  // going and refused the one benchmark they set themselves — the weekly
+  // goal and the start date are both in Settings, and "Week N of your
+  // search" was already translated. Without them a figure has no scale: 5
+  // applications is good or bad depending entirely on what you meant to do.
+  const sentThisWeek = mom.weeks[mom.weeks.length - 1]?.count ?? 0;
+  const searchWeek = searchWeekNumber(
+    goal?.search_started_at ??
+      stats.applications.reduce<string | null>((min, a) => {
+        const d = a.applied_at ?? a.created_at;
+        return d && (!min || d < min) ? d : min;
+      }, null),
+    Date.now(),
+  );
   const weekMax = Math.max(1, ...mom.weeks.map((w) => w.count));
   const pipe = computePipelineMomentum(history);
   const t2o = medianTimeToOffer(history);
@@ -77,13 +122,69 @@ export function InsightsTab({
     .filter((x): x is number => x != null);
   const topComp = comps.length ? Math.max(...comps) : null;
 
+  // Opens the row the entry came from. The calendar used to hand its title
+  // to a board search, which lands on whichever application matches the
+  // string first — and "Senior Software Engineer" is not a rare title. The
+  // search stays as the fallback for an entry with no application behind it.
+  const jumpToEntry = (e: AgendaEntry) => {
+    // Which field holds the application depends on where the entry came
+    // from: a follow-up and an applied-date are selected from applications,
+    // so their id IS the application; an interaction is selected from
+    // interactions and carries the application beside it. Checked against
+    // the queries rather than assumed — the first version of this only read
+    // application_id and silently fell through to the title search for two
+    // of the three kinds.
+    const applicationId = e.kind === "interaction" ? e.application_id : e.id;
+    if (applicationId) onOpenJob(applicationId);
+    else if (e.title) onJump(e.title);
+  };
+
   const fmtComp = (n: number) =>
     `~${liveOffers[0]?.salary_currency ?? "€"} ${Math.round(n).toLocaleString()}`;
 
   return (
     <section className="dash">
+      {/* Nothing to report yet, said once. The page used to render its full
+          chrome around an empty account: 0 open, 0% response over 0 of 0,
+          0 live offers, a median of "—", a five-stage funnel of zeroes and
+          a momentum verdict on no events — the first screen a newly invited
+          user sees under a tab called Insights, and every number on it
+          either zero or invented. A page whose only output is numbers has
+          nothing to say before there are any, so it says that and points at
+          the thing that starts the search. */}
+      {applications.length === 0 ? (
+        <EmptyState className="insights-empty">
+          {t("insights.nothingYet")}{" "}
+          <Button variant="link" onClick={onGoToJobs}>
+            {t("insights.nothingYetCta")}
+          </Button>
+        </EmptyState>
+      ) : (
+        <>
       {/* The figures sit on one hairline band, divided rather than boxed:
           four tiles read as four things, where this reads as one summary. */}
+      {/* Named for heading navigation. These two bands carry the page's
+          headline numbers and its verdict, and neither had a heading at all
+          — so skimming Insights by heading went straight past everything
+          analytic and landed on the calendar. Visually hidden because the
+          figures already label themselves on screen. */}
+      {/* Scale, before the figures. A goal of 0 means the user turned the
+          target off, so nothing is stated about pace — the weekly quota was
+          deliberately removed from Today for the same reason, and this must
+          not smuggle it back in for people who declined it. */}
+      {(searchWeek != null || (goal?.weekly_app_goal ?? 0) > 0) && (
+        <p className="insights-pace muted small">
+          {searchWeek != null ? t("goals.searchWeek", { count: searchWeek }) : ""}
+          {searchWeek != null && (goal?.weekly_app_goal ?? 0) > 0 ? " · " : ""}
+          {(goal?.weekly_app_goal ?? 0) > 0
+            ? t("insights.pace", {
+                sent: sentThisWeek,
+                goal: goal!.weekly_app_goal,
+              })
+            : ""}
+        </p>
+      )}
+      <h2 className="sr-only">{t("insights.headlineNumbers")}</h2>
       <div className="dash-kpiband">
         <StatCard
           band
@@ -92,34 +193,68 @@ export function InsightsTab({
           label={t("dashboard.kpiOpenShort")}
           onClick={onGoToJobs}
         />
+        {/* Below the threshold this states the fraction instead of a
+            percentage, the same way the funnel drops its conversion and
+            keeps its count: the two numbers are true, "50%" off two
+            applications is not. */}
         <StatCard
           band
-          value={`${Math.round(resp.rate * 100)}%`}
+          value={
+            resp.rate != null
+              ? `${Math.round(resp.rate * 100)}%`
+              : `${resp.responded}/${resp.applied}`
+          }
           label={t("dashboard.kpiResponseShort")}
-          sub={t("dashboard.kpiResponseOf", {
-            responded: resp.responded,
-            applied: resp.applied,
-          })}
+          sub={
+            resp.rate != null
+              ? t("dashboard.kpiResponseOf", {
+                  responded: resp.responded,
+                  applied: resp.applied,
+                })
+              : t("dashboard.kpiResponseTooFew")
+          }
           onClick={onGoToJobs}
         />
         <StatCard
           band
           value={liveOffers.length}
-          label={t("dashboard.kpiOffers")}
+          label={t("dashboard.kpiOffers", { count: liveOffers.length })}
           sub={topComp != null ? fmtComp(topComp) : undefined}
-          onClick={() => liveOffers[0] && onOpenJob(liveOffers[0].id)}
+          // No handler when there is nothing to open. It rendered as a
+          // button whatever the count, so with zero offers — the common
+          // case — the warmest tile on the page was pressable and inert.
+          onClick={
+            liveOffers[0] ? () => onOpenJob(liveOffers[0].id) : undefined
+          }
         />
+        {/* One offer has a median of itself. The number stays — how long
+            your offer took is real and worth knowing — but it is only
+            called a median once there are enough of them for the word to
+            mean anything, and below that the tile says how many it is
+            from. */}
         <StatCard
           band
-          value={t2o != null ? `~${Math.round(t2o)}d` : "—"}
-          label={t("dashboard.kpiToOffer")}
+          value={t2o.days != null ? `~${Math.round(t2o.days)}d` : "—"}
+          label={
+            t2o.n >= MIN_CONVERSION_N
+              ? t("dashboard.kpiToOffer")
+              : t("dashboard.kpiToOfferOne")
+          }
+          sub={
+            t2o.n > 0 && t2o.n < MIN_CONVERSION_N
+              ? t("insights.fromNOffers", { count: t2o.n })
+              : undefined
+          }
         />
       </div>
 
+      <h2 className="sr-only">{t("dashboard.momentumTitle")}</h2>
       <MomentumBand
         eyebrow={t("dashboard.momentumTitle")}
         verdict={t(`stats.momentum.${pipe.verdict}`)}
         detail={t("stats.momentumDetail", {
+          // count drives the plural form; recent is what the sentence prints.
+          count: pipe.recent,
           recent: pipe.recent,
           prior: pipe.prior,
         })}
@@ -143,10 +278,13 @@ export function InsightsTab({
               <div className={`dash-fn stage-${st}`} key={st}>
                 <span className="dash-fl">
                   {t(`stages.${st}`)}
-                  {i > 0 && conv[i - 1] ? (
+                  {/* Only when there is a rate to state. Below the
+                      threshold the stage still shows its count — the number
+                      is true, the percentage would not be. */}
+                  {i > 0 && conv[i - 1]?.rate != null ? (
                     <span className="dash-fconv">
                       {t("dashboard.convFrom", {
-                        pct: Math.round(conv[i - 1].rate * 100),
+                        pct: Math.round((conv[i - 1].rate ?? 0) * 100),
                         stage: t(`stages.${FUNNEL_STAGES[i - 1]}`),
                       })}
                     </span>
@@ -159,6 +297,27 @@ export function InsightsTab({
               </div>
             ))}
           </div>
+          {/* The one number that makes silence readable: three days of
+              nothing means little when the median is eleven and a lot when
+              it is four. The count still waiting sits beside it on purpose
+              — the median is over answers received, so alone it would
+              invite exactly the reading it cannot support. */}
+          {(rtime.median != null || rtime.waiting > 0) && (
+            <p className="muted small dash-rtime">
+              {rtime.median != null
+                ? t("insights.replyTypical", {
+                    days: Math.round(rtime.median),
+                    count: rtime.n,
+                  })
+                : t("insights.replyTooFew")}
+              {rtime.waiting > 0 && rtime.longestWait != null
+                ? ` ${t("insights.replyWaiting", {
+                    count: rtime.waiting,
+                    days: Math.round(rtime.longestWait),
+                  })}`
+                : ""}
+            </p>
+          )}
         </DashCard>
 
         {/* A reason is a phrase, not a one-word stage, so its card carries
@@ -187,13 +346,32 @@ export function InsightsTab({
                   </div>
                 ))}
               </div>
-              {outcomes.unrecorded > 0 && (
-                <p className="dash-outcome-rest">
-                  {t("outcome.insightsUnrecorded", {
-                    count: outcomes.unrecorded,
-                  })}
-                </p>
-              )}
+              {outcomes.unrecorded > 0 &&
+                (outcomes.counts.length === 0 ? (
+                  /* Nothing recorded at all, which is not the same as "and
+                     also these". The column rendered a header, a count and
+                     one grey sentence saying nothing was recorded, next to
+                     two populated columns — a dead end where the only thing
+                     that fixes it is somewhere else entirely. The reason is
+                     recorded on the application itself, so this says so and
+                     goes there. */
+                  <p className="dash-col-empty">
+                    <span className="muted small">
+                      {t("outcome.insightsNoneRecorded", {
+                        count: outcomes.unrecorded,
+                      })}
+                    </span>{" "}
+                    <Button variant="link" onClick={onShowClosed}>
+                      {t("outcome.insightsRecordCta")}
+                    </Button>
+                  </p>
+                ) : (
+                  <p className="dash-outcome-rest">
+                    {t("outcome.insightsUnrecorded", {
+                      count: outcomes.unrecorded,
+                    })}
+                  </p>
+                ))}
             </>
           )}
         </DashCard>
@@ -220,12 +398,29 @@ export function InsightsTab({
                       onClick={() => onOpenJob(o.id)}
                     >
                       <span className="dash-ot">{o.title}</span>
+                      {/* Two money figures sat on one row unlabelled —
+                          "~EUR 129,500" beside "€90,000 – €100,000" — with
+                          nothing saying one is the package and the other the
+                          base. An undefined number is an ambiguous number,
+                          and these two invited the reader to think the app
+                          disagreed with itself. */}
                       <span className="dash-ov">
-                        {tc != null ? fmtComp(tc) : "—"}
+                        {tc != null ? (
+                          <>
+                            {fmtComp(tc)}{" "}
+                            <span className="dash-ov-what">
+                              {t("insights.totalComp")}
+                            </span>
+                          </>
+                        ) : (
+                          "—"
+                        )}
                       </span>
                       <span className="dash-oc muted">
                         {o.company_name ?? "—"}
-                        {o.salary_range ? ` · ${o.salary_range}` : ""}
+                        {o.salary_range
+                          ? ` · ${t("insights.baseRange", { range: o.salary_range })}`
+                          : ""}
                       </span>
                     </button>
                   </li>
@@ -268,7 +463,7 @@ export function InsightsTab({
       {wide ? (
         <>
           <h2 className="ruled-h insights-cal-h">{t("tabs.calendar")}</h2>
-          <CalendarTab onError={onError} onJump={onJump} />
+          <CalendarTab onError={onError} onJump={jumpToEntry} />
         </>
       ) : (
         <div className="insights-activity">
@@ -280,8 +475,10 @@ export function InsightsTab({
           >
             {showCalendar ? t("calendar.hide") : t("calendar.show")}
           </Button>
-          {showCalendar && <CalendarTab onError={onError} onJump={onJump} />}
+          {showCalendar && <CalendarTab onError={onError} onJump={jumpToEntry} />}
         </div>
+      )}
+        </>
       )}
     </section>
   );

@@ -1,7 +1,6 @@
 {
   "tabs": {
     "overview": "Today",
-    "jobs": "Jobs",
     "feed": "Feed",
     "calendar": "Calendar",
     "insights": "Insights",
@@ -14,11 +13,18 @@
   },
   "today": {
     "needYou_one": "thing needs you today",
+    "overdueOnly_one": "follow-up is late",
+    "overdueOnly_other": "follow-ups are late",
+    "overdueSince": "oldest since {{date}}",
+    "mixed": "{{overdue}} late · {{today}} due today",
+    "pushedAll_one": "Pushed {{count}} follow-up back",
+    "pushedAll_other": "Pushed {{count}} follow-ups back, spread over the next few days",
+    "sortedBy": "Sorted by stage, then fit",
     "needYou_other": "things need you today",
     "quietTitle": "Gone quiet",
     "quietHint": "No reply is on them, not you. Clear these out when you're ready.",
     "quietAge": "quiet {{days}}d",
-    "closeOut": "Close out",
+    "closeOut": "Archive",
     "closedOut": "Archived — one less thing",
     "nothingTracked": "Nothing tracked yet",
     "nothingTrackedHint": "Add the first role you're chasing — everything on this screen grows from it.",
@@ -39,7 +45,12 @@
     "happenedAdded": "You added {{title}}",
     "moved": "Moved this week",
     "movedTo": "to",
-    "noMoves": "Nothing changed stage this week."
+    "noMoves": "Nothing changed stage this week.",
+    "pushAll_other": "Push {{count}} late follow-ups over the next few days",
+    "pushAllKeeps": "Offers and interviews stay put.",
+    "pushAll_one": "Push {{count}} late follow-up over the next few days",
+    "movedToday": "Today",
+    "movedEarlier": "Earlier this week"
   },
   "header": {
     "settings": "Settings",
@@ -167,6 +178,8 @@
     "languageNl": "Nederlands",
     "cvLanguage": "CV output language",
     "shareLink": "Public share link",
+    "shareIdentity": "Show my name on the share page",
+    "shareIdentityHint": "Off by default. Adds your name and the role you are searching for; never any application detail.",
     "generateLink": "Generate link",
     "regenerateLink": "Regenerate",
     "disableLink": "Disable",
@@ -207,9 +220,9 @@
     "checking": "Checking…",
     "viaSource": "via {{source}}",
     "viewPosting": "View posting ↗",
-    "addToJobs": "Add to Jobs",
+    "addToJobs": "Add to pipeline",
     "dismiss": "Dismiss",
-    "triageHint": "j / k move · a add · d dismiss",
+    "triageHint": "j / k move · a add · s keep · d dismiss",
     "skillsMatch_one": "{{count}} matching skill",
     "skillsMatch_other": "{{count}} matching skills",
     "whyItFits_one": "Matches 1 of your skills",
@@ -227,22 +240,38 @@
       "weak": "Weak"
     },
     "postedAge": "{{age}} ago",
-    "settingsBtn": "Feed sources"
+    "settingsBtn": "Feed sources",
+    "noFitMatchPage": "Nothing on the pages loaded so far matches this fit filter. There may be more further down the feed.",
+    "clearFitFilter": "Show any fit",
+    "showWeak_one": "Show {{count}} weaker match",
+    "showWeak_other": "Show {{count}} weaker matches",
+    "hideWeak_one": "Hide {{count}} weaker match",
+    "hideWeak_other": "Hide {{count}} weaker matches",
+    "allWeak_one": "{{count}} posting came in, but none of them mentions a skill from your CV yet.",
+    "allWeak_other": "{{count}} postings came in, but none of them mentions a skill from your CV yet.",
+    "addSkills": "Add your skills",
+    "listLabel": "Postings to triage",
+    "detailLabel": "Selected posting",
+    "save": "Keep for later",
+    "saved": "Kept"
   },
   "stats": {
     "momentum": {
       "up": "Speeding up",
       "down": "Slowing down",
       "flat": "Steady",
-      "none": "No recent activity"
+      "none": "No recent activity",
+      "early": "Too early to tell"
     },
-    "momentumDetail": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that",
     "downloadOfferComparison": "Download offer comparison (PDF)",
     "offerComparisonHeading": "Offer comparison",
     "offerComparisonBreakdown": "Breakdown",
     "offerComparisonEmpty": "No offers yet.",
     "exportData": "Export your data",
-    "exportAllJson": "Everything (JSON)"
+    "exportAllJson": "Everything (JSON)",
+    "momentumDetail_one": "{{recent}} stage advance in the last 2 weeks vs {{prior}} in the 2 weeks before that",
+    "momentumDetail_other": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that",
+    "exportCsv": "{{resource}} (CSV)"
   },
   "palette": {
     "title": "Jump to…",
@@ -457,6 +486,7 @@
   },
   "nextUp": {
     "title": "Next up",
+    "showAll": "Show all {{count}}",
     "done": "Done",
     "doneToast": "Follow-up completed",
     "segDue": "Due {{count}}",
@@ -465,7 +495,10 @@
     "snooze3d": "Snooze 3 days",
     "snooze1w": "Snooze 1 week",
     "snoozeToast": "Pushed to {{date}}",
-    "actionsFor": "Actions for {{title}}"
+    "actionsFor": "Actions for {{title}}",
+    "noReply": "No reply — close this out",
+    "noReplyToast": "Closed — no reply",
+    "doneFor": "Done: {{action}}"
   },
   "company": {
     "contactMap": "Contacts",
@@ -562,7 +595,9 @@
     "matchPosting": "Match to a posting",
     "moveUpNamed": "Move {{name}} up",
     "moveDownNamed": "Move {{name}} down",
-    "proficiencyLabel": "Proficiency"
+    "proficiencyLabel": "Proficiency",
+    "pages_one": "{{count}} page",
+    "pages_other": "{{count}} pages"
   },
   "posting": {
     "staleHint": "This posting may no longer be live — worth a quick check."
@@ -580,6 +615,8 @@
     "benefitsNotes": "Benefits notes",
     "totalComp": "Total comp (est.)",
     "benchmark": "{{pct}}% {{direction}} your median tracked offer ({{n}} others)",
+    "benchmarkFew_one": "{{pct}}% {{direction}} your one other tracked offer",
+    "benchmarkFew_other": "{{pct}}% {{direction}} the middle of your {{count}} other tracked offers",
     "above": "above",
     "below": "below",
     "draftNegotiation": "Draft negotiation talking points",
@@ -744,7 +781,10 @@
     "twoFactorDownloadCodes": "Download backup codes",
     "webhookDisabled": "disabled after repeated failures — delete and re-add to retry",
     "webhookFailing": "failing ({{count}} in a row)",
-    "webhookOk": "delivering"
+    "webhookOk": "delivering",
+    "deleteTypeEmail": "Type {{email}} to confirm",
+    "deleteForever": "Delete my account",
+    "deleteExportFirst": "Want a copy first? Settings → Data has a full export."
   },
   "companies": {
     "view": "View",
@@ -765,15 +805,28 @@
     "railArchived": "Archived",
     "addHere": "+ Add an application",
     "foldRail": "Fold {{stage}}",
-    "unfoldRail": "Open {{stage}}, {{count}} applications",
     "showingClosed": "Showing closed applications",
     "pin": "Pin",
     "unpin": "Unpin",
-    "nothingPinned": "Nothing pinned yet. Pin an application from its \u22ef menu to keep it here.",
+    "nothingPinned": "Nothing pinned yet. Pin an application from its ⋯ menu to keep it here.",
     "showingPinned": "Showing pinned applications",
     "showAll": "Show all",
     "backToLive": "Back to live",
-    "stageStrip": "Stages"
+    "stageStrip": "Stages",
+    "allLiveFolded": "Every live stage is folded — only closed applications are showing.",
+    "noMatchQuery": "Nothing matches “{{query}}”.",
+    "noMatchFilters": "Nothing matches the filters you have set.",
+    "clearSearch": "Clear search",
+    "clearFilters_one": "Clear {{count}} filter",
+    "clearFilters_other": "Clear {{count}} filters",
+    "unfoldRail_one": "Open {{stage}}, {{count}} application",
+    "unfoldRail_other": "Open {{stage}}, {{count}} applications",
+    "closedGroup": "Closed",
+    "openClosedGroup_one": "Open closed applications, {{count}} application",
+    "openClosedGroup_other": "Open closed applications, {{count}} applications",
+    "showingPinnedNow": "Showing pinned applications only.",
+    "closedOpen": "Closed applications are showing.",
+    "closeClosedGroup": "Fold them away"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
@@ -794,12 +847,15 @@
     "statusChanged": "Moved to {{stage}}",
     "revived": "Back in an active stage",
     "setFollowUp": "Set follow-up",
-    "archived": "Archived"
+    "archived": "Archived",
+    "dismissed": "Dismissed {{title}}"
   },
   "confirm": {
     "deleteDocument": "Delete “{{name}}”?",
     "deleteRoleType": "Delete role type “{{label}}”? Feed keywords for it go too.",
-    "discardEdit": "Discard unsaved changes?"
+    "discardEdit": "Discard unsaved changes?",
+    "deleteCvVariant": "Delete the CV variant “{{name}}”? This cannot be undone.",
+    "deleteWebhook": "Delete this webhook? Its signing secret cannot be recovered."
   },
   "aria": {
     "interactionType": "Interaction type",
@@ -811,11 +867,19 @@
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "today": "Today",
-    "eventCount": "{{count}} events",
     "moreEvents": "+{{count}} more",
     "upcoming": "Upcoming",
     "show": "Show calendar",
-    "hide": "Hide calendar"
+    "hide": "Hide calendar",
+    "noUpcoming_one": "Nothing scheduled ahead — {{count}} item is in the past.",
+    "noUpcoming_other": "Nothing scheduled ahead — {{count}} items are in the past.",
+    "eventCount_one": "{{count}} event",
+    "eventCount_other": "{{count}} events",
+    "kind": {
+      "due": "Follow-up",
+      "interaction": "Interview",
+      "applied": "Applied"
+    }
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"
@@ -876,7 +940,10 @@
     "insightsTitle": "Why applications end",
     "insightsEmpty": "No closed applications yet.",
     "insightsUnrecorded_one": "{{count}} closed with no reason recorded",
-    "insightsUnrecorded_other": "{{count}} closed with no reason recorded"
+    "insightsUnrecorded_other": "{{count}} closed with no reason recorded",
+    "insightsNoneRecorded_one": "None recorded yet — {{count}} closed application is waiting for a reason.",
+    "insightsNoneRecorded_other": "None recorded yet — {{count}} closed applications are waiting for a reason.",
+    "insightsRecordCta": "Show closed applications"
   },
   "bottomBar": {
     "pinned": "Pinned"
@@ -893,7 +960,6 @@
     "everyoneElse": "Everyone else"
   },
   "dashboard": {
-    "kpiOffers": "Live offers",
     "kpiToOffer": "Median to offer",
     "momentumTitle": "Pipeline momentum",
     "funnelConv": "Funnel & conversion",
@@ -902,10 +968,36 @@
     "kpiOpenShort": "Open",
     "kpiResponseShort": "Response",
     "kpiResponseOf": "{{responded}} of {{applied}}",
-    "convFrom": "{{pct}}% from {{stage}}"
+    "convFrom": "{{pct}}% from {{stage}}",
+    "kpiOffers_one": "Live offer",
+    "kpiOffers_other": "Live offers",
+    "kpiResponseTooFew": "too few to rate yet",
+    "kpiToOfferOne": "Days to offer"
   },
   "urgency": {
     "overdue": "overdue",
     "today": "due today"
+  },
+  "insights": {
+    "headlineNumbers": "Headline numbers",
+    "nothingYet": "Nothing to measure yet — Insights fills in as you apply.",
+    "nothingYetCta": "Add your first application",
+    "totalComp": "total",
+    "baseRange": "base {{range}}",
+    "pace": "{{sent}} of {{goal}} applications sent this week",
+    "replyTypical": "Replies typically come after {{days}} days (from {{count}} answered).",
+    "replyTooFew": "Not enough replies yet to say how long they take.",
+    "replyWaiting": "{{count}} still waiting, the longest {{days}} days.",
+    "fromNOffers": "from {{count}} offer"
+  },
+  "export": {
+    "applications": "Applications",
+    "companies": "Companies",
+    "contacts": "Contacts",
+    "interactions": "Interactions"
+  },
+  "errors": {
+    "offline": "You're offline — that change wasn't saved. It will work once you're back.",
+    "unreachable": "Couldn't reach Zenith, so that change wasn't saved. Check your connection and try again."
   }
 }

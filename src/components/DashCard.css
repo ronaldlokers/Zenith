@@ -41,17 +41,40 @@
     box-shadow: var(--shadow-2);
   }
 
+  /* The same treatment StatCard already carries (StatCard.css:171), and this
+     is the only owned component that lifts on hover without it. Currently
+     latent — no caller on any route passes onClick, so the variant does not
+     render — which is exactly why it is worth closing now: the first caller
+     that does would reintroduce uncovered movement silently, and the
+     component ships in Storybook with the variant regardless.
+
+     The shadow stays. Depth is feedback, not motion, and killing it too
+     would leave the hover with nothing to say. */
+  @media (prefers-reduced-motion: reduce) {
+    .zui-dashcard--click {
+      transition: box-shadow 0.12s ease;
+    }
+
+    .zui-dashcard--click:hover {
+      transform: none;
+    }
+  }
+
   /* App.css:4764 — the eyebrow heading. */
   .zui-dashcard-head {
     font-family: var(--mono);
     font-size: var(--text-chrome);
+    /* Explicit, because this is a real <h2> now rather than a <div>: a
+       heading arrives with the UA's own bold weight and block margins, and
+       the semantics were meant to change without the pixels moving. */
+    font-weight: 400;
     letter-spacing: var(--track-eyebrow);
     text-transform: uppercase;
     color: var(--faint);
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    margin-bottom: 0.55rem;
+    margin: 0 0 0.55rem;
   }
 
   /* App.css:4775 — the right-aligned "win" pill. */
@@ -61,7 +84,9 @@
     background: var(--accent-soft);
     border-radius: 999px;
     padding: 0.05rem 0.4rem;
-    font-size: 0.54rem;
+    /* The smallest documented step, rather than 0.54rem which was below
+       every one of them. */
+    font-size: var(--text-glyph);
     letter-spacing: 0.04em;
   }
 

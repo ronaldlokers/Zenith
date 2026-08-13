@@ -14,8 +14,14 @@
     .zui-cardmenu-btn { width: 40px; height: 40px; }
   }
 
+  /* fixed, and placed from JS in viewport coordinates. It used to be
+     absolute inside .zui-cardmenu, which sits inside .bcard (overflow:
+     hidden, so the card's colour strip can round) and inside .bcol-cards
+     (overflow-y: auto above 900px). Both clipped it, and clipped content is
+     not hit-tested: the lower half of this menu was announced to screen
+     readers and unclickable by anyone. */
   .zui-cardmenu-pop {
-    position: absolute; top: 1.5rem; right: 0; z-index: 41;
+    position: fixed; z-index: 41;
     min-width: 11rem; background: var(--surface);
     border: 1px solid var(--border); border-radius: var(--radius-md);
     box-shadow: var(--shadow-2); padding: 0.25rem; display: flex; flex-direction: column;

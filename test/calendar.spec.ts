@@ -36,6 +36,99 @@ describe("calendar ICS feed", () => {
     expect(ics).not.toContain(SECRET);
   });
 
+  it("does not book the user busy, and keeps the detail out of shared views", async () => {
+    // OPAQUE is the RFC 5545 default, so without this a subscriber was
+    // marked busy for the whole day on every follow-up — visible to
+    // colleagues doing a free/busy lookup, which is the exact exposure the
+    // app's own warning about this feed is trying to prevent.
+    const ics = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    expect(ics).toContain("TRANSP:TRANSPARENT");
+    expect(ics).toContain("CLASS:PRIVATE");
+  });
+
+  it("carries a SEQUENCE so a rescheduled follow-up moves", async () => {
+    // Some clients will not move an event they have already imported unless
+    // the sequence goes up, and this app has a control that pushes every
+    // late follow-up to a new date at once.
+    const app = await env.DB.prepare(
+      `INSERT INTO applications (user_id, title, status, next_action, next_action_at, updated_at)
+       VALUES ('seed-admin', 'Sequenced Role', 'applied', 'Chase', date('now', '+3 day'), '2026-08-01 10:00:00')
+       RETURNING id`,
+    ).first<{ id: number }>();
+    const first = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    const seq = (line: string) =>
+      Number(
+        line
+          .split("\r\n")
+          .find((l) => l.startsWith("SEQUENCE:"))
+          ?.slice("SEQUENCE:".length) ?? -1,
+      );
+    const blockFor = (ics: string, uid: string) =>
+      ics
+        .split("BEGIN:VEVENT")
+        .find((b) => b.includes(`UID:${uid}@zenith`)) ?? "";
+    const before = seq(blockFor(first, `followup-${app!.id}`));
+    expect(before).toBeGreaterThan(0);
+
+    await env.DB.prepare(
+      "UPDATE applications SET next_action_at = date('now', '+9 day'), updated_at = '2026-08-02 10:00:00' WHERE id = ?",
+    )
+      .bind(app!.id)
+      .run();
+    const second = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    const after = seq(blockFor(second, `followup-${app!.id}`));
+    expect(after, "a rescheduled follow-up kept its old sequence").toBeGreaterThan(
+      before,
+    );
+  });
+
+  it("folds every content line to 75 octets", async () => {
+    // RFC 5545 3.1 is a MUST, and the limit is octets rather than
+    // characters — a summary with an em dash in it reaches 75 sooner than
+    // it looks. Tolerant parsers accept the long line, which is exactly why
+    // nothing noticed; a strict one may reject the whole calendar.
+    const long = await env.DB.prepare(
+      `INSERT INTO applications (user_id, title, status, next_action, next_action_at)
+       VALUES ('seed-admin', ?, 'applied', 'Follow up', date('now', '+2 day'))
+       RETURNING id`,
+    )
+      .bind(
+        "Senior Platform Engineer, Site Reliability — Northwind Cloud Systems International",
+      )
+      .first<{ id: number }>();
+    expect(long?.id).toBeTruthy();
+    const ics = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    const over = ics
+      .split("\r\n")
+      .filter((l) => new TextEncoder().encode(l).length > 75);
+    expect(over, "unfolded content lines").toEqual([]);
+
+    // Folding has to be reversible, or the fix corrupts the summary it was
+    // protecting. Unfold the way a client does — CRLF followed by one space
+    // — and the original text is back, em dash intact.
+    const unfolded = ics.replace(/\r\n[ \t]/g, "");
+    expect(unfolded).toContain(
+      "Senior Platform Engineer\\, Site Reliability — Northwind Cloud Systems International",
+    );
+    expect(unfolded).not.toContain("\ufffd");
+  });
+
+  it("tells clients how often to come back", async () => {
+    const ics = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    // The standard property and the one Outlook actually reads.
+    expect(ics).toContain("REFRESH-INTERVAL;VALUE=DURATION:PT1H");
+    expect(ics).toContain("X-PUBLISHED-TTL:PT1H");
+  });
+
+  it("carries no alarms", async () => {
+    // RFC 9074: a client that accepts iCalendar from a third party SHOULD
+    // strip VALARM before storing it, and a published feed has no business
+    // setting alarms on someone else's calendar in the first place — the
+    // app has its own reminders for that.
+    const ics = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    expect(ics).not.toContain("BEGIN:VALARM");
+  });
+
   it("404s an unknown token", async () => {
     const res = await SELF.fetch(`${BASE}/calendar/not-a-real-token`);
     expect(res.status).toBe(404);

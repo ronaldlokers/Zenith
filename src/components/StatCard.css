@@ -49,6 +49,12 @@
   .zui-statcard-label {
     font-size: var(--text-meta);
     color: var(--muted);
+    /* A flex item will not shrink below its content by default, so at 200%
+       text "OPEN" ran 21px past a 171px tile and the tile clipped it. The
+       label is the only thing saying what the number means, so losing it
+       leaves a bare figure. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   /* Hero tile (elevation tier 3, #458) — one focal KPI per screen: a warm
@@ -156,5 +162,48 @@
     transform: none;
     box-shadow: none;
     color: var(--ink);
+  }
+
+  /* The hover lift is movement, and a reduced-motion preference asks for it
+     to stop. The transition here survived an earlier motion pass because that
+     pass looked at App.css and this rule lives in the component. Colour and
+     shadow feedback are deliberately left running. */
+  @media (prefers-reduced-motion: reduce) {
+    .zui-statcard--click {
+      transition: box-shadow 0.12s ease;
+    }
+
+    .zui-statcard--click:hover {
+      transform: none;
+    }
+  }
+
+  /* The hero variant, compacted on a phone. At 390x844 the card cost 94px and
+     pushed the first actionable row past the halfway line — on the surface
+     whose whole job is the next action, for the user the product describes as
+     one-handed and interrupted. Figure and sentence share a line here, at the
+     large figure step rather than the extra-large one. The ring and ground are
+     untouched, so it is still the loudest thing on the screen, just not the
+     tallest. Desktop is unchanged, where the space is free.
+
+     This lives here rather than in App.css because @layer components wins:
+     the same rule written against .today-hero in the app layer set the
+     padding and was then overruled on font-size and flex-direction by this
+     file, which is the trap that makes a fix look applied and do nothing. */
+  @media (max-width: 600px) {
+    .zui-statcard--hero {
+      flex-direction: row;
+      align-items: baseline;
+      gap: var(--space-3);
+    }
+
+    .zui-statcard--hero .zui-statcard-value {
+      font-size: var(--text-figure-lg);
+      line-height: 1;
+    }
+
+    .zui-statcard--hero .zui-statcard-label {
+      text-align: left;
+    }
   }
 }

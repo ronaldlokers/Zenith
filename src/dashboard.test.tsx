@@ -1,14 +1,19 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import type { Application, Stats, Status } from "./types";
 import { DashboardTab } from "./dashboard";
 // Side-effect: initializes i18next so `t()` renders real copy instead of keys.
 import "./i18n";
 
+const followUpCalls: { id: number; at: string | null }[] = [];
+
 vi.mock("./api", () => ({
   api: {
     goals: () => Promise.resolve(null),
-    updateFollowUp: () => Promise.resolve(undefined),
+    updateFollowUp: (id: number, body: { next_action_at: string | null }) => {
+      followUpCalls.push({ id, at: body.next_action_at });
+      return Promise.resolve(undefined);
+    },
     archiveApplication: () => Promise.resolve(undefined),
     unarchiveApplication: () => Promise.resolve(undefined),
   },
@@ -104,16 +109,32 @@ describe("DashboardTab (Today)", () => {
         stats={emptyStats}
       />,
     );
-    // The figure and its label are separate elements in the hero tile.
-    const hero = screen.getByRole("button", { name: /things need you today/ });
-    expect(hero).toHaveTextContent("2things need you today");
+    // The figure and its label are separate elements in the hero tile, and
+    // the tile is deliberately NOT a button in this state. It used to be one
+    // whose click set the Next Up tab to "due" while "due" was already the
+    // tab — the largest, warmest target on the screen, and pressing it
+    // changed nothing. A control that looks pressable and is not teaches
+    // people to distrust the ones that are (design critique, 2026-08-13).
+    // One of the two is late and one is genuinely due today, so the hero says
+    // so rather than calling both "today". The old copy — "2 things need you
+    // today" — was a lie in every set that mixed a late follow-up in, which
+    // is most of them; the count was right and the sentence was not.
+    const hero = screen.getByText(/late/).closest("div");
+    expect(hero).toHaveTextContent("1 late · 1 due today");
+    // Asked of the hero itself, not by accessible name: the task rows below
+    // it are buttons and their labels carry the same words now, so a name
+    // match finds a row and reports the hero as pressable.
+    expect(
+      hero?.closest("button"),
+      "the due-state hero must not be a button: its click had no effect",
+    ).toBeNull();
     expect(screen.getByRole("button", { name: "Due 2" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Upcoming 1" }),
     ).toBeInTheDocument();
   });
 
-  test("the hero switches Next Up to the upcoming half when nothing is due", () => {
+  test("Next Up opens on the upcoming half when nothing is due", () => {
     render(
       <DashboardTab
         {...props}
@@ -121,18 +142,56 @@ describe("DashboardTab (Today)", () => {
         stats={emptyStats}
       />,
     );
-    expect(screen.getByText("Nothing due today.")).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /follow-up scheduled, none due today/,
-      }),
-    );
+    // No click. The tab used to be pinned to "due" and the hero was the only
+    // thing that moved it, which made the hero work exactly once and do
+    // nothing every press after — the same defect the due-state hero had.
+    // The default follows the data now, so the panel opens on the half that
+    // has something in it and the hero needs no click at all.
+    expect(
+      screen.queryByRole("button", { name: /none due today/ }),
+      "the clear-state hero must not be a button either",
+    ).toBeNull();
     const list = screen.getByRole("list", { name: "Next up" });
     expect(
       within(list).getAllByRole("button", {
         name: /Senior Platform Engineer/,
       })[0],
     ).toBeInTheDocument();
+  });
+
+
+  test("the batch push leaves offers and interviews alone and spreads the rest", async () => {
+    // Both halves were live defects. It took everything overdue, so one tap
+    // on what was then a 10px caption snoozed a five-star offer along with
+    // the dead follow-ups; and it wrote one date to all of them, which
+    // clears the screen and rebuilds the same pile as a single cliff a week
+    // out — worse than the pile it replaced.
+    followUpCalls.length = 0;
+    render(
+      <DashboardTab
+        {...props}
+        applications={[
+          app({ id: 1, next_action_at: iso(-9), status: "applied" }),
+          app({ id: 2, next_action_at: iso(-6), status: "screening" }),
+          app({ id: 3, next_action_at: iso(-4), status: "offer" }),
+          app({ id: 4, next_action_at: iso(-3), status: "interview" }),
+          app({ id: 5, next_action_at: iso(-2), status: "applied" }),
+        ]}
+        stats={emptyStats}
+      />,
+    );
+
+    const push = screen.getByRole("button", { name: /Push 3 late follow-ups/ });
+    expect(
+      push,
+      "the count must exclude the offer and the interview, not just the write",
+    ).toBeInTheDocument();
+    fireEvent.click(push);
+    await waitFor(() => expect(followUpCalls.length).toBe(3));
+
+    expect(followUpCalls.map((c) => c.id).sort()).toEqual([1, 2, 5]);
+    const dates = new Set(followUpCalls.map((c) => c.at));
+    expect(dates.size, "all three landed on one date again").toBeGreaterThan(1);
   });
 
   test("names the unplanned state instead of calling it caught up", () => {
@@ -219,9 +278,19 @@ describe("DashboardTab (Today)", () => {
         onOpenJob={(id) => opened.push(id)}
       />,
     );
-    const moved = screen.getByRole("list", { name: "Moved this week" });
+    // One card, two time groups. It used to be two cards — "Moved this
+    // week" over 7 days and "Happened today" over 24 hours, both reading the
+    // same status_history rows — so today was a subset of the week by
+    // construction and the pair listed the same events twice whenever the
+    // user actually did something. This move was two days ago, so it belongs
+    // under Earlier this week.
+    const moved = screen.getByRole("list", { name: "Earlier this week" });
     expect(moved).toHaveTextContent("Screening");
     expect(moved).toHaveTextContent("Interview");
+    expect(
+      screen.queryByRole("list", { name: "Today" }),
+      "nothing moved today, so that group should not render",
+    ).toBeNull();
     fireEvent.click(
       within(moved).getAllByRole("button", {
         name: /Senior Platform Engineer/,

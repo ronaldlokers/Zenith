@@ -102,7 +102,16 @@ export function Login() {
               onChange={(e) => setCode(e.target.value)}
             />
           </label>
-          {error && <p className="login-error">{error}</p>}
+          {/* role="alert", because a failed sign-in was announced by
+              nothing at all: the button label reverted from "Signing in…"
+              and no live region existed on the page, so to a screen reader a
+              wrong password and a stalled network are the same event — on
+              the one screen with no way around a dead end. */}
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
           <button type="submit" className="login-btn" disabled={busy}>
             {busy ? t("login.signingIn") : t("login.verify")}
           </button>
@@ -131,6 +140,10 @@ export function Login() {
             <input
               type="email"
               autoComplete="email"
+              // Focus was on <body> at load, so every sign-in started with a
+              // wasted keystroke.
+              autoFocus
+              aria-invalid={!!error}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -141,12 +154,22 @@ export function Login() {
             <input
               type="password"
               autoComplete="current-password"
+              aria-invalid={!!error}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </label>
-          {error && <p className="login-error">{error}</p>}
+          {/* role="alert", because a failed sign-in was announced by
+              nothing at all: the button label reverted from "Signing in…"
+              and no live region existed on the page, so to a screen reader a
+              wrong password and a stalled network are the same event — on
+              the one screen with no way around a dead end. */}
+          {error && (
+            <p className="login-error" role="alert">
+              {error}
+            </p>
+          )}
           <button type="submit" className="login-btn" disabled={busy}>
             {busy ? t("login.signingIn") : t("login.signIn")}
           </button>

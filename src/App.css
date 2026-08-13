@@ -143,6 +143,23 @@
    layout sets its own content padding at ≥900px. */
 .content {
   padding-top: 1rem;
+  /* The bottom bar is position: fixed, so it is outside flow and the page
+     ends underneath it. At 1440x900 with nothing scrolled, the Today
+     screen's last two controls — "show all" and "push all late follow-ups"
+     — sat under the bar: elementFromPoint at their centres returned the bar,
+     and tabbing to them drew the focus ring beneath it, which is a WCAG 2.2
+     2.4.11 (Focus Not Obscured) failure outright.
+
+     rem, not px: the bar's labels scale with text size and so does the bar,
+     so a px reserve would stop covering it at 200%. Measured 59px at normal
+     size; 3.75rem is that plus the gutter it needs to not look pinned. */
+  padding-bottom: var(--bottombar-reserve);
+}
+
+/* Anything focused near the end of the page scrolls clear of the bar rather
+   than under it. */
+.content :focus-visible {
+  scroll-margin-bottom: var(--bottombar-reserve);
 }
 
 /* Search launcher — an icon-only button below 900px, a full ⌘K pill at rail
@@ -350,6 +367,16 @@
   background: color-mix(in srgb, var(--accent) 85%, black);
 }
 
+/* The app's default ring is --accent-ink, which sits on this button's own
+   gold fill at 2.42:1 — under the 3:1 WCAG 2.4.11 needs, on the primary
+   action of the one screen a user cannot work around. Night reads 7.62:1
+   against the fill, and the offset puts the ring on the white card behind
+   it, where it is 17:1. */
+.login-btn:focus-visible {
+  outline: 2px solid var(--night, #14173a);
+  outline-offset: 2px;
+}
+
 .login-btn:disabled {
   opacity: 0.6;
   cursor: default;
@@ -444,6 +471,17 @@
   margin: var(--space-5) 0 var(--space-3);
   padding-top: var(--space-5);
   border-top: 1px solid var(--border);
+}
+
+/* The rule separates this heading from what came before it. On the Data
+   section the first heading IS the first child, so the rule had nothing
+   above it to separate — it drew a line across the top of the pane and
+   ~50px of empty band under it, which reads as a section whose contents
+   failed to load. */
+.account-section h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .account-signed-in {
@@ -579,6 +617,15 @@
 /* The persistent bottom bar (#535 shell). Fixed, three slots, and — once the
    rail goes — the only navigation chrome left. Labels and keycaps appear when
    there is room for them; below that the glyphs carry it. */
+/* What the page must keep clear at its foot. The bar is position: fixed, so
+   it is out of flow and the document ends underneath it; without this the
+   last controls on a screen can only ever be read through it. Measured
+   58.97px at normal text size — the reserve has to exceed that, and it is in
+   rem because the bar's labels scale with text size and so does the bar. */
+:root {
+  --bottombar-reserve: 4.5rem;
+}
+
 .bottombar {
   position: fixed;
   left: 0;
@@ -1190,7 +1237,10 @@
 .nextup-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  /* Done and ⋯ sat 8px apart, both inside the right-thumb arc on a phone,
+     and Done mutates data — a mis-tap clears a follow-up whose text the row
+     did not show, recoverable only by catching a toast while scrolling. */
+  gap: var(--space-3);
 }
 
 @media (max-width: 600px) {
@@ -1499,6 +1549,7 @@ button.primary:hover {
 .feed-match {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.25rem;
   font-family: var(--mono);
@@ -1507,7 +1558,15 @@ button.primary:hover {
 }
 
 .feed-match-bar {
-  flex: 1 1 auto;
+  /* Capped, not full-width. The bar is normalised to five skills, so on a
+     538px track a two-skill match drew 320px of empty rail — making the
+     largest element on the card a measure of how little matched. The Weak
+     band was folded away precisely so the screen would stop repeating that
+     verdict; a full-width bar repeated it on every card that remained.
+     Short bars also compare better, which is the reason it is a bar and not
+     a sentence. */
+  flex: 0 0 auto;
+  width: 96px;
   min-width: 0;
   height: 5px;
   border-radius: var(--radius-full);
@@ -1523,7 +1582,10 @@ button.primary:hover {
 }
 
 .feed-match-n {
-  flex: 0 0 auto;
+  /* Was flex: 0 0 auto, which forbids shrinking; at 200% text the label
+     pushed past the card edge and was clipped with it. It may shrink now,
+     and the bar beside it gives up room first. */
+  flex: 0 1 auto;
 }
 
 /* People, banded (#535 shell): the ones the ball is with, then everyone
@@ -1628,12 +1690,29 @@ button.primary:hover {
   transition: background-color 0.1s ease;
 }
 
-.feed-card.swipe-add {
+/* .feed-row repeated, so these beat .feed-row.sel. Both were (0,2,0) and
+   .sel lands later in the file, so it won on source order and swallowed the
+   swipe tint entirely — on the *selected* card, which is the first card by
+   default. The first swipe anyone ever made had no colour feedback at all.
+   Measured before: rgba(214,164,65,0.14) at 40px and at 140px of drag. */
+.feed-card.feed-row.swipe-add {
   background: color-mix(in srgb, var(--success) 18%, var(--surface));
 }
 
-.feed-card.swipe-dismiss {
+.feed-card.feed-row.swipe-dismiss {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+}
+
+/* Past the commit point. The tint was identical at 40px and at 130px of
+   drag, so nothing told you the gesture had armed — you released and found
+   out. This is the difference between a gesture and a gamble, and the action
+   it arms (dismiss) is the destructive one. */
+.feed-card.feed-row.past-threshold.swipe-add {
+  background: color-mix(in srgb, var(--success) 38%, var(--surface));
+}
+
+.feed-card.feed-row.past-threshold.swipe-dismiss {
+  background: color-mix(in srgb, var(--danger) 32%, var(--surface));
 }
 
 /* Feed sort/filter controls (#444) — sit above the triage list; wrap on
@@ -1699,6 +1778,14 @@ button.primary:hover {
 }
 .feed-row-actions {
   display: flex;
+  /* Wrap, because at 200% text these three buttons measure 456px in a 342px
+     card and the card clips what does not fit — Dismiss was cut off
+     entirely, so the whole triage decision became unreachable for anyone who
+     needs larger text (WCAG 1.4.4 is loss of *functionality*, not only of
+     content). Same treatment, and the same reasoning, as .cv-plate-actions:
+     more locales are coming and the next label that does not fit should
+     reflow rather than need a copy edit. */
+  flex-wrap: wrap;
   gap: 0.4rem;
   flex: 1 1 100%;
   margin-top: 0.4rem;
@@ -1720,6 +1807,7 @@ button.primary:hover {
   .feed-list .feed-row-actions {
     display: none;
   }
+
   .feed-detail {
     display: flex;
     flex-direction: column;
@@ -1765,19 +1853,127 @@ button.primary:hover {
     font-size: var(--text-chrome);
     text-transform: uppercase;
     letter-spacing: var(--track-eyebrow);
-    color: var(--success);
+    /* --success-ink, not --success. The token's own comment says why:
+       --success is a fill and measures 3.92:1 as text on white, so anything
+       that says "this went well" in words takes the ink tone. This heading
+       is the one on the surface that does, at 10.24px. --success-ink is
+       5.14:1. */
+    color: var(--success-ink);
   }
   .feed-detail-actions {
     display: flex;
     gap: 0.5rem;
     margin-top: 0.6rem;
   }
-  .feed-detail-hint {
+  /* The posting's opening in the triage pane. Body size, not chrome: it is
+   the only prose on the surface and the one thing being judged. Clamped so a
+   long opening cannot push the two decision buttons off the pane. */
+
+.feed-weak-more {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) 0 0;
+}
+
+.feed-nomatch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.feed-detail-desc {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  overflow: hidden;
+}
+
+.feed-detail-hint {
     margin: 0.5rem 0 0;
     font-family: var(--mono);
     font-size: var(--text-chrome);
     letter-spacing: 0.03em;
     color: var(--faint);
+  }
+}
+
+/* Top level, and these rules were inside @media (min-width: 900px) — the
+   one width at which the rule below hides the brief entirely. So the styles
+   applied only where nothing could see them, and on the phone the brief
+   rendered with none of them: display fell back to block instead of the
+   column, the gap was absent, and -webkit-line-clamp computed to none, so a
+   long posting printed in full on the card instead of three lines. Measured
+   on a phone profile before and after.
+
+   Order matters as much as placement: the base rules have to precede the
+   hide, or from 900px up the later declaration wins and the brief comes
+   back beside the pane that already says it. */
+/* The card's own brief — the posting's opening and the skills it matched.
+   Shown only where there is no detail pane to carry them, which is every
+   viewport under 900px: on a phone this is the difference between deciding
+   from the job and deciding from its title. */
+
+.feed-row-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.feed-row-brief-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.feed-row-brief-desc {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  /* The pane says it from here up, and saying it twice on one screen is
+     worse than saying it once. */
+  .feed-row-brief {
+    display: none;
+  }
+}
+
+/* The only route to the job's own text on a phone, at 21px painted. The
+   overlay gives it the floor without changing the link's look.
+
+   Deliberately outside @media (min-width: 900px), and it was inside it —
+   which meant the fix applied only at the widths where the rule above sets
+   .feed-row-link to display: none, and never at the widths its own comment
+   names. Measured on a phone profile: the ::after computed to content: none
+   and the link's hit box stayed 21px tall. A nested media query is easy to
+   read past; the give-away is that the two queries cannot both be true. */
+@media (pointer: coarse) {
+  .feed-row-link {
+    position: relative;
+    display: inline-block;
+  }
+
+  .feed-row-link::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    transform: translateY(-50%);
   }
 }
 
@@ -2059,8 +2255,11 @@ select.status {
   font-weight: 700;
 }
 
+/* Overdue is the one state on a follow-up tracker that has to shout, and
+   this made it the faintest tone on the screen — a user opening the
+   calendar to find what is slipping was shown a wall of grey. */
 .agenda-date.past {
-  color: var(--faint);
+  color: var(--danger);
 }
 
 .agenda-items {
@@ -2440,14 +2639,27 @@ select.status {
     flex: 0 0 82%;
     scroll-snap-align: start;
     min-width: 0;
+    /* Containing block for the sr-only stage heading below. .sr-only is
+       position: absolute, and with every ancestor up to the viewport
+       static, its containing block was the initial one — so the carousel's
+       overflow-x never clipped it. Each column's heading then sat at that
+       column's document x, the last one at 2176px, and dragged the whole
+       document's scroll width out with it: the page itself scrolled
+       sideways at every phone width (WCAG 1.4.10). Measured, not reasoned
+       — hiding the nine headings dropped scrollWidth from 2179 to 320.
+       Relative with no offsets moves nothing; it only gives the heading a
+       box to be clipped by. */
+    position: relative;
   }
 
   /* The strip already carries the stage name and its count, and nothing
      folds here, so the column header would be a second copy with a control
-     that does nothing. */
-  .board > .bcol > .bcol-head {
-    display: none;
-  }
+     that does nothing — visually. It is not display: none, because that
+     took it out of the accessibility tree too and left the phone board's
+     outline at h1 followed by every card title at h3, with no stage
+     against any of them. board.tsx renders it sr-only here instead, and
+     drops the fold button rather than leaving an invisible focusable
+     control behind. */
 }
 
 /* The stage strip: every rail, the one you are on filled with its own ink.
@@ -2464,6 +2676,19 @@ select.status {
 
 .stage-strip::-webkit-scrollbar {
   display: none;
+}
+
+/* The strip hides its own scrollbar and carries nine rails, of which about
+   three fit at 390px — so on a phone the board's stage switcher ended flush
+   at the screen edge with nothing saying Offer existed to the right. The
+   right edge fades instead of stopping, which is the one cue that survives
+   a hidden scrollbar. Safe to apply unconditionally here: this strip always
+   holds all nine rails regardless of the data, so it always overflows at
+   the widths it renders at. */
+.stage-strip {
+  /* As with the column mask: a mask reads only the alpha channel, so #000
+     means "opaque here", not a colour. Nothing is painted this value. */
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }
 
 .stage-chip {
@@ -2531,6 +2756,41 @@ select.status {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    /* A clipped column looks finished. This scrolls above 900px, and a
+       15-card column measured 1721px of content in a 735px box with no
+       scrollbar, no fade and nothing saying so — the tail was invisible and
+       the header count was the only hint it existed.
+
+       Two scrollbar routes were tried and neither paints here: the platform
+       uses overlay scrollbars, so `scrollbar-width: thin` left the gutter at
+       0px, and setting it *disables* the ::-webkit-scrollbar rules that
+       would have forced a painted one. So the cue lives in the content.
+
+       The classic two-layer shadow: a pair of ground-coloured covers
+       attached `local` (they scroll with the content) sitting over a pair of
+       shadows attached `scroll` (fixed to the box). At the top of the list
+       the cover hides the top shadow; scroll down and it slides away to
+       reveal it. A column that does not overflow keeps both covers in place
+       and shows nothing at all, which is why this works where a plain fade
+       does not — a short column ends exactly at its content, and an
+       unconditional fade would sit on the last card of every column on the
+       board. */
+    /* The cue has to be over the cards, not behind them. The classic
+       two-layer scroll shadow paints on the container's background, and
+       these cards are opaque white the full width of the column, so it was
+       painted and invisible — captured a screenshot to be sure rather than
+       trusting the rule. A mask fades the rendered content itself.
+
+       Bottom only, and it costs nothing on a column that fits: this
+       container grows to fill the column, so a short list ends well above
+       the fade and nothing touches it. Where the list does overflow, the
+       card at the cut edge fades out instead of being sliced, which is the
+       difference between "there is more" and "this is the end". */
+    /* #000 here is not a colour. A mask uses only the alpha channel of its
+       image — the hue is discarded — so this reads "opaque until 26px from
+       the bottom, then fade to nothing". Nothing on screen is ever painted
+       this value, and it is not a palette addition. */
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
   }
 }
 
@@ -2958,22 +3218,39 @@ summary.bcol-head::after {
 .cv-doc-view {
   width: 100%;
   min-width: 0;
+  /* The sheet inside is transformed, which does not affect layout — so the
+     wrapper is told how tall the scaled result is. */
+  height: var(--cv-doc-height, auto);
+  overflow: hidden;
 }
 
-/* Styled HTML CV document (#386) — a truthful, themable preview of the export
-   (white page, dark ink) that replaces the embedded PDF viewer. Type is scaled
-   down to the small preview column. */
+/* Styled HTML CV document (#386) — a truthful, themable preview of the
+   export (white page, dark ink) that replaces the embedded PDF viewer.
+
+   Laid out at real A4 and scaled as a whole, rather than having its type
+   shrunk to fit the column. The page geometry is generateCvPdf's, read off
+   the source: 210x297mm, 18mm margins, and a first baseline 20mm down. That
+   makes "does this fit on one page" a question the preview can answer,
+   which is the question a CV is actually judged on — and the old preview
+   answered it wrong by about 3.5x.
+
+   --cv-scale is set from the container width by a ResizeObserver; the
+   wrapper carries the scaled height so the layout below does not sit under
+   a transformed element. */
 .cv-doc {
-  min-height: 100%;
+  width: 210mm;
+  min-height: 297mm;
   box-sizing: border-box;
   background: var(--doc-ground);
   color: var(--doc-ink);
   font-family: var(--sans);
   font-size: var(--doc-text);
   line-height: 1.42;
-  padding: 16px 18px;
+  padding: 20mm 18mm 18mm;
   border-radius: var(--doc-radius);
   box-shadow: var(--shadow-1);
+  transform: scale(var(--cv-scale, 1));
+  transform-origin: top left;
 }
 
 .cv-doc-name {
@@ -2981,6 +3258,11 @@ summary.bcol-head::after {
   font-size: var(--doc-name);
   font-weight: 700;
   letter-spacing: -0.01em;
+  /* The sheet is a fixed 210mm; a long unbroken name ran past it and took
+     the page's horizontal scroll with it. A real printed CV wraps the name
+     rather than running off the paper, so this is what the preview should
+     show as well. */
+  overflow-wrap: anywhere;
 }
 
 .cv-doc-head {
@@ -3568,6 +3850,22 @@ summary.bcol-head::after {
   color: var(--faint);
 }
 
+/* The third rail block, carded like the two above it. It rendered on the bare
+   page ground with no border and no radius beside two white, bordered,
+   10px-radius siblings, so it read as text that had fallen out of a card
+   rather than as the third member of a set. Its heading was centred over
+   left-aligned content, which is the other half of the same seam. */
+.today-happened {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.today-happened .col-h {
+  text-align: left;
+}
+
 .today-happened-list {
   list-style: none;
   margin: 0;
@@ -3791,6 +4089,110 @@ summary.bcol-head::after {
   white-space: nowrap;
 }
 
+/* The phone row. Measured at 390x844 the answer text — the whole reason the
+   screen exists — had 136px to itself while the row's first line ran the
+   full 330px with a ~200px gutter in the middle of it: the action wrapped to
+   two and three lines beside empty space. Two causes, both fixed here.
+
+   The action cluster came out of the row's second column, so the text no
+   longer competes with it for width; it sits on its own line, right-aligned,
+   which also takes Done out of the same horizontal band as the row-open
+   target it used to sit beside. Research on mis-taps is consistent that
+   spacing does more than size, and adjacent primary-and-destructive in the
+   thumb arc is the case it warns about — Done drops the application off
+   Today entirely.
+
+   And the stage label stops spanning every row of the inner grid, so it
+   fills the gutter on the date line instead of reserving a column down the
+   whole row. The title and company then span the full width.
+
+   Measured at 390x844: the action text goes from 136px wide and wrapping to
+   two lines, to 327px on one line, on every row. The trade is the action
+   line itself — four rows total 600px against 588px before, about 3px a row
+   — and the rows that were worst off are the ones that got shorter. */
+@media (max-width: 600px) {
+  /* One line for the meta, not three. The fit stars are 93-97px wide and sat
+     inline after the company name, wrapping that line to two or three lines
+     on every row that has a score — measured 159px against 114px for the one
+     row without. Six tasks became two on an 844px phone, on the screen whose
+     entire job is the next thing to do.
+
+     The stars keep their place and the company name gives way instead: it is
+     the third fact on a row that already names the action and the stage, and
+     it is the one a reader can afford to see truncated. */
+  /* The band above the list. On an 844px phone the chrome between the top
+     bar and the first task ran 342px — a date line, a hero, the ascent
+     strip, a panel heading with its own sort note, and the batch escape —
+     for a screen whose critical content is the tasks themselves. Each piece
+     earns its place; none of them earns its margins at this width.
+
+     The sort note moves onto its own line rather than sharing with the
+     heading, which is what forced the head to wrap to 77px: the segmented
+     control could not fit beside both. */
+  .today-nextup-head {
+    gap: 0.35rem 0.5rem;
+    margin-bottom: var(--space-1);
+  }
+
+  /* The sort note goes. It explains an order the list demonstrates anyway —
+     stage, then fit, both of which are printed on every row — and at this
+     width it was the third item in a head that could only fit two, forcing
+     the segmented control onto its own line and costing more height than
+     the sentence is worth. It stays on desktop, where the head has room. */
+  .today-sortnote {
+    display: none;
+  }
+
+  .today-hero {
+    margin-bottom: var(--space-2);
+  }
+
+  .today-ascent {
+    margin-bottom: var(--space-1);
+  }
+
+  /* The batch control is one line's worth of chrome above a list that needs
+     the room. The exemption still has to be said — it is the difference
+     between "pushes everything" and "keeps your offer" — but it can sit
+     under the button rather than beside it, which is what was costing a
+     wrapped 65px block. */
+  .today-rows .side-co {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .today-rows .side-co > .side-co-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .today-rows .side-co > .fit-stars {
+    flex: 0 0 auto;
+  }
+
+  .today-rows li {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-2);
+  }
+
+  .today-rows li .nextup-actions {
+    justify-content: flex-end;
+  }
+
+  .today-row-open .side-stage {
+    grid-row: 1;
+  }
+
+  .today-row-open .side-title,
+  .today-row-open .side-co {
+    grid-column: 1 / -1;
+  }
+}
+
 /* This week — volume as an observation, over the moves that actually
    happened. Not a quota, and no streak: a zero week is told plainly. */
 .today-card-h {
@@ -3799,6 +4201,22 @@ summary.bcol-head::after {
   color: inherit;
   margin: 0;
 }
+/* The when-group label inside the merged rail card. Chrome-sized, because it
+   separates two lists of the same kind of thing rather than titling a
+   section — the card's own heading does that. */
+.today-moved-when {
+  margin: var(--space-2) 0 0.3rem;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--faint);
+}
+
+.today-moved-when:first-child {
+  margin-top: 0;
+}
+
 .today-moved-empty {
   margin: 0;
 }
@@ -4018,10 +4436,10 @@ summary.bcol-head::after {
   .app:has(.board-swimlanes),
   .app:has(.cv-layout),
   .app:has(.settings-page),
-  .app:has(.company-grid),
+  .app:has(.network-page),
   .app:has(.dash),
     .app:has(.calendar-view),
-.app:has(.feed-triage),
+.app-tab-feed,
   .app:has(.job-page) {
     max-width: none;
   }
@@ -4030,7 +4448,13 @@ summary.bcol-head::after {
     max-width: 760px;
     width: 100%;
     margin: 0 auto;
-    padding: 24px 24px 56px;
+    /* The bottom value is the bar reserve, not a number. This shorthand
+       lands after the .content rule near the top of the file and silently
+       beat its padding-bottom, so the reserve added there was dead at every
+       viewport this query covers — and the 56px it replaced it with is less
+       than the bar's own 58.97px, leaving the foot of every page readable
+       only through the bar. */
+    padding: 24px 24px var(--bottombar-reserve);
     box-sizing: border-box;
   }
 
@@ -4049,11 +4473,11 @@ summary.bcol-head::after {
 
   .app:has(.cv-layout) .content,
     .app:has(.calendar-view) .content,
-.app:has(.feed-triage) .content {
+.app-tab-feed .content {
     max-width: 1100px;
   }
 
-  .app:has(.company-grid) .content,
+  .app:has(.network-page) .content,
   .app:has(.job-page) .content {
     max-width: 1000px;
   }
@@ -4074,7 +4498,7 @@ summary.bcol-head::after {
 
 /* Network grid gets a deliberate width under the sidebar shell (#314). */
 @media (min-width: 1000px) {
-  .app:has(.company-grid) > main {
+  .app:has(.network-page) > main {
     max-width: 1000px;
   }
 }
@@ -4447,6 +4871,24 @@ button:not(:disabled):active,
 }
 .dash-offers li:first-child .dash-orow { border-top: none; }
 .dash-orow:hover { background: var(--hover); }
+/* Same reasoning as .btitle above: these render text a person pasted from a
+   job posting, and a German company name or a bare URL offers nothing to
+   break at. Measured at 390px with "Rheinmetalldienstleistungsgesellschaft
+   mbHundCoKGaA00" in the user-content fields only — Today, Companies,
+   Insights and the CV preview each pushed the document past the viewport and
+   the whole page scrolled sideways. The board did not, because .btitle had
+   already learned this. No hyphens: a broken URL is normal, a hyphenated one
+   is wrong. */
+.dash-ot,
+.dash-oc,
+.side-title,
+.side-co-name,
+.co-name,
+.contact-name,
+.notes {
+  overflow-wrap: anywhere;
+}
+
 .dash-ot { font-weight: 560; font-size: var(--text-body); }
 .dash-ov { font-family: var(--serif); font-weight: 600; text-align: right; }
 .dash-oc { font-size: var(--text-meta); grid-column: 1 / -1; }
@@ -4458,6 +4900,15 @@ button:not(:disabled):active,
 
 /* Offer-comparison PDF sits under the offers list on the Insights card
    (#486) — it moved here when the "all the numbers" drawer was retired. */
+/* The unit beside the figure, not instead of it. */
+.dash-ov-what {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--faint);
+}
+
 .dash-offers-pdf { margin-top: var(--space-2); }
 
 @media (max-width: 600px) {
@@ -4482,6 +4933,8 @@ button:not(:disabled):active,
   min-width: 34px;
 }
 
+
+
 @media (max-width: 600px) {
   .board-bar .search,
   .board-bar-btn,
@@ -4493,6 +4946,44 @@ button:not(:disabled):active,
   }
   .settings-list li > button {
     min-width: 40px;
+  }
+}
+
+/* Placed after the max-width:600px floor above, which sets 40px at the
+   same specificity and wins on source order otherwise — measured, these
+   stayed 40px while the rule looked applied.
+
+   40px is the app's control height, not the touch floor, and unlike every
+   other control on this screen these three carry no hit-area overlay: the
+   board's search field, its Filter button and its sort select were the last
+   uncompensated targets on the board. Vertical only — they sit in a packed
+   pill bar with small gaps, so a wider overlay would answer for presses
+   aimed at the control beside it. */
+@media (pointer: coarse) {
+  .board-bar-btn {
+    position: relative;
+  }
+
+  .board-bar-btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    transform: translateY(-50%);
+  }
+
+  /* Real height for these two, because the overlay above cannot work on
+     them: <input> and <select> are replaced elements and render no ::after
+     at all. Measured — the rule computed and the pseudo-element never
+     existed, so the search field and the sort select would have stayed at 40
+     while looking fixed. 4px of extra bar height on touch is the honest
+     price. */
+  .board-bar .search,
+  .board-bar select,
+  .board-sort select {
+    min-height: 44px;
   }
 }
 
@@ -4512,7 +5003,7 @@ button:not(:disabled):active,
    cards + a gold count figure — the board's single focal accent, echoing
    the dashboard hero. */
 .bcol.stage-offer .bcol-cards {
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  background-color: color-mix(in srgb, var(--accent) 7%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
   border-radius: var(--radius-md);
   padding: 0.5rem;
@@ -4649,6 +5140,53 @@ button:not(:disabled):active,
   letter-spacing: var(--track-eyebrow);
 }
 .board-sort:hover select { color: var(--ink); }
+/* The bar and its panel, so the panel has something to hang from. */
+.board-bar-wrap {
+  position: relative;
+}
+
+/* Below 700px it is a sheet pinned to the bottom of the viewport rather than
+   a block inserted into the page. In flow it pushed the board 249px down an
+   844px screen — one and a half cards left visible — so you refined the
+   filter with the thing being filtered below the fold, which is the exact
+   defect the desktop rule above removes. A sheet keeps the board in place
+   and puts the controls under the thumb; light dismiss (Escape, or a tap
+   outside) is already wired, so it needs no chrome of its own. */
+@media (max-width: 699px) {
+  .board-filters-pop {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottombar-reserve) - var(--space-2));
+    z-index: 30;
+    max-height: 60vh;
+    overflow-y: auto;
+    margin: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: var(--shadow-2);
+  }
+}
+
+/* Overlaid, not inserted. In flow this pushed the whole board 248px down
+   the page on open and pulled it back on close — so the columns you were
+   filtering left the screen at the exact moment you were refining what they
+   show, and you picked a filter blind. Above 700px only: on a phone there is
+   no room to float a 30rem panel over anything, and the board below it is a
+   carousel the panel would cover entirely. */
+@media (min-width: 700px) {
+  .board-filters-pop {
+    position: absolute;
+    top: 100%;
+    /* Anchored to the control that opens it, not the far side of the bar.
+       Opening at the start edge put the panel about 1100px from its own
+       trigger on a wide board — and directly over the first two column
+       headers, so the thing being filtered was behind the filter. */
+    inset-inline-end: 0;
+    z-index: 20;
+    width: min(30rem, 100%);
+  }
+}
+
 .board-filters-pop {
   margin-top: var(--space-2);
   border: 1px solid var(--border);
@@ -4700,6 +5238,12 @@ button:not(:disabled):active,
   border-radius: var(--radius-md);
   cursor: pointer;
   min-width: 0;
+}
+
+/* The combined closed rail. Neutral rather than stage-tinted: it stands for
+   four outcomes at once and none of their hues would be true of it. */
+.bcol-rail.rail-closed {
+  --sc: var(--rule);
 }
 
 /* Filled, not a ring: white clears 4.5:1 on every --sc-ink (5.11:1 at the
@@ -4807,15 +5351,39 @@ button:not(:disabled):active,
 
 /* Each open live stage leads with its add block, so adding lands in the
    stage you are looking at. Closed stages and the archive get none: nothing
-   is created straight into them. */
+   is created straight into them.
+
+   Quiet, and it used to be five filled gold slabs — one per live stage, all
+   saying the same thing. Gold is the app's only accent and the stage hues
+   are the board's actual information; spending the loudest colour five times
+   on a repeated affordance outshouted the pipeline the screen exists to
+   show, and each slab pushed that column's first real card down with it.
+   A dashed slot reads as "space for one more", which is what it is, and the
+   card it sits above is now the first thing with weight in the column. */
 .bcol-add {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.7rem;
-  padding: 1rem 0.75rem;
-  border: 1px solid var(--rule);
+  margin-bottom: 0.55rem;
+  padding: 0.3rem;
+  border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: transparent;
+}
+
+.bcol-add:hover,
+.bcol-add:focus-within {
+  border-color: var(--accent);
+}
+
+/* The way back from the closed-only view. Sits above the columns rather
+   than inside one, because at that moment every live column is a folded
+   rail 40px wide and there is nowhere in them to put a sentence. */
+.board-allfolded {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0 0 0.7rem;
 }
 
 /* column header funnel proportion */
@@ -4941,9 +5509,36 @@ button:not(:disabled):active,
   white-space: nowrap;
 }
 
+/* The urgency word, lifted out of the clamped run. It used to trail the
+   action text inside the two-line clamp, which made it the token that got
+   cut on every overdue card — and it is the only text that separates
+   overdue from due-today. Its own line, ahead of the action, so the clamp
+   below can never reach it. */
+.baction-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  /* Takes the row's free space rather than shrinking to min-content. Without
+     the grow the fit stars (58px, margin-left: auto) squeezed this to 34px
+     and the urgency word clipped at 51px of content — the same defect one
+     level up from the one being fixed. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.baction-urgency {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--u-edge, var(--muted));
+  white-space: nowrap;
+}
+
 /* The next action is the one line here worth reading in full, and a board
    column is narrow — so it wraps to two lines rather than being cut at the
    first few words. The short variants (badge, comp, freshness) stay on one.  */
+.bfoot .baction-wrap .baction,
 .bfoot .baction {
   white-space: normal;
   display: -webkit-box;
@@ -4955,6 +5550,20 @@ button:not(:disabled):active,
 /* The fit rating rides at the end of the state line rather than in the
    identity strip: in a board column the strip has room for two cells, and a
    third pushed the company name down to four legible characters. */
+/* The stars drop to their own line when the action block cannot fit beside
+   them. At nine unfolded columns the footer's content box is 113px and the
+   dot, the urgency word and five stars need more than that — measured, the
+   action block was left with 34px for a 51px word, so the token this whole
+   change exists to protect clipped anyway. Wrapping gives it the full width
+   and costs one line only on the cards and densities where it was broken. */
+.bfoot {
+  flex-wrap: wrap;
+}
+
+.bfoot .baction-wrap {
+  flex: 1 1 60%;
+}
+
 .bfoot .bfit {
   margin-left: auto;
   flex: 0 0 auto;
@@ -5075,13 +5684,19 @@ button:not(:disabled):active,
 @media (pointer: coarse) {
   .top-icon,
   .top-brand,
-  .bottombar-slot {
+  button.bottombar-slot {
     position: relative;
   }
 
+  /* button, not .bottombar-slot alone. The bar's third slot is a <span>
+     wrapping the notification bell, so this overlay landed on an ANCESTOR of
+     the real control and covered its own descendant: the bell stopped
+     responding to touch entirely — a programmatic click still worked, which
+     is why it looked fine. An overlay may only ever sit on the element that
+     handles the press. */
   .top-icon::after,
   .top-brand::after,
-  .bottombar-slot::after {
+  button.bottombar-slot::after {
     content: "";
     position: absolute;
     top: 50%;
@@ -5109,3 +5724,72 @@ button:not(:disabled):active,
     justify-content: center;
   }
 }
+
+/* The way to the rest of the queue, at the end of the queue. */
+.today-showall {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--accent-ink);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  cursor: pointer;
+}
+
+.today-showall:hover,
+.today-showall:focus-visible {
+  border-color: var(--rule);
+  background: var(--surface);
+}
+
+/* The way out of the pile, at the foot of the pile. It was a borderless
+   10px caption in mono, which made the weakest-looking control on the screen
+   the one that rewrote every late row at once. It is a real secondary button
+   now, carrying its own count, with the exemption stated beside it rather
+   than left to be discovered afterwards. Still not primary: it is an escape
+   hatch for a bad week, not the screen's main act. */
+.today-pushall {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  /* Above the list now, so the margin belongs below it. */
+  margin: 0 0 var(--space-3);
+}
+
+/* Placed after the rule it overrides, not with the other phone rules higher
+   up the file: both are one class, so a tie goes to whichever comes last.
+   Stacked and tight here — the button is too wide to share a line with its
+   exemption at 390px, and 20px of gap and margin was being spent to
+   separate two things that belong together. */
+@media (max-width: 600px) {
+  .today-pushall {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    margin-bottom: var(--space-1);
+  }
+}
+
+/* The order, said out loud. Ranking by stage then fit beats ranking by date,
+   but an unlabelled order reads as no order when the date column jumps. */
+.today-sortnote {
+  color: var(--faint);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Show-all is a bare button and needs the floor set here; push-all is a
+   Button now and brings its own. */
+@media (pointer: coarse) {
+  .today-showall {
+    min-height: 44px;
+  }
+}
+

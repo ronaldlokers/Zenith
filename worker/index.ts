@@ -104,7 +104,15 @@ app.use("*", async (c, next) => {
   await next();
   c.header("X-Frame-Options", "DENY");
   c.header("X-Content-Type-Options", "nosniff");
-  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Same precedent as the CSP below: a route that has chosen a stricter
+  // policy keeps it. The share and calendar routes carry their token in the
+  // URL and set no-referrer; this used to overwrite them on the way out, so
+  // the stricter value never reached the browser. The app default is safe
+  // for the app — cross-origin it sends only the origin — but a tokenised
+  // page should not be relying on that distinction.
+  if (!c.res.headers.get("Referrer-Policy")) {
+    c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  }
   c.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   // The share page builds a stricter, nonced policy of its own; this must not
   // flatten it back to the app's. Anything that sets its own CSP keeps it.
@@ -1461,6 +1469,28 @@ app.put("/api/profile/board-folded", async (c) => {
   return c.json({ board_folded: folded });
 });
 
+// Whether the share page says whose search it is. Its own route for the same
+// reason board-folded has one: PUT /api/profile writes an explicit CV column
+// list and knows nothing about sharing preferences.
+//
+// Off by default, and it stays a separate decision from generating the link —
+// handing someone a URL is not the same act as putting your name on a public
+// page, and the privacy-first default only holds if the second one is opted
+// into on purpose.
+app.put("/api/profile/share-identity", async (c) => {
+  const body = await c.req.json<{ show?: unknown }>();
+  if (typeof body.show !== "boolean") {
+    return c.json({ error: "show must be a boolean" }, 400);
+  }
+  await c.env.DB.prepare(
+    `INSERT INTO profile (user_id, share_show_identity) VALUES (?, ?)
+     ON CONFLICT (user_id) DO UPDATE SET share_show_identity = excluded.share_show_identity`,
+  )
+    .bind(c.get("userId"), body.show ? 1 : 0)
+    .run();
+  return c.json({ share_show_identity: body.show });
+});
+
 app.delete("/api/profile/share-token", async (c) => {
   await c.env.DB.prepare("UPDATE profile SET share_token = NULL WHERE user_id = ?")
     .bind(c.get("userId"))
@@ -1560,21 +1590,179 @@ function shareParseSqlDate(d: string): number {
   return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
 }
 
+// The public page's own strings. It is server-rendered outside React, so it
+// cannot reach react-i18next — and it was hard-coded English on a product
+// whose locales are kept at strict parity, on the one page most likely to be
+// opened by someone who never chose a language. Two locales, same keys, and
+// the stage labels translated rather than a CSS capitalize() of a DB slug.
+// The display name is the only user-authored string that reaches this page,
+// and the page is public and server-rendered outside React — so it is escaped
+// here rather than trusted. The CSP would stop an injected <script> executing,
+// but markup injection into the document is not something to leave to a second
+// line of defence.
+function escapeHtml(v: string): string {
+  return v
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+const SHARE_STRINGS = {
+  en: {
+    title: "Shared pipeline",
+    momentumLabel: "Pipeline momentum",
+    steady: "Steady",
+    quiet: "No recent activity",
+    faster: "Speeding up",
+    slower: "Slowing down",
+    open: (n: number) => `${n} open application${n === 1 ? "" : "s"}`,
+    footer:
+      "Read-only view — no application details, no editing. Powered by Zenith.",
+    sharedOn: "Shared",
+    ogDescription:
+      "A read-only summary of a job search: how many applications are open and how far they have progressed. No per-application detail.",
+    stages: {
+      interested: "Interested",
+      applied: "Applied",
+      screening: "Screening",
+      interview: "Interview",
+      offer: "Offer",
+    } as Record<string, string>,
+  },
+  nl: {
+    title: "Gedeelde pijplijn",
+    momentumLabel: "Voortgang",
+    steady: "Stabiel",
+    quiet: "Geen recente activiteit",
+    faster: "Versnelt",
+    slower: "Vertraagt",
+    open: (n: number) =>
+      `${n} openstaande sollicitatie${n === 1 ? "" : "s"}`,
+    footer:
+      "Alleen-lezen weergave — geen details per sollicitatie, geen bewerking. Mogelijk gemaakt door Zenith.",
+    sharedOn: "Gedeeld",
+    ogDescription:
+      "Een alleen-lezen samenvatting van een zoektocht naar werk: hoeveel sollicitaties lopen en hoe ver ze zijn. Geen details per sollicitatie.",
+    stages: {
+      interested: "Geïnteresseerd",
+      applied: "Gesolliciteerd",
+      screening: "Screening",
+      interview: "Gesprek",
+      offer: "Aanbod",
+    } as Record<string, string>,
+  },
+} as const;
+
+type ShareLocale = keyof typeof SHARE_STRINGS;
+
+// Entry-page negotiation, which is what Accept-Language is for. Quality
+// values are honoured so "en;q=0.8, nl;q=0.9" picks Dutch; anything we do
+// not speak falls through to the sharer's own stored locale, then English.
+function shareLocale(header: string | undefined, ownerLocale: string | null): ShareLocale {
+  const ranked = (header ?? "")
+    .split(",")
+    .map((part) => {
+      const [tag, ...params] = part.trim().split(";");
+      const q = params
+        .map((p) => p.trim())
+        .find((p) => p.startsWith("q="));
+      return { tag: tag.trim().toLowerCase(), q: q ? Number(q.slice(2)) : 1 };
+    })
+    .filter((x) => x.tag && !Number.isNaN(x.q))
+    .sort((a, b) => b.q - a.q);
+  for (const { tag } of ranked) {
+    if (tag === "*") break;
+    const base = tag.split("-")[0];
+    if (base === "nl" || base === "en") return base;
+  }
+  return ownerLocale === "nl" ? "nl" : "en";
+}
+
+// A revoked or mistyped share link. Settings' regenerate control
+// invalidates the previous link, so this is a routine outcome rather than an
+// edge case — and its most likely reader is the stranger the link was sent
+// to, who concludes the sender is careless or the product is broken. Still a
+// 404, and still identical for "revoked" and "never existed" so the response
+// leaks nothing; only the rendering changes.
+function sharePageGone(c: Context<AppEnv>) {
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  return c.html(
+    `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Link not active — Zenith</title>
+<style nonce="${nonce}">
+  :root { color-scheme: dark }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #14173a; color: #e7e6f0; padding: 2rem;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 26rem; text-align: center }
+  /* Real ramp steps, inlined as literals and named — the same discipline
+     the shared-pipeline page above uses, so a drift is obvious on sight:
+       1.375rem --text-heading    0.64rem --text-chrome
+     The first draft of this page used 1.25rem, which is on the ramp but as
+     --text-figure-md, a step for numbers rather than headings, and 0.72rem,
+     which is not on it at all. */
+  h1 { font-size: 1.375rem; margin: 0 0 0.5rem; font-weight: 600 }
+  p { margin: 0; color: #b9b8cc; line-height: 1.5 }
+  .mark {
+    font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #8b8fa8; margin-bottom: 1.25rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="mark">Zenith</p>
+  <h1>This link is no longer active</h1>
+  <p>Ask the person who shared it for a new one.</p>
+</main>
+</body>
+</html>`,
+    404,
+    { "Cache-Control": "no-store, private", "Referrer-Policy": "no-referrer" },
+  );
+}
+
 app.get("/shared/:token", async (c) => {
   const token = c.req.param("token");
   const profile = await c.env.DB.prepare(
-    "SELECT user_id FROM profile WHERE share_token = ?",
+    // The owner's locale is the fallback when the reader's browser asks for
+    // a language this page does not speak.
+    `SELECT profile.user_id, profile.name, profile.share_show_identity,
+            "user".locale AS locale
+     FROM profile LEFT JOIN "user" ON "user".id = profile.user_id
+     WHERE profile.share_token = ?`,
   )
     .bind(token)
-    .first<{ user_id: string }>();
-  if (!profile) return c.text("Not found", 404);
+    .first<{
+      user_id: string;
+      name: string | null;
+      share_show_identity: number;
+      locale: string | null;
+    }>();
+  if (!profile) return sharePageGone(c);
 
   const [apps, history] = await Promise.all([
     c.env.DB.prepare(
-      "SELECT id, status, applied_at, created_at FROM applications WHERE user_id = ?",
+      // Only what the page prints. applied_at and created_at were fetched
+      // and never rendered — a public route should select nothing it does
+      // not show.
+      // role_type comes back only to name the track being searched, and only
+      // when identity is on. It is a stage-agnostic label the user already
+      // maintains per application — no new field to keep up to date, and
+      // nothing per-application reaches the page.
+      "SELECT id, status, role_type FROM applications WHERE user_id = ?",
     )
       .bind(profile.user_id)
-      .all<{ id: number; status: string; applied_at: string | null; created_at: string }>(),
+      .all<{ id: number; status: string; role_type: string | null }>(),
     c.env.DB.prepare(
       // Deliberately without outcome_reason/outcome_note (#381), unlike the
       // in-app stats query: the note is free text the user wrote about a
@@ -1620,12 +1808,42 @@ app.get("/shared/:token", async (c) => {
       shareParseSqlDate(h.changed_at) >= now - 2 * PERIOD &&
       shareParseSqlDate(h.changed_at) < now - PERIOD,
   ).length;
-  let momentum = "Steady";
-  if (recentMoves === 0 && priorMoves === 0) momentum = "No recent activity";
-  else if (priorMoves === 0) momentum = "Speeding up";
+  const lang = shareLocale(c.req.header("Accept-Language"), profile.locale);
+  const S = SHARE_STRINGS[lang];
+
+  // Off unless the owner turned it on. The page is aggregate-only by design
+  // and a name on a public URL is the owner's call, so the default stays
+  // anonymous and Settings carries the switch.
+  const showIdentity = profile.share_show_identity === 1 && !!profile.name;
+  const liveRoles = apps.results.filter(
+    (a) => !["rejected", "withdrawn", "ghosted"].includes(a.status),
+  );
+  const topRole = (() => {
+    if (!showIdentity) return null;
+    const counts = new Map<string, number>();
+    for (const a of liveRoles) {
+      if (!a.role_type || a.role_type === "other") continue;
+      counts.set(a.role_type, (counts.get(a.role_type) ?? 0) + 1);
+    }
+    let best: string | null = null;
+    let bestN = 0;
+    for (const [role, n] of counts) if (n > bestN) [best, bestN] = [role, n];
+    return best;
+  })();
+  const roleLabel = topRole
+    ? topRole.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())
+    : null;
+  const shownOn = new Date().toISOString().slice(0, 10);
+  const pageTitle = showIdentity
+    ? `${profile.name} — ${S.title}`
+    : `Zenith — ${S.title}`;
+
+  let momentum: string = S.steady;
+  if (recentMoves === 0 && priorMoves === 0) momentum = S.quiet;
+  else if (priorMoves === 0) momentum = S.faster;
   else {
     const change = (recentMoves - priorMoves) / priorMoves;
-    momentum = change > 0.15 ? "Speeding up" : change < -0.15 ? "Slowing down" : "Steady";
+    momentum = change > 0.15 ? S.faster : change < -0.15 ? S.slower : S.steady;
   }
 
   const totalOpen = apps.results.filter(
@@ -1639,7 +1857,7 @@ app.get("/shared/:token", async (c) => {
       // (see the nonce below). It is the only unauthenticated surface here.
       (f, i) => `
       <div class="row">
-        <span class="lbl">${f.stage}</span>
+        <span class="lbl">${S.stages[f.stage] ?? f.stage}</span>
         <span class="track"><span class="fill fill-${i}"></span></span>
         <span class="n">${f.count}</span>
       </div>`,
@@ -1654,12 +1872,15 @@ app.get("/shared/:token", async (c) => {
     .join("");
 
   const html = `<!doctype html>
-<html>
+<html lang="${lang}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Zenith — shared pipeline</title>
+<title>${escapeHtml(pageTitle)}</title>
+<meta property="og:title" content="${escapeHtml(pageTitle)}" />
+<meta property="og:description" content="${escapeHtml(S.ogDescription)}" />
+<meta property="og:type" content="website" />
 <style nonce="${nonce}">
 ${barWidths}
   /* This page is the only Zenith surface someone who is not a user ever sees,
@@ -1676,7 +1897,9 @@ ${barWidths}
      0.75 meta, 0.64 chrome. */
   body { font-family: system-ui, -apple-system, sans-serif; background: #14173a; color: #e7e6f0; margin: 0; padding: 2rem 1.25rem; }
   .wrap { max-width: 32rem; margin: 0 auto; }
-  h1 { font-size: 0.95rem; font-weight: 600; margin: 0 0 1.5rem; }
+  /* .when always follows and carries the gap to the momentum card, so the
+     heading's own bottom margin would double it. */
+  h1 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.15rem; }
   /* No border: on the Night ground the raised fill is the lift, and DESIGN.md
      puts state in the fill rather than on a coloured edge. */
   .momentum { padding: 0.9rem 1rem; margin-bottom: 1.5rem; border-radius: 10px; background: #1b1f4d; }
@@ -1685,7 +1908,22 @@ ${barWidths}
   .momentum-value { font-size: 1.375rem; font-weight: 700; }
   .open-count { color: #b9b8cc; font-size: 0.875rem; margin-bottom: 1.5rem; display: block; }
   .row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; font-size: 0.875rem; }
-  .lbl { width: 5.5rem; text-transform: capitalize; color: #b9b8cc; }
+  /* min-width, not width, and no capitalize: the labels are translated
+     strings now rather than DB slugs, and "Geïnteresseerd" is wider than
+     the 5.5rem the English set fitted in — measured, it clipped at both
+     1440 and 390. The column still aligns for every label that fits. */
+  .lbl { min-width: 5.5rem; flex-shrink: 0; color: #b9b8cc; }
+  /* Whose search this is, and when it was shared. Both are the difference
+     between a page a stranger can act on and an anonymous chart. Real ramp
+     steps, named, like everything else here: 0.64rem --text-chrome. */
+  .eyebrow {
+    margin: 0 0 0.15rem; font-size: 0.64rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #d6a441;
+  }
+  .when {
+    margin: 0.15rem 0 1.25rem; font-size: 0.64rem; letter-spacing: 0.06em;
+    color: #8b8fa8;
+  }
   .track { flex: 1; height: 8px; background: #1b1f4d; border-radius: 999px; overflow: hidden; }
   /* Struck Brass, not the teal this page used to invent. Brass is the one
      accent Zenith spends on the figure that carries the eye. */
@@ -1696,14 +1934,27 @@ ${barWidths}
 </head>
 <body>
   <div class="wrap">
-    <h1>Shared pipeline</h1>
+    ${
+      // With a name on it the person is the subject and the page title is the
+      // label; without one there is no subject, so the label is all there is.
+      // Swapping which of the two is the h1 keeps the anonymous page exactly
+      // as it was and stops the named page burying whose search it is.
+      showIdentity
+        ? `<p class="eyebrow">${S.title}</p>
+    <h1>${escapeHtml(profile.name ?? "")}</h1>
+    <p class="when">${
+      roleLabel ? `${escapeHtml(roleLabel)} · ` : ""
+    }${S.sharedOn} ${shownOn}</p>`
+        : `<h1>${S.title}</h1>
+    <p class="when">${S.sharedOn} ${shownOn}</p>`
+    }
     <div class="momentum">
-      <span class="momentum-label">Pipeline momentum</span>
+      <span class="momentum-label">${S.momentumLabel}</span>
       <span class="momentum-value">${momentum}</span>
     </div>
-    <span class="open-count">${totalOpen} open applications</span>
+    <span class="open-count">${S.open(totalOpen)}</span>
     ${rows}
-    <footer>Read-only view — no application details, no editing. Powered by Zenith.</footer>
+    <footer>${S.footer}</footer>
   </div>
 </body>
 </html>`;
@@ -1726,7 +1977,17 @@ ${barWidths}
       "frame-ancestors 'none'",
     ].join("; "),
   );
-  return c.html(html);
+  return c.html(html, 200, {
+    // The URL contains the token, so no shared cache may hold this and no
+    // outbound request may carry it in a Referer. /calendar/:token already
+    // sets a private cache policy; this route set nothing at all and left
+    // it to whatever a proxy decided. There are no links on the page today,
+    // which is exactly when the referrer policy is free to add.
+    "Cache-Control": "no-store, private",
+    "Referrer-Policy": "no-referrer",
+    // Announce what was negotiated, which is the other half of the contract.
+    "Content-Language": lang,
+  });
 });
 
 // --- Documents (R2) ---

@@ -161,6 +161,11 @@ export function ContactsTab({
               {contacts.length === 0
                 ? t("empty.noPeople")
                 : t("empty.noPeopleMatch")}
+              {contacts.length > 0 && (
+                <Button variant="link" onClick={() => setQuery("")}>
+                  {t("board.clearSearch")}
+                </Button>
+              )}
             </EmptyState>
           )}
         </ul>
@@ -213,6 +218,11 @@ export function ContactsTab({
             {contacts.length === 0
               ? t("empty.noPeople")
               : t("empty.noPeopleMatch")}
+            {contacts.length > 0 && (
+              <Button variant="link" onClick={() => setQuery("")}>
+                {t("board.clearSearch")}
+              </Button>
+            )}
           </EmptyState>
         )}
       </ul>

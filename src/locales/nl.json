@@ -1,7 +1,6 @@
 {
   "tabs": {
     "overview": "Vandaag",
-    "jobs": "Vacatures",
     "feed": "Feed",
     "calendar": "Agenda",
     "insights": "Inzichten",
@@ -14,11 +13,18 @@
   },
   "today": {
     "needYou_one": "taak wacht op je vandaag",
+    "overdueOnly_one": "vervolgactie is te laat",
+    "overdueOnly_other": "vervolgacties zijn te laat",
+    "overdueSince": "oudste sinds {{date}}",
+    "mixed": "{{overdue}} te laat · {{today}} vandaag",
+    "pushedAll_one": "{{count}} vervolgactie verzet",
+    "pushedAll_other": "{{count}} vervolgacties verzet, verspreid over de komende dagen",
+    "sortedBy": "Gesorteerd op fase, dan match",
     "needYou_other": "taken wachten op je vandaag",
     "quietTitle": "Stil geworden",
     "quietHint": "Geen reactie ligt aan hen, niet aan jou. Ruim ze op wanneer je er klaar voor bent.",
     "quietAge": "{{days}} dagen stil",
-    "closeOut": "Afsluiten",
+    "closeOut": "Archiveren",
     "closedOut": "Gearchiveerd — één ding minder",
     "nothingTracked": "Nog niets bijgehouden",
     "nothingTrackedHint": "Voeg de eerste vacature toe die je najaagt — alles op dit scherm groeit daaruit.",
@@ -39,7 +45,12 @@
     "happenedAdded": "Je hebt {{title}} toegevoegd",
     "moved": "Deze week verschoven",
     "movedTo": "naar",
-    "noMoves": "Deze week is er niets van fase veranderd."
+    "noMoves": "Deze week is er niets van fase veranderd.",
+    "pushAll_other": "Verzet {{count}} late vervolgacties naar de komende dagen",
+    "pushAllKeeps": "Aanbiedingen en gesprekken blijven staan.",
+    "pushAll_one": "Verzet {{count}} late vervolgactie naar de komende dagen",
+    "movedToday": "Vandaag",
+    "movedEarlier": "Eerder deze week"
   },
   "header": {
     "settings": "Instellingen",
@@ -167,6 +178,8 @@
     "languageNl": "Nederlands",
     "cvLanguage": "CV-taal",
     "shareLink": "Openbare deel-link",
+    "shareIdentity": "Toon mijn naam op de deelpagina",
+    "shareIdentityHint": "Standaard uit. Voegt je naam en de functie waarnaar je zoekt toe; nooit details per sollicitatie.",
     "generateLink": "Link genereren",
     "regenerateLink": "Opnieuw genereren",
     "disableLink": "Uitschakelen",
@@ -207,9 +220,9 @@
     "checking": "Controleren…",
     "viaSource": "via {{source}}",
     "viewPosting": "Bekijk vacature ↗",
-    "addToJobs": "Toevoegen aan Jobs",
+    "addToJobs": "Toevoegen aan pijplijn",
     "dismiss": "Negeren",
-    "triageHint": "j / k navigeren · a toevoegen · d negeren",
+    "triageHint": "j / k navigeren · a toevoegen · s bewaren · d negeren",
     "skillsMatch_one": "{{count}} passende vaardigheid",
     "skillsMatch_other": "{{count}} passende vaardigheden",
     "whyItFits_one": "Komt overeen met 1 van je vaardigheden",
@@ -227,22 +240,38 @@
       "weak": "Zwak"
     },
     "postedAge": "{{age}} geleden",
-    "settingsBtn": "Feedbronnen"
+    "settingsBtn": "Feedbronnen",
+    "noFitMatchPage": "Niets op de tot nu toe geladen pagina's komt overeen met dit fit-filter. Verderop in de feed staat mogelijk meer.",
+    "clearFitFilter": "Toon elke fit",
+    "showWeak_one": "Toon {{count}} zwakkere match",
+    "showWeak_other": "Toon {{count}} zwakkere matches",
+    "hideWeak_one": "Verberg {{count}} zwakkere match",
+    "hideWeak_other": "Verberg {{count}} zwakkere matches",
+    "allWeak_one": "Er is {{count}} vacature binnengekomen, maar geen enkele noemt een vaardigheid van je cv.",
+    "allWeak_other": "Er zijn {{count}} vacatures binnengekomen, maar geen enkele noemt een vaardigheid van je cv.",
+    "addSkills": "Voeg je vaardigheden toe",
+    "listLabel": "Vacatures om te beoordelen",
+    "detailLabel": "Geselecteerde vacature",
+    "save": "Bewaar voor later",
+    "saved": "Bewaard"
   },
   "stats": {
     "momentum": {
       "up": "Versnelt",
       "down": "Vertraagt",
       "flat": "Stabiel",
-      "none": "Geen recente activiteit"
+      "none": "Geen recente activiteit",
+      "early": "Nog te vroeg"
     },
-    "momentumDetail": "{{recent}} stap-vooruitgangen in de afgelopen 2 weken vs {{prior}} in de 2 weken daarvoor",
     "downloadOfferComparison": "Download aanbiedingsvergelijking (PDF)",
     "offerComparisonHeading": "Aanbiedingsvergelijking",
     "offerComparisonBreakdown": "Opbouw",
     "offerComparisonEmpty": "Nog geen aanbiedingen.",
     "exportData": "Exporteer je gegevens",
-    "exportAllJson": "Alles (JSON)"
+    "exportAllJson": "Alles (JSON)",
+    "momentumDetail_one": "{{recent}} fasewissel in de afgelopen 2 weken tegenover {{prior}} in de 2 weken daarvoor",
+    "momentumDetail_other": "{{recent}} fasewissels in de afgelopen 2 weken tegenover {{prior}} in de 2 weken daarvoor",
+    "exportCsv": "{{resource}} (CSV)"
   },
   "palette": {
     "title": "Ga naar…",
@@ -456,7 +485,8 @@
     "seeFullTimeline": "Bekijk de volledige tijdlijn"
   },
   "nextUp": {
-    "title": "Binnenkort",
+    "title": "Volgende acties",
+    "showAll": "Alle {{count}} tonen",
     "done": "Klaar",
     "doneToast": "Follow-up afgerond",
     "segDue": "Open {{count}}",
@@ -465,7 +495,10 @@
     "snooze3d": "3 dagen uitstellen",
     "snooze1w": "1 week uitstellen",
     "snoozeToast": "Verzet naar {{date}}",
-    "actionsFor": "Acties voor {{title}}"
+    "actionsFor": "Acties voor {{title}}",
+    "noReply": "Geen reactie — sluit deze af",
+    "noReplyToast": "Afgesloten — geen reactie",
+    "doneFor": "Gedaan: {{action}}"
   },
   "company": {
     "contactMap": "Contacten",
@@ -562,7 +595,9 @@
     "matchPosting": "Vergelijk met vacature",
     "moveUpNamed": "{{name}} omhoog",
     "moveDownNamed": "{{name}} omlaag",
-    "proficiencyLabel": "Niveau"
+    "proficiencyLabel": "Niveau",
+    "pages_one": "{{count}} pagina",
+    "pages_other": "{{count}} pagina's"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."
@@ -580,6 +615,8 @@
     "benefitsNotes": "Notities secundaire arbeidsvoorwaarden",
     "totalComp": "Totale beloning (geschat)",
     "benchmark": "{{pct}}% {{direction}} je mediane bijgehouden aanbod ({{n}} andere(n))",
+    "benchmarkFew_one": "{{pct}}% {{direction}} je enige andere bijgehouden aanbod",
+    "benchmarkFew_other": "{{pct}}% {{direction}} het midden van je {{count}} andere bijgehouden aanbiedingen",
     "above": "hoger dan",
     "below": "lager dan",
     "draftNegotiation": "Stel onderhandelingspunten op",
@@ -744,7 +781,10 @@
     "twoFactorDownloadCodes": "Back-upcodes downloaden",
     "webhookDisabled": "uitgeschakeld na herhaalde fouten — verwijder en voeg opnieuw toe",
     "webhookFailing": "faalt ({{count}} op rij)",
-    "webhookOk": "levert af"
+    "webhookOk": "levert af",
+    "deleteTypeEmail": "Typ {{email}} om te bevestigen",
+    "deleteForever": "Verwijder mijn account",
+    "deleteExportFirst": "Eerst een kopie? Instellingen → Gegevens heeft een volledige export."
   },
   "companies": {
     "view": "Weergave",
@@ -765,15 +805,28 @@
     "railArchived": "Gearchiveerd",
     "addHere": "+ Sollicitatie toevoegen",
     "foldRail": "{{stage}} inklappen",
-    "unfoldRail": "{{stage}} openen, {{count}} sollicitaties",
     "showingClosed": "Gesloten sollicitaties worden getoond",
     "pin": "Vastzetten",
     "unpin": "Losmaken",
-    "nothingPinned": "Nog niets vastgezet. Zet een sollicitatie vast via het \u22ef-menu om hem hier te houden.",
+    "nothingPinned": "Nog niets vastgezet. Zet een sollicitatie vast via het ⋯-menu om hem hier te houden.",
     "showingPinned": "Vastgezette sollicitaties",
     "showAll": "Alles tonen",
     "backToLive": "Terug naar actief",
-    "stageStrip": "Fases"
+    "stageStrip": "Fases",
+    "allLiveFolded": "Alle actieve fasen zijn ingeklapt — alleen afgesloten sollicitaties zijn zichtbaar.",
+    "noMatchQuery": "Niets komt overeen met “{{query}}”.",
+    "noMatchFilters": "Niets komt overeen met de ingestelde filters.",
+    "clearSearch": "Wis zoekopdracht",
+    "clearFilters_one": "Wis {{count}} filter",
+    "clearFilters_other": "Wis {{count}} filters",
+    "unfoldRail_one": "{{stage}} openen, {{count}} sollicitatie",
+    "unfoldRail_other": "{{stage}} openen, {{count}} sollicitaties",
+    "closedGroup": "Afgesloten",
+    "openClosedGroup_one": "Afgesloten sollicitaties openen, {{count}} sollicitatie",
+    "openClosedGroup_other": "Afgesloten sollicitaties openen, {{count}} sollicitaties",
+    "showingPinnedNow": "Alleen vastgezette sollicitaties zichtbaar.",
+    "closedOpen": "Afgesloten sollicitaties zijn zichtbaar.",
+    "closeClosedGroup": "Weer inklappen"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."
@@ -794,12 +847,15 @@
     "statusChanged": "Verplaatst naar {{stage}}",
     "revived": "Terug in een actieve fase",
     "setFollowUp": "Follow-up instellen",
-    "archived": "Gearchiveerd"
+    "archived": "Gearchiveerd",
+    "dismissed": "{{title}} genegeerd"
   },
   "confirm": {
     "deleteDocument": "“{{name}}” verwijderen?",
     "deleteRoleType": "Functietype “{{label}}” verwijderen? Feed-trefwoorden ervoor gaan mee.",
-    "discardEdit": "Niet-opgeslagen wijzigingen weggooien?"
+    "discardEdit": "Niet-opgeslagen wijzigingen weggooien?",
+    "deleteCvVariant": "CV-variant “{{name}}” verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "deleteWebhook": "Deze webhook verwijderen? De signing secret kan niet worden hersteld."
   },
   "aria": {
     "interactionType": "Type interactie",
@@ -811,11 +867,19 @@
     "prevMonth": "Vorige maand",
     "nextMonth": "Volgende maand",
     "today": "Vandaag",
-    "eventCount": "{{count}} items",
     "moreEvents": "+{{count}} meer",
     "upcoming": "Binnenkort",
     "show": "Toon agenda",
-    "hide": "Verberg agenda"
+    "hide": "Verberg agenda",
+    "noUpcoming_one": "Niets gepland — {{count}} item ligt in het verleden.",
+    "noUpcoming_other": "Niets gepland — {{count}} items liggen in het verleden.",
+    "eventCount_one": "{{count}} gebeurtenis",
+    "eventCount_other": "{{count}} gebeurtenissen",
+    "kind": {
+      "due": "Vervolgactie",
+      "interaction": "Gesprek",
+      "applied": "Gesolliciteerd"
+    }
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"
@@ -876,7 +940,10 @@
     "insightsTitle": "Waarom sollicitaties stoppen",
     "insightsEmpty": "Nog geen afgesloten sollicitaties.",
     "insightsUnrecorded_one": "{{count}} afgesloten zonder vastgelegde reden",
-    "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden"
+    "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden",
+    "insightsNoneRecorded_one": "Nog niets vastgelegd — {{count}} afgesloten sollicitatie wacht op een reden.",
+    "insightsNoneRecorded_other": "Nog niets vastgelegd — {{count}} afgesloten sollicitaties wachten op een reden.",
+    "insightsRecordCta": "Toon afgesloten sollicitaties"
   },
   "bottomBar": {
     "pinned": "Vastgezet"
@@ -893,7 +960,6 @@
     "everyoneElse": "Alle anderen"
   },
   "dashboard": {
-    "kpiOffers": "Open aanbiedingen",
     "kpiToOffer": "Mediaan tot aanbod",
     "momentumTitle": "Pijplijn-momentum",
     "funnelConv": "Funnel & conversie",
@@ -902,10 +968,36 @@
     "kpiOpenShort": "Open",
     "kpiResponseShort": "Respons",
     "kpiResponseOf": "{{responded}} van {{applied}}",
-    "convFrom": "{{pct}}% vanaf {{stage}}"
+    "convFrom": "{{pct}}% vanaf {{stage}}",
+    "kpiOffers_one": "Openstaand aanbod",
+    "kpiOffers_other": "Openstaande aanbiedingen",
+    "kpiResponseTooFew": "te weinig voor een percentage",
+    "kpiToOfferOne": "Dagen tot aanbod"
   },
   "urgency": {
     "overdue": "te laat",
     "today": "vandaag"
+  },
+  "insights": {
+    "headlineNumbers": "Kerncijfers",
+    "nothingYet": "Nog niets te meten — Inzichten vullen zich terwijl je solliciteert.",
+    "nothingYetCta": "Voeg je eerste sollicitatie toe",
+    "totalComp": "totaal",
+    "baseRange": "basis {{range}}",
+    "pace": "{{sent}} van {{goal}} sollicitaties deze week verstuurd",
+    "replyTypical": "Reacties komen doorgaans na {{days}} dagen (op basis van {{count}} antwoorden).",
+    "replyTooFew": "Nog te weinig reacties om te zeggen hoe lang ze duren.",
+    "replyWaiting": "{{count}} wachten nog, de langste {{days}} dagen.",
+    "fromNOffers": "op basis van {{count}} aanbod"
+  },
+  "export": {
+    "applications": "Sollicitaties",
+    "companies": "Bedrijven",
+    "contacts": "Contactpersonen",
+    "interactions": "Interacties"
+  },
+  "errors": {
+    "offline": "Je bent offline — die wijziging is niet opgeslagen. Het werkt weer zodra je verbinding hebt.",
+    "unreachable": "Zenith is niet bereikbaar, dus die wijziging is niet opgeslagen. Controleer je verbinding en probeer het opnieuw."
   }
 }

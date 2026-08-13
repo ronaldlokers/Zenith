@@ -93,7 +93,12 @@ export function PublicApiSettings({
       .finally(() => setWebhookBusy(false));
   };
 
-  const removeWebhook = (id: number) => {
+  const removeWebhook = async (id: number) => {
+    // The only destructive control in Settings that did not ask. Its signing
+    // secret is shown once at creation and never again, so a mis-click
+    // destroys something unrecoverable — the same reason every other
+    // destructive control on this page confirms.
+    if (!(await requestConfirm(t("confirm.deleteWebhook")))) return;
     api
       .removeWebhook(id)
       .then(loadWebhooks)
@@ -171,7 +176,7 @@ export function PublicApiSettings({
             <Button
               variant="danger"
               className="zui-webhook-remove"
-              onClick={() => removeWebhook(w.id)}
+              onClick={() => void removeWebhook(w.id)}
             >
               <RemoveIcon />
             </Button>

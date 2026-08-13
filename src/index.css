@@ -251,11 +251,20 @@
   --doc-muted: #4a4d63;
   --doc-faint: #6b675e;
   --doc-rule: #d8d5cc;
-  --doc-text: 8.5px;
-  --doc-small: 8px;
-  --doc-fine: 7.5px;
-  --doc-name: 15px;
-  --doc-name-aside: 13px;
+  /* The document's own type, in the units the export uses. The preview is a
+     picture of an A4 page, so it is laid out at real A4 size — 210x297mm,
+     18mm margins, 10pt body, 20pt name, 12pt section heads, all read off
+     generateCvPdf — and then scaled as a whole to fit the column it sits in.
+     It used to shrink the type independently of the page: 8.5px body inside
+     an 18px margin on a sheet with no fixed proportion, which showed roughly
+     3.5x more content per apparent page than the file it claimed to preview.
+     A CV is measured in pages, so a preview that gets pages wrong is worse
+     than no preview. */
+  --doc-text: 10pt;
+  --doc-small: 9.4pt;
+  --doc-fine: 8.8pt;
+  --doc-name: 20pt;
+  --doc-name-aside: 17.3pt;
   --doc-radius: 3px;
   --doc-radius-fine: 1px;
 
@@ -327,6 +336,11 @@ input[type="radio"] {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  /* --accent-ink, not --accent. The gold ring measured 2.27:1 against a white
+     card and 2.03:1 against the paper ground, where WCAG 1.4.11 asks for 3:1
+     — present on every focusable element and under-contrasted on every one.
+     The darker ink of the same hue keeps the ring unmistakably Zenith's and
+     clears the bar on both grounds. */
+  outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
 }

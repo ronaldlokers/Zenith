@@ -83,10 +83,41 @@ describe("public share page", () => {
     await seedShared();
     const ok = await SELF.fetch(`${BASE}/shared/${TOKEN}`);
     expect(ok.status).toBe(200);
-    expect(await ok.text()).toContain("shared pipeline");
+    expect(await ok.text()).toContain("Shared pipeline");
 
     const bad = await SELF.fetch(`${BASE}/shared/not-a-real-token`);
     expect(bad.status).toBe(404);
+  });
+
+  it("speaks the reader's language, not the developer's", async () => {
+    // The page is server-rendered outside React, so it cannot reach
+    // react-i18next and was hard-coded English — on a product with strict
+    // en/nl parity, on the one page most likely to be opened by someone who
+    // never chose a language.
+    await seedShared();
+    const dutch = await SELF.fetch(`${BASE}/shared/${TOKEN}`, {
+      headers: { "Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8" },
+    });
+    expect(dutch.headers.get("content-language")).toBe("nl");
+    const nl = await dutch.text();
+    expect(nl).toContain('<html lang="nl">');
+    expect(nl).toContain("Gedeelde pijplijn");
+    expect(nl, "stage labels are translated, not capitalised slugs").toContain(
+      "Geïnteresseerd",
+    );
+
+    // Quality values decide, so a lower-ranked English does not win.
+    const byQuality = await SELF.fetch(`${BASE}/shared/${TOKEN}`, {
+      headers: { "Accept-Language": "en;q=0.8, nl;q=0.9" },
+    });
+    expect(byQuality.headers.get("content-language")).toBe("nl");
+
+    // A language the page does not speak falls through to English.
+    const german = await SELF.fetch(`${BASE}/shared/${TOKEN}`, {
+      headers: { "Accept-Language": "de-DE,de;q=0.9" },
+    });
+    expect(german.headers.get("content-language")).toBe("en");
+    expect(await german.text()).toContain("Shared pipeline");
   });
 
   it("never puts compensation on the page", async () => {
@@ -167,6 +198,105 @@ describe("public share page", () => {
     expect(html, "the widths should be emitted as classes").toMatch(
       /\.fill-\d+\{width:/,
     );
+  });
+
+  describe("identity", () => {
+    // The page can say whose search it is, but only if the owner opted in.
+    // Two things are worth pinning: that the default really is off (a
+    // migration default is easy to get backwards, and getting it backwards
+    // publishes a name nobody agreed to publish), and that the name is
+    // escaped — it is the only user-authored string on a public page.
+    it("says nothing about who by default", async () => {
+      await seedShared();
+      await env.DB.prepare(
+        "UPDATE profile SET name = ?, share_show_identity = 0 WHERE user_id = ?",
+      )
+        .bind("Jordan Ellis", "seed-admin")
+        .run();
+      const html = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+      expect(html).not.toContain("Jordan Ellis");
+      expect(html).toMatch(/<title>Zenith — /);
+    });
+
+    it("names the owner once opted in, in the heading and the unfurl", async () => {
+      await seedShared();
+      await env.DB.prepare(
+        "UPDATE profile SET name = ?, share_show_identity = 1 WHERE user_id = ?",
+      )
+        .bind("Jordan Ellis", "seed-admin")
+        .run();
+      const html = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+      expect(html).toContain("<h1>Jordan Ellis</h1>");
+      expect(html).toMatch(/<title>Jordan Ellis — /);
+      expect(html).toMatch(
+        /<meta property="og:title" content="Jordan Ellis — /,
+      );
+    });
+
+    it("escapes the name rather than trusting it", async () => {
+      // The CSP would stop an injected script running; markup injection into
+      // the document is not something to leave to a second line of defence.
+      await seedShared();
+      await env.DB.prepare(
+        "UPDATE profile SET name = ?, share_show_identity = 1 WHERE user_id = ?",
+      )
+        .bind('Jo "><img src=x onerror=alert(1)>', "seed-admin")
+        .run();
+      const html = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+      expect(html, "the payload was emitted as markup").not.toContain("<img");
+      expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
+      // The title attribute sink is a separate escape from the text sink.
+      expect(html).toMatch(/content="Jo &quot;&gt;&lt;img /);
+    });
+
+    it("stays silent when opted in with no name set", async () => {
+      // A blank heading is worse than the anonymous page it replaced.
+      await seedShared();
+      await env.DB.prepare(
+        "UPDATE profile SET name = NULL, share_show_identity = 1 WHERE user_id = ?",
+      )
+        .bind("seed-admin")
+        .run();
+      const html = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+      expect(html).toMatch(/<h1>Shared pipeline<\/h1>/);
+      expect(html).not.toContain('class="eyebrow"');
+    });
+
+    it("refuses a non-boolean on the opt-in route", async () => {
+      const res = await authedFetch(`${BASE}/api/profile/share-identity`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ show: "yes" }),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it("round-trips the opt-in", async () => {
+      const on = await authedFetch(`${BASE}/api/profile/share-identity`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ show: true }),
+      });
+      expect(on.status).toBe(200);
+      const row = await env.DB.prepare(
+        "SELECT share_show_identity AS v FROM profile WHERE user_id = ?",
+      )
+        .bind("seed-admin")
+        .first<{ v: number }>();
+      expect(row?.v).toBe(1);
+
+      await authedFetch(`${BASE}/api/profile/share-identity`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ show: false }),
+      });
+      const off = await env.DB.prepare(
+        "SELECT share_show_identity AS v FROM profile WHERE user_id = ?",
+      )
+        .bind("seed-admin")
+        .first<{ v: number }>();
+      expect(off?.v).toBe(0);
+    });
   });
 
   it("gives each response its own nonce", async () => {

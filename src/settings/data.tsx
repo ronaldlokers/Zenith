@@ -89,9 +89,13 @@ export function DataExport() {
         <a href="/api/export" download>
           {t("stats.exportAllJson")}
         </a>
+        {/* Translated, like everything else the user reads. These four
+            printed the raw resource key — "applications (CSV)", lowercase
+            and English in every locale — beside a properly localised
+            "Everything (JSON)" on the same line. */}
         {csvResources.map((res) => (
           <a key={res} href={`/api/export/${res}.csv`} download>
-            {res} (CSV)
+            {t("stats.exportCsv", { resource: t(`export.${res}`) })}
           </a>
         ))}
       </p>

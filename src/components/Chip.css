@@ -28,6 +28,28 @@
     padding: 0 0.2rem;
   }
 
+  /* The remove control measured 16x10 — an icon with 0.2rem of side padding
+     and nothing else. WCAG 2.5.8 asks for 24x24, and on a phone this is the
+     one control on a chip, sitting beside a dozen others just like it.
+     An ::after overlay rather than padding or min-height: the chip's pill
+     shape is built from the button's real box, so growing it reflows every
+     chip on the page. This grows only what a finger has to hit.
+     Safe here because the target is a <button>; the same trick renders
+     nothing on an <input> or <select>. */
+  .zui-chip button {
+    position: relative;
+  }
+
+  .zui-chip button::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 24px);
+    height: 24px;
+    transform: translate(-50%, -50%);
+  }
+
   /* App.css:2759 */
   .zui-chip .chip-move:disabled {
     opacity: 0.3;

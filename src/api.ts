@@ -1,8 +1,35 @@
+import i18n from "./i18n";
+// The message a failed write actually shows the user. Everything below the
+// HTTP layer — no connection, DNS gone, the tab woken from sleep — surfaces
+// from fetch() as a TypeError reading "Failed to fetch", and that string was
+// going straight into the app's error banner: browser jargon, untranslated
+// in a Dutch UI, naming neither the problem nor anything to do about it.
+//
+// Importing i18n here rather than threading a t() through every call site.
+// api.ts is only ever called from handlers, long after i18n has initialized
+// — the same reasoning cv-snapshot.ts uses. (format.ts avoids the import
+// because it runs during render, which is a different position.)
+function networkErrorMessage(): string {
+  // navigator.onLine is only trustworthy when it says false: a browser can
+  // report "online" while attached to a network that reaches nothing. So it
+  // is used to add certainty, never to withhold it.
+  return i18n.t(
+    typeof navigator !== "undefined" && navigator.onLine === false
+      ? "errors.offline"
+      : "errors.unreachable",
+  );
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      headers: { "Content-Type": "application/json" },
+      ...init,
+    });
+  } catch {
+    throw new Error(networkErrorMessage());
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(
@@ -231,6 +258,12 @@ export const api = {
     }),
   dismissFeedItem: (id: number) =>
     request<void>(`/api/feed/${id}/dismiss`, { method: "POST" }),
+  saveFeedItem: (id: number) =>
+    request<void>(`/api/feed/${id}/save`, { method: "POST" }),
+  unsaveFeedItem: (id: number) =>
+    request<void>(`/api/feed/${id}/unsave`, { method: "POST" }),
+  undismissFeedItem: (id: number) =>
+    request<void>(`/api/feed/${id}/undismiss`, { method: "POST" }),
   addFeedItem: (id: number) =>
     request<import("./types").Application>(`/api/feed/${id}/add`, {
       method: "POST",
@@ -314,6 +347,11 @@ export const api = {
     request<{ board_folded: string[] }>("/api/profile/board-folded", {
       method: "PUT",
       body: JSON.stringify({ folded }),
+    }),
+  setShareIdentity: (show: boolean) =>
+    request<{ share_show_identity: boolean }>("/api/profile/share-identity", {
+      method: "PUT",
+      body: JSON.stringify({ show }),
     }),
   goals: () => request<import("./types").UserGoal>("/api/goals"),
   setGoals: (data: {

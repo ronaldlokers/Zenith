@@ -21,6 +21,19 @@ export const PIPELINE: Status[] = [
 // which is why there is no Archive screen any more.
 export type BoardRail = Status | "archived";
 
+// The four rails that only ever accumulate. They are outcomes, not places
+// work happens, and as four separate folded slabs they held 17% of the
+// board width permanently and spelled their names one letter per line each.
+// Collapsed into one "Closed" rail while they are all folded (approved
+// direction, this session) — Huntr, the closest comparable, ships six
+// stages with a single closed column.
+export const CLOSED_RAILS: BoardRail[] = [
+  "rejected",
+  "withdrawn",
+  "ghosted",
+  "archived",
+];
+
 export const BOARD_RAILS: BoardRail[] = [
   ...PIPELINE,
   "rejected",
@@ -162,12 +175,24 @@ export function isDeadlinePast(a: Application): boolean {
   return days !== null && !isDead(a.status) && days < 0;
 }
 
+// The language the interface is actually in, not the browser's. Passing
+// undefined here means "whatever this browser is set to", which put two date
+// systems on one screen: the Today heading formats with i18n.language and
+// read "woensdag 13 augustus" while every row beside it read "Jul 30" on an
+// en-US browser. Read from storage rather than importing i18n, which would
+// make this module depend on React init order; the key is the one i18n's own
+// detector writes.
+function uiLocale(): string | undefined {
+  if (typeof localStorage === "undefined") return undefined;
+  return localStorage.getItem("zenith_lang") ?? undefined;
+}
+
 export function formatDate(d: string): string {
   // Slice to the date part first: most callers pass a date-only "YYYY-MM-DD",
   // but feed posted_at is a full ISO datetime (Adzuna `created`, etc.) — and
   // "<iso>" + "T00:00:00" parses to Invalid Date. Anchoring at local midnight
   // keeps the day stable regardless of the stored time/zone.
-  return new Date(d.slice(0, 10) + "T00:00:00").toLocaleDateString(undefined, {
+  return new Date(d.slice(0, 10) + "T00:00:00").toLocaleDateString(uiLocale(), {
     day: "numeric",
     month: "short",
   });
@@ -362,7 +387,13 @@ export function buildNegotiationDraft(
     (o) => o.id !== a.id && o.status === "offer" && o.role_type === a.role_type && totalComp(o) != null,
   );
   const pool = sameRole.length ? sameRole : otherOffers;
-  if (total != null && pool.length) {
+  // Three, not one. This line goes into a brief someone reads out in a
+  // salary conversation, and off a single other offer it was false twice
+  // over: there is no median of one number, and "my other offers" was one
+  // offer. Nothing is lost by the floor — negotiationCompeting above
+  // already names a higher competing offer when there is exactly one, and
+  // says so truthfully.
+  if (total != null && pool.length >= MIN_POOL_FOR_MEDIAN) {
     const med = median(pool.map((o) => totalComp(o)!));
     if (med != null && med > 0 && total < med) {
       lines.push(
@@ -397,6 +428,10 @@ export function totalCompBreakdown(a: Application): string {
 // Forward stage advances in the last 2 weeks vs the two before — the
 // "speeding up / slowing down" verdict shared by the dashboard band and
 // the detailed Stats view (#346).
+// Six forward moves across four weeks — roughly one a week — is the least
+// that makes a fortnight-over-fortnight ratio mean anything here.
+export const MOMENTUM_MIN_EVENTS = 6;
+
 export function computePipelineMomentum(history: { from_status: string | null; to_status: string; changed_at: string }[]) {
   const now = Date.now();
   const P = 14 * 86400000;
@@ -414,8 +449,19 @@ export function computePipelineMomentum(history: { from_status: string | null; t
       parseSqlDate(h.changed_at) >= now - 2 * P &&
       parseSqlDate(h.changed_at) < now - P,
   ).length;
-  let verdict: "up" | "down" | "flat" | "none";
+  let verdict: "up" | "down" | "flat" | "none" | "early";
   if (recent === 0 && prior === 0) verdict = "none";
+  // Below this many events in the window, a ratio is noise wearing a
+  // verdict's clothes. Two fortnights of one or two stage advances is what a
+  // normal search looks like — and at prior = 1, a single extra move reads
+  // as +100% "speeding up" while one fewer reads as a collapse. The old code
+  // called prior === 0 with any recent movement "speeding up", which is the
+  // most confident thing this function could say off the least evidence.
+  //
+  // A job hunt is mostly flat by nature and mostly read on a bad day, so the
+  // default has to be silence until the signal clears the noise rather than
+  // a grade computed from a delta of one.
+  else if (recent + prior < MOMENTUM_MIN_EVENTS) verdict = "early";
   else if (prior === 0) verdict = "up";
   else {
     const change = (recent - prior) / prior;
@@ -426,7 +472,26 @@ export function computePipelineMomentum(history: { from_status: string | null; t
 
 // Median days from the "applied" transition to "offer", per application
 // that reached offer (#346, lifted from the Stats computation).
-export function medianTimeToOffer(history: { application_id: number; to_status: string; changed_at: string }[]): number | null {
+export interface TimeToOffer {
+  /** Days from applying to the offer, medianed over the offers there are. */
+  days: number | null;
+  /** How many offers that is. One offer has a "median" of itself. */
+  n: number;
+}
+
+// Returns the count as well as the figure, and the caller has to use it.
+// The tile printed "~56d MEDIAN TO OFFER" off a single offer: the number
+// was true and the word was not, on the largest type on the page. A median
+// of one value is that value, and calling it a median claims a spread the
+// data does not have.
+// Smallest pool that can carry the word "median" — the same three as
+// stats.ts's MIN_CONVERSION_N, kept here rather than imported because
+// format.ts is the leaf both the app and the worker-side PDF pull from.
+export const MIN_POOL_FOR_MEDIAN = 3;
+
+export function medianTimeToOffer(
+  history: { application_id: number; to_status: string; changed_at: string }[],
+): TimeToOffer {
   const byApp = new Map<number, typeof history>();
   for (const row of history) {
     const list = byApp.get(row.application_id) ?? [];
@@ -442,7 +507,7 @@ export function medianTimeToOffer(history: { application_id: number; to_status: 
       if (d >= 0) durations.push(d);
     }
   }
-  return median(durations);
+  return { days: median(durations), n: durations.length };
 }
 
 export function computeWeeklyMomentum(
@@ -518,4 +583,37 @@ export const CV_LANG_KEY = "zenith_cv_lang";
 
 export function getCvLanguage(fallback: string): string {
   return localStorage.getItem(CV_LANG_KEY) || fallback;
+}
+
+// Which stage's follow-up is worth doing first. Ordered from least to most
+// urgent so a higher index sorts higher: an offer waiting on a reply outranks
+// a screening, which outranks a speculative "interested". Ranking Today by
+// date alone buried a five-star offer at row four, styled like a chore.
+export const STAGE_URGENCY: readonly Status[] = [
+  "interested",
+  "applied",
+  "screening",
+  "interview",
+  "offer",
+];
+
+// Today's meaning of "gone quiet": an early-stage application with nothing
+// scheduled that has not moved in three weeks — the set that can be closed
+// out in one tap.
+//
+// This is NOT yet the board's meaning, and an earlier comment here claimed it
+// was. The board still derives its own (board.tsx:850): a company-relative
+// rule, 1.5x that company's own median gap between status changes with a
+// five-day floor, measured from a computed lastActivity rather than
+// updated_at. So the board can badge a card GONE QUIET while this block does
+// not list it — which is exactly what it does on the demo data today.
+//
+// Unifying them is a product decision, not a refactor: the company-relative
+// rule is the better signal but is not a superset, so adopting it changes
+// which applications Today offers to close out.
+export function isGoneQuiet(a: Application, now = Date.now()): boolean {
+  if (a.status !== "interested" && a.status !== "applied") return false;
+  if (a.next_action_at) return false;
+  const days = Math.floor((now - parseSqlDate(a.updated_at)) / 86400000);
+  return days >= 21;
 }

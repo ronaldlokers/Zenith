@@ -26,7 +26,9 @@
 
   /* App.css:4443 */
   .zui-momentumband-verdict {
-    font-size: 1.2rem;
+    /* The verdict is a figure-sized statement, and --text-figure-md is the
+       step this was reaching for: 1.25rem against the 1.2 it carried. */
+    font-size: var(--text-figure-md);
     font-weight: 650;
     letter-spacing: -0.015em;
     margin: 0.15rem 0;

@@ -356,12 +356,13 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     binds.push(limit);
 
     const { results } = await c.env.DB.prepare(
-      `SELECT feed_items.*
+      `SELECT feed_items.*,
+              COALESCE(feed_item_status.status, 'new') AS status
        FROM feed_items
        LEFT JOIN feed_item_status
          ON feed_item_status.feed_item_id = feed_items.id
          AND feed_item_status.user_id = ?
-       WHERE COALESCE(feed_item_status.status, 'new') = 'new'
+       WHERE COALESCE(feed_item_status.status, 'new') IN ('new', 'saved')
          AND NOT EXISTS (
            SELECT 1 FROM feed_company_blocklist
            WHERE feed_company_blocklist.user_id = ?
@@ -407,7 +408,27 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
       const match_skills = description
         ? matchedSkills(description, skillNames)
         : [];
-      return { ...rest, match_skills, match_count: match_skills.length };
+      // A first-paragraph preview, not the whole description. The pane the
+      // user triages from carried no posting text at all — source, date,
+      // title, company, location, role, salary, matched skills and two
+      // buttons, and not one word of the job — so add and dismiss were being
+      // decided from the title. The full text stays off the wire (it is up to
+      // 8000 chars per row, which is why it was dropped); 400 is about the
+      // first paragraph, which is what candidates skim to decide.
+      const description_snippet = (() => {
+        if (!description) return null;
+        const flat = description.replace(/\s+/g, " ").trim();
+        // The ellipsis belongs where the cut is made. Appending it in the
+        // view put "…" after descriptions that were never truncated, which
+        // says there is more to read when there is not.
+        return flat.length > 400 ? `${flat.slice(0, 400)}…` : flat;
+      })();
+      return {
+        ...rest,
+        description_snippet,
+        match_skills,
+        match_count: match_skills.length,
+      };
     });
     return c.json({ items, nextCursor });
   });
@@ -494,6 +515,50 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
       `INSERT INTO feed_item_status (feed_item_id, user_id, status)
        VALUES (?, ?, 'dismissed')
        ON CONFLICT (feed_item_id, user_id) DO UPDATE SET status = 'dismissed'`,
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
+  });
+
+  // Undo for the dismiss above. Dismissing is the majority action in triage
+  // and it was silent and permanent; the toast that now confirms it needs
+  // somewhere to send the user back to. Deletes the row rather than writing
+  // status = 'new', because "new" is what the absence of a row already means
+  // (the feed list reads COALESCE(status, 'new')) — two ways to say the same
+  // thing is how the two drift.
+  // Save / unsave. Deliberately not a pipeline state: a saved posting stays
+  // in the feed and never becomes an application, so the counts every other
+  // surface reads — the board, the funnel, the response rate — keep meaning
+  // "things I actually applied to". Triage had only two doors before, so a
+  // maybe had to go through the one marked "applied".
+  app.post("/api/feed/:id/save", async (c) => {
+    await c.env.DB.prepare(
+      `INSERT INTO feed_item_status (feed_item_id, user_id, status)
+       VALUES (?, ?, 'saved')
+       ON CONFLICT (feed_item_id, user_id) DO UPDATE SET status = 'saved'`,
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
+  });
+
+  app.post("/api/feed/:id/unsave", async (c) => {
+    // Deletes rather than writing 'new', for the same reason undismiss does:
+    // the absence of a row is already what "new" means to the list query.
+    await c.env.DB.prepare(
+      `DELETE FROM feed_item_status
+       WHERE feed_item_id = ? AND user_id = ? AND status = 'saved'`,
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
+  });
+
+  app.post("/api/feed/:id/undismiss", async (c) => {
+    await c.env.DB.prepare(
+      `DELETE FROM feed_item_status
+       WHERE feed_item_id = ? AND user_id = ? AND status = 'dismissed'`,
     )
       .bind(c.req.param("id"), c.get("userId"))
       .run();

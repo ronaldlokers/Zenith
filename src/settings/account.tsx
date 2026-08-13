@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { useAiStatus } from "../ai-status-context";
 import { authClient, signOut, useSession } from "../auth-client";
-import { Button } from "../components";
-import { requestConfirm } from "../hooks";
-import { formatDate } from "../format";
+import { ActionBar, Button } from "../components";
+import { Dialog } from "../ui";
+import { formatDateWithYear } from "../format";
 import "./settings.css";
 
 export function DeleteAccount({
@@ -15,9 +15,25 @@ export function DeleteAccount({
   onError: (message: string | null) => void;
 }) {
   const { t } = useTranslation();
+  const { data: session } = useSession();
   const [busy, setBusy] = useState(false);
+  // A typed confirmation rather than the shared OK/Cancel. This is the only
+  // action in the app that destroys everything — every application,
+  // document, contact and CV — and an OK button is dismissed by the same
+  // reflex that dismisses every other OK button. The established pattern for
+  // an action that takes resources beyond the thing named on the button is
+  // to make the user type its identifier, which cannot be done by reflex.
+  //
+  // The account's own email is the identifier: it is the one string a person
+  // deleting their account certainly knows, and it is already on this page.
+  const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState("");
+  const email = session?.user?.email ?? "";
+  const matches =
+    email.length > 0 && typed.trim().toLowerCase() === email.toLowerCase();
+
   const del = async () => {
-    if (!(await requestConfirm(t("account.deleteConfirm")))) return;
+    if (!matches) return;
     setBusy(true);
     try {
       await api.deleteAccount();
@@ -26,20 +42,64 @@ export function DeleteAccount({
     } catch (e) {
       onError((e as Error).message);
       setBusy(false);
+      setConfirming(false);
     }
   };
   return (
-    <div className="admin-invite">
+    /* A danger zone, which is the established shape for this: the one
+       irreversible action on the page, grouped and bordered so it cannot be
+       mistaken for the settings around it. It used to be a card identical to
+       Change password and 2FA, carrying a 112x27px raw-widget button — the
+       lightest control on the screen performing the heaviest act, while
+       "Remove key" beside it was 471px wide. Weight now matches
+       consequence. */
+    <div className="settings-danger">
       <h3>{t("account.deleteAccount")}</h3>
       <p className="muted small">{t("account.deleteHint")}</p>
-      <Button
-        variant="danger"
-        className="zui-settings-native"
-        disabled={busy}
-        onClick={del}
-      >
+      <Button variant="danger" disabled={busy} onClick={() => setConfirming(true)}>
         {t("account.deleteAccount")}
       </Button>
+      {confirming && (
+        <Dialog
+          label={t("account.deleteAccount")}
+          onClose={() => {
+            setConfirming(false);
+            setTyped("");
+          }}
+        >
+          <h3>{t("account.deleteAccount")}</h3>
+          <p className="small">{t("account.deleteHint")}</p>
+          {/* The way out that is not deletion. Offering the export here is
+              the point at which someone realises they wanted their data,
+              not the settings section they would have to go find. */}
+          <p className="muted small">{t("account.deleteExportFirst")}</p>
+          <label className="settings-field">
+            <span>{t("account.deleteTypeEmail", { email })}</span>
+            <input
+              type="email"
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+            />
+          </label>
+          <ActionBar variant="form">
+            <Button variant="danger" disabled={!matches || busy} onClick={del}>
+              {t("account.deleteForever")}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setConfirming(false);
+                setTyped("");
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
+          </ActionBar>
+        </Dialog>
+      )}
     </div>
   );
 }
@@ -234,8 +294,7 @@ export function TwoFactorSettings() {
             type="submit"
             disabled={busy}
             variant={enabled ? "danger" : "default"}
-            className="zui-settings-native"
-          >
+              >
             {enabled ? t("account.twoFactorDisable") : t("account.twoFactorEnable")}
           </Button>
         </form>
@@ -293,15 +352,21 @@ export function SessionManagement() {
             <span className="session-info">
               <span>{s.userAgent ?? t("account.unknownDevice")}</span>
               <span className="muted small">
-                {s.ipAddress ?? "—"} · {formatDate(String(s.createdAt))}
+                {s.ipAddress ?? "—"} ·{" "}
+                {/* Better Auth hands back a Date, and String(date) is
+                    "Wed Aug 13 2026 ..." — formatDate slices the first ten
+                    characters and appends T00:00:00, which parsed to
+                    Invalid Date and printed it. Normalise to ISO first. A
+                    session's age is also the one date here where the year
+                    matters, so it keeps it. */}
+                {formatDateWithYear(new Date(s.createdAt).toISOString())}
                 {s.token === currentToken ? ` · ${t("account.thisDevice")}` : ""}
               </span>
             </span>
             {s.token !== currentToken && (
               <Button
                 variant="danger"
-                className="zui-settings-native"
-                disabled={busyToken === s.token}
+                        disabled={busyToken === s.token}
                 onClick={() => revoke(s.token)}
               >
                 {t("account.revoke")}
@@ -376,8 +441,7 @@ export function AnthropicKeySettings() {
           </span>
           <Button
             variant="danger"
-            className="zui-settings-native"
-            disabled={busy}
+                disabled={busy}
             onClick={remove}
           >
             {t("account.aiKeyRemove")}

@@ -18,9 +18,11 @@ import type {
 } from "./types";
 import { FilterIcon, FoldIcon, SearchIcon } from "./icons";
 import type { BoardRail, BoardSort, Urgency } from "./format";
+import { boolParam, stringParam, useViewParam, useViewPatch } from "./board-view";
 import {
   ageDays,
   BOARD_RAILS,
+  CLOSED_RAILS,
   readFoldCache,
   writeFoldCache,
   formatDate,
@@ -44,6 +46,21 @@ import { ActionBar, Button, CardMenu, EmptyState, StarRating } from "./component
 // A stable empty set, so the narrow board does not allocate one per render
 // and re-run everything downstream of it.
 const EMPTY_FOLD: ReadonlySet<BoardRail> = new Set();
+
+// Module scope on purpose: useViewParam memoizes on the codec, so a literal
+// built during render would make the memo useless and hand every consumer a
+// new setter on every render.
+const FILTER_PARAM = stringParam("all");
+const QUERY_PARAM = stringParam("");
+const SORT_PARAM = stringParam("urgency", [
+  "urgency",
+  "followup",
+  "fit",
+  "updated",
+]) as import("./board-view").ParamCodec<BoardSort>;
+
+const isPipelineRail = (rail: BoardRail): boolean =>
+  (PIPELINE as readonly BoardRail[]).includes(rail);
 
 function BoardCard({
   a,
@@ -85,15 +102,6 @@ function BoardCard({
           the menu that toggles it. The dot is decorative — the text beside
           it is what a screen reader gets. */}
       {a.pinned_at && <span className="sr-only">{t("bottomBar.pinned")}</span>}
-      <CardMenu
-        a={a}
-        onMove={onMove}
-        onSetFollowUp={onSetFollowUp}
-        onOpenDetail={onOpenDetail}
-        onArchive={onArchive}
-        onUnarchive={onUnarchive}
-        onTogglePin={onTogglePin}
-      />
       <div className="bcard-body" {...rowActivate(onOpenDetail)}>
         {/* Identity strip, flush to the card edge: when it started, who it is
             with, and what kind of role. Every cell is a block — padding on an
@@ -102,7 +110,14 @@ function BoardCard({
           <span className="bwhen">
             {formatDate(a.applied_at ?? a.created_at)}
           </span>
-          <span className="bco">
+          {/* Titled, because this cell clips hard: measured 56px of box
+              against 288px of content at nine unfolded columns, with no way
+              to read the rest short of opening the card. The company is the
+              second thing a job hunter navigates by. */}
+          <span
+            className="bco"
+            title={[a.company_name, a.contact_name].filter(Boolean).join(" · ")}
+          >
             {a.company_name ?? "—"}
             {a.contact_name ? ` · ${a.contact_name}` : ""}
           </span>
@@ -111,13 +126,22 @@ function BoardCard({
         <div className="bfoot">
           <i className="dot" aria-hidden="true" />
           {actionable ? (
-            <span
-              className="baction"
-              title={a.next_action ?? t("detail.followUpFallback")}
-            >
-              {a.next_action ?? t("detail.followUpFallback")}
-              {" · "}
-              {t(`urgency.${urgency}`)}
+            /* The urgency word leads and sits outside the clamp. It used to
+               trail the action text inside a two-line -webkit-line-clamp, so
+               it was the token that got cut on every overdue card — and it
+               is the only *textual* carrier of overdue-versus-due-today.
+               Without it that distinction was the border colour, a 7px dot
+               and the text colour: colour alone, which is 1.4.1. */
+            <span className="baction-wrap">
+              <span className={`baction-urgency u-${urgency}`}>
+                {t(`urgency.${urgency}`)}
+              </span>
+              <span
+                className="baction"
+                title={a.next_action ?? t("detail.followUpFallback")}
+              >
+                {a.next_action ?? t("detail.followUpFallback")}
+              </span>
             </span>
           ) : urgency === "stale" || urgency === "quiet" ? (
             <span className={`bbadge u-${urgency}`}>
@@ -144,12 +168,29 @@ function BoardCard({
           ) : null}
         </div>
       </div>
+      {/* After the body in the DOM, though it paints over the card's top
+          right corner: .zui-cardmenu is position: absolute, so its place in
+          the tree costs nothing visually and everything to a keyboard. It
+          used to come first, so tabbing through a column announced "Actions
+          for Senior Platform Engineer" before anything had said which card
+          you were on — the actions for a thing you had not been told about
+          yet. */}
+      <CardMenu
+        a={a}
+        onMove={onMove}
+        onSetFollowUp={onSetFollowUp}
+        onOpenDetail={onOpenDetail}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
+        onTogglePin={onTogglePin}
+      />
     </article>
   );
 }
 function BoardTab({
   applications,
   pinnedOnly,
+  onShowAll,
   attention,
   sort,
   companies,
@@ -166,12 +207,16 @@ function BoardTab({
   onDetailIdChange,
   folded,
   onToggleFold,
+  onUnfoldLive,
+  onOpenClosedGroup,
+  onCloseClosedGroup,
   onAdd,
   showAddBlocks,
 }: CrudTabProps & {
   applications: Application[];
   /** True when the bottom bar's Pinned slot is filtering the board. */
   pinnedOnly: boolean;
+  onShowAll: () => void;
   companies: Company[];
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
@@ -186,6 +231,9 @@ function BoardTab({
   onDetailIdChange?: (id: number | null) => void;
   folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
+  onUnfoldLive: () => void;
+  onOpenClosedGroup: () => void;
+  onCloseClosedGroup: () => void;
   onAdd: (stage: Status) => void;
   // False on a board with nothing on it yet: the add blocks are for filing
   // into a particular stage, which only means something once there is a
@@ -363,9 +411,25 @@ function BoardTab({
   // The grid is data-driven — a folded rail is a fixed sliver and an open
   // column takes an equal share of what is left — so the track list cannot
   // live in the stylesheet.
-  const trackList = BOARD_RAILS.map((r) =>
-    shownFolded.has(r) ? "var(--rail-w)" : "minmax(0, 1fr)",
-  ).join(" ");
+  // The four closed rails collapse into one while they are all folded, which
+  // is the default. Derived rather than stored: the combined rail exists
+  // exactly when there is nothing open to show, so it cannot disagree with
+  // the columns beside it. Never on the narrow carousel, where nothing folds
+  // and each rail is a full page of its own.
+  const closedGrouped =
+    !isNarrow && !pinnedOnly && CLOSED_RAILS.every((r) => shownFolded.has(r));
+  const closedCount = CLOSED_RAILS.reduce((n, r) => n + countOf(r), 0);
+  // Opens all four in one save, the mirror of unfoldLive.
+  const openClosedGroup = () => onOpenClosedGroup();
+
+  const trackList = [
+    ...BOARD_RAILS.filter((r) => !(closedGrouped && CLOSED_RAILS.includes(r))).map(
+      (r) => (shownFolded.has(r) ? "var(--rail-w)" : "minmax(0, 1fr)"),
+    ),
+    // Last, where the four rails it replaces always sat: closed work is the
+    // end of the pipeline, not the front of it.
+    ...(closedGrouped ? ["var(--rail-w)"] : []),
+  ].join(" ");
 
   const cardProps = (a: Application) => ({
     urgency: urgencyOf(a),
@@ -410,6 +474,21 @@ function BoardTab({
         ))}
       </div>
     )}
+    {pinnedOnly && applications.length > 0 && (
+      /* Pinned is a filter with no visible state: the bottom bar's slot
+         looks identical pressed or not, and the only signal it ever gave
+         was a toast. Once that expired the board was a set of columns
+         missing most of their cards with nothing saying why — and with
+         nothing pinned, nine columns of zero. The all-folded state next to
+         this one already learned the lesson its comment states: a
+         persistent state needs a persistent way out. */
+      <div className="board-allfolded">
+        <span className="muted small">{t("board.showingPinnedNow")}</span>{" "}
+        <Button variant="link" onClick={onShowAll}>
+          {t("board.showAll")}
+        </Button>
+      </div>
+    )}
     {pinnedOnly && applications.length === 0 && (
       /* Pressing Pinned with nothing pinned rendered eight empty columns and
          a toast, which reads as a broken board rather than an empty set.
@@ -419,6 +498,37 @@ function BoardTab({
         {t("board.nothingPinned")}
       </EmptyState>
     )}
+    {!closedGrouped &&
+      !isNarrow &&
+      !pinnedOnly &&
+      CLOSED_RAILS.some((r) => !shownFolded.has(r)) && (
+        /* The way back. Opening the closed group is one press; closing it
+           again was four, one per rail, each its own server write — so a
+           glance at what ended cost more to undo than to do. The control
+           that opens it should have a counterpart, which is what
+           collapse-all is for. */
+        <div className="board-allfolded">
+          <span className="muted small">{t("board.closedOpen")}</span>{" "}
+          <Button variant="link" onClick={onCloseClosedGroup}>
+            {t("board.closeClosedGroup")}
+          </Button>
+        </div>
+      )}
+    {PIPELINE.every((r) => shownFolded.has(r)) && (
+      /* Folding every live stage at once is a thing a single press does —
+         "Closed applications" from the menu, the "c" key, and the link on
+         Insights all land here. The way back was a toast, which is gone the
+         moment it times out or the page reloads, and the fold is saved on
+         the server: miss it once and the board opens on nothing but closed
+         work from then on, with five rails to unfold by hand and nothing
+         saying so. A persistent state needs a persistent way out. */
+      <div className="board-allfolded">
+        <span className="muted small">{t("board.allLiveFolded")}</span>{" "}
+        <Button variant="link" onClick={onUnfoldLive}>
+          {t("board.backToLive")}
+        </Button>
+      </div>
+    )}
     <div
       className="board"
       ref={trackRef}
@@ -426,6 +536,8 @@ function BoardTab({
       style={isNarrow ? undefined : { gridTemplateColumns: trackList }}
     >
       {BOARD_RAILS.map((rail) => {
+        // Folded into the combined rail above, so nothing to draw here.
+        if (closedGrouped && CLOSED_RAILS.includes(rail)) return null;
         const isFolded = shownFolded.has(rail);
         const count = countOf(rail);
         const label =
@@ -495,19 +607,39 @@ function BoardTab({
           >
             {/* The stage is a heading: without it the board hands a screen
                 reader fifteen card titles and no structure to hang them on,
-                and the outline skips h1 straight to h3. */}
-            <h2 className="bcol-head">
-              <button
-                type="button"
-                className="bcol-fold"
-                aria-expanded="true"
-                aria-label={t("board.foldRail", { stage: label })}
-                onClick={() => onToggleFold(rail)}
-              >
-                <FoldIcon />
-                {label}
-              </button>
-              <span className="n">{count}</span>
+                and the outline skips h1 straight to h3.
+
+                On the narrow carousel it was display: none, which took it
+                out of the accessibility tree as well as off the screen —
+                so the phone board was exactly the outline this heading
+                exists to prevent, h1 followed by seventeen h3 card titles
+                with no stage against any of them. The strip above carries
+                the name and count visibly there, so the heading goes
+                sr-only rather than away.
+
+                Without the button, deliberately: nothing folds on the
+                carousel (shownFolded is empty below 900px), and an
+                invisible focusable control is worse than no control. That
+                is also why the label cannot simply be hidden with CSS —
+                it lives inside the button. */}
+            <h2 className={`bcol-head${isNarrow ? " sr-only" : ""}`}>
+              {isNarrow ? (
+                `${label} (${count})`
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="bcol-fold"
+                    aria-expanded="true"
+                    aria-label={t("board.foldRail", { stage: label })}
+                    onClick={() => onToggleFold(rail)}
+                  >
+                    <FoldIcon />
+                    {label}
+                  </button>
+                  <span className="n">{count}</span>
+                </>
+              )}
             </h2>
             {live && (
               <div className="bcol-prop" aria-hidden="true">
@@ -520,7 +652,7 @@ function BoardTab({
             <div className="bcol-cards">
               {live && showAddBlocks && (
                 <div className="bcol-add">
-                  <Button variant="primary" onClick={() => onAdd(rail as Status)}>
+                  <Button variant="ghost" onClick={() => onAdd(rail as Status)}>
                     {t("board.addHere")}
                   </Button>
                 </div>
@@ -550,6 +682,34 @@ function BoardTab({
           </div>
         );
       })}
+      {closedGrouped && (
+        /* One rail instead of four. They are outcomes rather than places
+           work happens — the only part of the board that only ever grows —
+           and as four folded slabs they held 17% of the width permanently.
+           Opening it gives all four back, each its own column and its own
+           drop target; while it is closed, dropping a card on a specific
+           outcome means opening the group first or using the card's menu.
+           That is the cost, and it buys the width back for the five stages
+           the user actually works in. */
+        <button
+          type="button"
+          /* No drop target, deliberately: a card dropped here could mean
+             rejected, withdrawn, ghosted or archived, and guessing one would
+             be worse than not accepting the drop. Open the group and the
+             four rails take drops exactly as they did before. */
+          className="bcol-rail rail-closed"
+          aria-expanded="false"
+          aria-label={t("board.openClosedGroup", { count: closedCount })}
+          onClick={openClosedGroup}
+        >
+          <span className="n" aria-hidden="true">
+            {closedCount}
+          </span>
+          <span className="vlabel" aria-hidden="true">
+            {t("board.closedGroup")}
+          </span>
+        </button>
+      )}
       </div>
       {detailApp && (
         <ApplicationDetailModal
@@ -607,15 +767,45 @@ export function PipelineTab({
   onOpenSampleData: () => void;
 }) {
   const { t } = useTranslation();
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string>("all");
-  const [query, setQuery] = useState(initialQuery ?? "");
+  // The view lives in the URL (see board-view.ts). What stays out of it: the
+  // fold, which is a per-user preference the server already stores, and the
+  // open card, which App owns as part of the route.
+  const [roleFilter, setRoleFilter] = useViewParam("role", FILTER_PARAM);
+  const [companyFilter, setCompanyFilter] = useViewParam("company", FILTER_PARAM);
+  const [tagFilter, setTagFilter] = useViewParam("tag", FILTER_PARAM);
+  const [query, setQuery] = useViewParam("q", QUERY_PARAM);
   // Global sort applied to every column (#346), default urgency.
-  const [sort, setSort] = useState<BoardSort>("urgency");
+  const [sort, setSort] = useViewParam("sort", SORT_PARAM);
   // Filters behind a Filter button; the Archived modal replaces the old
   // Closed drawer (#346).
   const [showFilters, setShowFilters] = useState(false);
+  const filterTriggerRef = useRef<HTMLButtonElement>(null);
+  const filterPopRef = useRef<HTMLDivElement>(null);
+  // Light dismiss, which is what every popover contract promises and this
+  // one honoured none of: Escape did nothing, clicking away did nothing, and
+  // the only way out was a return trip to the Filter chip — which sits about
+  // 1100px to the right of the panel it opens on a wide board.
+  useEffect(() => {
+    if (!showFilters) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setShowFilters(false);
+      filterTriggerRef.current?.focus();
+    };
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (filterPopRef.current?.contains(t)) return;
+      if (filterTriggerRef.current?.contains(t)) return;
+      setShowFilters(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [showFilters]);
   // Which rails are folded (#535 shell). Kept on profile so it follows you
   // between devices; the defaults stand in until that lands, which is what
   // someone who has never folded anything would see anyway.
@@ -669,6 +859,23 @@ export function PipelineTab({
     },
     [onError],
   );
+  // Unfolds every live stage in one save. Five toggles would be five
+  // requests and five chances to end up half-open.
+  const openClosedGroup = () =>
+    applyFold(
+      new Set([...folded].filter((r) => !CLOSED_RAILS.includes(r))),
+      new Set(folded),
+    );
+
+  const closeClosedGroup = () =>
+    applyFold(new Set([...folded, ...CLOSED_RAILS]), new Set(folded));
+
+  const unfoldLive = () =>
+    applyFold(
+      new Set([...folded].filter((r) => !isPipelineRail(r))),
+      new Set(folded),
+    );
+
   const toggleFold = (rail: BoardRail) => {
     const next = new Set(folded);
     if (!next.delete(rail)) next.add(rail);
@@ -680,12 +887,24 @@ export function PipelineTab({
   // The toast offers the way back, because this is a view someone lands in
   // and has to be able to leave without knowing what was folded before.
   const navigate = useNavigate();
-  const navState = useLocation().state as {
+  const location = useLocation();
+  const navState = location.state as {
     showClosed?: boolean;
     showPinned?: boolean;
   } | null;
+  // Clearing the one-shot nav state must not clear the view with it. These
+  // effects used to navigate to a bare "/board", which was harmless while
+  // the filters lived in component state and wipes them now that they live
+  // in the query string — pressing "p" on a filtered board would have
+  // dropped the filter on the way in.
+  const clearNavState = useCallback(() => {
+    navigate({ pathname: "/board", search: window.location.search }, {
+      replace: true,
+      state: null,
+    });
+  }, [navigate]);
   const showClosed = navState?.showClosed;
-  const [pinnedOnly, setPinnedOnly] = useState(false);
+  const [pinnedOnly, setPinnedOnly] = useViewParam("pinned", boolParam);
   useEffect(() => {
     if (!showClosed) return;
     const before = new Set(folded);
@@ -696,15 +915,34 @@ export function PipelineTab({
       t("board.backToLive"),
     );
     // Consume it, or every later visit to the board reopens the closed view.
-    navigate("/board", { replace: true, state: null });
+    clearNavState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showClosed]);
 
   useEffect(() => {
     if (!navState?.showPinned) return;
-    setPinnedOnly(true);
-    notify(t("board.showingPinned"), () => setPinnedOnly(false), t("board.showAll"));
-    navigate("/board", { replace: true, state: null });
+    // A toggle, not a re-assert. Pressing "p" while already in the pinned
+    // view fired the same effect again and did nothing visible, so the key
+    // that got you in had no way of getting you out — the strip above is
+    // the other half of that, and this is the half a keyboard user reaches
+    // for first.
+    // One navigation, not two. Flipping the parameter and then clearing the
+    // nav state separately is a race: the second call reads
+    // window.location.search before React Router has applied the first, so
+    // the toggle gets written and immediately overwritten with the value it
+    // just replaced. Computing the next query here and navigating once makes
+    // the toggle and the consume the same act.
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("pinned") !== "1";
+    if (next) params.set("pinned", "1");
+    else params.delete("pinned");
+    navigate(
+      { pathname: "/board", search: params.toString() },
+      { replace: true, state: null },
+    );
+    if (next) {
+      notify(t("board.showingPinned"), () => setPinnedOnly(false), t("board.showAll"));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navState?.showPinned]);
 
@@ -721,6 +959,7 @@ export function PipelineTab({
   // Saved views (#277) — the schema keeps statusFilter/sort for
   // back-compat with views saved from the old list; the board ignores
   // them (columns are the status filter).
+  const patchView = useViewPatch();
   const [savedViews, setSavedViews] = useState<SavedView[]>([]);
   const [namingView, setNamingView] = useState(false);
   const [newViewName, setNewViewName] = useState("");
@@ -745,12 +984,19 @@ export function PipelineTab({
     showArchived: false,
     sort: "updated",
   });
+  // A saved view is now just a URL, so applying one is a single replace
+  // rather than four setters racing inside one batch. Defaults are dropped
+  // rather than written, so applying the empty view gives a bare /board.
   const applyView = (v: SavedView) => {
     const f = v.filters;
-    setQuery(f.query ?? "");
-    setRoleFilter(f.roleFilter ?? "all");
-    setCompanyFilter(f.companyFilter ?? "all");
-    setTagFilter(f.tagFilter ?? "all");
+    const orNull = (value: string | undefined, dflt: string) =>
+      !value || value === dflt ? null : value;
+    patchView({
+      q: orNull(f.query, ""),
+      role: orNull(f.roleFilter, "all"),
+      company: orNull(f.companyFilter, "all"),
+      tag: orNull(f.tagFilter, "all"),
+    });
   };
   const saveCurrentView = () => {
     const name = newViewName.trim();
@@ -920,6 +1166,9 @@ export function PipelineTab({
 
       {/* Slim bar (#346): search · filter · sort · archived · add. The
           funnel ring is gone — counts live in the column headers now. */}
+      {/* Bar and panel share a positioning context so the panel can hang
+          under the bar instead of shoving the board down the page. */}
+      <div className="board-bar-wrap">
       <div className="board-bar">
         <span className="board-search-icon" aria-hidden="true">
           <SearchIcon />
@@ -935,6 +1184,7 @@ export function PipelineTab({
         />
         <button
           type="button"
+          ref={filterTriggerRef}
           className={`board-bar-btn${showFilters || activeFilterCount ? " active" : ""}`}
           aria-expanded={showFilters}
           onClick={() => setShowFilters((v) => !v)}
@@ -954,7 +1204,7 @@ export function PipelineTab({
       </div>
 
       {showFilters && (
-        <div className="board-filters-pop">
+        <div className="board-filters-pop" ref={filterPopRef}>
           <div className="filters-fields">
             <label className="filter-field">
               <span>{t("filters.role")}</span>
@@ -1026,6 +1276,7 @@ export function PipelineTab({
           </div>
         </div>
       )}
+      </div>
 
       {namingView && (
         <Dialog label={t("savedViews.save")} onClose={() => setNamingView(false)}>
@@ -1059,9 +1310,41 @@ export function PipelineTab({
         </Dialog>
       )}
 
+      {/* Nothing matched, but there is data behind it. The board rendered
+          five empty columns, four zero rails and five "+ Add an
+          application" slots — which reads as an empty account rather than
+          an empty result, and offers the one action the user does not want.
+          Names what happened, echoes the query back rather than clearing
+          it, and offers at most two ways out: the guidance on failed
+          searches is consistent that the user's problem is attribution
+          (their query? the data? the app?) and that a dead end is the one
+          thing never to show. The pinned-empty case has had this treatment
+          since #535; the search case never did. */}
+      {filtered.length === 0 && applications.length > 0 && !pinnedOnly && (
+        <EmptyState className="board-empty-search">
+          {q
+            ? t("board.noMatchQuery", { query: query.trim() })
+            : t("board.noMatchFilters")}{" "}
+          {q && (
+            <Button variant="link" onClick={() => setQuery("")}>
+              {t("board.clearSearch")}
+            </Button>
+          )}
+          {activeFilterCount > 0 && (
+            <Button
+              variant="link"
+              onClick={() => patchView({ role: null, company: null, tag: null })}
+            >
+              {t("board.clearFilters", { count: activeFilterCount })}
+            </Button>
+          )}
+        </EmptyState>
+      )}
+
       <BoardTab
         applications={filtered}
         pinnedOnly={pinnedOnly}
+        onShowAll={() => setPinnedOnly(false)}
         attention={attention}
         sort={sort}
         companies={companies}
@@ -1078,8 +1361,11 @@ export function PipelineTab({
         onDetailIdChange={onOpenJob}
         folded={folded}
         onToggleFold={toggleFold}
+        onUnfoldLive={unfoldLive}
+        onOpenClosedGroup={openClosedGroup}
+        onCloseClosedGroup={closeClosedGroup}
         onAdd={onOpenQuickAdd}
-        showAddBlocks={applications.length > 0}
+        showAddBlocks={applications.length > 0 && filtered.length > 0}
       />
 
 
