@@ -2590,6 +2590,10 @@ select.status {
        the fade and nothing touches it. Where the list does overflow, the
        card at the cut edge fades out instead of being sliced, which is the
        difference between "there is more" and "this is the end". */
+    /* #000 here is not a colour. A mask uses only the alpha channel of its
+       image — the hue is discarded — so this reads "opaque until 26px from
+       the bottom, then fade to nothing". Nothing on screen is ever painted
+       this value, and it is not a palette addition. */
     mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
   }
 }
