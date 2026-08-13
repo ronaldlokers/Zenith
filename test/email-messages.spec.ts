@@ -61,3 +61,50 @@ describe("buildDigestEmail", () => {
     expect(msg.html).toContain("4 added");
   });
 });
+
+describe("email markup constraints", () => {
+  // An email is not a browser document. These two were written the way the
+  // app writes CSS, which is the natural mistake and the one this pins.
+  const reminder = buildReminderEmail("a@b.test", "en", [
+    { kind: "due", title: "Follow up", body: "Vantage Digital" },
+  ]);
+  const digest = buildDigestEmail("a@b.test", "Your week", "4 added", "nl");
+
+  it("sizes type in px, never rem", () => {
+    // rem resolves against a root the email does not control: Outlook's Word
+    // engine does not support the unit at all, and a client that rewraps the
+    // HTML into its own document resolves it against theirs. The sizes are
+    // still DESIGN.md's ramp — 14/12/22 against its 16px root — just stated
+    // in the one unit every client agrees on.
+    for (const msg of [reminder, digest]) {
+      expect(msg.html, "rem in an email stylesheet").not.toMatch(
+        /font-size:\s*[\d.]+rem/,
+      );
+      expect(msg.html).toMatch(/font-size:\s*\d+px/);
+    }
+  });
+
+  it("keeps every style inline", () => {
+    // Gmail strips <style> blocks; inline is the only reliable channel.
+    for (const msg of [reminder, digest]) {
+      expect(msg.html).not.toMatch(/<style\b/i);
+      expect(msg.html).not.toMatch(/<link\b/i);
+    }
+  });
+
+  it("declares the language of the prose it carries", () => {
+    // So a mail client's screen reader announces a Dutch reminder in Dutch.
+    expect(reminder.html).toMatch(/lang="en"/);
+    expect(digest.html, "the digest is handed already-localized prose").toMatch(
+      /lang="nl"/,
+    );
+  });
+
+  it("stays far under Gmail's 102KB clipping threshold", () => {
+    // Clipping hides the end of the message. Nothing here is close, which is
+    // the point: this fails only if someone starts embedding.
+    for (const msg of [reminder, digest]) {
+      expect(new TextEncoder().encode(msg.html).length).toBeLessThan(102 * 1024);
+    }
+  });
+});

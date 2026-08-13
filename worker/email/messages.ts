@@ -77,22 +77,34 @@ const ACCENT = "#d6a441";
 
 // Font stack and sizes: no web font (email clients don't reliably load
 // them, and DESIGN.md's Atkinson Hyperlegible Next isn't guaranteed
-// present), so the system stack. Sizes are literal `rem` values pulled
-// straight off DESIGN.md's typography ramp for the same reason the colours
-// are — real steps, not invented ones: 0.875rem (--text-body), 0.75rem
-// (--text-meta), 1.375rem (--text-headline).
+// present), so the system stack.
+//
+// Sizes are DESIGN.md's ramp expressed in px, and the unit is the point.
+// They were `rem`, on the reasoning that real ramp steps beat invented
+// numbers — right about which sizes, wrong about the unit for this medium.
+// `rem` resolves against the root font size, and an email has no root it
+// controls: Outlook's Word rendering engine does not support the unit at
+// all, and clients that rewrap the HTML into their own document resolve it
+// against theirs. The ramp survives, stated in the one unit every client
+// agrees on, against the 16px root the ramp is defined from.
+const TEXT_BODY = "14px"; // 0.875rem --text-body
+const TEXT_META = "12px"; // 0.75rem  --text-meta
+const TEXT_HEADING = "22px"; // 1.375rem --text-heading
 const FONT_STACK = "system-ui, -apple-system, sans-serif";
 
 // Inline-styled, no <style> block or external stylesheet — email clients are
 // not browsers.
-function wrapHtml(bodyHtml: string): string {
-  return `<div style="background:${BG};padding:24px 16px;"><div style="font-family:${FONT_STACK};font-size:0.875rem;line-height:1.5;color:${INK};max-width:520px;margin:0 auto;background:${SURFACE};border:1px solid ${BORDER};border-radius:10px;padding:24px;">${bodyHtml}</div></div>`;
+// `lang` so a screen reader in a mail client reads a Dutch reminder in
+// Dutch. The app sets it on the document; an email fragment has to carry it
+// itself, and this product sends every message in one of two languages.
+function wrapHtml(bodyHtml: string, locale: Locale): string {
+  return `<div lang="${locale}" style="background:${BG};padding:24px 16px;"><div style="font-family:${FONT_STACK};font-size:${TEXT_BODY};line-height:1.5;color:${INK};max-width:520px;margin:0 auto;background:${SURFACE};border:1px solid ${BORDER};border-radius:10px;padding:24px;">${bodyHtml}</div></div>`;
 }
 
 function itemHtml(item: ReminderItem): string {
   const title = escapeHtml(item.title);
   const body = item.body ? escapeHtml(item.body) : "";
-  return `<div style="padding:10px 0;border-bottom:1px solid ${BORDER};"><div style="font-weight:600;">${title}</div>${body ? `<div style="color:${MUTED};font-size:0.75rem;">${body}</div>` : ""}</div>`;
+  return `<div style="padding:10px 0;border-bottom:1px solid ${BORDER};"><div style="font-weight:600;">${title}</div>${body ? `<div style="color:${MUTED};font-size:${TEXT_META};">${body}</div>` : ""}</div>`;
 }
 
 function itemText(item: ReminderItem): string {
@@ -106,7 +118,7 @@ function groupHtml(heading: string, items: ReminderItem[], accent: boolean): str
   if (items.length === 0) return "";
   const rows = items.map(itemHtml).join("");
   const color = accent ? ACCENT : MUTED;
-  return `<h2 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;color:${color};margin:20px 0 8px;">${escapeHtml(heading)}</h2>${rows}`;
+  return `<h2 style="font-size:${TEXT_META};text-transform:uppercase;letter-spacing:0.06em;color:${color};margin:20px 0 8px;">${escapeHtml(heading)}</h2>${rows}`;
 }
 
 function groupText(heading: string, items: ReminderItem[]): string {
@@ -140,6 +152,7 @@ export function buildReminderEmail(
 
   const html = wrapHtml(
     groupHtml(s.dueHeading, due, true) + groupHtml(s.upcomingHeading, upcoming, false),
+    resolveLocale(locale),
   );
   const text = [groupText(s.dueHeading, due), groupText(s.upcomingHeading, upcoming)]
     .filter(Boolean)
@@ -149,17 +162,21 @@ export function buildReminderEmail(
 }
 
 /**
- * No locale parameter: the digest's title and body are already localized
- * worker-generated prose (see digest.ts's STRINGS + fill), so this carries
- * them through unchanged rather than localizing again.
+ * The title and body are already localized worker-generated prose (see
+ * digest.ts's STRINGS + fill), so this still carries them through unchanged
+ * rather than localizing again. `locale` is not a second localization pass —
+ * it only declares, on the markup, which language that prose is already in,
+ * so a screen reader announces it correctly.
  */
 export function buildDigestEmail(
   to: string,
   title: string,
   body: string,
+  locale = "en",
 ): EmailMessage {
   const html = wrapHtml(
-    `<h1 style="font-size:1.375rem;margin:0 0 12px;">${escapeHtml(title)}</h1><p style="margin:0;">${escapeHtml(body)}</p>`,
+    `<h1 style="font-size:${TEXT_HEADING};margin:0 0 12px;">${escapeHtml(title)}</h1><p style="margin:0;">${escapeHtml(body)}</p>`,
+    resolveLocale(locale),
   );
   const text = `${title}\n\n${body}`;
 

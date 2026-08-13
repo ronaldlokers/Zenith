@@ -2173,6 +2173,7 @@ app.post("/api/admin/test-email", async (c) => {
           user.email,
           "Your week on Zenith",
           "4 added · 2 advanced · 3 need a nudge",
+          user.locale ?? "en",
         );
 
   try {
