@@ -1657,12 +1657,29 @@ button.primary:hover {
   transition: background-color 0.1s ease;
 }
 
-.feed-card.swipe-add {
+/* .feed-row repeated, so these beat .feed-row.sel. Both were (0,2,0) and
+   .sel lands later in the file, so it won on source order and swallowed the
+   swipe tint entirely — on the *selected* card, which is the first card by
+   default. The first swipe anyone ever made had no colour feedback at all.
+   Measured before: rgba(214,164,65,0.14) at 40px and at 140px of drag. */
+.feed-card.feed-row.swipe-add {
   background: color-mix(in srgb, var(--success) 18%, var(--surface));
 }
 
-.feed-card.swipe-dismiss {
+.feed-card.feed-row.swipe-dismiss {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+}
+
+/* Past the commit point. The tint was identical at 40px and at 130px of
+   drag, so nothing told you the gesture had armed — you released and found
+   out. This is the difference between a gesture and a gamble, and the action
+   it arms (dismiss) is the destructive one. */
+.feed-card.feed-row.past-threshold.swipe-add {
+  background: color-mix(in srgb, var(--success) 38%, var(--surface));
+}
+
+.feed-card.feed-row.past-threshold.swipe-dismiss {
+  background: color-mix(in srgb, var(--danger) 32%, var(--surface));
 }
 
 /* Feed sort/filter controls (#444) — sit above the triage list; wrap on
@@ -1749,6 +1766,7 @@ button.primary:hover {
   .feed-list .feed-row-actions {
     display: none;
   }
+
   .feed-detail {
     display: flex;
     flex-direction: column;

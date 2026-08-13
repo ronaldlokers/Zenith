@@ -427,6 +427,25 @@ export function FeedTab({
     cards?.[focusedIndex]?.focus();
   }, [focusedIndex]);
 
+  // Triage removes the focused card from the DOM, and a removed element takes
+  // focus with it — measured, activeElement went from the card straight to
+  // <body>, so every add and every dismiss dropped a keyboard user at the top
+  // of the document and made them Tab back through eleven stops. The slot is
+  // what persists, not the element: focus whatever moved up into it, or the
+  // last card when the one destroyed was last.
+  const triaged = useRef(false);
+  const itemCount = visibleItems.length;
+  useEffect(() => {
+    if (!triaged.current) return;
+    triaged.current = false;
+    if (!itemCount) return;
+    const cards = cardsRef.current?.querySelectorAll<HTMLElement>(".feed-card");
+    if (!cards?.length) return;
+    const at = Math.min(focusedIndex, cards.length - 1);
+    setFocusedIndex(at);
+    cards[at]?.focus();
+  }, [itemCount, focusedIndex]);
+
   const load = useCallback(
     () => {
       setFailed(false);
@@ -480,6 +499,7 @@ export function FeedTab({
     // focused slot — a job the user never saw.
     if (dismissingIds.current.has(item.id)) return;
     dismissingIds.current.add(item.id);
+    triaged.current = true;
     // Spliced back at its own index on failure, not prepended. Rolling back
     // to position 1 teleported the job the user had just tried to get rid of
     // to the top of the feed, which reads as the opposite of what happened.
@@ -526,6 +546,7 @@ export function FeedTab({
   const addToPipeline = (item: FeedItem) => {
     if (addingIds.has(item.id)) return;
     setAddingIds((s) => new Set(s).add(item.id));
+    triaged.current = true;
     api
       .addFeedItem(item.id)
       .then((created) => {
@@ -729,8 +750,16 @@ export function FeedTab({
               />
             ))}
           </ul>
+            {/* No aria-live. It sat on the whole pane, so every j/k
+                re-announced source, date, title, company, location, role,
+                salary, every skill chip, both button labels and the keyboard
+                hint — over the top of the focused card's own announcement.
+                The guidance on managing focus is explicit that the two
+                compete, and that the live region is the one to drop: the
+                card being focused already says which posting this is, and
+                the pane is what a user reads after arriving. */}
           {focusedItem && (
-            <aside className="feed-detail" aria-live="polite">
+            <aside className="feed-detail">
               <span className="feed-detail-src">
                 {t("feed.viaSource", { source: focusedItem.source })}
                 {focusedItem.posted_at
@@ -877,7 +906,7 @@ function FeedCard({
       </li>
     )}
     <li
-      className={`feed-card feed-row band-${band ?? "cont"}${focused ? " kb-focused sel" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}`}
+      className={`feed-card feed-row band-${band ?? "cont"}${focused ? " kb-focused sel" : ""}${dragX > 0 ? " swipe-add" : dragX < 0 ? " swipe-dismiss" : ""}${Math.abs(dragX) > SWIPE_COMMIT_THRESHOLD ? " past-threshold" : ""}`}
       tabIndex={focused ? 0 : -1}
       aria-current={focused ? "true" : undefined}
       onClick={onSelect}
