@@ -104,7 +104,15 @@ app.use("*", async (c, next) => {
   await next();
   c.header("X-Frame-Options", "DENY");
   c.header("X-Content-Type-Options", "nosniff");
-  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Same precedent as the CSP below: a route that has chosen a stricter
+  // policy keeps it. The share and calendar routes carry their token in the
+  // URL and set no-referrer; this used to overwrite them on the way out, so
+  // the stricter value never reached the browser. The app default is safe
+  // for the app — cross-origin it sends only the origin — but a tokenised
+  // page should not be relying on that distinction.
+  if (!c.res.headers.get("Referrer-Policy")) {
+    c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  }
   c.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   // The share page builds a stricter, nonced policy of its own; this must not
   // flatten it back to the app's. Anything that sets its own CSP keeps it.
@@ -1560,6 +1568,51 @@ function shareParseSqlDate(d: string): number {
   return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
 }
 
+// A revoked or mistyped share link. Settings' regenerate control
+// invalidates the previous link, so this is a routine outcome rather than an
+// edge case — and its most likely reader is the stranger the link was sent
+// to, who concludes the sender is careless or the product is broken. Still a
+// 404, and still identical for "revoked" and "never existed" so the response
+// leaks nothing; only the rendering changes.
+function sharePageGone(c: Context<AppEnv>) {
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  return c.html(
+    `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Link not active — Zenith</title>
+<style nonce="${nonce}">
+  :root { color-scheme: dark }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #14173a; color: #e7e6f0; padding: 2rem;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 26rem; text-align: center }
+  h1 { font-size: 1.25rem; margin: 0 0 0.5rem; font-weight: 600 }
+  p { margin: 0; color: #b9b8cc; line-height: 1.5 }
+  .mark {
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #8b8fa8; margin-bottom: 1.25rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="mark">Zenith</p>
+  <h1>This link is no longer active</h1>
+  <p>Ask the person who shared it for a new one.</p>
+</main>
+</body>
+</html>`,
+    404,
+    { "Cache-Control": "no-store, private", "Referrer-Policy": "no-referrer" },
+  );
+}
+
 app.get("/shared/:token", async (c) => {
   const token = c.req.param("token");
   const profile = await c.env.DB.prepare(
@@ -1567,14 +1620,17 @@ app.get("/shared/:token", async (c) => {
   )
     .bind(token)
     .first<{ user_id: string }>();
-  if (!profile) return c.text("Not found", 404);
+  if (!profile) return sharePageGone(c);
 
   const [apps, history] = await Promise.all([
     c.env.DB.prepare(
-      "SELECT id, status, applied_at, created_at FROM applications WHERE user_id = ?",
+      // Only what the page prints. applied_at and created_at were fetched
+      // and never rendered — a public route should select nothing it does
+      // not show.
+      "SELECT id, status FROM applications WHERE user_id = ?",
     )
       .bind(profile.user_id)
-      .all<{ id: number; status: string; applied_at: string | null; created_at: string }>(),
+      .all<{ id: number; status: string }>(),
     c.env.DB.prepare(
       // Deliberately without outcome_reason/outcome_note (#381), unlike the
       // in-app stats query: the note is free text the user wrote about a
@@ -1654,7 +1710,7 @@ app.get("/shared/:token", async (c) => {
     .join("");
 
   const html = `<!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1726,7 +1782,15 @@ ${barWidths}
       "frame-ancestors 'none'",
     ].join("; "),
   );
-  return c.html(html);
+  return c.html(html, 200, {
+    // The URL contains the token, so no shared cache may hold this and no
+    // outbound request may carry it in a Referer. /calendar/:token already
+    // sets a private cache policy; this route set nothing at all and left
+    // it to whatever a proxy decided. There are no links on the page today,
+    // which is exactly when the referrer policy is free to add.
+    "Cache-Control": "no-store, private",
+    "Referrer-Policy": "no-referrer",
+  });
 });
 
 // --- Documents (R2) ---

@@ -14,7 +14,6 @@ const BASE = "http://zenith.test";
 const EXPECTED: Record<string, string> = {
   "x-frame-options": "DENY",
   "x-content-type-options": "nosniff",
-  "referrer-policy": "strict-origin-when-cross-origin",
 };
 
 describe("security headers", () => {
@@ -28,6 +27,27 @@ describe("security headers", () => {
     });
     for (const [header, value] of Object.entries(EXPECTED)) {
       expect(res.headers.get(header), `${path} is missing ${header}`).toBe(value);
+    }
+  });
+
+  it("gives the app its default referrer policy", async () => {
+    const res = await SELF.fetch(`${BASE}/board`, {
+      headers: { Accept: "text/html" },
+    });
+    expect(res.headers.get("referrer-policy")).toBe(
+      "strict-origin-when-cross-origin",
+    );
+  });
+
+  it("lets a tokenised page keep a stricter referrer policy", async () => {
+    // The share and calendar URLs carry their token in the path, so they opt
+    // into no-referrer — and the global middleware used to overwrite it on
+    // the way out, exactly as it once would have flattened their CSP. Same
+    // precedent, now applied to both: a route that has chosen something
+    // stricter keeps it.
+    for (const path of ["/shared/does-not-exist", "/calendar/does-not-exist"]) {
+      const res = await SELF.fetch(`${BASE}${path}`);
+      expect(res.headers.get("referrer-policy"), `${path}`).toBe("no-referrer");
     }
   });
 });

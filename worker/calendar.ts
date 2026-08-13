@@ -123,7 +123,8 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
     )
       .bind(token)
       .first<{ user_id: string; timezone: string | null }>();
-    if (!profile) return c.text("Not found", 404);
+    if (!profile)
+      return c.text("Not found", 404, { "Referrer-Policy": "no-referrer" });
     const today = localDate(profile.timezone, new Date());
 
     const [followUps, deadlines, interviews] = await Promise.all([
@@ -200,6 +201,10 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
       // minutes of staleness is fine for a subscribe feed and saves re-running
       // the joined queries on every poll (perf review, #446).
       "Cache-Control": "private, max-age=300",
+      // The token is in the URL, so it must not travel in a Referer. The
+      // app-wide default only withholds the path cross-origin; a tokenised
+      // feed should not depend on that distinction.
+      "Referrer-Policy": "no-referrer",
     });
   });
 }
