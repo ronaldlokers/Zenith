@@ -1856,28 +1856,55 @@ button.primary:hover {
   /* The posting's opening in the triage pane. Body size, not chrome: it is
    the only prose on the surface and the one thing being judged. Clamped so a
    long opening cannot push the two decision buttons off the pane. */
+
+.feed-weak-more {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) 0 0;
+}
+
+.feed-nomatch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.feed-detail-desc {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+  overflow: hidden;
+}
+
+.feed-detail-hint {
+    margin: 0.5rem 0 0;
+    font-family: var(--mono);
+    font-size: var(--text-chrome);
+    letter-spacing: 0.03em;
+    color: var(--faint);
+  }
+}
+
+/* Top level, and these rules were inside @media (min-width: 900px) — the
+   one width at which the rule below hides the brief entirely. So the styles
+   applied only where nothing could see them, and on the phone the brief
+   rendered with none of them: display fell back to block instead of the
+   column, the gap was absent, and -webkit-line-clamp computed to none, so a
+   long posting printed in full on the card instead of three lines. Measured
+   on a phone profile before and after.
+
+   Order matters as much as placement: the base rules have to precede the
+   hide, or from 900px up the later declaration wins and the brief comes
+   back beside the pane that already says it. */
 /* The card's own brief — the posting's opening and the skills it matched.
    Shown only where there is no detail pane to carry them, which is every
    viewport under 900px: on a phone this is the difference between deciding
    from the job and deciding from its title. */
-/* The only route to the job's own text on a phone, at 21px painted. The
-   overlay gives it the floor without changing the link's look. */
-@media (pointer: coarse) {
-  .feed-row-link {
-    position: relative;
-    display: inline-block;
-  }
-
-  .feed-row-link::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: max(100%, 44px);
-    transform: translateY(-50%);
-  }
-}
 
 .feed-row-brief {
   display: flex;
@@ -1912,36 +1939,29 @@ button.primary:hover {
   }
 }
 
-.feed-weak-more {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-3) 0 0;
-}
+/* The only route to the job's own text on a phone, at 21px painted. The
+   overlay gives it the floor without changing the link's look.
 
-.feed-nomatch-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
+   Deliberately outside @media (min-width: 900px), and it was inside it —
+   which meant the fix applied only at the widths where the rule above sets
+   .feed-row-link to display: none, and never at the widths its own comment
+   names. Measured on a phone profile: the ::after computed to content: none
+   and the link's hit box stayed 21px tall. A nested media query is easy to
+   read past; the give-away is that the two queries cannot both be true. */
+@media (pointer: coarse) {
+  .feed-row-link {
+    position: relative;
+    display: inline-block;
+  }
 
-.feed-detail-desc {
-  margin: 0;
-  font-size: var(--text-small);
-  line-height: 1.45;
-  color: var(--muted);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 6;
-  line-clamp: 6;
-  overflow: hidden;
-}
-
-.feed-detail-hint {
-    margin: 0.5rem 0 0;
-    font-family: var(--mono);
-    font-size: var(--text-chrome);
-    letter-spacing: 0.03em;
-    color: var(--faint);
+  .feed-row-link::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    transform: translateY(-50%);
   }
 }
 
