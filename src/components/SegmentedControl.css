@@ -52,8 +52,11 @@
      selected button; a caller authoring a raw child button must still do
      this itself to opt into the escape hatch. */
   .zui-segmented button.active {
-    background: var(--accent);
-    color: var(--accent-text);
+    /* Same change as PillTabs: the tint says "current", the solid fill is
+       reserved for actions. See PillTabs.css for the measured numbers. */
+    background: var(--accent-soft);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--accent);
   }
 
   /* The touch floor. These render 40px tall on a phone and 34px on desktop,
