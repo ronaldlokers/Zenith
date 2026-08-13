@@ -153,13 +153,13 @@
      rem, not px: the bar's labels scale with text size and so does the bar,
      so a px reserve would stop covering it at 200%. Measured 59px at normal
      size; 3.75rem is that plus the gutter it needs to not look pinned. */
-  padding-bottom: calc(3.75rem + var(--space-4));
+  padding-bottom: var(--bottombar-reserve);
 }
 
 /* Anything focused near the end of the page scrolls clear of the bar rather
    than under it. */
 .content :focus-visible {
-  scroll-margin-bottom: calc(3.75rem + var(--space-4));
+  scroll-margin-bottom: var(--bottombar-reserve);
 }
 
 /* Search launcher — an icon-only button below 900px, a full ⌘K pill at rail
@@ -596,6 +596,15 @@
 /* The persistent bottom bar (#535 shell). Fixed, three slots, and — once the
    rail goes — the only navigation chrome left. Labels and keycaps appear when
    there is room for them; below that the glyphs carry it. */
+/* What the page must keep clear at its foot. The bar is position: fixed, so
+   it is out of flow and the document ends underneath it; without this the
+   last controls on a screen can only ever be read through it. Measured
+   58.97px at normal text size — the reserve has to exceed that, and it is in
+   rem because the bar's labels scale with text size and so does the bar. */
+:root {
+  --bottombar-reserve: 4.5rem;
+}
+
 .bottombar {
   position: fixed;
   left: 0;
@@ -4066,7 +4075,13 @@ summary.bcol-head::after {
     max-width: 760px;
     width: 100%;
     margin: 0 auto;
-    padding: 24px 24px 56px;
+    /* The bottom value is the bar reserve, not a number. This shorthand
+       lands after the .content rule near the top of the file and silently
+       beat its padding-bottom, so the reserve added there was dead at every
+       viewport this query covers — and the 56px it replaced it with is less
+       than the bar's own 58.97px, leaving the foot of every page readable
+       only through the bar. */
+    padding: 24px 24px var(--bottombar-reserve);
     box-sizing: border-box;
   }
 

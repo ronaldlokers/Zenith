@@ -475,7 +475,10 @@
     "snooze3d": "3 dagen uitstellen",
     "snooze1w": "1 week uitstellen",
     "snoozeToast": "Verzet naar {{date}}",
-    "actionsFor": "Acties voor {{title}}"
+    "actionsFor": "Acties voor {{title}}",
+    "noReply": "Geen reactie — sluit deze af",
+    "noReplyToast": "Afgesloten — geen reactie",
+    "doneFor": "Gedaan: {{action}}"
   },
   "company": {
     "contactMap": "Contacten",

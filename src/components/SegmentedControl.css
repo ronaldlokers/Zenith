@@ -55,4 +55,30 @@
     background: var(--accent);
     color: var(--accent-text);
   }
+
+  /* The touch floor. These render 40px tall on a phone and 34px on desktop,
+     and unlike Button, RowMenu, CardMenu, StarRating and the shell's own
+     icons this component carried no coarse-pointer compensation at all — so
+     the Due/Upcoming switch, which is how you change what the Today screen
+     is showing you, was the one control on it below the floor with nothing
+     making up the difference.
+
+     Vertical only. These sit in a row separated by a 2px gap, so a wider
+     overlay would reach into the next segment and one tab would answer for
+     presses aimed at its neighbour. */
+  @media (pointer: coarse) {
+    .zui-segmented button {
+      position: relative;
+    }
+
+    .zui-segmented button::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: max(100%, 44px);
+      transform: translateY(-50%);
+    }
+  }
 }

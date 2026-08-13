@@ -475,7 +475,10 @@
     "snooze3d": "Snooze 3 days",
     "snooze1w": "Snooze 1 week",
     "snoozeToast": "Pushed to {{date}}",
-    "actionsFor": "Actions for {{title}}"
+    "actionsFor": "Actions for {{title}}",
+    "noReply": "No reply — close this out",
+    "noReplyToast": "Closed — no reply",
+    "doneFor": "Done: {{action}}"
   },
   "company": {
     "contactMap": "Contacts",

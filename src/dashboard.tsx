@@ -519,6 +519,33 @@ function NextUpPanel({
   // the debt is not enough — the screen has to be able to absorb it. Every
   // date is restored by a single undo, so this is a reversible act, not a
   // confession.
+  // The verb the screen did not have. "Done" is a lie for an application
+  // nobody ever replied to, and Snooze only defers it — so the pile could
+  // only grow or be falsified, and the app's kindest sentence ("No reply is
+  // on them, not you") lived in a block the overdue set can never reach:
+  // isGoneQuiet requires no next_action_at, the due list requires one, so the
+  // two sets are disjoint by construction.
+  //
+  // Sets the status rather than archiving, which is what the gone-quiet block
+  // does. "ghosted" is terminal, so it writes a status_history row and the
+  // outcome the Insights column asks for, and the board already has the rail.
+  // Standard practice in trackers is exactly this rule: no response after a
+  // couple of weeks becomes a closed-no-response state rather than an open
+  // task nobody will ever action.
+  const markNoReply = (a: Application) => {
+    const prev = a.status;
+    return Promise.resolve(api.setStatus(a.id, "ghosted"))
+      .then(() => onChanged())
+      .then(() =>
+        notify(t("nextUp.noReplyToast"), () =>
+          Promise.resolve(api.setStatus(a.id, prev))
+            .then(() => onChanged())
+            .catch((e) => onError((e as Error).message)),
+        ),
+      )
+      .catch((e) => onError((e as Error).message));
+  };
+
   // What the batch escape is allowed to touch. An offer or an interview is
   // the thing that could end the search; the first run of this control would
   // have snoozed a five-star offer along with nine dead follow-ups, on one
@@ -630,11 +657,21 @@ function NextUpPanel({
                 <span className="side-stage">{t(`stages.${a.status}`)}</span>
               </button>
               <span className="nextup-actions">
-                <Button variant="secondary" onClick={() => done(a)}>
+                {/* Six buttons in one list whose entire accessible name was
+                    "Done" — serial navigation read "Done, button" six times
+                    with nothing to tell them apart. The visible label stays
+                    one word; the name carries the row. Likewise the menu,
+                    which was labelled with the job title while the row's
+                    visible primary text is the action. */}
+                <Button
+                  variant="secondary"
+                  aria-label={t("nextUp.doneFor", { action: rowName(a) })}
+                  onClick={() => done(a)}
+                >
                   {t("nextUp.done")}
                 </Button>
                 <RowMenu
-                  label={t("nextUp.actionsFor", { title: a.title })}
+                  label={t("nextUp.actionsFor", { title: rowName(a) })}
                   items={[
                     {
                       label: t("nextUp.snooze3d"),
@@ -644,6 +681,14 @@ function NextUpPanel({
                       label: t("nextUp.snooze1w"),
                       onSelect: () => void snooze(a, 7),
                     },
+                    ...(isOverdue(a)
+                      ? [
+                          {
+                            label: t("nextUp.noReply"),
+                            onSelect: () => void markNoReply(a),
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               </span>
@@ -673,6 +718,10 @@ function NextUpPanel({
     </section>
   );
 }
+
+// What the row actually reads as, which is the action when there is one.
+// Both accessible names use it, so neither can drift from the visible text.
+const rowName = (a: Application) => a.next_action ?? a.title;
 
 // The climb as motion (#492) — this week's volume as an observation (not a
 // quota), over the stage changes that actually happened. Replaces the old
