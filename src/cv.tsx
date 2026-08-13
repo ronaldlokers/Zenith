@@ -299,7 +299,11 @@ export function CVTab({
               variant="secondary"
               onClick={() =>
                 document
-                  .getElementById("cv-builder")
+                  // The editor, not the top of the builder — which opens
+                  // with the tailor panel, so this button and "Match to a
+                  // posting" scrolled to the identical pixel and one of them
+                  // did not do what it said.
+                  .getElementById("cv-editor")
                   ?.scrollIntoView({ block: "start" })
               }
             >
@@ -339,12 +343,14 @@ export function CVTab({
             notify={notify}
             initialJd={tailorJd}
           />
-          <ProfileSection
-            profile={profile}
-            onChanged={load}
-            onError={onError}
-            notify={notify}
-          />
+          <div id="cv-editor">
+            <ProfileSection
+              profile={profile}
+              onChanged={load}
+              onError={onError}
+              notify={notify}
+            />
+          </div>
           <LinkedInOptimizer onError={onError} notify={notify} />
           <WorkExperienceSection
             items={workExp}
