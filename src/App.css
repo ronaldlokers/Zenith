@@ -4741,6 +4741,27 @@ button:not(:disabled):active,
   letter-spacing: var(--track-eyebrow);
 }
 .board-sort:hover select { color: var(--ink); }
+/* The bar and its panel, so the panel has something to hang from. */
+.board-bar-wrap {
+  position: relative;
+}
+
+/* Overlaid, not inserted. In flow this pushed the whole board 248px down
+   the page on open and pulled it back on close — so the columns you were
+   filtering left the screen at the exact moment you were refining what they
+   show, and you picked a filter blind. Above 700px only: on a phone there is
+   no room to float a 30rem panel over anything, and the board below it is a
+   carousel the panel would cover entirely. */
+@media (min-width: 700px) {
+  .board-filters-pop {
+    position: absolute;
+    top: 100%;
+    inset-inline-start: 0;
+    z-index: 20;
+    width: min(30rem, 100%);
+  }
+}
+
 .board-filters-pop {
   margin-top: var(--space-2);
   border: 1px solid var(--border);

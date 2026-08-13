@@ -964,6 +964,9 @@ export function PipelineTab({
 
       {/* Slim bar (#346): search · filter · sort · archived · add. The
           funnel ring is gone — counts live in the column headers now. */}
+      {/* Bar and panel share a positioning context so the panel can hang
+          under the bar instead of shoving the board down the page. */}
+      <div className="board-bar-wrap">
       <div className="board-bar">
         <span className="board-search-icon" aria-hidden="true">
           <SearchIcon />
@@ -1070,6 +1073,7 @@ export function PipelineTab({
           </div>
         </div>
       )}
+      </div>
 
       {namingView && (
         <Dialog label={t("savedViews.save")} onClose={() => setNamingView(false)}>
