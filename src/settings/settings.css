@@ -228,6 +228,24 @@
     white-space: nowrap;
   }
 
+  /* Pointing at the row says nothing about it being one. The row is a
+     disclosure — the control is behind it — and the only signal it gave was
+     the cursor, which a value list styled exactly like this one would not
+     have. No new chrome: the same two parts the row already has answer,
+     using the colour the open state already uses. */
+  .set-row-line:hover .set-row-value,
+  .set-row-line:focus-visible .set-row-value {
+    color: var(--accent-ink);
+  }
+
+  .set-row-line:hover .set-row-leader {
+    background-image: radial-gradient(
+      circle,
+      var(--muted) 0.5px,
+      transparent 0.5px
+    );
+  }
+
   .set-row.open .set-row-value {
     color: var(--accent-ink);
   }
