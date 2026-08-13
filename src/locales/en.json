@@ -950,7 +950,6 @@
     "everyoneElse": "Everyone else"
   },
   "dashboard": {
-    "kpiOffers": "Live offers",
     "kpiToOffer": "Median to offer",
     "momentumTitle": "Pipeline momentum",
     "funnelConv": "Funnel & conversion",
@@ -959,7 +958,9 @@
     "kpiOpenShort": "Open",
     "kpiResponseShort": "Response",
     "kpiResponseOf": "{{responded}} of {{applied}}",
-    "convFrom": "{{pct}}% from {{stage}}"
+    "convFrom": "{{pct}}% from {{stage}}",
+    "kpiOffers_one": "Live offer",
+    "kpiOffers_other": "Live offers"
   },
   "urgency": {
     "overdue": "overdue",

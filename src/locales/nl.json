@@ -950,7 +950,6 @@
     "everyoneElse": "Alle anderen"
   },
   "dashboard": {
-    "kpiOffers": "Open aanbiedingen",
     "kpiToOffer": "Mediaan tot aanbod",
     "momentumTitle": "Pijplijn-momentum",
     "funnelConv": "Funnel & conversie",
@@ -959,7 +958,9 @@
     "kpiOpenShort": "Open",
     "kpiResponseShort": "Respons",
     "kpiResponseOf": "{{responded}} van {{applied}}",
-    "convFrom": "{{pct}}% vanaf {{stage}}"
+    "convFrom": "{{pct}}% vanaf {{stage}}",
+    "kpiOffers_one": "Openstaand aanbod",
+    "kpiOffers_other": "Openstaande aanbiedingen"
   },
   "urgency": {
     "overdue": "te laat",

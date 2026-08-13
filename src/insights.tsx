@@ -154,9 +154,14 @@ export function InsightsTab({
         <StatCard
           band
           value={liveOffers.length}
-          label={t("dashboard.kpiOffers")}
+          label={t("dashboard.kpiOffers", { count: liveOffers.length })}
           sub={topComp != null ? fmtComp(topComp) : undefined}
-          onClick={() => liveOffers[0] && onOpenJob(liveOffers[0].id)}
+          // No handler when there is nothing to open. It rendered as a
+          // button whatever the count, so with zero offers — the common
+          // case — the warmest tile on the page was pressable and inert.
+          onClick={
+            liveOffers[0] ? () => onOpenJob(liveOffers[0].id) : undefined
+          }
         />
         <StatCard
           band
