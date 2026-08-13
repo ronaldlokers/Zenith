@@ -236,7 +236,9 @@
       "weak": "Zwak"
     },
     "postedAge": "{{age}} geleden",
-    "settingsBtn": "Feedbronnen"
+    "settingsBtn": "Feedbronnen",
+    "noFitMatchPage": "Niets op de tot nu toe geladen pagina's komt overeen met dit fit-filter. Verderop in de feed staat mogelijk meer.",
+    "clearFitFilter": "Toon elke fit"
   },
   "stats": {
     "momentum": {

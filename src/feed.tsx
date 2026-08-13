@@ -622,11 +622,17 @@ export function FeedTab({
         return;
       const { items, focusedIndex, addToPipeline, dismiss } = triageRef.current;
       const list = items ?? [];
-      if (e.key === "j") {
+      // ArrowDown/ArrowUp alongside j/k. The cards carry a roving tabindex
+      // (0 on the focused one, -1 on the rest), which is the ARIA convention
+      // that promises arrow-key navigation — and the arrows did nothing, so
+      // cards 2..N were unreachable by Tab *and* by the keys the pattern
+      // told everyone to press. j/k stay: they are the documented ones and
+      // the muscle memory this screen was built around.
+      if (e.key === "j" || e.key === "ArrowDown") {
         e.preventDefault();
         kbNav.current = true;
         setFocusedIndex((i) => Math.min(i + 1, list.length - 1));
-      } else if (e.key === "k") {
+      } else if (e.key === "k" || e.key === "ArrowUp") {
         e.preventDefault();
         kbNav.current = true;
         setFocusedIndex((i) => Math.max(i - 1, 0));
@@ -709,7 +715,29 @@ export function FeedTab({
       )}
 
       {items && items.length > 0 && visibleItems.length === 0 && (
-        <p className="muted small feed-nomatch">{t("feed.noFitMatch")}</p>
+        /* The fit filter runs over the pages already loaded, not the whole
+           feed — matching is computed from each posting's description, which
+           only ships for the rows on the wire, so the server cannot order or
+           filter by it without scoring everything. The copy used to say "no
+           jobs match this fit filter", which is a claim about the feed that
+           this screen is in no position to make: page two may be full of
+           them. It says what it actually knows now, and offers both ways
+           forward. */
+        <div className="feed-nomatch">
+          <p className="muted small">
+            {cursor ? t("feed.noFitMatchPage") : t("feed.noFitMatch")}
+          </p>
+          <div className="feed-nomatch-actions">
+            <Button variant="link" onClick={() => setMinFit(0)}>
+              {t("feed.clearFitFilter")}
+            </Button>
+            {cursor && (
+              <Button variant="link" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? t("common.loading") : t("common.loadMore")}
+              </Button>
+            )}
+          </div>
+        </div>
       )}
 
       {visibleItems.length > 0 && (

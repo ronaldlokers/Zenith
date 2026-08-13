@@ -236,7 +236,9 @@
       "weak": "Weak"
     },
     "postedAge": "{{age}} ago",
-    "settingsBtn": "Feed sources"
+    "settingsBtn": "Feed sources",
+    "noFitMatchPage": "Nothing on the pages loaded so far matches this fit filter. There may be more further down the feed.",
+    "clearFitFilter": "Show any fit"
   },
   "stats": {
     "momentum": {
