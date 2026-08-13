@@ -76,6 +76,15 @@ export function TimezoneField({
         ))}
       </select>
       <span className="muted small">{t("settings.timezoneNow", { time: now })}</span>
+      {/* What it is for. The field showed a name and a clock and never said
+          what setting it changed — and the answer is not "the app", which is
+          the thing a reader would assume. Dates on screen come from this
+          device, so they follow you when you travel; this is the day the
+          server works in, which is what decides when a reminder is due,
+          which week the digest covers, and what the calendar feed calls
+          today. Somebody who moves and wonders why their reminders arrive at
+          breakfast-in-the-wrong-country has nothing else to go on. */}
+      <span className="muted small">{t("settings.timezoneHint")}</span>
     </label>
   );
 }

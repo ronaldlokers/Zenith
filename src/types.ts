@@ -311,7 +311,9 @@ export interface Webhook {
   url: string;
   enabled: boolean | number;
   created_at: string;
-  last_status: "ok" | "failed" | null;
+  // "blocked" is the delivery-time SSRF re-check refusing the URL — not a
+  // receiver failure, and not fixable by retrying or re-enabling.
+  last_status: "ok" | "failed" | "blocked" | null;
   last_attempt_at: string | null;
   failure_count: number;
 }

@@ -77,6 +77,37 @@ describe("locked decision: no telemetry", () => {
     expect(hits).toEqual([]);
   });
 
+  it("keeps the light-only decision out of the shell and the manifest too", () => {
+    // The CSS check above is the one this file was written for, and it
+    // missed two files that are not CSS. index.html carried a
+    // prefers-color-scheme branch giving dark browser chrome to a light-only
+    // app, and the manifest's background_color — the colour a browser paints
+    // as the splash before an installed app renders — was the same dark
+    // navy, so launching the PWA flashed navy and then opened Bone.
+    //
+    // #0f1130 was not in DESIGN.md either. It existed in exactly these two
+    // files and nowhere else in the product: an orphan colour, which is what
+    // a value drifting out of the system looks like before anyone notices.
+    const html = readFileSync(join(ROOT, "index.html"), "utf8");
+    expect(html, "no dark branch in the shell").not.toMatch(
+      /prefers-color-scheme/,
+    );
+    const manifest = JSON.parse(
+      readFileSync(join(ROOT, "public/manifest.webmanifest"), "utf8"),
+    ) as { background_color?: string; theme_color?: string };
+    // The ground the app actually paints — body { background: var(--bg) }.
+    const BONE = "#f4f2ec";
+    expect(manifest.background_color, "the splash must match what opens").toBe(
+      BONE,
+    );
+    expect(manifest.theme_color).toBe(BONE);
+    // And the shell agrees with the manifest.
+    const themeColors = [
+      ...html.matchAll(/<meta name="theme-color"[^>]*content="([^"]+)"/g),
+    ].map((m) => m[1]);
+    expect(themeColors).toEqual([BONE]);
+  });
+
   it("loads nothing from a third party in the page shell", () => {
     // Fonts are self-hosted (/fonts/*.woff2) precisely so no request leaves
     // for a CDN on first paint. A stylesheet or script from another origin

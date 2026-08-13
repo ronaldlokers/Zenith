@@ -46,8 +46,23 @@ export interface CvPdfData {
 // read it the same way a human does. Client-side generation (jsPDF,
 // pure JS, no WASM/native deps) rather than Cloudflare's paid Browser
 // Rendering API, per #68/#70's own recommendation for a first pass.
+// Every generator sets one. A PDF with no /Title shows its file path in the
+// viewer's window and indexes under nothing — and WCAG 2.4.2 (Page Titled)
+// applies to a PDF as much as to a page. These documents leave the product:
+// a CV goes to an employer and lands in their document system, a cheat sheet
+// is opened mid-interview. The filename is not the title, and it is the only
+// thing the reader had.
+//
+// Deliberately not an /Author: the CV is the one document where a name is
+// already on the page, and the others are working notes about someone else's
+// company. Nothing here needs a second, invisible copy of who made it.
+function titleDoc(doc: jsPDF, title: string): void {
+  doc.setProperties({ title });
+}
+
 export function generateCvPdf(data: CvPdfData, labels: CvPdfLabels): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  titleDoc(doc, data.profile.name ? `${data.profile.name} — CV` : "CV");
   const marginX = 18;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -226,6 +241,7 @@ export function generateOfferComparisonPdf(
   labels: OfferComparisonLabels,
 ): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  titleDoc(doc, labels.heading);
   const marginX = 18;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -328,6 +344,10 @@ export function generateInterviewCheatSheet(
   labels: InterviewCheatSheetLabels,
 ): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  titleDoc(
+    doc,
+    data.companyName ? `${data.title} — ${data.companyName}` : data.title,
+  );
   const marginX = 18;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -448,6 +468,7 @@ export function generateCvPdfTwoColumn(
   labels: CvPdfLabels,
 ): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  titleDoc(doc, data.profile.name ? `${data.profile.name} — CV` : "CV");
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const marginX = 14;

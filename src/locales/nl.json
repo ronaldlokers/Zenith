@@ -201,6 +201,7 @@
     "exportHint": "Download je data wanneer je wilt — een volledige JSON-back-up of CSV's per onderdeel.",
     "timezone": "Tijdzone",
     "timezoneNow": "{{time}} op dit moment",
+    "timezoneHint": "Wordt gebruikt door herinneringsmails, het wekelijkse overzicht en de agendafeed, zodat die op jouw dag aankomen. Datums in de app volgen het apparaat waarop je zit.",
     "notSet": "Niet ingesteld"
   },
   "admin": {
@@ -719,6 +720,8 @@
     "inviteError": "Kon dat account niet aanmaken.",
     "resetDemo": "Demo-account",
     "resetDemoSubmit": "Demo-data resetten",
+    "resetDemoHint": "Verwijdert alles in het demo-account — sollicitaties, bedrijven, contacten, cv — en vult het opnieuw met één voorbeeld van elke functie.",
+    "resetDemoConfirm": "Alle gegevens van het demo-account verwijderen en opnieuw vullen? Alles wat sinds de vorige reset is toegevoegd, gaat verloren.",
     "resetDemoSuccess": "Demo-data gereset.",
     "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?",
     "apiKey": "Persoonlijke API-sleutel",
@@ -780,11 +783,15 @@
     "deleteConfirm": "Je account en AL je data permanent verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "twoFactorDownloadCodes": "Back-upcodes downloaden",
     "webhookDisabled": "uitgeschakeld na herhaalde fouten — verwijder en voeg opnieuw toe",
+    "webhookBlocked": "Geblokkeerd — deze URL wijst naar een plek waar Zenith niet naartoe stuurt. Pas hem aan en voeg hem opnieuw toe.",
     "webhookFailing": "faalt ({{count}} op rij)",
     "webhookOk": "levert af",
     "deleteTypeEmail": "Typ {{email}} om te bevestigen",
     "deleteForever": "Verwijder mijn account",
-    "deleteExportFirst": "Eerst een kopie? Instellingen → Gegevens heeft een volledige export."
+    "deleteExportFirst": "Eerst een kopie? Instellingen → Gegevens heeft een volledige export.",
+    "resetPasswordFor": "Wachtwoord opnieuw instellen voor {{user}}",
+    "reset2faFor": "Tweestapsverificatie opnieuw instellen voor {{user}}",
+    "removeUserFor": "Verwijder {{user}}"
   },
   "companies": {
     "view": "Weergave",
@@ -806,6 +813,7 @@
     "addHere": "+ Sollicitatie toevoegen",
     "foldRail": "{{stage}} inklappen",
     "showingClosed": "Gesloten sollicitaties worden getoond",
+    "applicationGone": "Die sollicitatie bestaat niet meer — mogelijk is hij verwijderd.",
     "pin": "Vastzetten",
     "unpin": "Losmaken",
     "nothingPinned": "Nog niets vastgezet. Zet een sollicitatie vast via het ⋯-menu om hem hier te houden.",
@@ -998,6 +1006,8 @@
   },
   "errors": {
     "offline": "Je bent offline — die wijziging is niet opgeslagen. Het werkt weer zodra je verbinding hebt.",
-    "unreachable": "Zenith is niet bereikbaar, dus die wijziging is niet opgeslagen. Controleer je verbinding en probeer het opnieuw."
+    "unreachable": "Zenith is niet bereikbaar, dus die wijziging is niet opgeslagen. Controleer je verbinding en probeer het opnieuw.",
+    "sessionExpired": "Je sessie is verlopen — herlaad de pagina en meld je opnieuw aan.",
+    "chunkFailed": "Een deel van de app kon niet worden geladen. Meestal betekent dit dat er een nieuwe versie is uitgebracht terwijl Zenith openstond."
   }
 }

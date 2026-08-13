@@ -5,6 +5,7 @@ import type { Application, Profile, Status } from "./types";
 import { PipelineTab } from "./board";
 // Side-effect: initializes i18next so `t()` renders real copy instead of keys.
 import "./i18n";
+import { daysFromToday } from "./format";
 
 // The board is the only place a closed or archived application can be
 // reached now that the Archive screen is gone (#535 shell), so what folds,
@@ -30,8 +31,17 @@ vi.mock("./api", () => ({
   },
 }));
 
+// Dates come from the app's own daysFromToday(), not from
+// toISOString().slice(0, 10). The two disagree for anyone east of UTC
+// between local midnight and UTC midnight: toISOString() yields the UTC
+// date, so a fixture meant to be "today" arrives as yesterday and the app —
+// which computes today() from local parts — reads it as overdue. CI runs in
+// UTC where the two agree, so this was green there and red on a developer's
+// machine at night, which is the worst shape a flake can take.
+// daysFromToday also uses setDate rather than adding 86400000, so it stays
+// correct across a DST transition where a local day is 23 or 25 hours.
 const iso = (offsetDays: number) =>
-  new Date(Date.now() + offsetDays * 86400000).toISOString().slice(0, 10);
+  daysFromToday(offsetDays);
 
 function app(over: Partial<Application> & { id: number }): Application {
   return {

@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import { ChunkBoundary } from "./chunk-boundary";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
@@ -61,6 +62,7 @@ import {
 import { isDead, isDue, isOverdue } from "./format";
 import { useAppData, useToasts } from "./app-data";
 import {
+  clearChunkRetry,
   useGlobalShortcuts,
   useNotificationNavigation,
   useScrolled,
@@ -112,6 +114,8 @@ export default function App() {
   // onboarding step. The goal row auto-creates with a default, so "configured"
   // means they changed the target or set a search-start date in Settings.
   const [goalConfigured, setGoalConfigured] = useState(false);
+  // False until the three probes below have answered. See showOnboarding.
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(
     () => localStorage.getItem("zenith_onboarding_dismissed") === "1",
   );
@@ -169,21 +173,24 @@ export default function App() {
     },
   });
 
+  // allSettled, and the flag it sets, because these three are what decide
+  // whether the checklist is shown at all — and they resolve on their own
+  // schedule, independent of `loading`. Gating the checklist on `loading`
+  // alone left the shift in place on two runs out of three.
   useEffect(() => {
     if (onboardingDismissed) return;
-    api.profile().then(setOnboardingProfile).catch(() => {});
-    api
-      .feedConfig()
-      .then((cfg) => setFeedConfigured(cfg.keywords.length > 0))
-      .catch(() => {});
-    api
-      .goals()
-      .then((g) =>
+    void Promise.allSettled([
+      api.profile().then(setOnboardingProfile),
+      api.feedConfig().then((cfg) => setFeedConfigured(cfg.keywords.length > 0)),
+      api.goals().then((g) =>
         setGoalConfigured(
           g.search_started_at != null || g.weekly_app_goal !== 5,
         ),
-      )
-      .catch(() => {});
+      ),
+    ]).then(() => setOnboardingChecked(true));
+    // Settled, not fulfilled: a failed probe still ends the not-yet-known
+    // state. Leaving it pending would hide the checklist from the new
+    // account that needs it most, which is the worse of the two mistakes.
   }, [onboardingDismissed]);
 
   const dismissOnboarding = () => {
@@ -213,6 +220,34 @@ export default function App() {
     tab === "board" && detailIdFromUrl != null
       ? visibleApps.find((a) => a.id === detailIdFromUrl) ?? null
       : null;
+
+  // A deep link whose application is gone. Push notifications, calendar
+  // entries, emails and bookmarks all point at /board/:id, and any of them
+  // can outlive the row — deleted, archived out of view, or belonging to
+  // someone else. The board simply rendered instead, with the dead id still
+  // in the address bar, so the tap read as "nothing happened" and a refresh
+  // repeated it.
+  //
+  // Gated on `loading`, which is the whole difficulty: the list arrives
+  // after the first render, so an ungated check announces "not found" for
+  // every deep link in the moment before its data lands.
+  const missingJob =
+    tab === "board" && detailIdFromUrl != null && !loading && !routedJob;
+  // The app mounted, so whatever chunk failure prompted a reload is behind
+  // us. Clearing the marker returns the one-shot reload to the next deploy
+  // rather than spending it for the rest of the session.
+  useEffect(() => {
+    clearChunkRetry();
+  }, []);
+
+  useEffect(() => {
+    if (!missingJob) return;
+    notify(t("board.applicationGone"));
+    // Canonicalize, or the dead id survives a refresh and the toast fires
+    // again on every visit. replace, so Back does not return to it.
+    navigate("/board", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missingJob]);
 
   // Primary destinations, rendered from one list into both the desktop rail
   // (.side) and the sub-900px .tabs bar so the two never drift. Settings is
@@ -261,7 +296,19 @@ export default function App() {
     companies.length > 0 &&
     applications.length > 0 &&
     feedConfigured;
-  const showOnboarding = !onboardingDismissed && !onboardingComplete;
+  // Withheld until the data is in. Every input to onboardingComplete —
+  // companies, applications, the profile, the feed — starts empty, so on
+  // first paint an established account is indistinguishable from a new one
+  // and the checklist renders for everybody. It then disappears when the
+  // real counts arrive, taking 188px out from above the Today list and
+  // dropping everything below it: a reproducible 0.207 layout shift on the
+  // landing screen at 390, and a quarter-second of telling a long-standing
+  // user they have not set up yet.
+  //
+  // A genuinely new account sees it a beat later instead of instantly,
+  // which is the honest trade: before the data lands, nobody knows.
+  const showOnboarding =
+    onboardingChecked && !loading && !onboardingDismissed && !onboardingComplete;
   const onboardingProps = {
     profileDone: !!(onboardingProfile?.name && onboardingProfile?.email),
     companyDone: companies.length > 0,
@@ -464,6 +511,7 @@ export default function App() {
         {loading ? (
           <Skeleton />
         ) : (
+          <ChunkBoundary>
           <Suspense fallback={<Skeleton />}>
             {tab === "overview" && showOnboarding && (
               <OnboardingChecklist {...onboardingProps} />
@@ -623,6 +671,7 @@ export default function App() {
               />
             )}
           </Suspense>
+          </ChunkBoundary>
         )}
       </main>
       </div>

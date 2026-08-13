@@ -5,12 +5,28 @@
 @layer components {
   .zui-pilltabs {
     display: inline-flex;
+    /* At 200% text the two tabs measured 457px in a 390px viewport and took
+       the page's horizontal scroll with them — 91px over, which is a WCAG
+       1.4.4 failure outright (resize text to 200% without loss of content or
+       functionality). inline-flex will not shrink below its content and a
+       capsule of uppercase mono tracking is wide to begin with.
+       max-width caps it at the column; wrapping lets the second tab drop to
+       its own line rather than run off the screen. The capsule still reads
+       as one control because the border and the radius are on the container,
+       not on the row. */
+    max-width: 100%;
+    flex-wrap: wrap;
     gap: 0.2rem;
     margin: 0.25rem 0 0.9rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     padding: 0.2rem;
     background: var(--surface);
+  }
+
+  .zui-pilltabs button {
+    /* A flex item refuses to shrink below its own content unless told. */
+    min-width: 0;
   }
 
   .zui-pilltabs button {

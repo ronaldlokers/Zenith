@@ -188,3 +188,54 @@ describe("generateInterviewCheatSheet", () => {
     expect(doc.output().startsWith("%PDF")).toBe(true);
   });
 });
+
+describe("document titles", () => {
+  // A PDF with no /Title shows its file path in the viewer's window and
+  // indexes under nothing. These documents leave the product — a CV goes to
+  // an employer and lands in their document system — and WCAG 2.4.2 (Page
+  // Titled) applies to a PDF as much as to a page. Every generator here was
+  // producing untitled files.
+  const data = { profile, workExperience, education, languages };
+  // Read back out of the serialized file rather than from the jsPDF object:
+  // this version exposes no getProperties(), and the Info dictionary is what
+  // a viewer, an ATS and a document system actually read.
+  //
+  // The em dash forces the value out of PDFDocEncoding, so jsPDF writes it
+  // as UTF-16BE behind a byte-order mark — which is correct, and which a
+  // naive read renders as "þÿ\0R\0o\0n...". Decoded here rather than
+  // avoided in the title: pdfinfo reads it back as the intended string, so
+  // the file is right and the test was the naive one.
+  const decodeTitle = (raw: string): string => {
+    if (!raw.startsWith("þÿ")) return raw;
+    const bytes = raw.slice(2);
+    let out = "";
+    // Big-endian pairs, recombined. Taking only the low byte drops the high
+    // one, which turns the em dash (U+2014) into U+0014 — a decode that
+    // looks like it works until the character is not Latin-1.
+    for (let i = 0; i + 1 < bytes.length; i += 2) {
+      out += String.fromCharCode(
+        (bytes.charCodeAt(i) << 8) | bytes.charCodeAt(i + 1),
+      );
+    }
+    return out;
+  };
+  const titleOf = (doc: ReturnType<typeof generateCvPdf>) => {
+    const raw = /\/Title\s*\(([^)]*)\)/.exec(doc.output())?.[1];
+    return raw === undefined ? undefined : decodeTitle(raw);
+  };
+
+  it("names the CV after whoever it belongs to, in both templates", () => {
+    for (const build of [generateCvPdf, generateCvPdfTwoColumn]) {
+      expect(titleOf(build(data, labels))).toBe("Ronald Lokers — CV");
+    }
+  });
+
+  it("still titles a CV with no name on it", () => {
+    // Every other field on this profile is optional, and an untitled
+    // fallback would put the empty case straight back where it started.
+    const nameless = { ...data, profile: { ...profile, name: "" } };
+    for (const build of [generateCvPdf, generateCvPdfTwoColumn]) {
+      expect(titleOf(build(nameless, labels))).toBe("CV");
+    }
+  });
+});

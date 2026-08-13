@@ -3,6 +3,7 @@ import { guardedFetch, isForbiddenUrl } from "./url-guard.js";
 // Consecutive delivery failures before a webhook is switched off (#346).
 const WEBHOOK_DISABLE_AFTER = 10;
 import { Hono } from "hono";
+import type { Context } from "hono";
 import type { AppEnv } from "./index.js";
 
 // Public read-only API + webhooks (#228). Separate /api/v1/* namespace
@@ -149,7 +150,21 @@ export async function triggerWebhooks(
       };
       // Re-check at delivery time too — the create-time check alone is
       // not durable against rows written by other means (#346).
-      if (isForbiddenUrl(new URL(hook.url))) return;
+      //
+      // Recorded rather than skipped. A bare `return` left last_status and
+      // last_attempt_at untouched, so a webhook whose host became forbidden
+      // showed as healthy in Settings forever while delivering nothing —
+      // the exact "a dead receiver looked healthy" failure #346 set out to
+      // fix, reachable through a different door. It gets its own status
+      // because it is not a receiver problem and retrying will not help.
+      if (isForbiddenUrl(new URL(hook.url))) {
+        await env.DB.prepare(
+          `UPDATE webhooks SET last_status = 'blocked', last_attempt_at = datetime('now'), enabled = 0 WHERE id = ?`,
+        )
+          .bind(hook.id)
+          .run();
+        return;
+      }
       let ok = false;
       try {
         await attempt();
@@ -173,11 +188,22 @@ export async function triggerWebhooks(
           .bind(hook.id)
           .run();
       } else {
-        const failures = (hook.failure_count ?? 0) + 1;
+        // Incremented in SQL, not from the value read with the row. Two
+        // deliveries failing at once both read the same failure_count and
+        // both wrote back the same number, so a burst of five counted as
+        // one — measured — and the auto-disable that protects a dead
+        // receiver was computed from that same stale figure. Webhook events
+        // arrive in exactly those bursts: a batch status push, several
+        // follow-ups cleared at once.
         await env.DB.prepare(
-          `UPDATE webhooks SET last_status = 'failed', last_attempt_at = datetime('now'), failure_count = ?, enabled = CASE WHEN ? >= ${WEBHOOK_DISABLE_AFTER} THEN 0 ELSE enabled END WHERE id = ?`,
+          `UPDATE webhooks
+             SET last_status = 'failed',
+                 last_attempt_at = datetime('now'),
+                 failure_count = failure_count + 1,
+                 enabled = CASE WHEN failure_count + 1 >= ${WEBHOOK_DISABLE_AFTER} THEN 0 ELSE enabled END
+           WHERE id = ?`,
         )
-          .bind(failures, failures, hook.id)
+          .bind(hook.id)
           .run();
       }
     }),
@@ -187,38 +213,145 @@ export async function triggerWebhooks(
 const applicationColumns =
   "id, company_id, title, role_type, url, source, status, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, created_at, updated_at";
 
+
+// RFC 9457 problem details, for the v1 surface only. The `{error: "..."}`
+// shape stays on /api/webhooks and the rest of /api/*: those are the app's
+// own endpoints, session-authed, and src/api.ts reads `body.error` from
+// them. Changing both at once would have broken the product to tidy its
+// public API.
+//
+// Five fields, and `type` is the one that earns its keep: a URI a client can
+// branch on, stable across wording changes, where matching on a human
+// sentence is not. They are relative URIs deliberately — the spec allows it,
+// and an absolute one would bake this deployment's hostname into every error
+// body a self-hosted instance emits.
+type ProblemKind =
+  | "missing-token"
+  | "invalid-token"
+  | "not-found"
+  | "invalid-request";
+
+const PROBLEM_TITLES: Record<ProblemKind, string> = {
+  "missing-token": "Missing bearer token",
+  "invalid-token": "Invalid API key",
+  "not-found": "Not found",
+  "invalid-request": "Invalid request",
+};
+
+function problem(
+  c: Context<{ Bindings: Env; Variables: { apiUserId: string } }>,
+  kind: ProblemKind,
+  status: 400 | 401 | 404,
+  detail: string,
+  headers: Record<string, string> = {},
+) {
+  return c.json(
+    {
+      type: `/problems/${kind}`,
+      title: PROBLEM_TITLES[kind],
+      status,
+      detail,
+      instance: new URL(c.req.url).pathname,
+    },
+    status,
+    // The media type is half the point: it is what tells a generic client
+    // this body is a problem document rather than the resource it asked for.
+    { "Content-Type": "application/problem+json", ...headers },
+  );
+}
+
 export function registerPublicApiRoutes(app: Hono<AppEnv>) {
   const api = new Hono<{ Bindings: Env; Variables: { apiUserId: string } }>();
 
+  // RFC 9110 15.5.2 makes WWW-Authenticate mandatory on a 401 — "MUST send
+  // a WWW-Authenticate header field containing at least one challenge" — and
+  // both 401s here sent none. It is not decoration: a client that does not
+  // know the scheme cannot retry correctly, and generated SDKs and tools
+  // (curl --anyauth, Postman, most HTTP middlewares) read the challenge to
+  // decide what to do next. Adding a header breaks no existing consumer.
+  //
+  // RFC 6750 3.1 distinguishes the two cases, and the distinction is the
+  // useful part: no credentials is a bare challenge, because the client may
+  // simply not have tried yet; a token that was presented and rejected gets
+  // error="invalid_token", which says "do not just retry the same key".
+  const CHALLENGE = 'Bearer realm="Zenith API"';
   api.use("*", async (c, next) => {
     const auth = c.req.header("Authorization");
     const key = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
-    if (!key) return c.json({ error: "missing bearer token" }, 401);
+    if (!key)
+      return problem(c, "missing-token", 401, "This endpoint requires a Bearer API key.", {
+        "WWW-Authenticate": CHALLENGE,
+      });
     const profile = await c.env.DB.prepare(
       "SELECT user_id FROM profile WHERE api_key_hash = ?",
     )
       .bind(await sha256Hex(key))
       .first<{ user_id: string }>();
-    if (!profile) return c.json({ error: "invalid API key" }, 401);
+    if (!profile)
+      return problem(c, "invalid-token", 401, "The API key is not valid.", {
+        "WWW-Authenticate": `${CHALLENGE}, error="invalid_token", error_description="The API key is not valid"`,
+      });
     c.set("apiUserId", profile.user_id);
     await next();
   });
 
+  // 20 by default and 100 at most, replacing 50/200. The old bounds were
+  // borrowed from the in-app feed, where the client is this app and knows
+  // what it asked for; an integration is a stranger, and the widely-followed
+  // figures are the ones a stranger will expect.
+  //
+  // Still limit/offset rather than a cursor. A cursor is the right answer
+  // when rows are inserted between pages and offsets slide — at roughly
+  // fifty applications per account, ordered by updated_at, that is a real
+  // but small effect, and a cursor would be a larger change than the problem
+  // justifies. What was actually missing is stated below.
+  const DEFAULT_LIMIT = 20;
+  const MAX_LIMIT = 100;
+
   api.get("/applications", async (c) => {
-    // Bounded like the in-app feed (#285) — a heavy account shouldn't hand
-    // an integration its whole table in one response. `limit`/`offset`.
     const url = new URL(c.req.url);
     const limit = Math.min(
-      200,
-      Math.max(1, Number(url.searchParams.get("limit")) || 50),
+      MAX_LIMIT,
+      Math.max(1, Number(url.searchParams.get("limit")) || DEFAULT_LIMIT),
     );
     const offset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
+    const userId = c.get("apiUserId");
+    const total = await c.env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM applications WHERE user_id = ?",
+    )
+      .bind(userId)
+      .first<{ n: number }>();
     const { results } = await c.env.DB.prepare(
       `SELECT ${applicationColumns} FROM applications WHERE user_id = ? ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
     )
-      .bind(c.get("apiUserId"), limit, offset)
+      .bind(userId, limit, offset)
       .all();
-    return c.json(results);
+
+    // The gap this closes: a client had no way to know whether it had seen
+    // everything except by requesting until a page came back short — which
+    // costs one extra round trip every time, and is ambiguous on a boundary
+    // where the last page is exactly `limit` long.
+    //
+    // Headers rather than an envelope. Wrapping the array in {data, meta}
+    // would break every existing consumer, and this release already changes
+    // the error bodies; one breaking change at a time. RFC 8288 Link is the
+    // standard shape for this and clients that ignore it are unaffected.
+    const count = total?.n ?? 0;
+    const links: string[] = [];
+    const page = (o: number) => {
+      const next = new URL(c.req.url);
+      next.searchParams.set("limit", String(limit));
+      next.searchParams.set("offset", String(o));
+      return `<${next.pathname}${next.search}>`;
+    };
+    if (offset + limit < count) links.push(`${page(offset + limit)}; rel="next"`);
+    if (offset > 0) links.push(`${page(Math.max(0, offset - limit))}; rel="prev"`);
+    links.push(`${page(0)}; rel="first"`);
+
+    return c.json(results, 200, {
+      "X-Total-Count": String(count),
+      Link: links.join(", "),
+    });
   });
 
   api.get("/applications/:id", async (c) => {
@@ -227,7 +360,8 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
     )
       .bind(c.req.param("id"), c.get("apiUserId"))
       .first();
-    if (!result) return c.json({ error: "not found" }, 404);
+    if (!result)
+      return problem(c, "not-found", 404, "No application with that id.");
     return c.json(result);
   });
 
@@ -243,7 +377,8 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
       source?: string;
     }>();
     const title = (body.title ?? "").trim();
-    if (!title) return c.json({ error: "title is required" }, 400);
+    if (!title)
+      return problem(c, "invalid-request", 400, "A non-empty title is required.");
     const userId = c.get("apiUserId");
 
     let companyId: number | null = null;

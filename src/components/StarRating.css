@@ -29,6 +29,22 @@
     cursor: default;
   }
 
+  /* WCAG 2.5.8 is not pointer-specific, and on a mouse these measured
+     9.6x14 with 12px between centres — five contiguous targets under the
+     24px floor, with a 24px circle on each overlapping its neighbours, so
+     neither the size rule nor the spacing exception was met. The coarse
+     block below already fixed touch; this is the same padding applied to
+     every pointer, which takes them to 25.6x24 with 28px between centres.
+
+     The visible cost is real and was accepted deliberately: the row grows
+     from 58px to about 123px wherever a rating can be set. Read-only
+     ratings are untouched — they are a picture of a score with nothing to
+     aim at. */
+  .zui-starrating:not(.zui-starrating--readonly) .zui-star {
+    min-height: 24px;
+    padding: 0 0.5rem;
+  }
+
   /* Touch: the stars sit a few pixels apart, so an invisible 44px box around
      each one would overlap its neighbours and a tap would land on the wrong
      star — worse than a small target. They get real room instead, in the axis
@@ -42,10 +58,21 @@
        :not(), rather than only styling the interactive class, so a future
        variant that forgets the modifier still gets the target. */
     .zui-starrating:not(.zui-starrating--readonly) .zui-star {
-      /* Vertical only: five stars sit in a row, so width cannot grow without
-         a tap landing on the next star. */
+      /* 44 rather than the 24 above: a thumb is not a cursor. The padding
+         is inherited from that rule and no longer restated here. */
       min-height: 44px;
-      padding: 0 0.25rem;
+      /* 0.5rem, not 0.25rem: at 0.25 each star measured 16px wide — five
+         contiguous targets under the 24px WCAG 2.5.8 floor, on the axis a
+         thumb is least accurate in.
+
+         This rule used to say width could not grow "without a tap landing
+         on the next star". That is true of the invisible 44px box the
+         comment above rejects — absolutely positioned, so it overlaps its
+         neighbours — and not true of padding, which is in flow: widening
+         each star pushes the next one along instead. Measured on a phone
+         profile, 0.25rem vs 0.5rem: widths 16 -> 24, overlapping pairs 0 in
+         both, mis-hits 0 in both, and the row grows 90px -> 130px in a
+         393px viewport. The room was always there. */
     }
   }
 }

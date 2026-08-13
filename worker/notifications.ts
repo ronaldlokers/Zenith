@@ -253,7 +253,7 @@ async function emailUser(env: Env, rows: DueRow[]): Promise<void> {
   if (digestRows.length > 0) {
     if (email_digest) {
       for (const n of digestRows) {
-        const sent = await sendEmail(env, buildDigestEmail(email, n.title, n.body ?? ""));
+        const sent = await sendEmail(env, buildDigestEmail(email, n.title, n.body ?? "", locale ?? "en"));
         if (sent) await stampEmailed(env, [n.id]);
       }
     } else {

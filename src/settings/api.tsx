@@ -156,7 +156,15 @@ export function PublicApiSettings({
           <li key={w.id}>
             <span>
               {w.url}
-              {!w.enabled ? (
+              {/* Checked before `!enabled`, because a blocked hook is also
+                  disabled and "disabled" alone sends the user to re-enable
+                  it — which changes nothing. The URL is what has to change. */}
+              {w.last_status === "blocked" ? (
+                <span className="muted small warn-text">
+                  {" "}
+                  · {t("account.webhookBlocked")}
+                </span>
+              ) : !w.enabled ? (
                 <span className="muted small warn-text">
                   {" "}
                   · {t("account.webhookDisabled")}

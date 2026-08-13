@@ -201,6 +201,7 @@
     "exportHint": "Download your data any time — a full JSON backup or per-resource CSVs.",
     "timezone": "Time zone",
     "timezoneNow": "{{time}} right now",
+    "timezoneHint": "Used by reminder emails, the weekly digest and the calendar feed, so they land on your day. Dates shown in the app follow whichever device you are on.",
     "notSet": "Not set"
   },
   "admin": {
@@ -719,6 +720,8 @@
     "inviteError": "Couldn't create that account.",
     "resetDemo": "Demo account",
     "resetDemoSubmit": "Reset demo data",
+    "resetDemoHint": "Deletes everything in the demo account — applications, companies, contacts, CV — and seeds it again with one example of each feature.",
+    "resetDemoConfirm": "Delete all demo-account data and seed it again? Anything added to that account since the last reset is lost.",
     "resetDemoSuccess": "Demo data reset.",
     "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?",
     "apiKey": "Personal API key",
@@ -780,11 +783,15 @@
     "deleteConfirm": "Permanently delete your account and ALL your data? This cannot be undone.",
     "twoFactorDownloadCodes": "Download backup codes",
     "webhookDisabled": "disabled after repeated failures — delete and re-add to retry",
+    "webhookBlocked": "Blocked — this URL points somewhere Zenith will not send to. Change it and add it again.",
     "webhookFailing": "failing ({{count}} in a row)",
     "webhookOk": "delivering",
     "deleteTypeEmail": "Type {{email}} to confirm",
     "deleteForever": "Delete my account",
-    "deleteExportFirst": "Want a copy first? Settings → Data has a full export."
+    "deleteExportFirst": "Want a copy first? Settings → Data has a full export.",
+    "resetPasswordFor": "Reset password for {{user}}",
+    "reset2faFor": "Reset two-factor for {{user}}",
+    "removeUserFor": "Remove {{user}}"
   },
   "companies": {
     "view": "View",
@@ -806,6 +813,7 @@
     "addHere": "+ Add an application",
     "foldRail": "Fold {{stage}}",
     "showingClosed": "Showing closed applications",
+    "applicationGone": "That application is no longer here — it may have been deleted.",
     "pin": "Pin",
     "unpin": "Unpin",
     "nothingPinned": "Nothing pinned yet. Pin an application from its ⋯ menu to keep it here.",
@@ -998,6 +1006,8 @@
   },
   "errors": {
     "offline": "You're offline — that change wasn't saved. It will work once you're back.",
-    "unreachable": "Couldn't reach Zenith, so that change wasn't saved. Check your connection and try again."
+    "unreachable": "Couldn't reach Zenith, so that change wasn't saved. Check your connection and try again.",
+    "sessionExpired": "Your session has expired — reload the page and sign in again.",
+    "chunkFailed": "Part of the app could not be loaded. This usually means a new version was released while you had Zenith open."
   }
 }

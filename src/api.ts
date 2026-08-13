@@ -30,6 +30,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   } catch {
     throw new Error(networkErrorMessage());
   }
+  // A 401 from this client means one thing: the session is gone. Sign-in
+  // goes through auth-client, not through here, so nothing else can produce
+  // it — and the server's own word for it ("unauthorized") reached the user
+  // as the entire explanation, on a page that still looked signed in. They
+  // were left clicking controls that would keep failing, with no indication
+  // that signing in again was the answer.
+  //
+  // Not an automatic redirect: that would throw away whatever is half-typed
+  // on the screen, and deciding to navigate out from under someone is a
+  // product call rather than an error-handling one. Saying plainly what
+  // happened is the part that is unambiguously right.
+  if (res.status === 401) {
+    throw new Error(i18n.t("errors.sessionExpired"));
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(

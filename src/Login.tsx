@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { authClient, signIn } from "./auth-client";
 import { Logo } from "./icons";
@@ -16,6 +16,17 @@ export function Login() {
   const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
   const [code, setCode] = useState("");
   const [useBackupCode, setUseBackupCode] = useState(false);
+  // Where focus goes when a submit fails. The submit button is disabled
+  // while busy, and a focused element that becomes disabled drops focus to
+  // <body> — so after a wrong password the keyboard user was at the top of
+  // the document with no way back to the form but Tab. Measured:
+  // document.activeElement was BODY after every failed sign-in.
+  //
+  // Focus lands on the field to correct rather than back on the button,
+  // which is both the conventional answer and the useful one: the password
+  // is what was wrong.
+  const emailRef = useRef<HTMLInputElement>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,6 +36,7 @@ export function Login() {
     setBusy(false);
     if (signInError) {
       setError(t("login.error"));
+      emailRef.current?.focus();
       return;
     }
     if (data && "twoFactorRedirect" in data && data.twoFactorRedirect) {
@@ -45,6 +57,7 @@ export function Login() {
     setBusy(false);
     if (verifyError) {
       setError(t("login.twoFactorError"));
+      codeRef.current?.focus();
     }
   };
 
@@ -97,6 +110,13 @@ export function Login() {
               inputMode={useBackupCode ? "text" : "numeric"}
               autoComplete="one-time-code"
               autoFocus
+              ref={codeRef}
+              aria-invalid={!!error}
+              /* aria-invalid said the field was wrong; nothing said why.
+                 The alert announces the message once when it appears, but a
+                 user who returns to the field afterwards got "invalid" and
+                 no explanation. */
+              aria-describedby={error ? "login-2fa-error" : undefined}
               required
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -108,7 +128,7 @@ export function Login() {
               wrong password and a stalled network are the same event — on
               the one screen with no way around a dead end. */}
           {error && (
-            <p className="login-error" role="alert">
+            <p className="login-error" role="alert" id="login-2fa-error">
               {error}
             </p>
           )}
@@ -143,7 +163,9 @@ export function Login() {
               // Focus was on <body> at load, so every sign-in started with a
               // wasted keystroke.
               autoFocus
+              ref={emailRef}
               aria-invalid={!!error}
+              aria-describedby={error ? "login-error" : undefined}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -155,6 +177,7 @@ export function Login() {
               type="password"
               autoComplete="current-password"
               aria-invalid={!!error}
+              aria-describedby={error ? "login-error" : undefined}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -166,7 +189,7 @@ export function Login() {
               wrong password and a stalled network are the same event — on
               the one screen with no way around a dead end. */}
           {error && (
-            <p className="login-error" role="alert">
+            <p className="login-error" role="alert" id="login-error">
               {error}
             </p>
           )}

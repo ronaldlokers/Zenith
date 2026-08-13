@@ -26,16 +26,32 @@ async function seedApp(overrides: Record<string, unknown> = {}) {
 }
 
 describe("public v1 API", () => {
-  it("rejects a request with no bearer token", async () => {
+  it("rejects a request with no bearer token, and says how to authenticate", async () => {
+    // RFC 9110 15.5.2: a 401 MUST carry a WWW-Authenticate challenge. Both
+    // 401s here sent none, so a client was told "no" with no indication of
+    // the scheme to use — and generated SDKs and HTTP tools read the
+    // challenge to decide what to do next.
     const res = await SELF.fetch(`${BASE}/api/v1/applications`);
     expect(res.status).toBe(401);
+    const challenge = res.headers.get("www-authenticate");
+    expect(challenge, "401 without a challenge violates RFC 9110").toBeTruthy();
+    expect(challenge).toMatch(/^Bearer\b/);
+    expect(challenge).toContain('realm="Zenith API"');
+    // No error parameter here on purpose: nothing was presented to reject.
+    expect(challenge).not.toContain("error=");
   });
 
-  it("rejects an invalid key", async () => {
+  it("rejects an invalid key, and distinguishes it from an absent one", async () => {
+    // RFC 6750 3.1. The distinction is the useful part: a key that was
+    // presented and rejected earns error="invalid_token", which tells a
+    // client not to simply retry the same credential.
     const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
       headers: { Authorization: "Bearer not-a-real-key" },
     });
     expect(res.status).toBe(401);
+    const challenge = res.headers.get("www-authenticate") ?? "";
+    expect(challenge).toMatch(/^Bearer\b/);
+    expect(challenge).toContain('error="invalid_token"');
   });
 
   it("lists the user's applications and never exposes salary", async () => {
@@ -286,5 +302,112 @@ describe("ssrf + export guards (#346)", () => {
     const csv = await (await authedFetch(`${BASE}/api/export/applications`)).text();
     expect(csv).toContain("'=HYPERLINK");
     expect(csv).not.toMatch(/^=|[,\n]=/);
+  });
+});
+
+describe("v1 problem details", () => {
+  // RFC 9457. The `{error: "..."}` shape stays on /api/webhooks and the rest
+  // of /api/* — those are the app's own session-authed endpoints and
+  // src/api.ts reads body.error from them. Only the public surface moved.
+  it("answers errors as application/problem+json", async () => {
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`);
+    expect(res.headers.get("content-type")).toMatch(/application\/problem\+json/);
+    const body = (await res.json()) as Record<string, unknown>;
+    // The five fields, and status echoing the real one — a problem document
+    // that disagrees with its own response code is worse than none.
+    expect(body.type).toBe("/problems/missing-token");
+    expect(body.title).toBeTruthy();
+    expect(body.status).toBe(401);
+    expect(body.detail).toBeTruthy();
+    expect(body.instance).toBe("/api/v1/applications");
+  });
+
+  it("gives each failure its own type, so a client can branch on it", async () => {
+    // The point of `type`: stable across any rewording of title or detail,
+    // where matching on a human sentence is not.
+    const key = await apiKey();
+    const bad = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      headers: { Authorization: "Bearer nope" },
+    });
+    const missing = await SELF.fetch(`${BASE}/api/v1/applications/99999999`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const invalid = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "   " }),
+    });
+    const typeOf = async (r: Response) =>
+      ((await r.json()) as { type: string }).type;
+    expect(await typeOf(bad)).toBe("/problems/invalid-token");
+    expect(await typeOf(missing)).toBe("/problems/not-found");
+    expect(await typeOf(invalid)).toBe("/problems/invalid-request");
+  });
+
+  it("keeps the WWW-Authenticate challenge alongside the problem body", async () => {
+    // Both are required and they answer different questions: the header says
+    // how to authenticate, the body says what went wrong.
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`);
+    expect(res.headers.get("www-authenticate")).toMatch(/^Bearer\b/);
+  });
+
+  it("uses relative type URIs, so a self-hosted instance is not misdescribed", async () => {
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`);
+    const body = (await res.json()) as { type: string };
+    expect(body.type.startsWith("/")).toBe(true);
+    expect(body.type).not.toMatch(/^https?:/);
+  });
+});
+
+describe("v1 pagination", () => {
+  it("says how many there are and where the next page is", async () => {
+    // The gap: a client had no way to know it had seen everything except by
+    // requesting until a page came back short — an extra round trip every
+    // time, and ambiguous when the last page is exactly `limit` long.
+    const key = await apiKey();
+    for (let i = 0; i < 3; i++) await seedApp({ title: `Paged ${i}` });
+    const res = await SELF.fetch(`${BASE}/api/v1/applications?limit=1`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    expect(res.status).toBe(200);
+    expect(Number(res.headers.get("x-total-count"))).toBeGreaterThanOrEqual(3);
+    const link = res.headers.get("link") ?? "";
+    expect(link).toContain('rel="next"');
+    expect(link).toContain('rel="first"');
+    // No prev on the first page — offering one would be a link to itself.
+    expect(link).not.toContain('rel="prev"');
+    expect(((await res.json()) as unknown[]).length).toBe(1);
+  });
+
+  it("offers prev once past the start, and drops next at the end", async () => {
+    const key = await apiKey();
+    for (let i = 0; i < 3; i++) await seedApp({ title: `Edge ${i}` });
+    const total = Number(
+      (await SELF.fetch(`${BASE}/api/v1/applications?limit=1`, {
+        headers: { Authorization: `Bearer ${key}` },
+      })).headers.get("x-total-count"),
+    );
+    const last = await SELF.fetch(
+      `${BASE}/api/v1/applications?limit=1&offset=${total - 1}`,
+      { headers: { Authorization: `Bearer ${key}` } },
+    );
+    const link = last.headers.get("link") ?? "";
+    expect(link, "nothing follows the last page").not.toContain('rel="next"');
+    expect(link).toContain('rel="prev"');
+  });
+
+  it("defaults to 20 and refuses to serve more than 100", async () => {
+    const key = await apiKey();
+    const res = await SELF.fetch(`${BASE}/api/v1/applications?limit=5000`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    expect(((await res.json()) as unknown[]).length).toBeLessThanOrEqual(100);
+    // A garbage limit falls back rather than erroring: this is a read-only
+    // convenience surface, not a form.
+    const junk = await SELF.fetch(`${BASE}/api/v1/applications?limit=abc`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    expect(junk.status).toBe(200);
+    expect(((await junk.json()) as unknown[]).length).toBeLessThanOrEqual(20);
   });
 });

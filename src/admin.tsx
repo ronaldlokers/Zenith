@@ -40,7 +40,17 @@ export function AdminPage({
 
   return (
     <section className="admin-page">
-      <h1 className="admin-page-title">{t("admin.title")}</h1>
+      {/* No h1 here. The shell's top bar already renders the page title as
+          the document's h1 — every other tab relies on that and only this
+          one also rendered its own, so "Admin" appeared twice on screen and
+          the page carried two h1 elements. The outline then ran h1 > h1 > h3
+          with no h2 between them.
+
+          The section heading below is the h2, mirroring Settings
+          (settings/index.tsx), which shares the same two-pane shell and the
+          same h3-bearing section components — several of them literally the
+          same components, which is why their h3s cannot simply be promoted:
+          under Settings they already sit correctly beneath an h2. */}
       <p className="admin-page-sub muted">{t("admin.subtitle")}</p>
       <div className="settings-page">
         <SettingsNav
@@ -50,6 +60,7 @@ export function AdminPage({
           aria-label={t("admin.navLabel")}
         />
         <div className="admin-content">
+          <h2 className="admin-page-title">{t(`admin.section.${section}`)}</h2>
           {section === "users" && <AdminUsers onError={onError} />}
           {section === "invites" && <AdminInvite />}
           {section === "demo" && <ResetDemoData />}
