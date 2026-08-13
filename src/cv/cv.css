@@ -176,6 +176,32 @@
     color: var(--danger);
   }
 
+  /* The one destructive control on this surface, and it measured 13x21px
+     sitting 3px from the 132px target that selects the variant — the two
+     things you can do to a variant were a thumb's width apart and one of
+     them was unrecoverable. Real separation, and a hit area like every
+     other control in the app has.
+
+     Unlike .cv-tool above, this one can take the full 44px: it sits at the
+     end of its row with the rail's gap beneath it, so the overlay has
+     nothing to steal presses from. */
+  @media (pointer: coarse) {
+    .cv-rail-del {
+      position: relative;
+      margin-inline-start: var(--space-2);
+    }
+
+    .cv-rail-del::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
+
   .cv-rail-add {
     border: 0;
     background: none;

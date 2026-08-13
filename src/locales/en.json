@@ -822,7 +822,8 @@
   "confirm": {
     "deleteDocument": "Delete “{{name}}”?",
     "deleteRoleType": "Delete role type “{{label}}”? Feed keywords for it go too.",
-    "discardEdit": "Discard unsaved changes?"
+    "discardEdit": "Discard unsaved changes?",
+    "deleteCvVariant": "Delete the CV variant “{{name}}”? This cannot be undone."
   },
   "aria": {
     "interactionType": "Interaction type",

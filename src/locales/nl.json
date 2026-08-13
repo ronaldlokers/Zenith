@@ -822,7 +822,8 @@
   "confirm": {
     "deleteDocument": "“{{name}}” verwijderen?",
     "deleteRoleType": "Functietype “{{label}}” verwijderen? Feed-trefwoorden ervoor gaan mee.",
-    "discardEdit": "Niet-opgeslagen wijzigingen weggooien?"
+    "discardEdit": "Niet-opgeslagen wijzigingen weggooien?",
+    "deleteCvVariant": "CV-variant “{{name}}” verwijderen? Dit kan niet ongedaan worden gemaakt."
   },
   "aria": {
     "interactionType": "Type interactie",

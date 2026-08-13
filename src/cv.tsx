@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { api } from "./api";
 import { Button, Skeleton } from "./components";
+import { requestConfirm } from "./hooks";
 import type {
   CvSnapshotData,
   CvVersion,
@@ -101,12 +102,29 @@ export function CVTab({
   const active = versions.find((v) => v.id === activeId) ?? null;
   // A saved variant is a JSON snapshot; a corrupt one falls back to live
   // rather than blanking the page.
+  //
+  // The shape is checked, not just the syntax. try/catch alone caught only
+  // malformed JSON — a snapshot of "{}" parses perfectly and then throws on
+  // shown.workExperience.length, which took the whole app to a white screen
+  // with no way back but a reload. These blobs are long-lived and
+  // schema-coupled: they are written by whatever version of the app was
+  // running that day, so "parses" and "is a CV" are different questions.
   const shown: CvSnapshotData = (() => {
-    if (!active) return { profile, workExperience: workExp, education, languages };
+    const live = { profile, workExperience: workExp, education, languages };
+    if (!active) return live;
     try {
-      return JSON.parse(active.snapshot) as CvSnapshotData;
+      const parsed = JSON.parse(active.snapshot) as Partial<CvSnapshotData>;
+      const usable =
+        !!parsed &&
+        typeof parsed === "object" &&
+        !!parsed.profile &&
+        typeof parsed.profile === "object" &&
+        Array.isArray(parsed.workExperience) &&
+        Array.isArray(parsed.education) &&
+        Array.isArray(parsed.languages);
+      return usable ? (parsed as CvSnapshotData) : live;
     } catch {
-      return { profile, workExperience: workExp, education, languages };
+      return live;
     }
   })();
 
@@ -128,9 +146,17 @@ export function CVTab({
       .finally(() => setVersionBusy(false));
   };
 
-  const deleteVariant = (v: CvVersion) => {
+  const deleteVariant = async (v: CvVersion) => {
+    // A saved variant is a JSON blob with no history — deleting one is
+    // unrecoverable, and the control that did it was a 13x21px x sitting
+    // 3px from the 132px target that selects the variant, with no confirm
+    // and no undo. Every other destructive action in this app asks first
+    // (documents, role types, account data, the API key); this surface used
+    // neither the confirm nor the undo the app already has.
+    if (!(await requestConfirm(t("confirm.deleteCvVariant", { name: v.name }))))
+      return;
     setVersionBusy(true);
-    Promise.resolve(api.remove("cv-versions", v.id))
+    return Promise.resolve(api.remove("cv-versions", v.id))
       .then(() => {
         if (activeId === v.id) setActiveId(null);
         return loadVersions();
@@ -235,7 +261,7 @@ export function CVTab({
                 activeId={activeId}
                 onSelect={setActiveId}
                 onSave={saveVariant}
-                onDelete={deleteVariant}
+                onDelete={(v) => void deleteVariant(v)}
                 busy={versionBusy}
               />
             </div>
