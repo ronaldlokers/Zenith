@@ -1,4 +1,4 @@
-import { env, SELF } from "cloudflare:test";
+import { env } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
 
