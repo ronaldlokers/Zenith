@@ -15,7 +15,7 @@ import "./CalendarMonth.css";
 // stays in calendar.tsx.
 export interface CalendarMonthProps {
   entries: AgendaEntry[];
-  onJump: (title: string) => void;
+  onJump: (entry: AgendaEntry) => void;
 }
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -180,7 +180,12 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
                       // The accessible name states it; the tint stays as the
                       // at-a-glance signal for everyone else.
                       aria-label={kindLabel(e, t)}
-                      onClick={() => e.title && onJump(e.title)}
+                      // The entry, not its title. Jumping by title string
+                      // sent you to whichever application matched first, and
+                      // "Senior Software Engineer" is not a rare name —
+                      // while every entry already carries the id of the row
+                      // it came from.
+                      onClick={() => onJump(e)}
                     >
                       {/* An inner span, because text-overflow does not apply
                           to a flex item: the chip is display:flex, so the
@@ -218,7 +223,7 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
             <button
               key={`${e.kind}-${e.id}`}
               className="zui-cal-up"
-              onClick={() => e.title && onJump(e.title)}
+              onClick={() => onJump(e)}
             >
               <span className={`zui-cal-up-dot kind-${e.kind}`} aria-hidden="true" />
               <span className="zui-cal-up-body">

@@ -30,7 +30,9 @@ export function CalendarTab({
   onJump,
 }: {
   onError: (message: string | null) => void;
-  onJump: (title: string) => void;
+  // The entry, so a jump can use its application_id. Jumping by title sent
+  // the user to whichever application matched the string first.
+  onJump: (entry: AgendaEntry) => void;
 }) {
   const { t } = useTranslation();
   const [entries, setEntries] = useState<AgendaEntry[] | null>(null);
@@ -88,7 +90,7 @@ export function CalendarTab({
                 <li
                   key={`${e.kind}-${e.id}`}
                   className={`agenda-item kind-${e.kind}`}
-                  {...rowActivate(() => e.title && onJump(e.title))}
+                  {...rowActivate(() => onJump(e))}
                 >
                   {agendaText(e, t)}
                 </li>

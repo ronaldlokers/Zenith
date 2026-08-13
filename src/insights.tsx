@@ -6,7 +6,7 @@
 // only unique piece, data export, now lives in Settings → Data (#485).
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { Application, Stats } from "./types";
+import type { AgendaEntry, Application, Stats } from "./types";
 import {
   FUNNEL_STAGES,
   funnelConversions,
@@ -85,6 +85,23 @@ export function InsightsTab({
     .map((o) => totalComp(o))
     .filter((x): x is number => x != null);
   const topComp = comps.length ? Math.max(...comps) : null;
+
+  // Opens the row the entry came from. The calendar used to hand its title
+  // to a board search, which lands on whichever application matches the
+  // string first — and "Senior Software Engineer" is not a rare title. The
+  // search stays as the fallback for an entry with no application behind it.
+  const jumpToEntry = (e: AgendaEntry) => {
+    // Which field holds the application depends on where the entry came
+    // from: a follow-up and an applied-date are selected from applications,
+    // so their id IS the application; an interaction is selected from
+    // interactions and carries the application beside it. Checked against
+    // the queries rather than assumed — the first version of this only read
+    // application_id and silently fell through to the title search for two
+    // of the three kinds.
+    const applicationId = e.kind === "interaction" ? e.application_id : e.id;
+    if (applicationId) onOpenJob(applicationId);
+    else if (e.title) onJump(e.title);
+  };
 
   const fmtComp = (n: number) =>
     `~${liveOffers[0]?.salary_currency ?? "€"} ${Math.round(n).toLocaleString()}`;
@@ -325,7 +342,7 @@ export function InsightsTab({
       {wide ? (
         <>
           <h2 className="ruled-h insights-cal-h">{t("tabs.calendar")}</h2>
-          <CalendarTab onError={onError} onJump={onJump} />
+          <CalendarTab onError={onError} onJump={jumpToEntry} />
         </>
       ) : (
         <div className="insights-activity">
@@ -337,7 +354,7 @@ export function InsightsTab({
           >
             {showCalendar ? t("calendar.hide") : t("calendar.show")}
           </Button>
-          {showCalendar && <CalendarTab onError={onError} onJump={onJump} />}
+          {showCalendar && <CalendarTab onError={onError} onJump={jumpToEntry} />}
         </div>
       )}
         </>
