@@ -2627,6 +2627,17 @@ select.status {
     flex: 0 0 82%;
     scroll-snap-align: start;
     min-width: 0;
+    /* Containing block for the sr-only stage heading below. .sr-only is
+       position: absolute, and with every ancestor up to the viewport
+       static, its containing block was the initial one — so the carousel's
+       overflow-x never clipped it. Each column's heading then sat at that
+       column's document x, the last one at 2176px, and dragged the whole
+       document's scroll width out with it: the page itself scrolled
+       sideways at every phone width (WCAG 1.4.10). Measured, not reasoned
+       — hiding the nine headings dropped scrollWidth from 2179 to 320.
+       Relative with no offsets moves nothing; it only gives the heading a
+       box to be clipped by. */
+    position: relative;
   }
 
   /* The strip already carries the stage name and its count, and nothing
