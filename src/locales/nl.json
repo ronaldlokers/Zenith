@@ -778,7 +778,7 @@
     "showingClosed": "Gesloten sollicitaties worden getoond",
     "pin": "Vastzetten",
     "unpin": "Losmaken",
-    "nothingPinned": "Nog niets vastgezet. Zet een sollicitatie vast via het \u22ef-menu om hem hier te houden.",
+    "nothingPinned": "Nog niets vastgezet. Zet een sollicitatie vast via het ⋯-menu om hem hier te houden.",
     "showingPinned": "Vastgezette sollicitaties",
     "showAll": "Alles tonen",
     "backToLive": "Terug naar actief",
@@ -885,7 +885,10 @@
     "insightsTitle": "Waarom sollicitaties stoppen",
     "insightsEmpty": "Nog geen afgesloten sollicitaties.",
     "insightsUnrecorded_one": "{{count}} afgesloten zonder vastgelegde reden",
-    "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden"
+    "insightsUnrecorded_other": "{{count}} afgesloten zonder vastgelegde reden",
+    "insightsNoneRecorded_one": "Nog niets vastgelegd — {{count}} afgesloten sollicitatie wacht op een reden.",
+    "insightsNoneRecorded_other": "Nog niets vastgelegd — {{count}} afgesloten sollicitaties wachten op een reden.",
+    "insightsRecordCta": "Toon afgesloten sollicitaties"
   },
   "bottomBar": {
     "pinned": "Vastgezet"

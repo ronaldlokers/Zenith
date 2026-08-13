@@ -30,6 +30,7 @@ export function InsightsTab({
   applications,
   onGoToJobs,
   onOpenJob,
+  onShowClosed,
   onError,
   onJump,
   stats,
@@ -37,6 +38,7 @@ export function InsightsTab({
   applications: Application[];
   onGoToJobs: () => void;
   onOpenJob: (id: number) => void;
+  onShowClosed: () => void;
   onError: (message: string | null) => void;
   onJump: (title: string) => void;
   stats: Stats | null;
@@ -187,13 +189,32 @@ export function InsightsTab({
                   </div>
                 ))}
               </div>
-              {outcomes.unrecorded > 0 && (
-                <p className="dash-outcome-rest">
-                  {t("outcome.insightsUnrecorded", {
-                    count: outcomes.unrecorded,
-                  })}
-                </p>
-              )}
+              {outcomes.unrecorded > 0 &&
+                (outcomes.counts.length === 0 ? (
+                  /* Nothing recorded at all, which is not the same as "and
+                     also these". The column rendered a header, a count and
+                     one grey sentence saying nothing was recorded, next to
+                     two populated columns — a dead end where the only thing
+                     that fixes it is somewhere else entirely. The reason is
+                     recorded on the application itself, so this says so and
+                     goes there. */
+                  <p className="dash-col-empty">
+                    <span className="muted small">
+                      {t("outcome.insightsNoneRecorded", {
+                        count: outcomes.unrecorded,
+                      })}
+                    </span>{" "}
+                    <Button variant="link" onClick={onShowClosed}>
+                      {t("outcome.insightsRecordCta")}
+                    </Button>
+                  </p>
+                ) : (
+                  <p className="dash-outcome-rest">
+                    {t("outcome.insightsUnrecorded", {
+                      count: outcomes.unrecorded,
+                    })}
+                  </p>
+                ))}
             </>
           )}
         </DashCard>

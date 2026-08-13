@@ -778,7 +778,7 @@
     "showingClosed": "Showing closed applications",
     "pin": "Pin",
     "unpin": "Unpin",
-    "nothingPinned": "Nothing pinned yet. Pin an application from its \u22ef menu to keep it here.",
+    "nothingPinned": "Nothing pinned yet. Pin an application from its ⋯ menu to keep it here.",
     "showingPinned": "Showing pinned applications",
     "showAll": "Show all",
     "backToLive": "Back to live",
@@ -885,7 +885,10 @@
     "insightsTitle": "Why applications end",
     "insightsEmpty": "No closed applications yet.",
     "insightsUnrecorded_one": "{{count}} closed with no reason recorded",
-    "insightsUnrecorded_other": "{{count}} closed with no reason recorded"
+    "insightsUnrecorded_other": "{{count}} closed with no reason recorded",
+    "insightsNoneRecorded_one": "None recorded yet — {{count}} closed application is waiting for a reason.",
+    "insightsNoneRecorded_other": "None recorded yet — {{count}} closed applications are waiting for a reason.",
+    "insightsRecordCta": "Show closed applications"
   },
   "bottomBar": {
     "pinned": "Pinned"

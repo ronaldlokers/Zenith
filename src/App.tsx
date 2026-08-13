@@ -449,6 +449,12 @@ export default function App() {
                 applications={visibleApps}
                 onGoToJobs={() => setTab("board")}
                 onOpenJob={(id) => navigate(`/board/${id}`)}
+                // Same target the "c" shortcut and the menu use: the closed
+                // rails are folded by default, so landing on a bare board
+                // would show none of what the link promised.
+                onShowClosed={() =>
+                  navigate("/board", { state: { showClosed: true } })
+                }
                 onError={setError}
                 onJump={(title) => {
                   setJumpQuery(title);
