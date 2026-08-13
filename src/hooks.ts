@@ -59,6 +59,48 @@ export function rowActivate(onActivate: () => void) {
   } as const;
 }
 
+// Holds the page still while a modal is open. Measured on the CV at both
+// 1440 and 390: with the quick-add dialog up, a wheel gesture scrolled the
+// page behind it from 0 to 800px. On a phone that is worse than
+// disorienting — a dialog that reaches its own end passes the gesture to the
+// page underneath, so you lose your place while trying to read the thing in
+// front of you.
+//
+// Two details that are easy to get wrong, and both cost more than they fix
+// if skipped:
+//
+// Counted, not a boolean. A confirm opened from inside a dialog is a second
+// lock, and releasing on the first close would unlock the page while a modal
+// is still up.
+//
+// The scrollbar is compensated. Setting overflow:hidden removes a classic
+// scrollbar, the content widens by its width, and every fixed element jumps
+// — which is a layout shift introduced by the fix for a scroll. Overlay
+// scrollbars measure 0 and get no padding, so the common case pays nothing.
+let scrollLocks = 0;
+let restorePadding = "";
+
+export function useScrollLock(active: boolean): void {
+  useEffect(() => {
+    if (!active) return;
+    const body = document.body;
+    if (scrollLocks === 0) {
+      const gap = window.innerWidth - document.documentElement.clientWidth;
+      restorePadding = body.style.paddingRight;
+      if (gap > 0) body.style.paddingRight = `${gap}px`;
+      body.style.overflow = "hidden";
+    }
+    scrollLocks += 1;
+    return () => {
+      scrollLocks -= 1;
+      if (scrollLocks === 0) {
+        body.style.overflow = "";
+        body.style.paddingRight = restorePadding;
+      }
+    };
+  }, [active]);
+}
+
 // Dialog focus management (#261) — moves focus into the dialog on open and
 // traps Tab within it, so keyboard/AT users can't tab out to the page
 // behind the modal. Attach the returned ref to the dialog element.

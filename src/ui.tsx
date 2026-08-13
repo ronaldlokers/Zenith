@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionBar, Button } from "./components";
-import { setConfirmImpl, useFocusTrap } from "./hooks";
+import { setConfirmImpl, useFocusTrap, useScrollLock } from "./hooks";
 
 // Shared dialog primitive (#314) — backdrop, focus trap, Escape, and
 // aria-modal in one place instead of re-implemented per modal.
@@ -20,6 +20,9 @@ export function Dialog({
   children: React.ReactNode;
 }) {
   const ref = useFocusTrap<HTMLDivElement>();
+  // Every modal in the app comes through here, so the page is held still in
+  // one place rather than at each call site.
+  useScrollLock(true);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
