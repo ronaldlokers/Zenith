@@ -330,7 +330,15 @@ export default function App() {
        rendered and its data has arrived — so the feed laid out at 760px
        during the fetch and jumped to 1100px when the items landed, on every
        visit. The route is known before any of that. */
-    <div className={`app app-tab-${tab}`}>
+    // `app-detail` comes from the URL, not from the loaded row: /board/:id
+    // is known at first paint, whereas routedJob resolves only once the
+    // applications arrive. The whole point of these classes is that they are
+    // there before the content is.
+    <div
+      className={`app app-tab-${tab}${
+        tab === "board" && detailIdFromUrl != null ? " app-detail" : ""
+      }`}
+    >
       {showQuickAdd && (
         <QuickAddDialog
           companies={visibleCompanies}

@@ -4497,24 +4497,37 @@ summary.bcol-head::after {
     display: none;
   }
 
-  .app:has(.board) .content,
-  .app:has(.board-swimlanes) .content,
-  .app:has(.settings-page) .content {
+  /* Keyed off the tab, for the same reason the .app widths above are: these
+     ran on :has(), which cannot match until the page's content mounts, so
+     .content laid out at the 760px cap and then jumped to its real measure —
+     measured on the board at 1440, x 340 -> 12 and width 760 -> 1416, which
+     is the whole of the remaining 0.16 shift there. `.app.app-tab-*` to
+     match the (0,3,0) specificity `:has()` contributed.
+
+     One-to-one with what they reached: admin renders the same .settings-page
+     shell as settings, .dash is rendered by Today and Insights, and
+     .network-page is Companies only — People never matched it and keeps the
+     base 760px measure it has today. */
+  .app.app-tab-board .content,
+  .app.app-tab-settings .content,
+  .app.app-tab-admin .content {
     max-width: none;
   }
 
-  .app:has(.cv-layout) .content,
-    .app:has(.calendar-view) .content,
-.app-tab-feed .content {
+  .app.app-tab-cv .content,
+  .app.app-tab-feed .content {
     max-width: 1100px;
   }
 
-  .app:has(.network-page) .content,
-  .app:has(.job-page) .content {
+  .app.app-tab-companies .content,
+  .app.app-tab-insights .content {
     max-width: 1000px;
   }
 
-  .app:has(.dash) .content {
+  /* After the board rule on purpose: a routed application is inside the
+     board tab but takes the narrower measure, which is what :has(.job-page)
+     expressed by being written later. */
+  .app.app-detail .content {
     max-width: 1000px;
   }
 
@@ -4523,7 +4536,13 @@ summary.bcol-head::after {
      enough to lay out, not enough to read a sentence in. Two classes rather
      than one so it beats the .dash rule above on specificity, not on being
      written after it. Insights keeps its figures at the narrower measure. */
-  .app:has(.dash.today) .content {
+  /* The landing runs three columns of sentences and needs a wider measure
+     than Insights, which is figures. Overview is deliberately absent from
+     the 1000px group above rather than listed there and overridden here:
+     the rule it replaced used two classes inside :has() specifically so it
+     would win on specificity and not on source order, and putting the same
+     selector in two rules would have given that property away. */
+  .app.app-tab-overview .content {
     max-width: 1240px;
   }
 }
