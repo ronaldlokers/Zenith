@@ -82,6 +82,7 @@ export function CVTab({
   // width depends on the rail, the viewport and the template — and the whole
   // point of this preview is that its proportions are true.
   const docViewRef = useRef<HTMLDivElement>(null);
+  const [pages, setPages] = useState(1);
   useEffect(() => {
     const host = docViewRef.current;
     if (!host) return;
@@ -97,6 +98,11 @@ export function CVTab({
         "--cv-doc-height",
         `${Math.ceil(sheet.scrollHeight * scale)}px`,
       );
+      // How long the document actually is, in the unit a CV is judged in.
+      // One decimal on purpose: "1.6 pages" says something "2 pages" does
+      // not, and the half-empty second page is the length mistake this is
+      // here to surface.
+      setPages(Math.max(1, sheet.scrollHeight / (297 * MM)));
     };
     apply();
     const ro = new ResizeObserver(apply);
@@ -320,6 +326,13 @@ export function CVTab({
               </span>
               <span>
                 {t("cv.languages")} <b>{shown.languages.length}</b>
+              </span>
+              {/* The one count that is about the document rather than its
+                  contents. Everything else here says how much you have
+                  written; this says how long it is, which is the thing a
+                  reader notices first. */}
+              <span className="cv-card-pages">
+                {t("cv.pages", { count: Math.round(pages * 10) / 10 })}
               </span>
             </div>
           </article>

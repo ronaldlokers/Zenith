@@ -581,7 +581,9 @@
     "matchPosting": "Vergelijk met vacature",
     "moveUpNamed": "{{name}} omhoog",
     "moveDownNamed": "{{name}} omlaag",
-    "proficiencyLabel": "Niveau"
+    "proficiencyLabel": "Niveau",
+    "pages_one": "{{count}} pagina",
+    "pages_other": "{{count}} pagina's"
   },
   "posting": {
     "staleHint": "Deze vacature staat mogelijk niet meer online — even checken."

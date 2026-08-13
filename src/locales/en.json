@@ -581,7 +581,9 @@
     "matchPosting": "Match to a posting",
     "moveUpNamed": "Move {{name}} up",
     "moveDownNamed": "Move {{name}} down",
-    "proficiencyLabel": "Proficiency"
+    "proficiencyLabel": "Proficiency",
+    "pages_one": "{{count}} page",
+    "pages_other": "{{count}} pages"
   },
   "posting": {
     "staleHint": "This posting may no longer be live — worth a quick check."
