@@ -969,7 +969,9 @@
   "insights": {
     "headlineNumbers": "Kerncijfers",
     "nothingYet": "Nog niets te meten — Inzichten vullen zich terwijl je solliciteert.",
-    "nothingYetCta": "Voeg je eerste sollicitatie toe"
+    "nothingYetCta": "Voeg je eerste sollicitatie toe",
+    "totalComp": "totaal",
+    "baseRange": "basis {{range}}"
   },
   "export": {
     "applications": "Sollicitaties",

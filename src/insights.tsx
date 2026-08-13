@@ -299,12 +299,29 @@ export function InsightsTab({
                       onClick={() => onOpenJob(o.id)}
                     >
                       <span className="dash-ot">{o.title}</span>
+                      {/* Two money figures sat on one row unlabelled —
+                          "~EUR 129,500" beside "€90,000 – €100,000" — with
+                          nothing saying one is the package and the other the
+                          base. An undefined number is an ambiguous number,
+                          and these two invited the reader to think the app
+                          disagreed with itself. */}
                       <span className="dash-ov">
-                        {tc != null ? fmtComp(tc) : "—"}
+                        {tc != null ? (
+                          <>
+                            {fmtComp(tc)}{" "}
+                            <span className="dash-ov-what">
+                              {t("insights.totalComp")}
+                            </span>
+                          </>
+                        ) : (
+                          "—"
+                        )}
                       </span>
                       <span className="dash-oc muted">
                         {o.company_name ?? "—"}
-                        {o.salary_range ? ` · ${o.salary_range}` : ""}
+                        {o.salary_range
+                          ? ` · ${t("insights.baseRange", { range: o.salary_range })}`
+                          : ""}
                       </span>
                     </button>
                   </li>

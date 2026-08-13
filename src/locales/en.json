@@ -969,7 +969,9 @@
   "insights": {
     "headlineNumbers": "Headline numbers",
     "nothingYet": "Nothing to measure yet — Insights fills in as you apply.",
-    "nothingYetCta": "Add your first application"
+    "nothingYetCta": "Add your first application",
+    "totalComp": "total",
+    "baseRange": "base {{range}}"
   },
   "export": {
     "applications": "Applications",

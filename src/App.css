@@ -473,6 +473,17 @@
   border-top: 1px solid var(--border);
 }
 
+/* The rule separates this heading from what came before it. On the Data
+   section the first heading IS the first child, so the rule had nothing
+   above it to separate — it drew a line across the top of the pane and
+   ~50px of empty band under it, which reads as a section whose contents
+   failed to load. */
+.account-section h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .account-signed-in {
   display: flex;
   align-items: center;
@@ -4821,6 +4832,15 @@ button:not(:disabled):active,
 
 /* Offer-comparison PDF sits under the offers list on the Insights card
    (#486) — it moved here when the "all the numbers" drawer was retired. */
+/* The unit beside the figure, not instead of it. */
+.dash-ov-what {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--faint);
+}
+
 .dash-offers-pdf { margin-top: var(--space-2); }
 
 @media (max-width: 600px) {
