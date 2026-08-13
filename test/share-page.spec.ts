@@ -83,10 +83,41 @@ describe("public share page", () => {
     await seedShared();
     const ok = await SELF.fetch(`${BASE}/shared/${TOKEN}`);
     expect(ok.status).toBe(200);
-    expect(await ok.text()).toContain("shared pipeline");
+    expect(await ok.text()).toContain("Shared pipeline");
 
     const bad = await SELF.fetch(`${BASE}/shared/not-a-real-token`);
     expect(bad.status).toBe(404);
+  });
+
+  it("speaks the reader's language, not the developer's", async () => {
+    // The page is server-rendered outside React, so it cannot reach
+    // react-i18next and was hard-coded English — on a product with strict
+    // en/nl parity, on the one page most likely to be opened by someone who
+    // never chose a language.
+    await seedShared();
+    const dutch = await SELF.fetch(`${BASE}/shared/${TOKEN}`, {
+      headers: { "Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8" },
+    });
+    expect(dutch.headers.get("content-language")).toBe("nl");
+    const nl = await dutch.text();
+    expect(nl).toContain('<html lang="nl">');
+    expect(nl).toContain("Gedeelde pijplijn");
+    expect(nl, "stage labels are translated, not capitalised slugs").toContain(
+      "Geïnteresseerd",
+    );
+
+    // Quality values decide, so a lower-ranked English does not win.
+    const byQuality = await SELF.fetch(`${BASE}/shared/${TOKEN}`, {
+      headers: { "Accept-Language": "en;q=0.8, nl;q=0.9" },
+    });
+    expect(byQuality.headers.get("content-language")).toBe("nl");
+
+    // A language the page does not speak falls through to English.
+    const german = await SELF.fetch(`${BASE}/shared/${TOKEN}`, {
+      headers: { "Accept-Language": "de-DE,de;q=0.9" },
+    });
+    expect(german.headers.get("content-language")).toBe("en");
+    expect(await german.text()).toContain("Shared pipeline");
   });
 
   it("never puts compensation on the page", async () => {

@@ -1568,6 +1568,76 @@ function shareParseSqlDate(d: string): number {
   return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
 }
 
+// The public page's own strings. It is server-rendered outside React, so it
+// cannot reach react-i18next — and it was hard-coded English on a product
+// whose locales are kept at strict parity, on the one page most likely to be
+// opened by someone who never chose a language. Two locales, same keys, and
+// the stage labels translated rather than a CSS capitalize() of a DB slug.
+const SHARE_STRINGS = {
+  en: {
+    title: "Shared pipeline",
+    momentumLabel: "Pipeline momentum",
+    steady: "Steady",
+    quiet: "No recent activity",
+    faster: "Speeding up",
+    slower: "Slowing down",
+    open: (n: number) => `${n} open application${n === 1 ? "" : "s"}`,
+    footer:
+      "Read-only view — no application details, no editing. Powered by Zenith.",
+    stages: {
+      interested: "Interested",
+      applied: "Applied",
+      screening: "Screening",
+      interview: "Interview",
+      offer: "Offer",
+    } as Record<string, string>,
+  },
+  nl: {
+    title: "Gedeelde pijplijn",
+    momentumLabel: "Voortgang",
+    steady: "Stabiel",
+    quiet: "Geen recente activiteit",
+    faster: "Versnelt",
+    slower: "Vertraagt",
+    open: (n: number) =>
+      `${n} openstaande sollicitatie${n === 1 ? "" : "s"}`,
+    footer:
+      "Alleen-lezen weergave — geen details per sollicitatie, geen bewerking. Mogelijk gemaakt door Zenith.",
+    stages: {
+      interested: "Geïnteresseerd",
+      applied: "Gesolliciteerd",
+      screening: "Screening",
+      interview: "Gesprek",
+      offer: "Aanbod",
+    } as Record<string, string>,
+  },
+} as const;
+
+type ShareLocale = keyof typeof SHARE_STRINGS;
+
+// Entry-page negotiation, which is what Accept-Language is for. Quality
+// values are honoured so "en;q=0.8, nl;q=0.9" picks Dutch; anything we do
+// not speak falls through to the sharer's own stored locale, then English.
+function shareLocale(header: string | undefined, ownerLocale: string | null): ShareLocale {
+  const ranked = (header ?? "")
+    .split(",")
+    .map((part) => {
+      const [tag, ...params] = part.trim().split(";");
+      const q = params
+        .map((p) => p.trim())
+        .find((p) => p.startsWith("q="));
+      return { tag: tag.trim().toLowerCase(), q: q ? Number(q.slice(2)) : 1 };
+    })
+    .filter((x) => x.tag && !Number.isNaN(x.q))
+    .sort((a, b) => b.q - a.q);
+  for (const { tag } of ranked) {
+    if (tag === "*") break;
+    const base = tag.split("-")[0];
+    if (base === "nl" || base === "en") return base;
+  }
+  return ownerLocale === "nl" ? "nl" : "en";
+}
+
 // A revoked or mistyped share link. Settings' regenerate control
 // invalidates the previous link, so this is a routine outcome rather than an
 // edge case — and its most likely reader is the stranger the link was sent
@@ -1622,10 +1692,14 @@ function sharePageGone(c: Context<AppEnv>) {
 app.get("/shared/:token", async (c) => {
   const token = c.req.param("token");
   const profile = await c.env.DB.prepare(
-    "SELECT user_id FROM profile WHERE share_token = ?",
+    // The owner's locale is the fallback when the reader's browser asks for
+    // a language this page does not speak.
+    `SELECT profile.user_id, "user".locale AS locale
+     FROM profile LEFT JOIN "user" ON "user".id = profile.user_id
+     WHERE profile.share_token = ?`,
   )
     .bind(token)
-    .first<{ user_id: string }>();
+    .first<{ user_id: string; locale: string | null }>();
   if (!profile) return sharePageGone(c);
 
   const [apps, history] = await Promise.all([
@@ -1682,12 +1756,15 @@ app.get("/shared/:token", async (c) => {
       shareParseSqlDate(h.changed_at) >= now - 2 * PERIOD &&
       shareParseSqlDate(h.changed_at) < now - PERIOD,
   ).length;
-  let momentum = "Steady";
-  if (recentMoves === 0 && priorMoves === 0) momentum = "No recent activity";
-  else if (priorMoves === 0) momentum = "Speeding up";
+  const lang = shareLocale(c.req.header("Accept-Language"), profile.locale);
+  const S = SHARE_STRINGS[lang];
+
+  let momentum: string = S.steady;
+  if (recentMoves === 0 && priorMoves === 0) momentum = S.quiet;
+  else if (priorMoves === 0) momentum = S.faster;
   else {
     const change = (recentMoves - priorMoves) / priorMoves;
-    momentum = change > 0.15 ? "Speeding up" : change < -0.15 ? "Slowing down" : "Steady";
+    momentum = change > 0.15 ? S.faster : change < -0.15 ? S.slower : S.steady;
   }
 
   const totalOpen = apps.results.filter(
@@ -1701,7 +1778,7 @@ app.get("/shared/:token", async (c) => {
       // (see the nonce below). It is the only unauthenticated surface here.
       (f, i) => `
       <div class="row">
-        <span class="lbl">${f.stage}</span>
+        <span class="lbl">${S.stages[f.stage] ?? f.stage}</span>
         <span class="track"><span class="fill fill-${i}"></span></span>
         <span class="n">${f.count}</span>
       </div>`,
@@ -1716,12 +1793,12 @@ app.get("/shared/:token", async (c) => {
     .join("");
 
   const html = `<!doctype html>
-<html lang="en">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Zenith — shared pipeline</title>
+<title>Zenith — ${S.title}</title>
 <style nonce="${nonce}">
 ${barWidths}
   /* This page is the only Zenith surface someone who is not a user ever sees,
@@ -1747,7 +1824,11 @@ ${barWidths}
   .momentum-value { font-size: 1.375rem; font-weight: 700; }
   .open-count { color: #b9b8cc; font-size: 0.875rem; margin-bottom: 1.5rem; display: block; }
   .row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; font-size: 0.875rem; }
-  .lbl { width: 5.5rem; text-transform: capitalize; color: #b9b8cc; }
+  /* min-width, not width, and no capitalize: the labels are translated
+     strings now rather than DB slugs, and "Geïnteresseerd" is wider than
+     the 5.5rem the English set fitted in — measured, it clipped at both
+     1440 and 390. The column still aligns for every label that fits. */
+  .lbl { min-width: 5.5rem; flex-shrink: 0; color: #b9b8cc; }
   .track { flex: 1; height: 8px; background: #1b1f4d; border-radius: 999px; overflow: hidden; }
   /* Struck Brass, not the teal this page used to invent. Brass is the one
      accent Zenith spends on the figure that carries the eye. */
@@ -1758,14 +1839,14 @@ ${barWidths}
 </head>
 <body>
   <div class="wrap">
-    <h1>Shared pipeline</h1>
+    <h1>${S.title}</h1>
     <div class="momentum">
-      <span class="momentum-label">Pipeline momentum</span>
+      <span class="momentum-label">${S.momentumLabel}</span>
       <span class="momentum-value">${momentum}</span>
     </div>
-    <span class="open-count">${totalOpen} open applications</span>
+    <span class="open-count">${S.open(totalOpen)}</span>
     ${rows}
-    <footer>Read-only view — no application details, no editing. Powered by Zenith.</footer>
+    <footer>${S.footer}</footer>
   </div>
 </body>
 </html>`;
@@ -1796,6 +1877,8 @@ ${barWidths}
     // which is exactly when the referrer policy is free to add.
     "Cache-Control": "no-store, private",
     "Referrer-Policy": "no-referrer",
+    // Announce what was negotiated, which is the other half of the contract.
+    "Content-Language": lang,
   });
 });
 
