@@ -10,6 +10,16 @@ export interface DashCardProps
   extends Omit<HTMLAttributes<HTMLElement>, "onClick"> {
   /** The .dash-ch eyebrow label. Omitted for the lead card, which has none. */
   heading?: ReactNode;
+  /**
+   * Heading level for the card's own title. A real heading, because this
+   * card is how the analytics surface is divided up, and it rendered a
+   * <div>: a screen-reader user navigating Insights by heading skipped the
+   * KPIs, the momentum band, the funnel, the outcomes and the offers, and
+   * landed on the calendar. Guidance on accessible dashboards is explicit
+   * that every visualisation needs a real heading and that levels must not
+   * skip. Defaults to 2; the styling is unchanged either way.
+   */
+  headingLevel?: 2 | 3;
   /** Optional right-aligned "win" pill in the heading (.dash-win). */
   win?: ReactNode;
   /** Accent left border (the dashboard's lead card). */
@@ -33,6 +43,7 @@ export interface DashCardProps
 
 export function DashCard({
   heading,
+  headingLevel = 2,
   win,
   lead = false,
   column = false,
@@ -51,13 +62,14 @@ export function DashCard({
   ]
     .filter(Boolean)
     .join(" ");
+  const HeadTag = `h${headingLevel}` as "h2" | "h3";
   const head =
     heading != null ? (
-      <div className="zui-dashcard-head">
+      <HeadTag className="zui-dashcard-head">
         {heading}
         {win != null && <span className="zui-dashcard-win">{win}</span>}
         {icon != null && <span className="zui-dashcard-icon">{icon}</span>}
-      </div>
+      </HeadTag>
     ) : null;
   return onClick ? (
     <button type="button" className={classes} onClick={onClick} {...rest}>

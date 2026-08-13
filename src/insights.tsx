@@ -86,6 +86,12 @@ export function InsightsTab({
     <section className="dash">
       {/* The figures sit on one hairline band, divided rather than boxed:
           four tiles read as four things, where this reads as one summary. */}
+      {/* Named for heading navigation. These two bands carry the page's
+          headline numbers and its verdict, and neither had a heading at all
+          — so skimming Insights by heading went straight past everything
+          analytic and landed on the calendar. Visually hidden because the
+          figures already label themselves on screen. */}
+      <h2 className="sr-only">{t("insights.headlineNumbers")}</h2>
       <div className="dash-kpiband">
         <StatCard
           band
@@ -118,6 +124,7 @@ export function InsightsTab({
         />
       </div>
 
+      <h2 className="sr-only">{t("dashboard.momentumTitle")}</h2>
       <MomentumBand
         eyebrow={t("dashboard.momentumTitle")}
         verdict={t(`stats.momentum.${pipe.verdict}`)}

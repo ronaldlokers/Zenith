@@ -938,5 +938,8 @@
   "urgency": {
     "overdue": "overdue",
     "today": "due today"
+  },
+  "insights": {
+    "headlineNumbers": "Headline numbers"
   }
 }

@@ -45,13 +45,17 @@
   .zui-dashcard-head {
     font-family: var(--mono);
     font-size: var(--text-chrome);
+    /* Explicit, because this is a real <h2> now rather than a <div>: a
+       heading arrives with the UA's own bold weight and block margins, and
+       the semantics were meant to change without the pixels moving. */
+    font-weight: 400;
     letter-spacing: var(--track-eyebrow);
     text-transform: uppercase;
     color: var(--faint);
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    margin-bottom: 0.55rem;
+    margin: 0 0 0.55rem;
   }
 
   /* App.css:4775 — the right-aligned "win" pill. */

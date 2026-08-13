@@ -938,5 +938,8 @@
   "urgency": {
     "overdue": "te laat",
     "today": "vandaag"
+  },
+  "insights": {
+    "headlineNumbers": "Kerncijfers"
   }
 }
