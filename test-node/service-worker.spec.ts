@@ -65,6 +65,9 @@ function loadWorker() {
     registration: { showNotification: () => Promise.resolve() },
   };
 
+  // Flipped by the offline tests. A dropped connection is a rejected
+  // fetch(), not an error response — the two take different branches.
+  const net = { online: true };
   const sandbox = {
     self,
     caches: {
@@ -72,13 +75,16 @@ function loadWorker() {
       keys: async () => [...caches.keys()],
       delete: async (name: string) => caches.delete(name),
     },
-    fetch: async () => ({ ok: true, clone: () => ({ ok: true }) }),
+    fetch: async () => {
+      if (!net.online) throw new TypeError("Failed to fetch");
+      return { ok: true, clone: () => ({ ok: true }), body: "fresh" };
+    },
     URL,
   };
 
   runInContext(SRC, createContext(sandbox));
 
-  return { handlers, caches, openCache };
+  return { handlers, caches, openCache, net };
 }
 
 /** Drives the fetch handler for one asset request and awaits its response. */
@@ -96,6 +102,22 @@ async function requestAsset(
     },
   });
   await responded;
+}
+
+/** Drives one navigation request and returns what the worker responded. */
+async function navigate(
+  handlers: Map<string, (e: unknown) => void>,
+  url: string,
+) {
+  const fetchHandler = handlers.get("fetch");
+  let responded: Promise<unknown> | undefined;
+  fetchHandler!({
+    request: { url, method: "GET", mode: "navigate" },
+    respondWith: (p: Promise<unknown>) => {
+      responded = p;
+    },
+  });
+  return responded;
 }
 
 describe("service worker", () => {
@@ -147,5 +169,42 @@ describe("service worker", () => {
         expect(key).not.toContain("elsewhere.example");
       }
     }
+  });
+
+  it("serves the cached shell when the connection is gone", async () => {
+    // The tunnel. Without this the browser shows its own offline page and
+    // the app is simply absent — which is the whole reason a shell is
+    // cached at install.
+    const { handlers, net, openCache } = loadWorker();
+    // A successful navigation first, which is what populates the shell.
+    await navigate(handlers, "https://zenith.test/board");
+    expect(await openCache("zenith-shell-v1").keys()).toContain("/");
+
+    net.online = false;
+    const res = await navigate(handlers, "https://zenith.test/insights");
+    expect(res, "offline navigation fell through to the network").toBeTruthy();
+  });
+
+  it("caches the shell under one key, not one per route", async () => {
+    // Every navigation writes to "/" deliberately: the SPA serves the same
+    // document for every route, so keying by url would store N copies of
+    // one file and still miss any route not visited before going offline.
+    const { handlers, openCache } = loadWorker();
+    for (const path of ["/", "/board", "/insights", "/settings"]) {
+      await navigate(handlers, `https://zenith.test${path}`);
+    }
+    expect(await openCache("zenith-shell-v1").keys()).toEqual(["/"]);
+  });
+
+  it("has nothing to serve if it goes offline before any navigation", async () => {
+    // Honest about the limit: install caches "/" via cache.add, so a worker
+    // that never installed and never navigated has no shell. This asserts
+    // the failure is a rejection rather than a hang — the page gets an
+    // error it can act on instead of a spinner that never resolves.
+    const { handlers, net } = loadWorker();
+    net.online = false;
+    await expect(
+      navigate(handlers, "https://zenith.test/board"),
+    ).rejects.toThrow();
   });
 });
