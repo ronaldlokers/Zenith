@@ -2560,6 +2560,37 @@ select.status {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    /* A clipped column looks finished. This scrolls above 900px, and a
+       15-card column measured 1721px of content in a 735px box with no
+       scrollbar, no fade and nothing saying so — the tail was invisible and
+       the header count was the only hint it existed.
+
+       Two scrollbar routes were tried and neither paints here: the platform
+       uses overlay scrollbars, so `scrollbar-width: thin` left the gutter at
+       0px, and setting it *disables* the ::-webkit-scrollbar rules that
+       would have forced a painted one. So the cue lives in the content.
+
+       The classic two-layer shadow: a pair of ground-coloured covers
+       attached `local` (they scroll with the content) sitting over a pair of
+       shadows attached `scroll` (fixed to the box). At the top of the list
+       the cover hides the top shadow; scroll down and it slides away to
+       reveal it. A column that does not overflow keeps both covers in place
+       and shows nothing at all, which is why this works where a plain fade
+       does not — a short column ends exactly at its content, and an
+       unconditional fade would sit on the last card of every column on the
+       board. */
+    /* The cue has to be over the cards, not behind them. The classic
+       two-layer scroll shadow paints on the container's background, and
+       these cards are opaque white the full width of the column, so it was
+       painted and invisible — captured a screenshot to be sure rather than
+       trusting the rule. A mask fades the rendered content itself.
+
+       Bottom only, and it costs nothing on a column that fits: this
+       container grows to fill the column, so a short list ends well above
+       the fade and nothing touches it. Where the list does overflow, the
+       card at the cut edge fades out instead of being sliced, which is the
+       difference between "there is more" and "this is the end". */
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
   }
 }
 
@@ -4574,6 +4605,8 @@ button:not(:disabled):active,
   min-width: 34px;
 }
 
+
+
 @media (max-width: 600px) {
   .board-bar .search,
   .board-bar-btn,
@@ -4585,6 +4618,44 @@ button:not(:disabled):active,
   }
   .settings-list li > button {
     min-width: 40px;
+  }
+}
+
+/* Placed after the max-width:600px floor above, which sets 40px at the
+   same specificity and wins on source order otherwise — measured, these
+   stayed 40px while the rule looked applied.
+
+   40px is the app's control height, not the touch floor, and unlike every
+   other control on this screen these three carry no hit-area overlay: the
+   board's search field, its Filter button and its sort select were the last
+   uncompensated targets on the board. Vertical only — they sit in a packed
+   pill bar with small gaps, so a wider overlay would answer for presses
+   aimed at the control beside it. */
+@media (pointer: coarse) {
+  .board-bar-btn {
+    position: relative;
+  }
+
+  .board-bar-btn::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    transform: translateY(-50%);
+  }
+
+  /* Real height for these two, because the overlay above cannot work on
+     them: <input> and <select> are replaced elements and render no ::after
+     at all. Measured — the rule computed and the pseudo-element never
+     existed, so the search field and the sort select would have stayed at 40
+     while looking fixed. 4px of extra bar height on touch is the honest
+     price. */
+  .board-bar .search,
+  .board-bar select,
+  .board-sort select {
+    min-height: 44px;
   }
 }
 
@@ -4604,7 +4675,7 @@ button:not(:disabled):active,
    cards + a gold count figure — the board's single focal accent, echoing
    the dashboard hero. */
 .bcol.stage-offer .bcol-cards {
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  background-color: color-mix(in srgb, var(--accent) 7%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
   border-radius: var(--radius-md);
   padding: 0.5rem;
