@@ -720,6 +720,8 @@
     "inviteError": "Couldn't create that account.",
     "resetDemo": "Demo account",
     "resetDemoSubmit": "Reset demo data",
+    "resetDemoHint": "Deletes everything in the demo account — applications, companies, contacts, CV — and seeds it again with one example of each feature.",
+    "resetDemoConfirm": "Delete all demo-account data and seed it again? Anything added to that account since the last reset is lost.",
     "resetDemoSuccess": "Demo data reset.",
     "resetDemoError": "Couldn't reset demo data — has the demo account been invited yet?",
     "apiKey": "Personal API key",

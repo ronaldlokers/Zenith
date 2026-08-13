@@ -720,6 +720,8 @@
     "inviteError": "Kon dat account niet aanmaken.",
     "resetDemo": "Demo-account",
     "resetDemoSubmit": "Demo-data resetten",
+    "resetDemoHint": "Verwijdert alles in het demo-account — sollicitaties, bedrijven, contacten, cv — en vult het opnieuw met één voorbeeld van elke functie.",
+    "resetDemoConfirm": "Alle gegevens van het demo-account verwijderen en opnieuw vullen? Alles wat sinds de vorige reset is toegevoegd, gaat verloren.",
     "resetDemoSuccess": "Demo-data gereset.",
     "resetDemoError": "Kon demo-data niet resetten — is het demo-account al uitgenodigd?",
     "apiKey": "Persoonlijke API-sleutel",
