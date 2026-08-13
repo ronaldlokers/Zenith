@@ -1,7 +1,6 @@
 {
   "tabs": {
     "overview": "Today",
-    "jobs": "Jobs",
     "feed": "Feed",
     "calendar": "Calendar",
     "insights": "Insights",
@@ -215,7 +214,7 @@
     "checking": "Checking…",
     "viaSource": "via {{source}}",
     "viewPosting": "View posting ↗",
-    "addToJobs": "Add to Jobs",
+    "addToJobs": "Add to pipeline",
     "dismiss": "Dismiss",
     "triageHint": "j / k move · a add · d dismiss",
     "skillsMatch_one": "{{count}} matching skill",

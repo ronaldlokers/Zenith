@@ -1,7 +1,6 @@
 {
   "tabs": {
     "overview": "Vandaag",
-    "jobs": "Vacatures",
     "feed": "Feed",
     "calendar": "Agenda",
     "insights": "Inzichten",
@@ -215,7 +214,7 @@
     "checking": "Controleren…",
     "viaSource": "via {{source}}",
     "viewPosting": "Bekijk vacature ↗",
-    "addToJobs": "Toevoegen aan Jobs",
+    "addToJobs": "Toevoegen aan pijplijn",
     "dismiss": "Negeren",
     "triageHint": "j / k navigeren · a toevoegen · d negeren",
     "skillsMatch_one": "{{count}} passende vaardigheid",

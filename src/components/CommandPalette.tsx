@@ -60,7 +60,10 @@ export function CommandPalette({
           .slice(0, 6)
           .map((a) => ({
             domId: `palette-app-${a.id}`,
-            group: t("tabs.jobs"),
+            // "Pipeline", the same word the nav, the page title and the
+            // feed's add action use. The palette grouped these under "Jobs",
+            // which was a second name for one destination.
+            group: t("tabs.pipeline"),
             label: (
               <>
                 {a.title}
