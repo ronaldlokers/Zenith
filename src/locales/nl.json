@@ -806,7 +806,8 @@
     "unfoldRail_other": "{{stage}} openen, {{count}} sollicitaties",
     "closedGroup": "Afgesloten",
     "openClosedGroup_one": "Afgesloten sollicitaties openen, {{count}} sollicitatie",
-    "openClosedGroup_other": "Afgesloten sollicitaties openen, {{count}} sollicitaties"
+    "openClosedGroup_other": "Afgesloten sollicitaties openen, {{count}} sollicitaties",
+    "showingPinnedNow": "Alleen vastgezette sollicitaties zichtbaar."
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

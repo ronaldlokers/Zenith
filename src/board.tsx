@@ -177,6 +177,7 @@ function BoardCard({
 function BoardTab({
   applications,
   pinnedOnly,
+  onShowAll,
   attention,
   sort,
   companies,
@@ -201,6 +202,7 @@ function BoardTab({
   applications: Application[];
   /** True when the bottom bar's Pinned slot is filtering the board. */
   pinnedOnly: boolean;
+  onShowAll: () => void;
   companies: Company[];
   contacts: Contact[];
   roleTypes: RoleTypeDef[];
@@ -455,6 +457,21 @@ function BoardTab({
             <span className="n">{countOf(rail)}</span>
           </button>
         ))}
+      </div>
+    )}
+    {pinnedOnly && applications.length > 0 && (
+      /* Pinned is a filter with no visible state: the bottom bar's slot
+         looks identical pressed or not, and the only signal it ever gave
+         was a toast. Once that expired the board was a set of columns
+         missing most of their cards with nothing saying why — and with
+         nothing pinned, nine columns of zero. The all-folded state next to
+         this one already learned the lesson its comment states: a
+         persistent state needs a persistent way out. */
+      <div className="board-allfolded">
+        <span className="muted small">{t("board.showingPinnedNow")}</span>{" "}
+        <Button variant="link" onClick={onShowAll}>
+          {t("board.showAll")}
+        </Button>
       </div>
     )}
     {pinnedOnly && applications.length === 0 && (
@@ -808,8 +825,18 @@ export function PipelineTab({
 
   useEffect(() => {
     if (!navState?.showPinned) return;
-    setPinnedOnly(true);
-    notify(t("board.showingPinned"), () => setPinnedOnly(false), t("board.showAll"));
+    // A toggle, not a re-assert. Pressing "p" while already in the pinned
+    // view fired the same effect again and did nothing visible, so the key
+    // that got you in had no way of getting you out — the strip above is
+    // the other half of that, and this is the half a keyboard user reaches
+    // for first.
+    setPinnedOnly((v) => {
+      const next = !v;
+      if (next) {
+        notify(t("board.showingPinned"), () => setPinnedOnly(false), t("board.showAll"));
+      }
+      return next;
+    });
     navigate("/board", { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navState?.showPinned]);
@@ -1207,6 +1234,7 @@ export function PipelineTab({
       <BoardTab
         applications={filtered}
         pinnedOnly={pinnedOnly}
+        onShowAll={() => setPinnedOnly(false)}
         attention={attention}
         sort={sort}
         companies={companies}
