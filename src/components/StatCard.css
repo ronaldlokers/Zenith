@@ -171,4 +171,33 @@
       transform: none;
     }
   }
+
+  /* The hero variant, compacted on a phone. At 390x844 the card cost 94px and
+     pushed the first actionable row past the halfway line — on the surface
+     whose whole job is the next action, for the user the product describes as
+     one-handed and interrupted. Figure and sentence share a line here, at the
+     large figure step rather than the extra-large one. The ring and ground are
+     untouched, so it is still the loudest thing on the screen, just not the
+     tallest. Desktop is unchanged, where the space is free.
+
+     This lives here rather than in App.css because @layer components wins:
+     the same rule written against .today-hero in the app layer set the
+     padding and was then overruled on font-size and flex-direction by this
+     file, which is the trap that makes a fix look applied and do nothing. */
+  @media (max-width: 600px) {
+    .zui-statcard--hero {
+      flex-direction: row;
+      align-items: baseline;
+      gap: var(--space-3);
+    }
+
+    .zui-statcard--hero .zui-statcard-value {
+      font-size: var(--text-figure-lg);
+      line-height: 1;
+    }
+
+    .zui-statcard--hero .zui-statcard-label {
+      text-align: left;
+    }
+  }
 }

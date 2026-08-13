@@ -137,6 +137,25 @@ export function DashboardTab({
   // Four honest hero states. The old single "all caught up" string was true in
   // one of them and a lie in the other three — congratulating a user who has
   // never added an application, or who has twelve rotting with nothing planned.
+  // "Today" was doing two jobs. Every item in `due` is either late or due now,
+  // and the hero called all of them "today" — so nine follow-ups running from
+  // three weeks to nine days late were announced as today's work. Splitting
+  // them lets the copy say what is true, which is also what the research on
+  // task-app abandonment asks for: an overdue pile that is named honestly and
+  // has a way out is survivable; one dressed up as today's list is not.
+  // Plain derivations, not useMemo: they sit below the `if (!stats)` guard
+  // above, and a hook after an early return changes hook order between
+  // renders. Two filters over the due set (tens of rows, and the product is
+  // specified around ~50 applications) cost nothing worth a hook.
+  const overdue = due
+    // Sorted, because the hero quotes the oldest date. `due` is in source
+    // order, so indexing it for "oldest" would have named an arbitrary one.
+    .filter((a) => isOverdue(a))
+    .sort((a, b) =>
+      (a.next_action_at ?? "").localeCompare(b.next_action_at ?? ""),
+    );
+  const dueToday = due.filter((a) => !isOverdue(a));
+
   const heroState =
     applications.length === 0
       ? "untracked"
@@ -169,16 +188,36 @@ export function DashboardTab({
         <div className="today-cols">
           <div className="today-col">
             {heroState === "due" && (
-              /* No onClick in this state. It used to call setNextUpTab("due")
-                 while the tab was already "due" — the largest, warmest target
-                 on the screen, and pressing it changed nothing. A control that
-                 looks pressable and is not teaches people to distrust the
-                 ones that are. The list below it is what acts. */
+              /* No onClick. It used to call setNextUpTab("due") while "due"
+                 was already the tab — the largest, warmest target on the
+                 screen, and pressing it changed nothing.
+
+                 The label says which kind of work these are. Calling nine
+                 follow-ups that ran late by up to three weeks "things need
+                 you today" is the framing the research on task-app
+                 abandonment warns about: a pile presented as today's list,
+                 which the user learns not to open. Named honestly, with the
+                 oldest date shown and a way to clear it below, it stays
+                 survivable. */
               <StatCard
                 hero
                 className="today-hero"
                 value={due.length}
-                label={t("today.needYou", { count: due.length })}
+                label={
+                  overdue.length && dueToday.length
+                    ? t("today.mixed", {
+                        overdue: overdue.length,
+                        today: dueToday.length,
+                      })
+                    : overdue.length
+                      ? `${t("today.overdueOnly", { count: overdue.length })} · ${t(
+                          "today.overdueSince",
+                          {
+                            date: formatDate(overdue[0].next_action_at!),
+                          },
+                        )}`
+                      : t("today.needYou", { count: due.length })
+                }
               />
             )}
             {heroState === "clear" && (
@@ -267,17 +306,37 @@ export function DashboardTab({
             />
           </div>
 
-          <div className="today-col">
-            <HappenedToday
-              stats={stats}
-              applications={applications}
-              onOpenJob={onOpenJob}
-            />
-          </div>
+          {hadMovesThisWeek(stats, applications) && (
+            <div className="today-col">
+              <HappenedToday
+                stats={stats}
+                applications={applications}
+                onOpenJob={onOpenJob}
+              />
+            </div>
+          )}
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+// "Happened today" reads a 24h window and "Moved this week" a 7d one over the
+// same status_history rows, so today is a strict subset of the week: when the
+// week is empty today cannot hold anything either, and the rail ended on two
+// cards side by side each saying nothing changed. Two nulls read as two
+// failures. The narrower one yields and the week's single line stands, which
+// is both smaller and the more useful of the two statements. Mirrors
+// ThisWeek's predicate exactly, app-exists filter included — a row whose
+// application is missing shows in neither, so counting it here would keep an
+// empty card alive next to an empty card.
+function hadMovesThisWeek(stats: Stats, applications: Application[]): boolean {
+  const since = Date.now() - 7 * DAY;
+  return stats.history.some(
+    (h) =>
+      parseSqlDate(h.changed_at) >= since &&
+      applications.some((a) => a.id === h.application_id),
   );
 }
 
@@ -443,10 +502,51 @@ function NextUpPanel({
       .catch((e) => onError((e as Error).message));
   };
 
+  // One way out of the pile. The research on task-app abandonment is blunt
+  // about this: a list of seventeen overdue items costs more to open than to
+  // ignore, and the app is then abandoned in week two or three. Enumerating
+  // the debt is not enough — the screen has to be able to absorb it. Every
+  // date is restored by a single undo, so this is a reversible act, not a
+  // confession.
+  const pushAllLate = () => {
+    const late = rows.filter((a) => isOverdue(a));
+    if (!late.length) return;
+    const prev = late.map((a) => ({
+      id: a.id,
+      next_action: a.next_action ?? null,
+      next_action_at: a.next_action_at ?? null,
+    }));
+    const at = daysFromToday(7);
+    return Promise.all(
+      late.map((a) =>
+        api.updateFollowUp(a.id, {
+          next_action: a.next_action ?? null,
+          next_action_at: at,
+        }),
+      ),
+    )
+      .then(() => onChanged())
+      .then(() =>
+        notify(t("today.pushedAll", { count: late.length }), () =>
+          Promise.all(prev.map((r) => api.updateFollowUp(r.id, r)))
+            .then(() => onChanged())
+            .catch((e) => onError((e as Error).message)),
+        ),
+      )
+      .catch((e) => onError((e as Error).message));
+  };
+
+  const lateCount = rows.filter((a) => isOverdue(a)).length;
+
   return (
     <section className="today-nextup">
       <div className="today-nextup-head">
-        <h2 className="side-h">{t("nextUp.title")}</h2>
+        <h2 className="side-h">
+          {t("nextUp.title")}{" "}
+          {tab === "due" && (
+            <span className="today-sortnote">{t("today.sortedBy")}</span>
+          )}
+        </h2>
         <SegmentedControl role="group" aria-label={t("nextUp.title")}>
           <SegmentedControl.Item
             active={tab === "due"}
@@ -533,6 +633,11 @@ function NextUpPanel({
       {rows.length > visible.length && (
         <button className="today-showall" onClick={() => setShowAll(true)}>
           {t("nextUp.showAll", { count: rows.length })}
+        </button>
+      )}
+      {tab === "due" && lateCount > 1 && (
+        <button className="today-pushall" onClick={() => void pushAllLate()}>
+          {t("today.pushAll")}
         </button>
       )}
     </section>

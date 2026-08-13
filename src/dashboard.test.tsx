@@ -110,10 +110,17 @@ describe("DashboardTab (Today)", () => {
     // tab — the largest, warmest target on the screen, and pressing it
     // changed nothing. A control that looks pressable and is not teaches
     // people to distrust the ones that are (design critique, 2026-08-13).
-    const hero = screen.getByText(/things need you today/).closest("div");
-    expect(hero).toHaveTextContent("2things need you today");
+    // One of the two is late and one is genuinely due today, so the hero says
+    // so rather than calling both "today". The old copy — "2 things need you
+    // today" — was a lie in every set that mixed a late follow-up in, which
+    // is most of them; the count was right and the sentence was not.
+    const hero = screen.getByText(/late/).closest("div");
+    expect(hero).toHaveTextContent("1 late · 1 due today");
+    // Asked of the hero itself, not by accessible name: the task rows below
+    // it are buttons and their labels carry the same words now, so a name
+    // match finds a row and reports the hero as pressable.
     expect(
-      screen.queryByRole("button", { name: /things need you today/ }),
+      hero?.closest("button"),
       "the due-state hero must not be a button: its click had no effect",
     ).toBeNull();
     expect(screen.getByRole("button", { name: "Due 2" })).toBeInTheDocument();

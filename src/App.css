@@ -5157,3 +5157,44 @@ button:not(:disabled):active,
   border-color: var(--rule);
   background: var(--surface);
 }
+
+/* The way out of the pile, at the foot of the pile. Quiet on purpose: it is
+   an escape hatch for a bad week, not the screen's primary act. */
+.today-pushall {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  cursor: pointer;
+}
+
+.today-pushall:hover,
+.today-pushall:focus-visible {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+/* The order, said out loud. Ranking by stage then fit beats ranking by date,
+   but an unlabelled order reads as no order when the date column jumps. */
+.today-sortnote {
+  color: var(--faint);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Both of these are real controls in the thumb zone; 33px was not enough. */
+@media (pointer: coarse) {
+  .today-showall,
+  .today-pushall {
+    min-height: 44px;
+  }
+}
+
