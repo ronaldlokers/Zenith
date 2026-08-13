@@ -814,7 +814,8 @@
     "statusChanged": "Moved to {{stage}}",
     "revived": "Back in an active stage",
     "setFollowUp": "Set follow-up",
-    "archived": "Archived"
+    "archived": "Archived",
+    "dismissed": "Dismissed {{title}}"
   },
   "confirm": {
     "deleteDocument": "Delete “{{name}}”?",

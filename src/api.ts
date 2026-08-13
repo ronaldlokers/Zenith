@@ -231,6 +231,8 @@ export const api = {
     }),
   dismissFeedItem: (id: number) =>
     request<void>(`/api/feed/${id}/dismiss`, { method: "POST" }),
+  undismissFeedItem: (id: number) =>
+    request<void>(`/api/feed/${id}/undismiss`, { method: "POST" }),
   addFeedItem: (id: number) =>
     request<import("./types").Application>(`/api/feed/${id}/add`, {
       method: "POST",

@@ -500,6 +500,22 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     return c.body(null, 204);
   });
 
+  // Undo for the dismiss above. Dismissing is the majority action in triage
+  // and it was silent and permanent; the toast that now confirms it needs
+  // somewhere to send the user back to. Deletes the row rather than writing
+  // status = 'new', because "new" is what the absence of a row already means
+  // (the feed list reads COALESCE(status, 'new')) — two ways to say the same
+  // thing is how the two drift.
+  app.post("/api/feed/:id/undismiss", async (c) => {
+    await c.env.DB.prepare(
+      `DELETE FROM feed_item_status
+       WHERE feed_item_id = ? AND user_id = ? AND status = 'dismissed'`,
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
+  });
+
   app.post("/api/feed/:id/add", async (c) => {
     const userId = c.get("userId");
     const item = await c.env.DB.prepare("SELECT * FROM feed_items WHERE id = ?")

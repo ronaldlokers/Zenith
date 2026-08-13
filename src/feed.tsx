@@ -473,14 +473,53 @@ export function FeedTab({
       .finally(() => setRefreshing(false));
   };
 
+  const dismissingIds = useRef<Set<number>>(new Set());
   const dismiss = (item: FeedItem) => {
+    // Same in-flight guard addToPipeline has. Without it a fast double-d
+    // fired twice, and the second one destroyed whatever had moved into the
+    // focused slot — a job the user never saw.
+    if (dismissingIds.current.has(item.id)) return;
+    dismissingIds.current.add(item.id);
+    // Spliced back at its own index on failure, not prepended. Rolling back
+    // to position 1 teleported the job the user had just tried to get rid of
+    // to the top of the feed, which reads as the opposite of what happened.
+    const at = (items ?? []).findIndex((i) => i.id === item.id);
     setItems((prev) => (prev ?? []).filter((i) => i.id !== item.id));
-    api.dismissFeedItem(item.id).catch((e) => {
-      // Optimistic removal must roll back (#346) — otherwise the card
-      // vanishes client-side while still active server-side.
-      setItems((prev) => (prev ? [item, ...prev] : [item]));
-      onError((e as Error).message);
-    });
+    api
+      .dismissFeedItem(item.id)
+      .then(() =>
+        // Dismiss is the majority action in triage and was the only one with
+        // no acknowledgement and no way back, on a surface whose whole
+        // anxiety is missing the one posting that mattered.
+        notify(
+          t("toast.dismissed", { title: item.title }),
+          () =>
+            api
+              .undismissFeedItem(item.id)
+              .then(() =>
+                setItems((prev) => {
+                  const rest = prev ?? [];
+                  const back = [...rest];
+                  back.splice(Math.max(0, Math.min(at, rest.length)), 0, item);
+                  return back;
+                }),
+              )
+              .catch((e) => onError((e as Error).message)),
+          t("toast.undo"),
+        ),
+      )
+      .catch((e) => {
+        // Optimistic removal must roll back (#346) — otherwise the card
+        // vanishes client-side while still active server-side.
+        setItems((prev) => {
+          const rest = prev ?? [];
+          const back = [...rest];
+          back.splice(Math.max(0, Math.min(at, rest.length)), 0, item);
+          return back;
+        });
+        onError((e as Error).message);
+      })
+      .finally(() => dismissingIds.current.delete(item.id));
   };
 
   const [addingIds, setAddingIds] = useState<Set<number>>(new Set());
@@ -543,8 +582,23 @@ export function FeedTab({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      // Bare keys only. Without this, Ctrl/Cmd-A added the focused job to the
+      // pipeline and swallowed select-all, and Ctrl/Cmd-D dismissed it and
+      // swallowed the bookmark dialog — both verified firing real POSTs. Both
+      // are muscle memory on a page of text, and dismiss is destructive.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target as HTMLElement;
+      const tag = el.tagName;
+      // BUTTON too: the toolbar's own controls take focus, and "d" with the
+      // sort button focused dismissed a job.
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        tag === "BUTTON" ||
+        el.isContentEditable
+      )
+        return;
       const { items, focusedIndex, addToPipeline, dismiss } = triageRef.current;
       const list = items ?? [];
       if (e.key === "j") {

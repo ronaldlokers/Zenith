@@ -814,7 +814,8 @@
     "statusChanged": "Verplaatst naar {{stage}}",
     "revived": "Terug in een actieve fase",
     "setFollowUp": "Follow-up instellen",
-    "archived": "Gearchiveerd"
+    "archived": "Gearchiveerd",
+    "dismissed": "{{title}} genegeerd"
   },
   "confirm": {
     "deleteDocument": "“{{name}}” verwijderen?",
