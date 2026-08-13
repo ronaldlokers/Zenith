@@ -327,15 +327,6 @@ export function DashboardTab({
             />
           </div>
 
-          {hadMovesThisWeek(stats, applications) && (
-            <div className="today-col">
-              <HappenedToday
-                stats={stats}
-                applications={applications}
-                onOpenJob={onOpenJob}
-              />
-            </div>
-          )}
           </div>
         </div>
       )}
@@ -343,73 +334,7 @@ export function DashboardTab({
   );
 }
 
-// "Happened today" reads a 24h window and "Moved this week" a 7d one over the
-// same status_history rows, so today is a strict subset of the week: when the
-// week is empty today cannot hold anything either, and the rail ended on two
-// cards side by side each saying nothing changed. Two nulls read as two
-// failures. The narrower one yields and the week's single line stands, which
-// is both smaller and the more useful of the two statements. Mirrors
-// ThisWeek's predicate exactly, app-exists filter included — a row whose
-// application is missing shows in neither, so counting it here would keep an
-// empty card alive next to an empty card.
-function hadMovesThisWeek(stats: Stats, applications: Application[]): boolean {
-  const since = Date.now() - 7 * DAY;
-  return stats.history.some(
-    (h) =>
-      parseSqlDate(h.changed_at) >= since &&
-      applications.some((a) => a.id === h.application_id),
-  );
-}
 
-// What changed today, as sentences rather than a chart (#535 landing). Reads
-// the same status_history rows the weekly momentum already uses, filtered to
-// today: nothing new is fetched.
-function HappenedToday({
-  stats,
-  applications,
-  onOpenJob,
-}: {
-  stats: Stats;
-  applications: Application[];
-  onOpenJob: (id: number) => void;
-}) {
-  const { t } = useTranslation();
-  const since = Date.now() - DAY;
-  const moves = stats.history
-    .filter((h) => parseSqlDate(h.changed_at) >= since)
-    .sort((a, b) => b.changed_at.localeCompare(a.changed_at))
-    .map((h) => ({ h, app: applications.find((a) => a.id === h.application_id) }))
-    .filter((m): m is { h: StatusHistoryRow; app: Application } => !!m.app)
-    .slice(0, 6);
-
-  return (
-    <section className="today-happened">
-      <h2 className="col-h">
-        {t("today.happened")} <span className="col-n">({moves.length})</span>
-      </h2>
-      {moves.length === 0 ? (
-        <p className="muted small">{t("today.happenedNone")}</p>
-      ) : (
-        <ul className="today-happened-list">
-          {moves.map(({ h, app }) => (
-            <li key={`${h.application_id}-${h.changed_at}`}>
-              <button className="today-happened-row" onClick={() => onOpenJob(app.id)}>
-                <span className="today-happened-meta">
-                  {app.company_name ?? "—"}
-                </span>
-                <span className="today-happened-say">
-                  {h.from_status
-                    ? t("today.happenedMoved", { title: app.title, stage: t(`stages.${h.to_status}`) })
-                    : t("today.happenedAdded", { title: app.title })}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
 
 // The climb as state (#492): where live applications sit across the five
 // rungs, right now. A glance, not a chart — Insights keeps the funnel and the
@@ -803,7 +728,22 @@ function ThisWeek({
     .sort((a, b) => b.changed_at.localeCompare(a.changed_at))
     .map((h) => ({ h, app: applications.find((a) => a.id === h.application_id) }))
     .filter((m): m is { h: StatusHistoryRow; app: Application } => !!m.app)
-    .slice(0, 5);
+    .slice(0, 6);
+
+  // One card, split by when. There used to be two — "Moved this week" over a
+  // 7-day window and "Happened today" over a 24-hour one, both reading the
+  // same status_history rows — so today was a strict subset of the week by
+  // construction and any day the user actually did something the two cards
+  // listed the same events in two different grammars, side by side, for
+  // about 880px of rail. Grouping is what the pair was reaching for; two
+  // cards was the wrong shape for it.
+  const todayCut = Date.now() - DAY;
+  const movedToday = moves.filter(
+    ({ h }) => parseSqlDate(h.changed_at) >= todayCut,
+  );
+  const movedEarlier = moves.filter(
+    ({ h }) => parseSqlDate(h.changed_at) < todayCut,
+  );
 
   // Two sibling cards, not one card wrapping another: MomentumBand is already
   // a tier-2 surface, and nesting a surface inside a surface is depth the
@@ -826,31 +766,65 @@ function ThisWeek({
         {moves.length === 0 ? (
           <p className="muted small today-moved-empty">{t("today.noMoves")}</p>
         ) : (
-          <ul className="today-rows today-moved" aria-label={t("today.moved")}>
-            {moves.map(({ h, app }) => (
-              <li key={h.application_id} className={`stage-${h.to_status}`}>
-                <button
-                  className="today-row-open"
-                  onClick={() => onOpenJob(app.id)}
-                >
-                  <span className="side-title">{app.title}</span>
-                  <span className="side-co">{app.company_name ?? "—"}</span>
-                  <span className="side-stage">
-                    {h.from_status ? (
-                      <>
-                        {t(`stages.${h.from_status}`)}
-                        <span aria-hidden="true"> → </span>
-                        <span className="sr-only">{t("today.movedTo")}</span>
-                      </>
-                    ) : null}
-                    {t(`stages.${h.to_status}`)}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <>
+            {movedToday.length > 0 && (
+              <p className="today-moved-when">{t("today.movedToday")}</p>
+            )}
+            {movedToday.length > 0 && (
+              <ul className="today-rows today-moved" aria-label={t("today.movedToday")}>
+                {movedToday.map(({ h, app }) => (
+                  <MoveRow key={`${h.application_id}-${h.changed_at}`} h={h} app={app} onOpenJob={onOpenJob} />
+                ))}
+              </ul>
+            )}
+            {movedEarlier.length > 0 && (
+              <p className="today-moved-when">{t("today.movedEarlier")}</p>
+            )}
+            {movedEarlier.length > 0 && (
+              <ul className="today-rows today-moved" aria-label={t("today.movedEarlier")}>
+                {movedEarlier.map(({ h, app }) => (
+                  <MoveRow key={`${h.application_id}-${h.changed_at}`} h={h} app={app} onOpenJob={onOpenJob} />
+                ))}
+              </ul>
+            )}
+          </>
         )}
       </DashCard>
     </>
+  );
+}
+
+// One move, as a row. Extracted when the two rail cards merged: both groups
+// draw the same thing and a second copy of it would drift.
+// One move, as a row. Extracted when the two rail cards merged into one:
+// both time groups draw the same thing, and a second copy of this markup
+// would drift from the first.
+function MoveRow({
+  h,
+  app,
+  onOpenJob,
+}: {
+  h: StatusHistoryRow;
+  app: Application;
+  onOpenJob: (id: number) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <li className={`stage-${h.to_status}`}>
+      <button className="today-row-open" onClick={() => onOpenJob(app.id)}>
+        <span className="side-title">{app.title}</span>
+        <span className="side-co">{app.company_name ?? "—"}</span>
+        <span className="side-stage">
+          {h.from_status ? (
+            <>
+              {t(`stages.${h.from_status}`)}
+              <span aria-hidden="true"> → </span>
+              <span className="sr-only">{t("today.movedTo")}</span>
+            </>
+          ) : null}
+          {t(`stages.${h.to_status}`)}
+        </span>
+      </button>
+    </li>
   );
 }

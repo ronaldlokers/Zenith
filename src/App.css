@@ -4071,6 +4071,22 @@ summary.bcol-head::after {
   color: inherit;
   margin: 0;
 }
+/* The when-group label inside the merged rail card. Chrome-sized, because it
+   separates two lists of the same kind of thing rather than titling a
+   section — the card's own heading does that. */
+.today-moved-when {
+  margin: var(--space-2) 0 0.3rem;
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--faint);
+}
+
+.today-moved-when:first-child {
+  margin-top: 0;
+}
+
 .today-moved-empty {
   margin: 0;
 }

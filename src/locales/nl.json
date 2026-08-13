@@ -48,7 +48,9 @@
     "noMoves": "Deze week is er niets van fase veranderd.",
     "pushAll_other": "Verzet {{count}} late vervolgacties naar de komende dagen",
     "pushAllKeeps": "Aanbiedingen en gesprekken blijven staan.",
-    "pushAll_one": "Verzet {{count}} late vervolgactie naar de komende dagen"
+    "pushAll_one": "Verzet {{count}} late vervolgactie naar de komende dagen",
+    "movedToday": "Vandaag",
+    "movedEarlier": "Eerder deze week"
   },
   "header": {
     "settings": "Instellingen",

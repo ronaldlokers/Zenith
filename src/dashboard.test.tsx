@@ -278,9 +278,19 @@ describe("DashboardTab (Today)", () => {
         onOpenJob={(id) => opened.push(id)}
       />,
     );
-    const moved = screen.getByRole("list", { name: "Moved this week" });
+    // One card, two time groups. It used to be two cards — "Moved this
+    // week" over 7 days and "Happened today" over 24 hours, both reading the
+    // same status_history rows — so today was a subset of the week by
+    // construction and the pair listed the same events twice whenever the
+    // user actually did something. This move was two days ago, so it belongs
+    // under Earlier this week.
+    const moved = screen.getByRole("list", { name: "Earlier this week" });
     expect(moved).toHaveTextContent("Screening");
     expect(moved).toHaveTextContent("Interview");
+    expect(
+      screen.queryByRole("list", { name: "Today" }),
+      "nothing moved today, so that group should not render",
+    ).toBeNull();
     fireEvent.click(
       within(moved).getAllByRole("button", {
         name: /Senior Platform Engineer/,

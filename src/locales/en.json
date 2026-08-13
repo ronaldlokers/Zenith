@@ -48,7 +48,9 @@
     "noMoves": "Nothing changed stage this week.",
     "pushAll_other": "Push {{count}} late follow-ups over the next few days",
     "pushAllKeeps": "Offers and interviews stay put.",
-    "pushAll_one": "Push {{count}} late follow-up over the next few days"
+    "pushAll_one": "Push {{count}} late follow-up over the next few days",
+    "movedToday": "Today",
+    "movedEarlier": "Earlier this week"
   },
   "header": {
     "settings": "Settings",
