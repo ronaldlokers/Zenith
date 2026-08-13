@@ -943,6 +943,8 @@
     "today": "vandaag"
   },
   "insights": {
-    "headlineNumbers": "Kerncijfers"
+    "headlineNumbers": "Kerncijfers",
+    "nothingYet": "Nog niets te meten — Inzichten vullen zich terwijl je solliciteert.",
+    "nothingYetCta": "Voeg je eerste sollicitatie toe"
   }
 }

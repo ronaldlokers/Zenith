@@ -943,6 +943,8 @@
     "today": "due today"
   },
   "insights": {
-    "headlineNumbers": "Headline numbers"
+    "headlineNumbers": "Headline numbers",
+    "nothingYet": "Nothing to measure yet — Insights fills in as you apply.",
+    "nothingYetCta": "Add your first application"
   }
 }

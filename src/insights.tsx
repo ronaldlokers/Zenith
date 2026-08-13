@@ -24,7 +24,14 @@ import {
 } from "./format";
 import { ActivityTab, CalendarTab } from "./calendar";
 import { FlagIcon, FunnelIcon, OfferIcon } from "./icons";
-import { Button, DashCard, MomentumBand, Skeleton, StatCard } from "./components";
+import {
+  Button,
+  DashCard,
+  EmptyState,
+  MomentumBand,
+  Skeleton,
+  StatCard,
+} from "./components";
 
 export function InsightsTab({
   applications,
@@ -84,6 +91,23 @@ export function InsightsTab({
 
   return (
     <section className="dash">
+      {/* Nothing to report yet, said once. The page used to render its full
+          chrome around an empty account: 0 open, 0% response over 0 of 0,
+          0 live offers, a median of "—", a five-stage funnel of zeroes and
+          a momentum verdict on no events — the first screen a newly invited
+          user sees under a tab called Insights, and every number on it
+          either zero or invented. A page whose only output is numbers has
+          nothing to say before there are any, so it says that and points at
+          the thing that starts the search. */}
+      {applications.length === 0 ? (
+        <EmptyState className="insights-empty">
+          {t("insights.nothingYet")}{" "}
+          <Button variant="link" onClick={onGoToJobs}>
+            {t("insights.nothingYetCta")}
+          </Button>
+        </EmptyState>
+      ) : (
+        <>
       {/* The figures sit on one hairline band, divided rather than boxed:
           four tiles read as four things, where this reads as one summary. */}
       {/* Named for heading navigation. These two bands carry the page's
@@ -315,6 +339,8 @@ export function InsightsTab({
           </Button>
           {showCalendar && <CalendarTab onError={onError} onJump={onJump} />}
         </div>
+      )}
+        </>
       )}
     </section>
   );
