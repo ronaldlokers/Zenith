@@ -613,12 +613,14 @@ function NextUpPanel({
   return (
     <section className="today-nextup">
       <div className="today-nextup-head">
-        <h2 className="side-h">
-          {t("nextUp.title")}{" "}
-          {tab === "due" && (
-            <span className="today-sortnote">{t("today.sortedBy")}</span>
-          )}
-        </h2>
+        {/* The note sits beside the heading, not inside it: within the h2
+            it became part of the accessible name, so heading navigation
+            announced "Next up Sorted by stage, then fit" as the section's
+            title. It describes the list, not the section. */}
+        <h2 className="side-h">{t("nextUp.title")}</h2>
+        {tab === "due" && (
+          <span className="today-sortnote">{t("today.sortedBy")}</span>
+        )}
         <SegmentedControl role="group" aria-label={t("nextUp.title")}>
           {/* Both switches clear the expansion. showAll had no collapse and
               was never reset, so expanding Due to forty rows left Upcoming
@@ -643,6 +645,29 @@ function NextUpPanel({
           </SegmentedControl.Item>
         </SegmentedControl>
       </div>
+      {tab === "due" && lateCount > 1 && (
+        /* Above the pile, not below it. A real button that says how many —
+           it was a 10px muted caption firing an unconfirmed write across
+           every late row, the weakest control on the screen doing the
+           largest thing on it.
+
+           Its position was the other half of the problem. At the foot of
+           the list it sat inside the fixed bottom bar's band at rest on
+           desktop, and on a phone it came after six rows of the very pile
+           it exists to clear — so the escape from a bad week was reachable
+           only by scrolling through the bad week. It belongs where the
+           count it acts on already is. */
+        <p className="today-pushall">
+          <Button
+            variant="secondary"
+            disabled={pushing}
+            onClick={() => void pushAllLate()}
+          >
+            {t("today.pushAll", { count: lateCount })}
+          </Button>{" "}
+          <span className="muted small">{t("today.pushAllKeeps")}</span>
+        </p>
+      )}
       {rows.length === 0 ? (
         <p className="muted small">
           {tab === "due" ? t("nextUp.emptyDue") : t("empty.noFollowUps")}
@@ -734,21 +759,6 @@ function NextUpPanel({
           {t("nextUp.showAll", { count: rows.length })}
         </button>
       )}
-      {tab === "due" && lateCount > 1 && (
-        /* A real button, and it says how many. This was a 10px muted caption
-           with no border firing an unconfirmed write across every late row —
-           the weakest control on the screen doing the largest thing on it. */
-        <p className="today-pushall">
-          <Button
-            variant="secondary"
-            disabled={pushing}
-            onClick={() => void pushAllLate()}
-          >
-            {t("today.pushAll", { count: lateCount })}
-          </Button>{" "}
-          <span className="muted small">{t("today.pushAllKeeps")}</span>
-        </p>
-      )}
     </section>
   );
 }
@@ -803,7 +813,10 @@ function ThisWeek({
           dim: w.count === 0,
         }))}
       />
-      <DashCard heading={<h2 className="today-card-h">{t("today.moved")}</h2>}>
+      {/* The string, not an element: DashCard wraps its heading in a real
+          h2 of its own, so passing one produced <h2><h2>…</h2></h2> — invalid,
+          and the same heading twice in the accessibility outline. */}
+      <DashCard heading={t("today.moved")}>
         {moves.length === 0 ? (
           <p className="muted small today-moved-empty">{t("today.noMoves")}</p>
         ) : (

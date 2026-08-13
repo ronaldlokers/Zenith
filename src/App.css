@@ -5497,7 +5497,8 @@ button:not(:disabled):active,
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-2);
-  margin: var(--space-3) 0 0;
+  /* Above the list now, so the margin belongs below it. */
+  margin: 0 0 var(--space-3);
 }
 
 /* The order, said out loud. Ranking by stage then fit beats ranking by date,
