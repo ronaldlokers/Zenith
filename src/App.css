@@ -2503,6 +2503,8 @@ select.status {
    holds all nine rails regardless of the data, so it always overflows at
    the widths it renders at. */
 .stage-strip {
+  /* As with the column mask: a mask reads only the alpha channel, so #000
+     means "opaque here", not a colour. Nothing is painted this value. */
   mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }
 
