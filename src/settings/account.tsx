@@ -29,15 +29,17 @@ export function DeleteAccount({
     }
   };
   return (
-    <div className="admin-invite">
+    /* A danger zone, which is the established shape for this: the one
+       irreversible action on the page, grouped and bordered so it cannot be
+       mistaken for the settings around it. It used to be a card identical to
+       Change password and 2FA, carrying a 112x27px raw-widget button — the
+       lightest control on the screen performing the heaviest act, while
+       "Remove key" beside it was 471px wide. Weight now matches
+       consequence. */
+    <div className="settings-danger">
       <h3>{t("account.deleteAccount")}</h3>
       <p className="muted small">{t("account.deleteHint")}</p>
-      <Button
-        variant="danger"
-        className="zui-settings-native"
-        disabled={busy}
-        onClick={del}
-      >
+      <Button variant="danger" disabled={busy} onClick={del}>
         {t("account.deleteAccount")}
       </Button>
     </div>
@@ -234,8 +236,7 @@ export function TwoFactorSettings() {
             type="submit"
             disabled={busy}
             variant={enabled ? "danger" : "default"}
-            className="zui-settings-native"
-          >
+              >
             {enabled ? t("account.twoFactorDisable") : t("account.twoFactorEnable")}
           </Button>
         </form>
@@ -307,8 +308,7 @@ export function SessionManagement() {
             {s.token !== currentToken && (
               <Button
                 variant="danger"
-                className="zui-settings-native"
-                disabled={busyToken === s.token}
+                        disabled={busyToken === s.token}
                 onClick={() => revoke(s.token)}
               >
                 {t("account.revoke")}
@@ -383,8 +383,7 @@ export function AnthropicKeySettings() {
           </span>
           <Button
             variant="danger"
-            className="zui-settings-native"
-            disabled={busy}
+                disabled={busy}
             onClick={remove}
           >
             {t("account.aiKeyRemove")}
