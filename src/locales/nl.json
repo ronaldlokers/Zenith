@@ -810,6 +810,7 @@
     "addHere": "+ Sollicitatie toevoegen",
     "foldRail": "{{stage}} inklappen",
     "showingClosed": "Gesloten sollicitaties worden getoond",
+    "applicationGone": "Die sollicitatie bestaat niet meer — mogelijk is hij verwijderd.",
     "pin": "Vastzetten",
     "unpin": "Losmaken",
     "nothingPinned": "Nog niets vastgezet. Zet een sollicitatie vast via het ⋯-menu om hem hier te houden.",

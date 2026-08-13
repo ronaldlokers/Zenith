@@ -214,6 +214,27 @@ export default function App() {
       ? visibleApps.find((a) => a.id === detailIdFromUrl) ?? null
       : null;
 
+  // A deep link whose application is gone. Push notifications, calendar
+  // entries, emails and bookmarks all point at /board/:id, and any of them
+  // can outlive the row — deleted, archived out of view, or belonging to
+  // someone else. The board simply rendered instead, with the dead id still
+  // in the address bar, so the tap read as "nothing happened" and a refresh
+  // repeated it.
+  //
+  // Gated on `loading`, which is the whole difficulty: the list arrives
+  // after the first render, so an ungated check announces "not found" for
+  // every deep link in the moment before its data lands.
+  const missingJob =
+    tab === "board" && detailIdFromUrl != null && !loading && !routedJob;
+  useEffect(() => {
+    if (!missingJob) return;
+    notify(t("board.applicationGone"));
+    // Canonicalize, or the dead id survives a refresh and the toast fires
+    // again on every visit. replace, so Back does not return to it.
+    navigate("/board", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missingJob]);
+
   // Primary destinations, rendered from one list into both the desktop rail
   // (.side) and the sub-900px .tabs bar so the two never drift. Settings is
   // pinned separately (rail foot / last tab). `data` drives the mobile

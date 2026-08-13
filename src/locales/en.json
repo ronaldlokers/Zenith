@@ -810,6 +810,7 @@
     "addHere": "+ Add an application",
     "foldRail": "Fold {{stage}}",
     "showingClosed": "Showing closed applications",
+    "applicationGone": "That application is no longer here — it may have been deleted.",
     "pin": "Pin",
     "unpin": "Unpin",
     "nothingPinned": "Nothing pinned yet. Pin an application from its ⋯ menu to keep it here.",
