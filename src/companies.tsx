@@ -144,6 +144,11 @@ export function CompaniesTab({
               {companies.length === 0
                 ? t("empty.noCompanies")
                 : t("empty.noCompaniesMatch")}
+              {companies.length > 0 && (
+                <Button variant="link" onClick={() => setQuery("")}>
+                  {t("board.clearSearch")}
+                </Button>
+              )}
             </EmptyState>
           )}
         </ul>
@@ -188,6 +193,11 @@ export function CompaniesTab({
             {companies.length === 0
               ? t("empty.noCompanies")
               : t("empty.noCompaniesMatch")}
+            {companies.length > 0 && (
+              <Button variant="link" onClick={() => setQuery("")}>
+                {t("board.clearSearch")}
+              </Button>
+            )}
           </EmptyState>
         )}
       </ul>
