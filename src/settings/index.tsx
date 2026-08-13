@@ -130,6 +130,7 @@ export function SettingsPage({
       .catch((e) => setApiError((e as Error).message));
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
+  const [shareIdentity, setShareIdentity] = useState(false);
   const [calendarToken, setCalendarToken] = useState<string | null>(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -137,6 +138,7 @@ export function SettingsPage({
   useEffect(() => {
     api.profile().then((p) => {
       setShareToken(p.share_token);
+      setShareIdentity(p.share_show_identity === 1);
       setCalendarToken(p.calendar_token);
     });
   }, []);
@@ -393,6 +395,28 @@ export function SettingsPage({
             </Button>
           )}
         </div>
+        {shareUrl && (
+          <label className="settings-field settings-check">
+            <input
+              type="checkbox"
+              checked={shareIdentity}
+              onChange={(e) => {
+                const show = e.target.checked;
+                setShareIdentity(show);
+                api
+                  .setShareIdentity(show)
+                  .catch((err: Error) => {
+                    setShareIdentity(!show);
+                    setApiError(err.message);
+                  });
+              }}
+            />
+            <span>
+              {t("settings.shareIdentity")}
+              <span className="muted small"> {t("settings.shareIdentityHint")}</span>
+            </span>
+          </label>
+        )}
         <div className="settings-field share-field">
           <span>{t("settings.calendarLink")}</span>
           {calendarUrl ? (

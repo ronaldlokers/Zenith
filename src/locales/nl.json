@@ -178,6 +178,8 @@
     "languageNl": "Nederlands",
     "cvLanguage": "CV-taal",
     "shareLink": "Openbare deel-link",
+    "shareIdentity": "Toon mijn naam op de deelpagina",
+    "shareIdentityHint": "Standaard uit. Voegt je naam en de functie waarnaar je zoekt toe; nooit details per sollicitatie.",
     "generateLink": "Link genereren",
     "regenerateLink": "Opnieuw genereren",
     "disableLink": "Uitschakelen",

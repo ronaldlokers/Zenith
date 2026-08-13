@@ -1,0 +1,13 @@
+-- Opt-in identity on the public share page.
+--
+-- The page is the only surface a stranger ever sees, and it never said whose
+-- pipeline it was: no name, no role, no date, in the body or the title or any
+-- meta tag. Forwarded, bookmarked, or opened a day after the message it came
+-- in, it was unattributable data — and the persuasive value of a job hunter's
+-- own numbers goes to zero the moment nobody knows whose they are.
+--
+-- Default 0, deliberately. Privacy-first is a locked product value here and
+-- the page's whole design is aggregate-only; putting a real name on a public
+-- URL is a decision the owner makes, not one the app makes for them. Settings
+-- carries the switch, beside the link itself.
+ALTER TABLE profile ADD COLUMN share_show_identity INTEGER NOT NULL DEFAULT 0;

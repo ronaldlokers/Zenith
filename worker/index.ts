@@ -1469,6 +1469,28 @@ app.put("/api/profile/board-folded", async (c) => {
   return c.json({ board_folded: folded });
 });
 
+// Whether the share page says whose search it is. Its own route for the same
+// reason board-folded has one: PUT /api/profile writes an explicit CV column
+// list and knows nothing about sharing preferences.
+//
+// Off by default, and it stays a separate decision from generating the link —
+// handing someone a URL is not the same act as putting your name on a public
+// page, and the privacy-first default only holds if the second one is opted
+// into on purpose.
+app.put("/api/profile/share-identity", async (c) => {
+  const body = await c.req.json<{ show?: unknown }>();
+  if (typeof body.show !== "boolean") {
+    return c.json({ error: "show must be a boolean" }, 400);
+  }
+  await c.env.DB.prepare(
+    `INSERT INTO profile (user_id, share_show_identity) VALUES (?, ?)
+     ON CONFLICT (user_id) DO UPDATE SET share_show_identity = excluded.share_show_identity`,
+  )
+    .bind(c.get("userId"), body.show ? 1 : 0)
+    .run();
+  return c.json({ share_show_identity: body.show });
+});
+
 app.delete("/api/profile/share-token", async (c) => {
   await c.env.DB.prepare("UPDATE profile SET share_token = NULL WHERE user_id = ?")
     .bind(c.get("userId"))
@@ -1573,6 +1595,20 @@ function shareParseSqlDate(d: string): number {
 // whose locales are kept at strict parity, on the one page most likely to be
 // opened by someone who never chose a language. Two locales, same keys, and
 // the stage labels translated rather than a CSS capitalize() of a DB slug.
+// The display name is the only user-authored string that reaches this page,
+// and the page is public and server-rendered outside React — so it is escaped
+// here rather than trusted. The CSP would stop an injected <script> executing,
+// but markup injection into the document is not something to leave to a second
+// line of defence.
+function escapeHtml(v: string): string {
+  return v
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const SHARE_STRINGS = {
   en: {
     title: "Shared pipeline",
@@ -1584,6 +1620,9 @@ const SHARE_STRINGS = {
     open: (n: number) => `${n} open application${n === 1 ? "" : "s"}`,
     footer:
       "Read-only view — no application details, no editing. Powered by Zenith.",
+    sharedOn: "Shared",
+    ogDescription:
+      "A read-only summary of a job search: how many applications are open and how far they have progressed. No per-application detail.",
     stages: {
       interested: "Interested",
       applied: "Applied",
@@ -1603,6 +1642,9 @@ const SHARE_STRINGS = {
       `${n} openstaande sollicitatie${n === 1 ? "" : "s"}`,
     footer:
       "Alleen-lezen weergave — geen details per sollicitatie, geen bewerking. Mogelijk gemaakt door Zenith.",
+    sharedOn: "Gedeeld",
+    ogDescription:
+      "Een alleen-lezen samenvatting van een zoektocht naar werk: hoeveel sollicitaties lopen en hoe ver ze zijn. Geen details per sollicitatie.",
     stages: {
       interested: "Geïnteresseerd",
       applied: "Gesolliciteerd",
@@ -1694,12 +1736,18 @@ app.get("/shared/:token", async (c) => {
   const profile = await c.env.DB.prepare(
     // The owner's locale is the fallback when the reader's browser asks for
     // a language this page does not speak.
-    `SELECT profile.user_id, "user".locale AS locale
+    `SELECT profile.user_id, profile.name, profile.share_show_identity,
+            "user".locale AS locale
      FROM profile LEFT JOIN "user" ON "user".id = profile.user_id
      WHERE profile.share_token = ?`,
   )
     .bind(token)
-    .first<{ user_id: string; locale: string | null }>();
+    .first<{
+      user_id: string;
+      name: string | null;
+      share_show_identity: number;
+      locale: string | null;
+    }>();
   if (!profile) return sharePageGone(c);
 
   const [apps, history] = await Promise.all([
@@ -1707,10 +1755,14 @@ app.get("/shared/:token", async (c) => {
       // Only what the page prints. applied_at and created_at were fetched
       // and never rendered — a public route should select nothing it does
       // not show.
-      "SELECT id, status FROM applications WHERE user_id = ?",
+      // role_type comes back only to name the track being searched, and only
+      // when identity is on. It is a stage-agnostic label the user already
+      // maintains per application — no new field to keep up to date, and
+      // nothing per-application reaches the page.
+      "SELECT id, status, role_type FROM applications WHERE user_id = ?",
     )
       .bind(profile.user_id)
-      .all<{ id: number; status: string }>(),
+      .all<{ id: number; status: string; role_type: string | null }>(),
     c.env.DB.prepare(
       // Deliberately without outcome_reason/outcome_note (#381), unlike the
       // in-app stats query: the note is free text the user wrote about a
@@ -1759,6 +1811,33 @@ app.get("/shared/:token", async (c) => {
   const lang = shareLocale(c.req.header("Accept-Language"), profile.locale);
   const S = SHARE_STRINGS[lang];
 
+  // Off unless the owner turned it on. The page is aggregate-only by design
+  // and a name on a public URL is the owner's call, so the default stays
+  // anonymous and Settings carries the switch.
+  const showIdentity = profile.share_show_identity === 1 && !!profile.name;
+  const liveRoles = apps.results.filter(
+    (a) => !["rejected", "withdrawn", "ghosted"].includes(a.status),
+  );
+  const topRole = (() => {
+    if (!showIdentity) return null;
+    const counts = new Map<string, number>();
+    for (const a of liveRoles) {
+      if (!a.role_type || a.role_type === "other") continue;
+      counts.set(a.role_type, (counts.get(a.role_type) ?? 0) + 1);
+    }
+    let best: string | null = null;
+    let bestN = 0;
+    for (const [role, n] of counts) if (n > bestN) [best, bestN] = [role, n];
+    return best;
+  })();
+  const roleLabel = topRole
+    ? topRole.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())
+    : null;
+  const shownOn = new Date().toISOString().slice(0, 10);
+  const pageTitle = showIdentity
+    ? `${profile.name} — ${S.title}`
+    : `Zenith — ${S.title}`;
+
   let momentum: string = S.steady;
   if (recentMoves === 0 && priorMoves === 0) momentum = S.quiet;
   else if (priorMoves === 0) momentum = S.faster;
@@ -1798,7 +1877,10 @@ app.get("/shared/:token", async (c) => {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Zenith — ${S.title}</title>
+<title>${escapeHtml(pageTitle)}</title>
+<meta property="og:title" content="${escapeHtml(pageTitle)}" />
+<meta property="og:description" content="${escapeHtml(S.ogDescription)}" />
+<meta property="og:type" content="website" />
 <style nonce="${nonce}">
 ${barWidths}
   /* This page is the only Zenith surface someone who is not a user ever sees,
@@ -1815,7 +1897,9 @@ ${barWidths}
      0.75 meta, 0.64 chrome. */
   body { font-family: system-ui, -apple-system, sans-serif; background: #14173a; color: #e7e6f0; margin: 0; padding: 2rem 1.25rem; }
   .wrap { max-width: 32rem; margin: 0 auto; }
-  h1 { font-size: 0.95rem; font-weight: 600; margin: 0 0 1.5rem; }
+  /* .when always follows and carries the gap to the momentum card, so the
+     heading's own bottom margin would double it. */
+  h1 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.15rem; }
   /* No border: on the Night ground the raised fill is the lift, and DESIGN.md
      puts state in the fill rather than on a coloured edge. */
   .momentum { padding: 0.9rem 1rem; margin-bottom: 1.5rem; border-radius: 10px; background: #1b1f4d; }
@@ -1829,6 +1913,17 @@ ${barWidths}
      the 5.5rem the English set fitted in — measured, it clipped at both
      1440 and 390. The column still aligns for every label that fits. */
   .lbl { min-width: 5.5rem; flex-shrink: 0; color: #b9b8cc; }
+  /* Whose search this is, and when it was shared. Both are the difference
+     between a page a stranger can act on and an anonymous chart. Real ramp
+     steps, named, like everything else here: 0.64rem --text-chrome. */
+  .eyebrow {
+    margin: 0 0 0.15rem; font-size: 0.64rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #d6a441;
+  }
+  .when {
+    margin: 0.15rem 0 1.25rem; font-size: 0.64rem; letter-spacing: 0.06em;
+    color: #8b8fa8;
+  }
   .track { flex: 1; height: 8px; background: #1b1f4d; border-radius: 999px; overflow: hidden; }
   /* Struck Brass, not the teal this page used to invent. Brass is the one
      accent Zenith spends on the figure that carries the eye. */
@@ -1839,7 +1934,20 @@ ${barWidths}
 </head>
 <body>
   <div class="wrap">
-    <h1>${S.title}</h1>
+    ${
+      // With a name on it the person is the subject and the page title is the
+      // label; without one there is no subject, so the label is all there is.
+      // Swapping which of the two is the h1 keeps the anonymous page exactly
+      // as it was and stops the named page burying whose search it is.
+      showIdentity
+        ? `<p class="eyebrow">${S.title}</p>
+    <h1>${escapeHtml(profile.name ?? "")}</h1>
+    <p class="when">${
+      roleLabel ? `${escapeHtml(roleLabel)} · ` : ""
+    }${S.sharedOn} ${shownOn}</p>`
+        : `<h1>${S.title}</h1>
+    <p class="when">${S.sharedOn} ${shownOn}</p>`
+    }
     <div class="momentum">
       <span class="momentum-label">${S.momentumLabel}</span>
       <span class="momentum-value">${momentum}</span>

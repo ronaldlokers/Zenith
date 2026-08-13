@@ -303,6 +303,7 @@ export interface Profile {
   // client applies its default; the empty string means explicitly nothing
   // folded, which is a different thing.
   board_folded: string | null;
+  share_show_identity: number;
 }
 
 export interface Webhook {

@@ -321,6 +321,11 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ folded }),
     }),
+  setShareIdentity: (show: boolean) =>
+    request<{ share_show_identity: boolean }>("/api/profile/share-identity", {
+      method: "PUT",
+      body: JSON.stringify({ show }),
+    }),
   goals: () => request<import("./types").UserGoal>("/api/goals"),
   setGoals: (data: {
     weekly_app_goal: number;

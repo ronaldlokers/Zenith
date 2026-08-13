@@ -178,6 +178,8 @@
     "languageNl": "Nederlands",
     "cvLanguage": "CV output language",
     "shareLink": "Public share link",
+    "shareIdentity": "Show my name on the share page",
+    "shareIdentityHint": "Off by default. Adds your name and the role you are searching for; never any application detail.",
     "generateLink": "Generate link",
     "regenerateLink": "Regenerate",
     "disableLink": "Disable",
