@@ -65,3 +65,50 @@ describe("ApplicationForm", () => {
     expect(container.querySelector(".url-row")).toBeNull();
   });
 });
+
+describe("salary range", () => {
+  // A range that runs backwards was accepted in silence — 120000 to 90000
+  // saved with no complaint — and then read as a range everywhere it
+  // appeared, including the offer comparison, which does arithmetic on the
+  // two numbers.
+  //
+  // The fix is the max field's `min` attribute bound to whatever the min
+  // field holds, so the constraint API blocks it. This form already leans on
+  // that API for the required title, and it brings blocking, focus and
+  // screen-reader announcement without a second validation path or a message
+  // to translate.
+  const min = () => screen.getByLabelText(/min/i) as HTMLInputElement;
+  const max = () => screen.getByLabelText(/max/i) as HTMLInputElement;
+
+  test("will not accept a maximum below the minimum", () => {
+    renderForm();
+    fireEvent.change(min(), { target: { value: "120000" } });
+    fireEvent.change(max(), { target: { value: "90000" } });
+    expect(max().checkValidity(), "a backwards range must not validate").toBe(false);
+    expect(max().validationMessage).toBeTruthy();
+  });
+
+  test("accepts a range the right way round", () => {
+    renderForm();
+    fireEvent.change(min(), { target: { value: "90000" } });
+    fireEvent.change(max(), { target: { value: "120000" } });
+    expect(max().checkValidity()).toBe(true);
+  });
+
+  test("leaves a maximum alone when there is no minimum", () => {
+    // Half a range is a normal thing to know: "up to 80k" is information.
+    // Only the max is constrained for the same reason — giving the min a max
+    // as well would fight whoever fills the two in the order they are shown.
+    renderForm();
+    fireEvent.change(max(), { target: { value: "80000" } });
+    expect(max().checkValidity()).toBe(true);
+  });
+
+  test("still refuses a negative maximum", () => {
+    // The floor the field had before this, which the new bound must not
+    // quietly replace.
+    renderForm();
+    fireEvent.change(max(), { target: { value: "-5" } });
+    expect(max().checkValidity()).toBe(false);
+  });
+});

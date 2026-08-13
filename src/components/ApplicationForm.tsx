@@ -258,7 +258,19 @@ export function ApplicationForm({
           {t("forms.max")}
           <input
             type="number"
-            min={0}
+            /* Bound to whatever min currently holds, so a range that runs
+               backwards cannot be saved. It was accepted silently — 120000
+               to 90000 went through with no complaint — and then read as a
+               range everywhere it appeared, including the offer comparison,
+               which does arithmetic on these two.
+
+               The constraint API rather than a check of our own: the form
+               already leans on it for the required title, so a bad max
+               blocks the submit, focuses the field and is announced, all
+               without inventing a second validation path or a message to
+               translate. Only the max is constrained — giving min a max as
+               well would fight whoever types the two in the usual order. */
+            min={form.salary_min ?? 0}
             value={form.salary_max ?? ""}
             onChange={(e) =>
               set({

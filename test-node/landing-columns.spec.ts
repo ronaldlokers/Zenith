@@ -41,9 +41,28 @@ describe("landing screen columns", () => {
 
   it("gives the landing a wider measure than the rest of .dash", () => {
     // Three columns of sentences at the 1000px measure came out 300px wide —
-    // enough to lay out, not enough to read in. The rule carries two classes
-    // so it beats `.app:has(.dash) .content` on specificity rather than on
-    // being written after it.
-    expect(css).toContain(".app:has(.dash.today) .content");
+    // enough to lay out, not enough to read in.
+    //
+    // Keyed off the tab class now rather than :has(.dash.today), because
+    // :has() cannot match until the content mounts and the page was laying
+    // out at the narrow measure and then jumping. The property the old
+    // selector had is kept and is what this asserts: the landing wins
+    // without relying on source order, so Overview appears in exactly one
+    // width rule rather than being listed in the narrow group and
+    // overridden below it.
+    const landing = /\.app\.app-tab-overview \.content\s*\{([^}]*)\}/.exec(css);
+    expect(landing, "no width rule for the landing").toBeTruthy();
+    expect(landing![1]).toContain("1240px");
+
+    // Scoped to rules that cap .content. Overview also appears in the group
+    // that releases `.app`'s own max-width, which is a different element and
+    // a different question.
+    const contentWidthRules = [
+      ...css.matchAll(/([^{}]*)\{[^}]*max-width[^}]*\}/g),
+    ].filter((m) => /app-tab-overview\s+\.content/.test(m[1]));
+    expect(
+      contentWidthRules,
+      "the landing must set its measure once, not set it twice and rely on order",
+    ).toHaveLength(1);
   });
 });
