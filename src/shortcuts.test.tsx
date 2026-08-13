@@ -164,3 +164,81 @@ describe("global shortcuts", () => {
     expect(h.onQuickAdd).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("shortcuts under a modal", () => {
+  // Measured in the running app: with the quick-add dialog open and focus on
+  // its Cancel button — a button, so the "not while typing" guard does not
+  // apply — pressing "," navigated to Settings *behind* the dialog. The
+  // dialog stayed on screen, focus left its trap, and whatever had been
+  // typed was stranded on a screen the user was no longer looking at.
+  //
+  // A modal owns the keyboard while it is open. That is what makes it modal.
+  function openModal() {
+    const el = document.createElement("div");
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-modal", "true");
+    document.body.appendChild(el);
+    return () => el.remove();
+  }
+
+  test("a modal swallows the single-key shortcuts", () => {
+    const close = openModal();
+    try {
+      const h = handlers();
+      renderHook(() => useGlobalShortcuts(h));
+      press(",");
+      press("m");
+      press("p");
+      press("n");
+      press("2");
+      expect(h.onOpenSettings).not.toHaveBeenCalled();
+      expect(h.onToggleMenu).not.toHaveBeenCalled();
+      expect(h.onShowPinned).not.toHaveBeenCalled();
+      expect(h.onQuickAdd).not.toHaveBeenCalled();
+      expect(h.onGoToIndex).not.toHaveBeenCalled();
+    } finally {
+      close();
+    }
+  });
+
+  test("Cmd-K still reaches the palette", () => {
+    // Left through deliberately: it toggles the palette, which is itself a
+    // modal, so swallowing it would leave the one control that closes the
+    // palette inert.
+    const close = openModal();
+    try {
+      const h = handlers();
+      renderHook(() => useGlobalShortcuts(h));
+      press("k", { metaKey: true });
+      expect(h.onTogglePalette).toHaveBeenCalledTimes(1);
+    } finally {
+      close();
+    }
+  });
+
+  test("the keys work again once the modal is gone", () => {
+    // The suppression has to be a condition, not a latch.
+    openModal()();
+    const h = handlers();
+    renderHook(() => useGlobalShortcuts(h));
+    press(",");
+    expect(h.onOpenSettings).toHaveBeenCalledTimes(1);
+  });
+
+  test("a non-modal dialog does not swallow them", () => {
+    // aria-modal is the signal, not role="dialog": a popover that does not
+    // claim the screen should not disable the app's keyboard.
+    const el = document.createElement("div");
+    el.setAttribute("role", "dialog");
+    document.body.appendChild(el);
+    try {
+      const h = handlers();
+      renderHook(() => useGlobalShortcuts(h));
+      press(",");
+      expect(h.onOpenSettings).toHaveBeenCalledTimes(1);
+    } finally {
+      el.remove();
+    }
+  });
+});
+

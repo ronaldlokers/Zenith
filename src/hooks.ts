@@ -216,11 +216,31 @@ export function useGlobalShortcuts(handlers: {
         return;
       }
 
+      // A modal owns the keyboard while it is open. Measured: with the
+      // quick-add dialog up and focus on its Cancel button — a button, so
+      // the "not while typing" guard below does not apply — pressing ","
+      // navigated to Settings *behind* the dialog. The dialog stayed on
+      // screen, focus left its trap, and whatever had been typed was
+      // stranded on a screen the user was no longer on.
+      //
+      // Checked in the DOM rather than threaded through as state: dialogs
+      // are opened from half a dozen places and a prop would have to reach
+      // every one of them, where aria-modal is already on each of them
+      // because assistive technology needs it.
+      //
+      // Only the unmodified single-key shortcuts are suppressed. Cmd/Ctrl-K
+      // is deliberately left alone above: it toggles the palette, which is
+      // itself a modal, and swallowing it would leave the one control that
+      // closes the palette inert.
+      const modalOpen =
+        typeof document !== "undefined" &&
+        !!document.querySelector('[aria-modal="true"]');
+
       // Destination shortcuts (#535 shell). Same guards as the quick-add key
       // below: no modifiers, not while typing, and off entirely when the
       // single-key setting is disabled for speech-input and single-switch
       // users (WCAG 2.1.4).
-      if (!e.metaKey && !e.ctrlKey && !e.altKey && keyShortcutsEnabled()) {
+      if (!modalOpen && !e.metaKey && !e.ctrlKey && !e.altKey && keyShortcutsEnabled()) {
         const el = document.activeElement as HTMLElement | null;
         const typing =
           !!el &&
@@ -259,6 +279,7 @@ export function useGlobalShortcuts(handlers: {
 
       if (
         e.key === "n" &&
+        !modalOpen &&
         !e.metaKey &&
         !e.ctrlKey &&
         !e.altKey &&
