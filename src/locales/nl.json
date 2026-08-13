@@ -1003,6 +1003,7 @@
   },
   "errors": {
     "offline": "Je bent offline — die wijziging is niet opgeslagen. Het werkt weer zodra je verbinding hebt.",
-    "unreachable": "Zenith is niet bereikbaar, dus die wijziging is niet opgeslagen. Controleer je verbinding en probeer het opnieuw."
+    "unreachable": "Zenith is niet bereikbaar, dus die wijziging is niet opgeslagen. Controleer je verbinding en probeer het opnieuw.",
+    "sessionExpired": "Je sessie is verlopen — herlaad de pagina en meld je opnieuw aan."
   }
 }

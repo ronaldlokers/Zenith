@@ -52,6 +52,35 @@ describe("network error copy", () => {
     expect(en.errors.unreachable, "and a way forward").toMatch(/try again/i);
   });
 
+  it("treats a 401 as an expired session, before the generic branch", () => {
+    // Sign-in goes through auth-client, not this client, so a 401 here means
+    // exactly one thing. It used to fall through to the generic branch and
+    // show the server's own word — "unauthorized" — as the whole
+    // explanation, on a page that still looked signed in.
+    //
+    // Order is the assertion: the status check has to precede the !res.ok
+    // branch, or the generic message wins and nothing changes.
+    const body = api.slice(api.indexOf("async function request"));
+    const at401 = body.indexOf("res.status === 401");
+    const atGeneric = body.indexOf("if (!res.ok)");
+    expect(at401, "no 401 branch").toBeGreaterThan(-1);
+    expect(at401, "the 401 branch must come before the generic one").toBeLessThan(
+      atGeneric,
+    );
+    for (const dict of [en, nl]) expect(dict.errors?.sessionExpired).toBeTruthy();
+    expect(en.errors.sessionExpired).toMatch(/sign in again/i);
+    expect(en.errors.sessionExpired, "no wire jargon").not.toMatch(
+      /unauthorized|401/i,
+    );
+  });
+
+  it("still lets a server explain its own failure", () => {
+    // The 401 branch must not swallow the rest: a server that answered with
+    // a specific message knows more about the failure than this layer does.
+    const body = api.slice(api.indexOf("async function request"));
+    expect(body).toMatch(/\(body as \{ error\?: string \}\)\.error/);
+  });
+
   it("only claims the user is offline when the browser is sure", () => {
     // navigator.onLine is trustworthy when false and unreliable when true:
     // a machine can be on a network that reaches nothing. Telling someone
