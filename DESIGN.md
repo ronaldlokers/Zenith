@@ -37,10 +37,27 @@ colors:
   st-dead: "#6b675e"
   heat-quiet: "#c98a2b"
   ev-touch: "#7a5fb8"
-  rail-ink: "#e7e6f0"
-  rail-text: "#f4f2ec"
-  rail-muted: "#b9b8cc"
-  rail-faint: "#8b8fa8"
+  attention: "#d9930a"
+  attention-ink: "#8a5a00"
+  success-ink: "#357a5b"
+  heat-quiet-text: "#9a6a1f"
+  st-dead-ink: "#5c584f"
+  danger-text: "#ffffff"
+  rule: "#cfc9b9"
+  track: "#efece4"
+  share-ink: "#e7e6f0"
+  share-text: "#f4f2ec"
+  share-muted: "#b9b8cc"
+  share-faint: "#8b8fa8"
+  doc-ground: "#ffffff"
+  doc-aside: "#f2f0ea"
+  doc-ink: "#1b1d2e"
+  doc-heading: "#14173a"
+  doc-muted: "#4a4d63"
+  doc-faint: "#6b675e"
+  doc-rule: "#d8d5cc"
+  print-ground: "#ffffff"
+  print-ink: "#000000"
 typography:
   display:
     fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
@@ -78,6 +95,24 @@ typography:
     fontWeight: 400
     lineHeight: 1.4
     letterSpacing: "0.12em"
+  figure-xl:
+    fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    fontSize: "2.7rem"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "-0.02em"
+  figure-lg:
+    fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    fontSize: "2rem"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "-0.01em"
+  figure-md:
+    fontFamily: "Atkinson Hyperlegible Next, -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 600
+    lineHeight: 1.15
+    letterSpacing: "-0.01em"
 rounded:
   sm: "8px"
   md: "10px"
@@ -201,14 +236,14 @@ components:
 
 **Creative North Star: "The Night Ascent"**
 
-Two halves, and the name says both. The **ground is always Night** — the desktop rail and the sign-in stage are Ink Indigo in every theme, never re-tinted, because they are chrome, not content. Against that constant, everything that *moves* climbs: the five pipeline stages rise slate → lapis → iris → fuchsia → brass, and the single interaction accent is the brass at the top of that climb. A user reading a board is reading altitude.
+Two halves, and the name says both. The **ground is Night where the product speaks for itself** — the sign-in stage and the public share page are Ink Indigo, never re-tinted, because they are brand moments rather than content. (The 210px desktop rail was the third such surface until the Fizzy-philosophy shell removed it; see Layout.) Against that constant, everything that *moves* climbs: the five pipeline stages rise slate → lapis → iris → fuchsia → brass, and the single interaction accent is the brass at the top of that climb. A user reading a board is reading altitude.
 
 The character is **warm and instrumental**. The precision is real — hairline 1px borders, a 10px control corner, uppercase Atkinson Mono chrome at 0.64rem with 0.12em tracking, tabular figures that don't jitter as numbers change. But the canvas is Bone (#f4f2ec), not white, the cards round at 14px, and the accent is a struck brass rather than a saturated primary. The result should read as a well-made instrument on a warm desk, not a terminal and not a SaaS dashboard.
 
-Density is **calm-dense**. A heavy user holds around fifty applications, so nothing here is a data grid: rows are 44px minimum, lists breathe at 0.6rem gaps, and the app column is a single 720px measure until the rail appears at 900px. Colour is spent almost nowhere — the brass is the only voice raised, and the stage hues are locked to pipeline state and never used decoratively.
+Density is **calm-dense**. A heavy user holds around fifty applications, so nothing here is a data grid: rows are 44px minimum, lists breathe at 0.6rem gaps, and the app column is a single 760px measure from 900px up, with only the board, swimlanes and settings released to full width. Colour is spent almost nowhere — the brass is the only voice raised, and the stage hues are locked to pipeline state and never used decoratively.
 
 **Key Characteristics:**
-- Ink Indigo chrome that never changes with the theme; Bone or night-sky content beneath it.
+- Ink Indigo reserved for the two surfaces that are brand rather than content — sign-in and the public share page — on a Bone canvas everywhere else. One theme, light.
 - One accent (Struck Brass) for every interactive meaning: primary action, link, focus ring, selection, offer.
 - Five stage hues that climb in temperature — slate, steel, teal, terracotta, brass — held apart by measurement, not by decree, and reserved for pipeline state.
 - Atkinson Hyperlegible everywhere, its Mono strictly as chrome; figures set at 600 with tabular numerals.
@@ -221,12 +256,12 @@ A warm-neutral canvas carrying one metal accent, over an indigo chrome ground, w
 
 ### Primary
 
-- **Struck Brass** (`accent` / `gold`): the only interaction colour in the system. Primary buttons, every link, the 2px focus ring, checkbox and radio tint, the active rail item, selected filter tabs, the hero KPI, and the offer stage. `accent-ink` is the darkened text-safe version for brass-on-light copy; `accent-on-ink` is the lightened one for brass on Night. `gold-soft` (14% brass) is the only fill tint it is allowed to make.
+- **Struck Brass** (`accent` / `gold`): the only interaction colour in the system. Primary buttons, every link, the 2px focus ring, checkbox and radio tint, the active bottom-bar slot, selected filter tabs, the hero KPI, and the offer stage. `accent-ink` is the darkened text-safe version for brass-on-light copy; `accent-on-ink` is the lightened one for brass on Night. `gold-soft` (14% brass) is the only fill tint it is allowed to make.
 - **Aged Brass Deep** (`gold-deep`): pressed and deep-hover states only.
 
 ### Secondary
 
-- **Ink Indigo** (`night`): the permanent chrome ground — the 210px desktop rail, the sign-in stage, the brand squircle, and the ink colour of every shadow in the light theme. It is also `ink`, the body text colour on light: the type and the chrome are literally the same pigment.
+- **Ink Indigo** (`night`): the Night ground — the sign-in stage, the server-rendered share page, the brand squircle, and the ink colour of every shadow. It is also `ink`, the body copy colour: the type and the brand are literally the same pigment.
 - **Ink Indigo Raised** (`night-raised`): the lighter pole of the sign-in radial ground, and nothing else.
 
 ### Tertiary
@@ -268,7 +303,7 @@ Separation is on the blue↔orange axis, the one axis every dichromacy preserves
 
 **The Always-Night Rule.** The sign-in stage is Ink Indigo — a committed Night-ground brand moment on the paper canvas, so `--ink` / `--muted` must not leak into it: those are paper-ground tones and it is not on the paper ground.
 
-The desktop rail was the other Night surface, and it is gone with the Fizzy-philosophy shell; the `--rail-*` token family went with it. Any future Night surface needs its own declared tones rather than reaching for the app's.
+The desktop rail was the other Night surface, and it is gone with the Fizzy-philosophy shell; the `--rail-*` custom properties went with it. Their four values did not die — the public share page still uses them, as `share-ink` / `share-text` / `share-muted` / `share-faint` here and as **literals** in `worker/index.ts`, because that page is server-rendered and ships without the app's stylesheet. They are documented as the Night-ground text ramp they always were. Any *new* Night surface declares its own tones rather than reaching for the app's paper-ground ones.
 
 **The No-Fill Rule.** A stage colour is a tint, a ring or an edge — never a filled ground with type on it. Measured, no ink clears 4.5:1 on all five hues: the best available is white at a worst case of 3.62:1 on interview, Night ink is worse at 2.37:1, paper worse still. That is not a gap to close by picking a better ink. The hues are tuned to clear 4.5:1 *as label text* on paper, which makes them mid-tone by construction, and a mid-tone cannot also be a reliable ground for type. `--stage-tint` is the mechanism that already does this correctly.
 
@@ -321,11 +356,13 @@ Self-hosted variable woff2, latin + latin-ext per family. The Mono axis ships **
 
 ## Layout
 
-**The shell.** Below 900px the app is a single centred column: `max-width: 720px`, `0.75rem` side padding, `5rem` bottom padding to clear the fixed mobile tab bar. The top bar is sticky, full-bleed (negative side margins that cancel the column padding), and carries the brand, the ⌘K launcher, and the single "+ Add" affordance.
+**The shell is the same shape at every width**, which is the Fizzy-philosophy change: a sticky top bar, one content column, and a **fixed bottom bar** — no desktop rail, and no layout that only some viewports get. `.app` is a plain block; the bar is `position: fixed` with `max-width: 100vw`, and the content reserves `--bottombar-reserve` (4.5rem) at the foot so nothing ends underneath it.
 
-**The rail.** At `min-width: 900px` the shell becomes a flex row: a sticky, full-height, 210px Ink Indigo rail plus fluid content, and the 720px cap is released. The rail carries brand, nav, and a pinned account block; the top bar switches from brand to page title. Board views widen further, to `max-width: 1280px`.
+**The column.** Below 900px: full width with `0.75rem` side padding. From `min-width: 900px`: `max-width: 760px`, centred, `24px` side padding. Three surfaces release the cap to `max-width: none` because they are horizontal by nature — the board, the swimlanes, and settings — which is why a board measures the full viewport at 1440 while Today does not.
 
-**Breakpoints** (the whole set, in use order): `600px` (mobile ⇄ tablet — the tab bar goes fixed-bottom with icon-over-label, touch targets grow to 40px), `900px` (the rail; five-column board; two-column dashboard; the feed's list+detail split), `1000px` and `1100px` (side panels such as Next Up appear), plus narrow patches at `560px` and `599px` for search wrap and the "+ Add" label.
+**The bottom bar is not a mobile tab bar.** It is present at 1440 as much as at 390, carrying three slots: the pinned filter (`p`), the ⌘K launcher, and notifications. It is chrome for the whole product, so the reserve at the foot of `.content` is unconditional — and it is set in `rem` rather than `px` so it still clears the bar at 200% text, where the bar itself grows.
+
+**Breakpoints**, by how much they carry: `900px` is the real one (twelve rules — the five-column board, the two-column dashboard, the feed's list+detail split, the content cap). `600px` is the second (nine — touch targets grow, the bar goes icon-over-label). `1000px` and `1100px` bring in side panels such as Next Up; `700px` handles two narrow patches.
 
 **Grids.** The board is `repeat(5, 1fr)` at ≥900px with each column capped at `calc(100vh - 8rem)` and scrolling internally, so a busy stage never grows the page. KPI tiles are `minmax(0, 1.3fr) repeat(3, minmax(0, 1fr))` — the hero column is wider by design, and the `minmax(0, …)` is load-bearing: it lets a long value shrink instead of pushing the grid past a phone viewport. The dashboard splits `1.05fr 0.95fr` at ≥900px. Forms are a two-column grid at `0.7rem` gaps with action rows spanning `1 / -1`.
 
@@ -333,7 +370,7 @@ Self-hosted variable woff2, latin + latin-ext per family. The Mono axis ships **
 
 ### Named Rules
 
-**The 720 Rule.** Content is one 720px column until the rail exists. Do not introduce a second content column below 900px; on phones the answer to "where does this go" is *further down*, not *beside*.
+**The One-Column Rule.** Content is one column (`max-width: 760px` from 900px up), and the three surfaces that release the cap — board, swimlanes, settings — release it to full width rather than to a second column. Do not introduce a second content column; on phones the answer to "where does this go" is *further down*, not *beside*. Named for the doctrine rather than the measurement: this was "The 720 Rule" until the number moved and the name went stale with it.
 
 **The Internal-Scroll Rule.** A stage column, not the page, absorbs a busy stage. Any new column-shaped surface gets `max-height` + `overflow-y: auto` on its list, with the head pinned.
 
@@ -364,7 +401,7 @@ Shadows are indigo-tinted (`rgba(20, 23, 58, …)`), not neutral black — they 
 
 A three-step corner vocabulary and a hairline-only border language.
 
-- **10px (`--radius-md`)** is the dominant control corner: buttons, inputs, selects, cards, rows, dashboard panels, rail nav items, the ⌘K launcher.
+- **10px (`--radius-md`)** is the dominant control corner: buttons, inputs, selects, cards, rows, dashboard panels, bottom-bar slots, the ⌘K launcher.
 - **14px (`--radius-lg`)** is the container corner: modals, the sign-in card, the feed detail pane, the brand squircle (a 44px square at rx 14 in the mark itself).
 - **8px (`--radius-sm`)** is the small-object corner: badges, the settings icon button, keyboard `kbd` chips, settings-field inputs.
 - **Pill (`--radius-full`, 999px)** belongs to anything that reads as a token: chips, filter tabs, the segmented control and its thumb, the win pill, and the 34px circular avatar.
@@ -420,9 +457,23 @@ The `.zui-row` band is the most repeated object in the product: white, 1px hairl
 
 ### Navigation
 
-- **Desktop rail (≥900px):** 210px, Ink Indigo, sticky full height. Brand at 20px Atkinson 600. Items are 14px, `9px 12px`, 10px corners, 18px icons, `--rail-muted` at rest; hover lifts to `rgba(255,255,255,.06)` with `--rail-text`; **active is brass on a 16% brass wash**. The account block pins to the foot above a `rgba(255,255,255,.08)` rule.
-- **Tablet strip (600–900px):** the same tabs as bordered mono pills — 10px corners, `--text-chrome`, uppercase, `--track-eyebrow`, muted; active turns brass with a brass border and weight 700.
-- **Mobile bar (≤600px):** fixed to the bottom with `env(safe-area-inset-bottom)` padding and a `--vv-bottom-offset` hook for the visual viewport. Borders and fills drop entirely; each tab becomes an equal-width icon-over-label column at `0.6rem`, sized so eight tabs fit a 320px phone without scrolling or clipping.
+Navigation is **two bars and no tabs**, identical at 390 and at 1440. The
+per-width nav vocabulary — a 210px Ink Indigo rail, a tablet pill strip, an
+eight-tab mobile bar — is gone with the Fizzy-philosophy shell. There is no
+`.tabs` element in the DOM at any width.
+
+- **Top bar** (`.top`, 55–58px, sticky, white): three things only — the current
+  destination on the left, the brand wordmark with its menu chevron centred,
+  and Settings on the right. Everything else that used to live in a rail is
+  behind the brand menu.
+- **Bottom bar** (`.bottombar`, ~59px, `position: fixed`, white, `max-width:
+  100vw`): three slots — the pinned filter with a `p` keycap, the ⌘K launcher,
+  and notifications with a count badge. Each slot carries its label as visible
+  text plus a keycap; the labels are sr-only where the slot is icon-first, so
+  the accessible names are "Pinned", "Search", "Notifications".
+- **It is chrome, not a mobile affordance.** Because it is fixed at every
+  width, `.content` reserves `--bottombar-reserve` unconditionally — see
+  Layout for why that reserve is in `rem`.
 
 ### Stat tiles
 
@@ -459,7 +510,7 @@ A Night squircle (44px at rx 14 on a 48 viewBox) holding three rungs that rise a
 - **Don't** use emoji anywhere in the UI, and don't introduce mascots or stock vector illustration.
 - **Don't** build dense enterprise-dashboard chrome: no data-grid density, no stacked toolbars, no ten-colour chart palettes. Fifty applications is the ceiling, not fifty thousand rows.
 - **Don't** let colour carry meaning alone. A stage hue always travels with a label or a position.
-- **Don't** hardcode a rail hex or let `--ink` / `--muted` reach a rail descendant — use `--rail-ink` / `--rail-text` / `--rail-muted` / `--rail-faint`.
+- **Don't** let `--ink` / `--muted` reach a descendant of a Night surface — they are paper-ground tones. The sign-in stage and the share page each declare their own; the share page's four are literals in `worker/index.ts` (documented here as `share-ink` / `share-text` / `share-muted` / `share-faint`) because it ships without the app's stylesheet.
 - **Don't** use `--muted` on empty-state icons; `--empty-stroke` exists because muted drops to about 1.6:1 at those icons' internal opacities.
 - **Don't** lighten `--faint` — its current value is the one that clears 4.5:1 on both `--surface` and `--bg`.
 - **Don't** set `line-height` on a button. Buttons inherit the body's 1.5 through `button { font: inherit }`, and primary sizes its box off it; forcing 1 shortens every primary by roughly 7px and shifts the whole content column.
