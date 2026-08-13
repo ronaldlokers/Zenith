@@ -424,6 +424,14 @@ export function FeedTab({
 
   // Counted off the same filtered set the list is built from, so the number
   // offered cannot disagree with what pressing it reveals.
+  const weakShown = useMemo(
+    () =>
+      showWeak
+        ? (items ?? []).filter((i) => matchBand(i.match_count) === "weak").length
+        : 0,
+    [items, showWeak],
+  );
+
   const weakHidden = useMemo(
     () =>
       showWeak
@@ -540,14 +548,19 @@ export function FeedTab({
           () =>
             api
               .undismissFeedItem(item.id)
-              .then(() =>
+              .then(() => {
                 setItems((prev) => {
                   const rest = prev ?? [];
                   const back = [...rest];
                   back.splice(Math.max(0, Math.min(at, rest.length)), 0, item);
                   return back;
-                }),
-              )
+                });
+                // Put the caret back on the restored posting. Undo left
+                // focus on <body>, so a keyboard user got the job back and
+                // then had to tab through the whole shell to reach it.
+                setFocusedIndex(at);
+                triaged.current = true;
+              })
               .catch((e) => onError((e as Error).message)),
           t("toast.undo"),
         ),
@@ -561,6 +574,12 @@ export function FeedTab({
           back.splice(Math.max(0, Math.min(at, rest.length)), 0, item);
           return back;
         });
+        // Re-arm the focus effect. It already ran on the way down, moving
+        // focus to whatever filled the vacated slot; putting the row back
+        // shifts that element one along, so the ring and the announcement
+        // ended up on a different posting from the one the pane was showing
+        // — and the next a/d would have hit the wrong job silently.
+        triaged.current = true;
         onError((e as Error).message);
       })
       .finally(() => dismissingIds.current.delete(item.id));
@@ -627,6 +646,14 @@ export function FeedTab({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // One press, one action. A held key repeats at ~30/second and each
+      // repeat lands on a *different* posting as the list shifts up, so the
+      // per-item in-flight guard cannot see it: measured, holding "d" fired
+      // ten dismisses in about a third of a second, took the list from
+      // twelve rows to two, and left three undo toasts for seven destroyed
+      // postings — on the screen whose whole anxiety is missing the one
+      // that mattered.
+      if (e.repeat) return;
       // Bare keys only. Without this, Ctrl/Cmd-A added the focused job to the
       // pipeline and swallowed select-all, and Ctrl/Cmd-D dismissed it and
       // swallowed the bookmark dialog — both verified firing real POSTs. Both
@@ -895,6 +922,17 @@ export function FeedTab({
             {t("empty.feedNothingNew")}
           </EmptyState>
         </ul>
+      )}
+      {showWeak && weakShown > 0 && (
+        /* The way back. Showing the weaker matches was a one-way door: the
+           control disappeared once pressed, so a screen someone opened to
+           get away from a wall of "0 matching skills" could not be returned
+           to. */
+        <div className="feed-weak-more">
+          <Button variant="link" onClick={() => setShowWeak(false)}>
+            {t("feed.hideWeak", { count: weakShown })}
+          </Button>
+        </div>
       )}
       {weakHidden > 0 && (
         /* Stated, not hidden: the count is the honest part, and one press

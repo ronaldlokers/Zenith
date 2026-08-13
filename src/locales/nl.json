@@ -242,7 +242,9 @@
     "noFitMatchPage": "Niets op de tot nu toe geladen pagina's komt overeen met dit fit-filter. Verderop in de feed staat mogelijk meer.",
     "clearFitFilter": "Toon elke fit",
     "showWeak_one": "Toon {{count}} zwakkere match",
-    "showWeak_other": "Toon {{count}} zwakkere matches"
+    "showWeak_other": "Toon {{count}} zwakkere matches",
+    "hideWeak_one": "Verberg {{count}} zwakkere match",
+    "hideWeak_other": "Verberg {{count}} zwakkere matches"
   },
   "stats": {
     "momentum": {
