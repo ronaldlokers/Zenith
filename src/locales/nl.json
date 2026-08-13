@@ -24,7 +24,7 @@
     "quietTitle": "Stil geworden",
     "quietHint": "Geen reactie ligt aan hen, niet aan jou. Ruim ze op wanneer je er klaar voor bent.",
     "quietAge": "{{days}} dagen stil",
-    "closeOut": "Afsluiten",
+    "closeOut": "Archiveren",
     "closedOut": "Gearchiveerd — één ding minder",
     "nothingTracked": "Nog niets bijgehouden",
     "nothingTrackedHint": "Voeg de eerste vacature toe die je najaagt — alles op dit scherm groeit daaruit.",
@@ -471,7 +471,7 @@
     "seeFullTimeline": "Bekijk de volledige tijdlijn"
   },
   "nextUp": {
-    "title": "Binnenkort",
+    "title": "Volgende acties",
     "showAll": "Alle {{count}} tonen",
     "done": "Klaar",
     "doneToast": "Follow-up afgerond",

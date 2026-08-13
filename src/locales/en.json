@@ -24,7 +24,7 @@
     "quietTitle": "Gone quiet",
     "quietHint": "No reply is on them, not you. Clear these out when you're ready.",
     "quietAge": "quiet {{days}}d",
-    "closeOut": "Close out",
+    "closeOut": "Archive",
     "closedOut": "Archived — one less thing",
     "nothingTracked": "Nothing tracked yet",
     "nothingTrackedHint": "Add the first role you're chasing — everything on this screen grows from it.",
