@@ -778,7 +778,6 @@
     "railArchived": "Archived",
     "addHere": "+ Add an application",
     "foldRail": "Fold {{stage}}",
-    "unfoldRail": "Open {{stage}}, {{count}} applications",
     "showingClosed": "Showing closed applications",
     "pin": "Pin",
     "unpin": "Unpin",
@@ -792,7 +791,9 @@
     "noMatchFilters": "Nothing matches the filters you have set.",
     "clearSearch": "Clear search",
     "clearFilters_one": "Clear {{count}} filter",
-    "clearFilters_other": "Clear {{count}} filters"
+    "clearFilters_other": "Clear {{count}} filters",
+    "unfoldRail_one": "Open {{stage}}, {{count}} application",
+    "unfoldRail_other": "Open {{stage}}, {{count}} applications"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."

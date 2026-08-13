@@ -2495,6 +2495,17 @@ select.status {
   display: none;
 }
 
+/* The strip hides its own scrollbar and carries nine rails, of which about
+   three fit at 390px — so on a phone the board's stage switcher ended flush
+   at the screen edge with nothing saying Offer existed to the right. The
+   right edge fades instead of stopping, which is the one cue that survives
+   a hidden scrollbar. Safe to apply unconditionally here: this strip always
+   holds all nine rails regardless of the data, so it always overflows at
+   the widths it renders at. */
+.stage-strip {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
 .stage-chip {
   flex: 0 0 auto;
   padding: 0.55rem 0.85rem;
