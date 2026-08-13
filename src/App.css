@@ -1830,7 +1830,12 @@ button.primary:hover {
     font-size: var(--text-chrome);
     text-transform: uppercase;
     letter-spacing: var(--track-eyebrow);
-    color: var(--success);
+    /* --success-ink, not --success. The token's own comment says why:
+       --success is a fill and measures 3.92:1 as text on white, so anything
+       that says "this went well" in words takes the ink tone. This heading
+       is the one on the surface that does, at 10.24px. --success-ink is
+       5.14:1. */
+    color: var(--success-ink);
   }
   .feed-detail-actions {
     display: flex;

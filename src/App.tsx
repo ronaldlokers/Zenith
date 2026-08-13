@@ -535,6 +535,7 @@ export default function App() {
                 notify={notify}
                 roleTypes={roleTypes}
                 onOpenSettings={() => navigate("/settings?s=feed")}
+                onGoToCv={() => navigate("/cv")}
                 onChanged={reload}
                 onOpenJob={(id) => navigate(`/board/${id}`)}
               />

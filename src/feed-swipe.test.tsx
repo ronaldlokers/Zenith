@@ -78,6 +78,7 @@ function renderFeed() {
       notify={() => {}}
       roleTypes={[]}
       onOpenSettings={() => {}}
+      onGoToCv={() => {}}
       onChanged={() => Promise.resolve()}
       onOpenJob={() => {}}
     />,

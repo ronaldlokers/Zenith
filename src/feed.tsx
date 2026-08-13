@@ -370,6 +370,7 @@ export function FeedTab({
   notify,
   roleTypes,
   onOpenSettings,
+  onGoToCv,
   onChanged,
   onOpenJob,
 }: {
@@ -377,6 +378,8 @@ export function FeedTab({
   notify: (message: string, undo?: () => void, label?: string) => void;
   roleTypes: RoleTypeDef[];
   onOpenSettings: () => void;
+  /** Where the skills that drive matching are edited. */
+  onGoToCv: () => void;
   onChanged: () => Promise<void>;
   onOpenJob: (id: number) => void;
 }) {
@@ -770,7 +773,7 @@ export function FeedTab({
         </div>
       )}
 
-      {items && items.length > 0 && visibleItems.length === 0 && (
+      {items && items.length > 0 && visibleItems.length === 0 && weakHidden === 0 && (
         /* The fit filter runs over the pages already loaded, not the whole
            feed — matching is computed from each posting's description, which
            only ships for the rows on the wire, so the server cannot order or
@@ -784,9 +787,14 @@ export function FeedTab({
             {cursor ? t("feed.noFitMatchPage") : t("feed.noFitMatch")}
           </p>
           <div className="feed-nomatch-actions">
-            <Button variant="link" onClick={() => setMinFit(0)}>
-              {t("feed.clearFitFilter")}
-            </Button>
+            {/* Only when there is a filter to clear. Offering "show any fit"
+                while the fit filter is already at zero is a remedy that
+                changes nothing — measured, rows before and after: 0. */}
+            {minFit > 0 && (
+              <Button variant="link" onClick={() => setMinFit(0)}>
+                {t("feed.clearFitFilter")}
+              </Button>
+            )}
             {cursor && (
               <Button variant="link" onClick={loadMore} disabled={loadingMore}>
                 {loadingMore ? t("common.loading") : t("common.loadMore")}
@@ -922,6 +930,23 @@ export function FeedTab({
             {t("empty.feedNothingNew")}
           </EmptyState>
         </ul>
+      )}
+      {visibleItems.length === 0 && weakHidden > 0 && (
+        /* The state a new account lands in. Matching needs skills on the CV,
+           so before one is filled in every posting scores zero, the weak
+           fold hides all of them, and the screen went blank under a message
+           about a fit filter that was not set — with a "show any fit" button
+           that did nothing. Names the real cause and points at the thing
+           that fixes it; the fold's own control below still offers to show
+           them anyway. */
+        <div className="feed-nomatch">
+          <p className="muted small">{t("feed.allWeak", { count: weakHidden })}</p>
+          <div className="feed-nomatch-actions">
+            <Button variant="link" onClick={onGoToCv}>
+              {t("feed.addSkills")}
+            </Button>
+          </div>
+        </div>
       )}
       {showWeak && weakShown > 0 && (
         /* The way back. Showing the weaker matches was a one-way door: the
