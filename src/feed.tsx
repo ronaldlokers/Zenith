@@ -662,7 +662,12 @@ export function FeedTab({
     : "";
 
   return (
-    <section>
+    /* A class that exists whether or not anything has loaded. The shell's
+       width was keyed on .feed-triage, which only renders once there are
+       items — so the page laid out at 760px during the fetch and jumped to
+       1100px when the data arrived, measured on every visit. Layout is a
+       property of the route, not of the query result. */
+    <section className="feed-page">
       <Toolbar>
         <p className="muted small" style={{ margin: 0 }}>
           {t("feed.pulledFrom")}

@@ -4194,7 +4194,7 @@ summary.bcol-head::after {
   .app:has(.network-page),
   .app:has(.dash),
     .app:has(.calendar-view),
-.app:has(.feed-triage),
+.app-tab-feed,
   .app:has(.job-page) {
     max-width: none;
   }
@@ -4228,7 +4228,7 @@ summary.bcol-head::after {
 
   .app:has(.cv-layout) .content,
     .app:has(.calendar-view) .content,
-.app:has(.feed-triage) .content {
+.app-tab-feed .content {
     max-width: 1100px;
   }
 

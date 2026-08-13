@@ -260,7 +260,12 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    /* The active tab, on the shell, from the first paint. The per-view width
+       rules key off :has() against content that only exists once the view has
+       rendered and its data has arrived — so the feed laid out at 760px
+       during the fetch and jumped to 1100px when the items landed, on every
+       visit. The route is known before any of that. */
+    <div className={`app app-tab-${tab}`}>
       {showQuickAdd && (
         <QuickAddDialog
           companies={visibleCompanies}
