@@ -4826,15 +4826,28 @@ button:not(:disabled):active,
 
 /* Each open live stage leads with its add block, so adding lands in the
    stage you are looking at. Closed stages and the archive get none: nothing
-   is created straight into them. */
+   is created straight into them.
+
+   Quiet, and it used to be five filled gold slabs — one per live stage, all
+   saying the same thing. Gold is the app's only accent and the stage hues
+   are the board's actual information; spending the loudest colour five times
+   on a repeated affordance outshouted the pipeline the screen exists to
+   show, and each slab pushed that column's first real card down with it.
+   A dashed slot reads as "space for one more", which is what it is, and the
+   card it sits above is now the first thing with weight in the column. */
 .bcol-add {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.7rem;
-  padding: 1rem 0.75rem;
-  border: 1px solid var(--rule);
+  margin-bottom: 0.55rem;
+  padding: 0.3rem;
+  border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: transparent;
+}
+
+.bcol-add:hover,
+.bcol-add:focus-within {
+  border-color: var(--accent);
 }
 
 /* column header funnel proportion */

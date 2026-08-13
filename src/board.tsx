@@ -520,7 +520,7 @@ function BoardTab({
             <div className="bcol-cards">
               {live && showAddBlocks && (
                 <div className="bcol-add">
-                  <Button variant="primary" onClick={() => onAdd(rail as Status)}>
+                  <Button variant="ghost" onClick={() => onAdd(rail as Status)}>
                     {t("board.addHere")}
                   </Button>
                 </div>

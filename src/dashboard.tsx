@@ -77,7 +77,15 @@ export function DashboardTab({
   // Which half of Next Up is showing. The hero is the handle that sets it,
   // which is also what keeps the hero count and the list length honest: they
   // are the same filter, not two filters that can disagree.
-  const [nextUpTab, setNextUpTab] = useState<"due" | "upcoming">("due");
+  // null until the user picks a half, and the default follows the data
+  // rather than being pinned to "due". Pinned, the panel opened on an empty
+  // Due list whenever nothing was due, and the only thing that moved it was
+  // clicking the hero — which made the hero a control that worked once and
+  // was inert every press after, the same defect the due-state hero had.
+  // Derived rather than an effect: an effect would render the wrong half
+  // first and correct it, and the tab would also fight the user's choice
+  // every time the data refetched.
+  const [tabChoice, setTabChoice] = useState<"due" | "upcoming" | null>(null);
 
   const live = useMemo(
     () => applications.filter((a) => !isDead(a.status)),
@@ -156,6 +164,10 @@ export function DashboardTab({
     );
   const dueToday = due.filter((a) => !isOverdue(a));
 
+  const nextUpTab: "due" | "upcoming" =
+    tabChoice ?? (due.length > 0 ? "due" : "upcoming");
+  const setNextUpTab = setTabChoice;
+
   const heroState =
     applications.length === 0
       ? "untracked"
@@ -226,7 +238,6 @@ export function DashboardTab({
                 className="today-hero"
                 value={upcoming.length}
                 label={t("today.scheduledNoneDue", { count: upcoming.length })}
-                onClick={() => setNextUpTab("upcoming")}
               />
             )}
             {heroState === "unplanned" && (

@@ -129,7 +129,7 @@ describe("DashboardTab (Today)", () => {
     ).toBeInTheDocument();
   });
 
-  test("the hero switches Next Up to the upcoming half when nothing is due", () => {
+  test("Next Up opens on the upcoming half when nothing is due", () => {
     render(
       <DashboardTab
         {...props}
@@ -137,12 +137,15 @@ describe("DashboardTab (Today)", () => {
         stats={emptyStats}
       />,
     );
-    expect(screen.getByText("Nothing due today.")).toBeInTheDocument();
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /follow-up scheduled, none due today/,
-      }),
-    );
+    // No click. The tab used to be pinned to "due" and the hero was the only
+    // thing that moved it, which made the hero work exactly once and do
+    // nothing every press after — the same defect the due-state hero had.
+    // The default follows the data now, so the panel opens on the half that
+    // has something in it and the hero needs no click at all.
+    expect(
+      screen.queryByRole("button", { name: /none due today/ }),
+      "the clear-state hero must not be a button either",
+    ).toBeNull();
     const list = screen.getByRole("list", { name: "Next up" });
     expect(
       within(list).getAllByRole("button", {
