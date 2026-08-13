@@ -18,6 +18,7 @@ import type {
 } from "./types";
 import { FilterIcon, FoldIcon, SearchIcon } from "./icons";
 import type { BoardRail, BoardSort, Urgency } from "./format";
+import { boolParam, stringParam, useViewParam, useViewPatch } from "./board-view";
 import {
   ageDays,
   BOARD_RAILS,
@@ -45,6 +46,18 @@ import { ActionBar, Button, CardMenu, EmptyState, StarRating } from "./component
 // A stable empty set, so the narrow board does not allocate one per render
 // and re-run everything downstream of it.
 const EMPTY_FOLD: ReadonlySet<BoardRail> = new Set();
+
+// Module scope on purpose: useViewParam memoizes on the codec, so a literal
+// built during render would make the memo useless and hand every consumer a
+// new setter on every render.
+const FILTER_PARAM = stringParam("all");
+const QUERY_PARAM = stringParam("");
+const SORT_PARAM = stringParam("urgency", [
+  "urgency",
+  "followup",
+  "fit",
+  "updated",
+]) as import("./board-view").ParamCodec<BoardSort>;
 
 const isPipelineRail = (rail: BoardRail): boolean =>
   (PIPELINE as readonly BoardRail[]).includes(rail);
@@ -734,12 +747,15 @@ export function PipelineTab({
   onOpenSampleData: () => void;
 }) {
   const { t } = useTranslation();
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [tagFilter, setTagFilter] = useState<string>("all");
-  const [query, setQuery] = useState(initialQuery ?? "");
+  // The view lives in the URL (see board-view.ts). What stays out of it: the
+  // fold, which is a per-user preference the server already stores, and the
+  // open card, which App owns as part of the route.
+  const [roleFilter, setRoleFilter] = useViewParam("role", FILTER_PARAM);
+  const [companyFilter, setCompanyFilter] = useViewParam("company", FILTER_PARAM);
+  const [tagFilter, setTagFilter] = useViewParam("tag", FILTER_PARAM);
+  const [query, setQuery] = useViewParam("q", QUERY_PARAM);
   // Global sort applied to every column (#346), default urgency.
-  const [sort, setSort] = useState<BoardSort>("urgency");
+  const [sort, setSort] = useViewParam("sort", SORT_PARAM);
   // Filters behind a Filter button; the Archived modal replaces the old
   // Closed drawer (#346).
   const [showFilters, setShowFilters] = useState(false);
@@ -851,12 +867,24 @@ export function PipelineTab({
   // The toast offers the way back, because this is a view someone lands in
   // and has to be able to leave without knowing what was folded before.
   const navigate = useNavigate();
-  const navState = useLocation().state as {
+  const location = useLocation();
+  const navState = location.state as {
     showClosed?: boolean;
     showPinned?: boolean;
   } | null;
+  // Clearing the one-shot nav state must not clear the view with it. These
+  // effects used to navigate to a bare "/board", which was harmless while
+  // the filters lived in component state and wipes them now that they live
+  // in the query string — pressing "p" on a filtered board would have
+  // dropped the filter on the way in.
+  const clearNavState = useCallback(() => {
+    navigate({ pathname: "/board", search: window.location.search }, {
+      replace: true,
+      state: null,
+    });
+  }, [navigate]);
   const showClosed = navState?.showClosed;
-  const [pinnedOnly, setPinnedOnly] = useState(false);
+  const [pinnedOnly, setPinnedOnly] = useViewParam("pinned", boolParam);
   useEffect(() => {
     if (!showClosed) return;
     const before = new Set(folded);
@@ -867,7 +895,7 @@ export function PipelineTab({
       t("board.backToLive"),
     );
     // Consume it, or every later visit to the board reopens the closed view.
-    navigate("/board", { replace: true, state: null });
+    clearNavState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showClosed]);
 
@@ -878,14 +906,23 @@ export function PipelineTab({
     // that got you in had no way of getting you out — the strip above is
     // the other half of that, and this is the half a keyboard user reaches
     // for first.
-    setPinnedOnly((v) => {
-      const next = !v;
-      if (next) {
-        notify(t("board.showingPinned"), () => setPinnedOnly(false), t("board.showAll"));
-      }
-      return next;
-    });
-    navigate("/board", { replace: true, state: null });
+    // One navigation, not two. Flipping the parameter and then clearing the
+    // nav state separately is a race: the second call reads
+    // window.location.search before React Router has applied the first, so
+    // the toggle gets written and immediately overwritten with the value it
+    // just replaced. Computing the next query here and navigating once makes
+    // the toggle and the consume the same act.
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("pinned") !== "1";
+    if (next) params.set("pinned", "1");
+    else params.delete("pinned");
+    navigate(
+      { pathname: "/board", search: params.toString() },
+      { replace: true, state: null },
+    );
+    if (next) {
+      notify(t("board.showingPinned"), () => setPinnedOnly(false), t("board.showAll"));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navState?.showPinned]);
 
@@ -902,6 +939,7 @@ export function PipelineTab({
   // Saved views (#277) — the schema keeps statusFilter/sort for
   // back-compat with views saved from the old list; the board ignores
   // them (columns are the status filter).
+  const patchView = useViewPatch();
   const [savedViews, setSavedViews] = useState<SavedView[]>([]);
   const [namingView, setNamingView] = useState(false);
   const [newViewName, setNewViewName] = useState("");
@@ -926,12 +964,19 @@ export function PipelineTab({
     showArchived: false,
     sort: "updated",
   });
+  // A saved view is now just a URL, so applying one is a single replace
+  // rather than four setters racing inside one batch. Defaults are dropped
+  // rather than written, so applying the empty view gives a bare /board.
   const applyView = (v: SavedView) => {
     const f = v.filters;
-    setQuery(f.query ?? "");
-    setRoleFilter(f.roleFilter ?? "all");
-    setCompanyFilter(f.companyFilter ?? "all");
-    setTagFilter(f.tagFilter ?? "all");
+    const orNull = (value: string | undefined, dflt: string) =>
+      !value || value === dflt ? null : value;
+    patchView({
+      q: orNull(f.query, ""),
+      role: orNull(f.roleFilter, "all"),
+      company: orNull(f.companyFilter, "all"),
+      tag: orNull(f.tagFilter, "all"),
+    });
   };
   const saveCurrentView = () => {
     const name = newViewName.trim();
@@ -1268,11 +1313,7 @@ export function PipelineTab({
           {activeFilterCount > 0 && (
             <Button
               variant="link"
-              onClick={() => {
-                setRoleFilter("all");
-                setCompanyFilter("all");
-                setTagFilter("all");
-              }}
+              onClick={() => patchView({ role: null, company: null, tag: null })}
             >
               {t("board.clearFilters", { count: activeFilterCount })}
             </Button>

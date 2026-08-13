@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
@@ -71,6 +71,24 @@ import { BottomBar, type NavItem, ToastStack, TopBar } from "./shell";
 export default function App() {
   const { t } = useTranslation();
   const location = useLocation();
+  // Every route into the board keeps the board's query string. The view
+  // (search, sort, filters, pinned) lives there now, so a bare "/board"
+  // means "and discard what they were looking at" — which is not what
+  // pressing "p" or opening Closed applications is asking for. Measured:
+  // "p" on a filtered board dropped the filter, and because it also blanked
+  // the parameter it was toggling, pressing it twice pinned twice instead of
+  // toggling back off.
+  // Prefix match, not equality: closing a card navigates from "/board/123"
+  // back to "/board", and that is exactly the trip that must not lose the
+  // filters. Arriving from another tab carries nothing, which is right —
+  // there is no view to preserve.
+  const boardTarget = useCallback(
+    (id?: number) => ({
+      pathname: id === undefined ? "/board" : `/board/${id}`,
+      search: location.pathname.startsWith("/board") ? location.search : "",
+    }),
+    [location.pathname, location.search],
+  );
   const navigate = useNavigate();
   const { tab, id: detailIdFromUrl } = parsePath(location.pathname);
   const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
@@ -143,11 +161,11 @@ export default function App() {
     onToggleMenu: () => setMenuOpen((v) => !v),
     onShowClosed: () => {
       setMenuOpen(false);
-      navigate("/board", { state: { showClosed: true } });
+      navigate(boardTarget(), { state: { showClosed: true } });
     },
     onShowPinned: () => {
       setMenuOpen(false);
-      navigate("/board", { state: { showPinned: true } });
+      navigate(boardTarget(), { state: { showPinned: true } });
     },
   });
 
@@ -278,7 +296,7 @@ export default function App() {
             // Navigate on the optimistic append instead of blocking on the
             // five-endpoint reload — the page fills in as data lands.
             setApplications((prev) => [...prev, a]);
-            if (open) navigate(`/board/${a.id}`);
+            if (open) navigate(boardTarget(a.id));
             void reload();
           }}
         />
@@ -300,7 +318,7 @@ export default function App() {
           contacts={visibleContacts}
           onClose={() => setShowPalette(false)}
           onJumpToApplication={(id) => {
-            navigate(`/board/${id}`);
+            navigate(boardTarget(id));
             setShowPalette(false);
           }}
           onJumpToCompany={(id) => {
@@ -397,7 +415,7 @@ export default function App() {
             if (id === "settings") return setTab("settings");
             if (id === "quick-add") return setShowQuickAdd(true);
             if (id === "closed")
-              return navigate("/board", { state: { showClosed: true } });
+              return navigate(boardTarget(), { state: { showClosed: true } });
             const target = navItems.find((n) => n.data === id);
             if (target) setTab(target.to);
           }}
@@ -440,7 +458,7 @@ export default function App() {
             {tab === "overview" && (
               <DashboardTab
                 applications={visibleApps}
-                onOpenJob={(id) => navigate(`/board/${id}`)}
+                onOpenJob={(id) => navigate(boardTarget(id))}
                 onGoToJobs={() => setTab("board")}
                 onError={setError}
                 onChanged={reload}
@@ -453,12 +471,12 @@ export default function App() {
               <InsightsTab
                 applications={visibleApps}
                 onGoToJobs={() => setTab("board")}
-                onOpenJob={(id) => navigate(`/board/${id}`)}
+                onOpenJob={(id) => navigate(boardTarget(id))}
                 // Same target the "c" shortcut and the menu use: the closed
                 // rails are folded by default, so landing on a bare board
                 // would show none of what the link promised.
                 onShowClosed={() =>
-                  navigate("/board", { state: { showClosed: true } })
+                  navigate(boardTarget(), { state: { showClosed: true } })
                 }
                 onError={setError}
                 onJump={(title) => {
@@ -479,7 +497,7 @@ export default function App() {
                     // "default" only on a direct deep-link with no in-app
                     // history; fall back to the board there.
                     if (location.key !== "default") navigate(-1);
-                    else navigate("/board");
+                    else navigate(boardTarget());
                   }}
                 >
                   ← {t("common.back")}
@@ -491,7 +509,7 @@ export default function App() {
                   companies={visibleCompanies}
                   contacts={visibleContacts}
                   roleTypes={roleTypes}
-                  onClose={() => navigate("/board")}
+                  onClose={() => navigate(boardTarget())}
                   onChanged={reload}
                   onError={setError}
                   notify={notify}
@@ -520,7 +538,7 @@ export default function App() {
                 onSaveOutcome={saveOutcome}
                 lastInteractions={statsData?.interactions ?? []}
                 onOpenJob={(id: number | null) =>
-                  navigate(id ? `/board/${id}` : "/board")
+                  navigate(boardTarget(id ?? undefined))
                 }
                 onOpenQuickAdd={(stage) => {
                   setQuickAddStage(stage);
@@ -537,7 +555,7 @@ export default function App() {
                 onOpenSettings={() => navigate("/settings?s=feed")}
                 onGoToCv={() => navigate("/cv")}
                 onChanged={reload}
-                onOpenJob={(id) => navigate(`/board/${id}`)}
+                onOpenJob={(id) => navigate(boardTarget(id))}
               />
             )}
             {(tab === "companies" || tab === "contacts") && (
@@ -598,7 +616,7 @@ export default function App() {
 
       <BottomBar
         onSearch={() => setShowPalette(true)}
-        onPinned={() => navigate("/board", { state: { showPinned: true } })}
+        onPinned={() => navigate(boardTarget(), { state: { showPinned: true } })}
         pinnedCount={pinnedCount}
       />
       <ConfirmHost />
