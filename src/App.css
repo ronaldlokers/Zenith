@@ -4443,15 +4443,36 @@ summary.bcol-head::after {
      used to size .app (and .app > main) now cap the content column only —
      these overrides beat the older .app:has(){max-width} rules above since
      they land later in the cascade at equal specificity. */
-  .app:has(.board),
-  .app:has(.board-swimlanes),
-  .app:has(.cv-layout),
-  .app:has(.settings-page),
-  .app:has(.network-page),
-  .app:has(.dash),
-    .app:has(.calendar-view),
-.app-tab-feed,
-  .app:has(.job-page) {
+  /* Keyed off the tab class rather than off what the tab renders.
+     `app-tab-${tab}` is on the root from the first paint; `:has(.cv-layout)`
+     cannot match until the CV mounts, so every page released here laid out
+     at the cap and then widened under content the reader was already looking
+     at — a uniform ~0.222 layout shift at 1440. The feed was already doing
+     it this way and measured 0, which is what made the shape worth trying.
+
+     `.app.app-tab-*` rather than `.app-tab-*`: `:has()` contributes the
+     specificity of its argument, so `.app:has(.board)` is (0,2,0). Written
+     as a bare tab class this is (0,1,0) and loses to the earlier
+     `max-width: 1280px` / `1100px` rules it is meant to override — measured,
+     that silently narrowed the board from 1440 to 1280 and the CV to 1100.
+
+     One-to-one with what the old selectors reached, which is the whole
+     requirement — this is a timing fix, not a layout change. board covers
+     the swimlanes and the routed job page, admin renders the same
+     .settings-page shell as settings, insights owns the calendar, and .dash
+     is rendered by both Today and Insights.
+     Contacts is deliberately absent: .network-page is rendered by Companies
+     and not by People, so /people keeps the 1120px cap it has today.
+     Including it widened that page to 1440, which measured as the only
+     genuine layout difference once the specificity was right. */
+  .app.app-tab-board,
+  .app.app-tab-cv,
+  .app.app-tab-settings,
+  .app.app-tab-admin,
+  .app.app-tab-companies,
+  .app.app-tab-overview,
+  .app.app-tab-insights,
+  .app.app-tab-feed {
     max-width: none;
   }
 
