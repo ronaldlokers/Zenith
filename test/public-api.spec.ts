@@ -26,16 +26,32 @@ async function seedApp(overrides: Record<string, unknown> = {}) {
 }
 
 describe("public v1 API", () => {
-  it("rejects a request with no bearer token", async () => {
+  it("rejects a request with no bearer token, and says how to authenticate", async () => {
+    // RFC 9110 15.5.2: a 401 MUST carry a WWW-Authenticate challenge. Both
+    // 401s here sent none, so a client was told "no" with no indication of
+    // the scheme to use — and generated SDKs and HTTP tools read the
+    // challenge to decide what to do next.
     const res = await SELF.fetch(`${BASE}/api/v1/applications`);
     expect(res.status).toBe(401);
+    const challenge = res.headers.get("www-authenticate");
+    expect(challenge, "401 without a challenge violates RFC 9110").toBeTruthy();
+    expect(challenge).toMatch(/^Bearer\b/);
+    expect(challenge).toContain('realm="Zenith API"');
+    // No error parameter here on purpose: nothing was presented to reject.
+    expect(challenge).not.toContain("error=");
   });
 
-  it("rejects an invalid key", async () => {
+  it("rejects an invalid key, and distinguishes it from an absent one", async () => {
+    // RFC 6750 3.1. The distinction is the useful part: a key that was
+    // presented and rejected earns error="invalid_token", which tells a
+    // client not to simply retry the same credential.
     const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
       headers: { Authorization: "Bearer not-a-real-key" },
     });
     expect(res.status).toBe(401);
+    const challenge = res.headers.get("www-authenticate") ?? "";
+    expect(challenge).toMatch(/^Bearer\b/);
+    expect(challenge).toContain('error="invalid_token"');
   });
 
   it("lists the user's applications and never exposes salary", async () => {

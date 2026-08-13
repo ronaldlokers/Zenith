@@ -190,16 +190,34 @@ const applicationColumns =
 export function registerPublicApiRoutes(app: Hono<AppEnv>) {
   const api = new Hono<{ Bindings: Env; Variables: { apiUserId: string } }>();
 
+  // RFC 9110 15.5.2 makes WWW-Authenticate mandatory on a 401 — "MUST send
+  // a WWW-Authenticate header field containing at least one challenge" — and
+  // both 401s here sent none. It is not decoration: a client that does not
+  // know the scheme cannot retry correctly, and generated SDKs and tools
+  // (curl --anyauth, Postman, most HTTP middlewares) read the challenge to
+  // decide what to do next. Adding a header breaks no existing consumer.
+  //
+  // RFC 6750 3.1 distinguishes the two cases, and the distinction is the
+  // useful part: no credentials is a bare challenge, because the client may
+  // simply not have tried yet; a token that was presented and rejected gets
+  // error="invalid_token", which says "do not just retry the same key".
+  const CHALLENGE = 'Bearer realm="Zenith API"';
   api.use("*", async (c, next) => {
     const auth = c.req.header("Authorization");
     const key = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
-    if (!key) return c.json({ error: "missing bearer token" }, 401);
+    if (!key)
+      return c.json({ error: "missing bearer token" }, 401, {
+        "WWW-Authenticate": CHALLENGE,
+      });
     const profile = await c.env.DB.prepare(
       "SELECT user_id FROM profile WHERE api_key_hash = ?",
     )
       .bind(await sha256Hex(key))
       .first<{ user_id: string }>();
-    if (!profile) return c.json({ error: "invalid API key" }, 401);
+    if (!profile)
+      return c.json({ error: "invalid API key" }, 401, {
+        "WWW-Authenticate": `${CHALLENGE}, error="invalid_token", error_description="The API key is not valid"`,
+      });
     c.set("apiUserId", profile.user_id);
     await next();
   });
