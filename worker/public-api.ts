@@ -149,7 +149,21 @@ export async function triggerWebhooks(
       };
       // Re-check at delivery time too — the create-time check alone is
       // not durable against rows written by other means (#346).
-      if (isForbiddenUrl(new URL(hook.url))) return;
+      //
+      // Recorded rather than skipped. A bare `return` left last_status and
+      // last_attempt_at untouched, so a webhook whose host became forbidden
+      // showed as healthy in Settings forever while delivering nothing —
+      // the exact "a dead receiver looked healthy" failure #346 set out to
+      // fix, reachable through a different door. It gets its own status
+      // because it is not a receiver problem and retrying will not help.
+      if (isForbiddenUrl(new URL(hook.url))) {
+        await env.DB.prepare(
+          `UPDATE webhooks SET last_status = 'blocked', last_attempt_at = datetime('now'), enabled = 0 WHERE id = ?`,
+        )
+          .bind(hook.id)
+          .run();
+        return;
+      }
       let ok = false;
       try {
         await attempt();
@@ -173,11 +187,22 @@ export async function triggerWebhooks(
           .bind(hook.id)
           .run();
       } else {
-        const failures = (hook.failure_count ?? 0) + 1;
+        // Incremented in SQL, not from the value read with the row. Two
+        // deliveries failing at once both read the same failure_count and
+        // both wrote back the same number, so a burst of five counted as
+        // one — measured — and the auto-disable that protects a dead
+        // receiver was computed from that same stale figure. Webhook events
+        // arrive in exactly those bursts: a batch status push, several
+        // follow-ups cleared at once.
         await env.DB.prepare(
-          `UPDATE webhooks SET last_status = 'failed', last_attempt_at = datetime('now'), failure_count = ?, enabled = CASE WHEN ? >= ${WEBHOOK_DISABLE_AFTER} THEN 0 ELSE enabled END WHERE id = ?`,
+          `UPDATE webhooks
+             SET last_status = 'failed',
+                 last_attempt_at = datetime('now'),
+                 failure_count = failure_count + 1,
+                 enabled = CASE WHEN failure_count + 1 >= ${WEBHOOK_DISABLE_AFTER} THEN 0 ELSE enabled END
+           WHERE id = ?`,
         )
-          .bind(failures, failures, hook.id)
+          .bind(hook.id)
           .run();
       }
     }),

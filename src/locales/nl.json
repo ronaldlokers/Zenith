@@ -780,6 +780,7 @@
     "deleteConfirm": "Je account en AL je data permanent verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "twoFactorDownloadCodes": "Back-upcodes downloaden",
     "webhookDisabled": "uitgeschakeld na herhaalde fouten — verwijder en voeg opnieuw toe",
+    "webhookBlocked": "Geblokkeerd — deze URL wijst naar een plek waar Zenith niet naartoe stuurt. Pas hem aan en voeg hem opnieuw toe.",
     "webhookFailing": "faalt ({{count}} op rij)",
     "webhookOk": "levert af",
     "deleteTypeEmail": "Typ {{email}} om te bevestigen",

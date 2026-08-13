@@ -780,6 +780,7 @@
     "deleteConfirm": "Permanently delete your account and ALL your data? This cannot be undone.",
     "twoFactorDownloadCodes": "Download backup codes",
     "webhookDisabled": "disabled after repeated failures — delete and re-add to retry",
+    "webhookBlocked": "Blocked — this URL points somewhere Zenith will not send to. Change it and add it again.",
     "webhookFailing": "failing ({{count}} in a row)",
     "webhookOk": "delivering",
     "deleteTypeEmail": "Type {{email}} to confirm",
