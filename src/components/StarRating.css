@@ -28,4 +28,17 @@
   .zui-starrating--readonly .zui-star {
     cursor: default;
   }
+
+  /* Touch: the stars sit a few pixels apart, so an invisible 44px box around
+     each one would overlap its neighbours and a tap would land on the wrong
+     star — worse than a small target. They get real room instead, in the axis
+     that has it. */
+  @media (pointer: coarse) {
+    .zui-star {
+      /* Vertical only: five stars sit in a row, so width cannot grow without
+         a tap landing on the next star. */
+      min-height: 44px;
+      padding: 0 0.25rem;
+    }
+  }
 }

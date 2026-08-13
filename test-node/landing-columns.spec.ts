@@ -20,11 +20,23 @@ function blocksFor(selector: string): string[] {
 
 describe("landing screen columns", () => {
   it("declares its column count exactly once", () => {
+    // Two tracks since the design audit, not three equal ones: the first
+    // column is the task path and the other blocks are a rail of summaries.
+    // Measured at 1440 on the demo set before the change — 767px of content
+    // in column one against 195 and 64 — so a third of the screen did the
+    // work while two thirds stood empty and every title wrapped.
     const declaring = blocksFor(".today-cols").filter((b) =>
       b.includes("grid-template-columns"),
     );
     expect(declaring).toHaveLength(1);
-    expect(declaring[0]).toContain("repeat(3");
+    expect(declaring[0]).toContain("1.6fr");
+  });
+
+  it("keeps the summaries in one rail rather than one row each", () => {
+    // As separate grid items their rows were sized by the task column
+    // beside them, which opened a gap between two blocks that belong
+    // together.
+    expect(css).toContain(".today-rail");
   });
 
   it("gives the landing a wider measure than the rest of .dash", () => {

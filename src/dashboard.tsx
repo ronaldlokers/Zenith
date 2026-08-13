@@ -220,6 +220,11 @@ export function DashboardTab({
             />
           </div>
 
+          {/* One rail, not two columns. Both blocks are summaries read at
+              a glance; as separate grid items their rows were sized by the
+              task column spanning beside them, which opened a gap between
+              them that the content never asked for. */}
+          <div className="today-rail">
           <div className="today-col">
             {quiet.length > 0 && (
               <div className="today-quiet">
@@ -267,6 +272,7 @@ export function DashboardTab({
               applications={applications}
               onOpenJob={onOpenJob}
             />
+          </div>
           </div>
         </div>
       )}
