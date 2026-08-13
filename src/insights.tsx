@@ -13,7 +13,9 @@ import {
   funnelConversions,
   funnelReachCounts,
   outcomeBreakdown,
+  MIN_CONVERSION_N,
   responseRate,
+  responseTime,
 } from "./stats";
 import {
   computePipelineMomentum,
@@ -89,6 +91,11 @@ export function InsightsTab({
   const funnelMax = Math.max(1, counts[0] ?? 0);
   const conv = funnelConversions(history);
   const resp = responseRate(history);
+  // How long employers take to answer, and how many have not. See
+  // responseTime: the two numbers have to travel together, because the
+  // median is over answers received and says nothing on its own about the
+  // ones still out.
+  const rtime = responseTime(history, Date.now());
   const mom = computeWeeklyMomentum(stats.applications, history);
   // Pace against the user's own target. This page judges how the search is
   // going and refused the one benchmark they set themselves — the weekly
@@ -186,14 +193,26 @@ export function InsightsTab({
           label={t("dashboard.kpiOpenShort")}
           onClick={onGoToJobs}
         />
+        {/* Below the threshold this states the fraction instead of a
+            percentage, the same way the funnel drops its conversion and
+            keeps its count: the two numbers are true, "50%" off two
+            applications is not. */}
         <StatCard
           band
-          value={`${Math.round(resp.rate * 100)}%`}
+          value={
+            resp.rate != null
+              ? `${Math.round(resp.rate * 100)}%`
+              : `${resp.responded}/${resp.applied}`
+          }
           label={t("dashboard.kpiResponseShort")}
-          sub={t("dashboard.kpiResponseOf", {
-            responded: resp.responded,
-            applied: resp.applied,
-          })}
+          sub={
+            resp.rate != null
+              ? t("dashboard.kpiResponseOf", {
+                  responded: resp.responded,
+                  applied: resp.applied,
+                })
+              : t("dashboard.kpiResponseTooFew")
+          }
           onClick={onGoToJobs}
         />
         <StatCard
@@ -208,10 +227,24 @@ export function InsightsTab({
             liveOffers[0] ? () => onOpenJob(liveOffers[0].id) : undefined
           }
         />
+        {/* One offer has a median of itself. The number stays — how long
+            your offer took is real and worth knowing — but it is only
+            called a median once there are enough of them for the word to
+            mean anything, and below that the tile says how many it is
+            from. */}
         <StatCard
           band
-          value={t2o != null ? `~${Math.round(t2o)}d` : "—"}
-          label={t("dashboard.kpiToOffer")}
+          value={t2o.days != null ? `~${Math.round(t2o.days)}d` : "—"}
+          label={
+            t2o.n >= MIN_CONVERSION_N
+              ? t("dashboard.kpiToOffer")
+              : t("dashboard.kpiToOfferOne")
+          }
+          sub={
+            t2o.n > 0 && t2o.n < MIN_CONVERSION_N
+              ? t("insights.fromNOffers", { count: t2o.n })
+              : undefined
+          }
         />
       </div>
 
@@ -264,6 +297,27 @@ export function InsightsTab({
               </div>
             ))}
           </div>
+          {/* The one number that makes silence readable: three days of
+              nothing means little when the median is eleven and a lot when
+              it is four. The count still waiting sits beside it on purpose
+              — the median is over answers received, so alone it would
+              invite exactly the reading it cannot support. */}
+          {(rtime.median != null || rtime.waiting > 0) && (
+            <p className="muted small dash-rtime">
+              {rtime.median != null
+                ? t("insights.replyTypical", {
+                    days: Math.round(rtime.median),
+                    count: rtime.n,
+                  })
+                : t("insights.replyTooFew")}
+              {rtime.waiting > 0 && rtime.longestWait != null
+                ? ` ${t("insights.replyWaiting", {
+                    count: rtime.waiting,
+                    days: Math.round(rtime.longestWait),
+                  })}`
+                : ""}
+            </p>
+          )}
         </DashCard>
 
         {/* A reason is a phrase, not a one-word stage, so its card carries

@@ -965,7 +965,9 @@
     "kpiResponseOf": "{{responded}} of {{applied}}",
     "convFrom": "{{pct}}% from {{stage}}",
     "kpiOffers_one": "Live offer",
-    "kpiOffers_other": "Live offers"
+    "kpiOffers_other": "Live offers",
+    "kpiResponseTooFew": "too few to rate yet",
+    "kpiToOfferOne": "Days to offer"
   },
   "urgency": {
     "overdue": "overdue",
@@ -977,7 +979,11 @@
     "nothingYetCta": "Add your first application",
     "totalComp": "total",
     "baseRange": "base {{range}}",
-    "pace": "{{sent}} of {{goal}} applications sent this week"
+    "pace": "{{sent}} of {{goal}} applications sent this week",
+    "replyTypical": "Replies typically come after {{days}} days (from {{count}} answered).",
+    "replyTooFew": "Not enough replies yet to say how long they take.",
+    "replyWaiting": "{{count}} still waiting, the longest {{days}} days.",
+    "fromNOffers": "from {{count}} offer"
   },
   "export": {
     "applications": "Applications",

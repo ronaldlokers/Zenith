@@ -126,18 +126,95 @@ export function medianTimeInStageDays(
 export interface ResponseRate {
   applied: number;
   responded: number;
-  rate: number;
+  /** Null below MIN_CONVERSION_N applications — see funnelConversions. */
+  rate: number | null;
 }
 
 // Of applications that reached "applied", the fraction that advanced to
 // "screening" or beyond — i.e. got a real response rather than silence.
+//
+// Same floor as funnelConversions, and for the same reason: this card sits
+// beside that one, and it read "50%" off two applications while the funnel
+// beside it declined to answer off the same evidence. One of the two was
+// wrong, and it was this one.
 export function responseRate(history: StatusHistoryRow[]): ResponseRate {
   const reached = [...reachedIndexByApp(history).values()];
   const appliedIdx = FUNNEL_STAGES.indexOf("applied");
   const screeningIdx = FUNNEL_STAGES.indexOf("screening");
   const applied = reached.filter((r) => r >= appliedIdx).length;
   const responded = reached.filter((r) => r >= screeningIdx).length;
-  return { applied, responded, rate: applied > 0 ? responded / applied : 0 };
+  return {
+    applied,
+    responded,
+    rate: applied >= MIN_CONVERSION_N ? responded / applied : null,
+  };
+}
+
+export interface ResponseTime {
+  /** Median days from applying to the first reply, over replies received. */
+  median: number | null;
+  /** How many applications that median is computed from. */
+  n: number;
+  /** Applications still sitting in "applied" with no answer yet. */
+  waiting: number;
+  /** Days the longest of those has been waiting, for scale. */
+  longestWait: number | null;
+}
+
+// How long employers actually take to answer — the metric a job seeker can
+// act on, because it is what makes silence readable: three days is nothing
+// when the median is eleven, and telling when the median is four.
+//
+// The median is taken over applications that *got* an answer, and the ones
+// still waiting are reported separately rather than folded in. This is the
+// whole point. Right-censored durations — "it has been 6 days and counting"
+// — are not the same measurement as "it took 6 days", and averaging them
+// together is a standard way to get a number that is wrong in a specific
+// direction: every unanswered application drags the median down, so the
+// more employers ignore you, the faster the app claims they reply. A fresh
+// batch of ten applications sent yesterday would report a median response
+// of one day.
+//
+// medianTimeInStageDays does exactly that mixing. It is not on any screen,
+// which is the only reason this has not been visible.
+//
+// Proper survival analysis would give a censored estimate rather than
+// dropping the open ones, and at fifty applications with no covariates it
+// would not say anything this does not: the pair of numbers — how long the
+// answers took, how many are still out — is the honest reading.
+export function responseTime(
+  history: StatusHistoryRow[],
+  nowMs: number,
+): ResponseTime {
+  const byApp = new Map<number, StatusHistoryRow[]>();
+  for (const row of history) {
+    const list = byApp.get(row.application_id) ?? [];
+    list.push(row);
+    byApp.set(row.application_id, list);
+  }
+  const answered: number[] = [];
+  const waits: number[] = [];
+  for (const rows of byApp.values()) {
+    const sorted = [...rows].sort(
+      (a, b) => sqlMs(a.changed_at) - sqlMs(b.changed_at),
+    );
+    const i = sorted.findIndex((r) => r.to_status === "applied");
+    if (i === -1) continue;
+    const appliedAt = sqlMs(sorted[i].changed_at);
+    // The first move after applying, whatever it is. A rejection is an
+    // answer: it is the silence this measures, not the outcome.
+    const next = sorted[i + 1];
+    const days = ((next ? sqlMs(next.changed_at) : nowMs) - appliedAt) / 86400000;
+    if (days < 0) continue;
+    if (next) answered.push(days);
+    else waits.push(days);
+  }
+  return {
+    median: answered.length >= MIN_CONVERSION_N ? median(answered) : null,
+    n: answered.length,
+    waiting: waits.length,
+    longestWait: waits.length ? Math.max(...waits) : null,
+  };
 }
 
 export interface OutcomeBreakdown {

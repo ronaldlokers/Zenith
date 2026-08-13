@@ -466,7 +466,21 @@ export function computePipelineMomentum(history: { from_status: string | null; t
 
 // Median days from the "applied" transition to "offer", per application
 // that reached offer (#346, lifted from the Stats computation).
-export function medianTimeToOffer(history: { application_id: number; to_status: string; changed_at: string }[]): number | null {
+export interface TimeToOffer {
+  /** Days from applying to the offer, medianed over the offers there are. */
+  days: number | null;
+  /** How many offers that is. One offer has a "median" of itself. */
+  n: number;
+}
+
+// Returns the count as well as the figure, and the caller has to use it.
+// The tile printed "~56d MEDIAN TO OFFER" off a single offer: the number
+// was true and the word was not, on the largest type on the page. A median
+// of one value is that value, and calling it a median claims a spread the
+// data does not have.
+export function medianTimeToOffer(
+  history: { application_id: number; to_status: string; changed_at: string }[],
+): TimeToOffer {
   const byApp = new Map<number, typeof history>();
   for (const row of history) {
     const list = byApp.get(row.application_id) ?? [];
@@ -482,7 +496,7 @@ export function medianTimeToOffer(history: { application_id: number; to_status: 
       if (d >= 0) durations.push(d);
     }
   }
-  return median(durations);
+  return { days: median(durations), n: durations.length };
 }
 
 export function computeWeeklyMomentum(

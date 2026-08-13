@@ -3,6 +3,7 @@ import {
   funnelReachCounts,
   funnelConversions,
   responseRate,
+  responseTime,
   medianTimeInStageDays,
   median,
   outcomeBreakdown,
@@ -99,10 +100,11 @@ describe("responseRate", () => {
     expect(r.rate).toBeCloseTo(2 / 3);
   });
 
-  it("is zero with no applications", () => {
-    expect(responseRate([h(9, "interested", "2026-01-01 00:00:00")]).rate).toBe(
-      0,
-    );
+  it("declines to answer below the threshold", () => {
+    // It read "50%" off two applications while the funnel card beside it,
+    // on the same evidence, declined to state a conversion at all.
+    expect(responseRate([h(9, "interested", "2026-01-01 00:00:00")]).rate)
+      .toBeNull();
   });
 });
 
@@ -181,5 +183,82 @@ describe("outcomeBreakdown", () => {
     const b = outcomeBreakdown(HISTORY);
     expect(b.total).toBe(0);
     expect(b.counts).toEqual([]);
+  });
+});
+
+describe("responseTime", () => {
+  const NOW = Date.parse("2026-02-01T00:00:00Z");
+  const day = (n: number) =>
+    new Date(Date.parse("2026-01-01T00:00:00Z") + n * 86400000)
+      .toISOString()
+      .replace("T", " ")
+      .slice(0, 19);
+
+  it("medians only the applications that got an answer", () => {
+    // Three answered at 2, 4 and 12 days; one still waiting since day 1.
+    // The waiter must not pull the median down — it is not a measurement of
+    // how long an answer took, it is a measurement still in progress.
+    const history = [
+      h(1, "applied", day(0)),
+      h(1, "screening", day(2)),
+      h(2, "applied", day(0)),
+      h(2, "rejected", day(4)),
+      h(3, "applied", day(0)),
+      h(3, "screening", day(12)),
+      h(4, "applied", day(1)),
+    ];
+    const r = responseTime(history, NOW);
+    expect(r.n).toBe(3);
+    expect(r.median).toBe(4);
+    expect(r.waiting).toBe(1);
+    // Applied on day 1, "now" is 2026-02-01 — 30 days out and counting.
+    expect(r.longestWait).toBe(30);
+  });
+
+  it("counts a rejection as an answer", () => {
+    // This measures silence, not outcome. A "no" told you where you stand;
+    // treating it as no reply would make a fast-rejecting employer look
+    // like one that never wrote back.
+    const history = [
+      h(1, "applied", day(0)),
+      h(1, "rejected", day(3)),
+      h(2, "applied", day(0)),
+      h(2, "rejected", day(3)),
+      h(3, "applied", day(0)),
+      h(3, "rejected", day(3)),
+    ];
+    const r = responseTime(history, NOW);
+    expect(r.n).toBe(3);
+    expect(r.median).toBe(3);
+    expect(r.waiting).toBe(0);
+  });
+
+  it("declines to answer below the threshold", () => {
+    // Same floor as every other rate on this page. Two answers is an
+    // anecdote, and the card that states one is the card people plan from.
+    const history = [
+      h(1, "applied", day(0)),
+      h(1, "screening", day(2)),
+      h(2, "applied", day(0)),
+      h(2, "screening", day(8)),
+    ];
+    const r = responseTime(history, NOW);
+    expect(r.n).toBe(2);
+    expect(r.median).toBeNull();
+  });
+
+  it("reports waiting applications even with no answers at all", () => {
+    // The first weeks of a search look exactly like this, and "nothing to
+    // say" is the wrong answer: how long you have been waiting is the only
+    // information there is, and it is real.
+    const r = responseTime([h(1, "applied", day(0)), h(2, "applied", day(5))], NOW);
+    expect(r.median).toBeNull();
+    expect(r.waiting).toBe(2);
+    expect(r.longestWait).toBe(31);
+  });
+
+  it("ignores applications that never reached applied", () => {
+    const r = responseTime([h(1, "interested", day(0))], NOW);
+    expect(r).toEqual({ median: null, n: 0, waiting: 0, longestWait: null });
   });
 });

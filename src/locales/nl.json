@@ -965,7 +965,9 @@
     "kpiResponseOf": "{{responded}} van {{applied}}",
     "convFrom": "{{pct}}% vanaf {{stage}}",
     "kpiOffers_one": "Openstaand aanbod",
-    "kpiOffers_other": "Openstaande aanbiedingen"
+    "kpiOffers_other": "Openstaande aanbiedingen",
+    "kpiResponseTooFew": "te weinig voor een percentage",
+    "kpiToOfferOne": "Dagen tot aanbod"
   },
   "urgency": {
     "overdue": "te laat",
@@ -977,7 +979,11 @@
     "nothingYetCta": "Voeg je eerste sollicitatie toe",
     "totalComp": "totaal",
     "baseRange": "basis {{range}}",
-    "pace": "{{sent}} van {{goal}} sollicitaties deze week verstuurd"
+    "pace": "{{sent}} van {{goal}} sollicitaties deze week verstuurd",
+    "replyTypical": "Reacties komen doorgaans na {{days}} dagen (op basis van {{count}} antwoorden).",
+    "replyTooFew": "Nog te weinig reacties om te zeggen hoe lang ze duren.",
+    "replyWaiting": "{{count}} wachten nog, de langste {{days}} dagen.",
+    "fromNOffers": "op basis van {{count}} aanbod"
   },
   "export": {
     "applications": "Sollicitaties",
