@@ -5,8 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f2ec" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1130" />
+    <!-- One colour, no media branch: Zenith is light-only, and a dark
+         theme-color put navy browser chrome above a Bone app on any device
+         set to dark. Bone is what body paints (--bg), so the chrome and the
+         page agree. -->
+    <meta name="theme-color" content="#f4f2ec" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Zenith</title>
     <!-- The faces are discovered only after index.css parses, so first paint
