@@ -238,7 +238,9 @@
     "postedAge": "{{age}} ago",
     "settingsBtn": "Feed sources",
     "noFitMatchPage": "Nothing on the pages loaded so far matches this fit filter. There may be more further down the feed.",
-    "clearFitFilter": "Show any fit"
+    "clearFitFilter": "Show any fit",
+    "showWeak_one": "Show {{count}} weaker match",
+    "showWeak_other": "Show {{count}} weaker matches"
   },
   "stats": {
     "momentum": {

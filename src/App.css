@@ -1822,6 +1822,12 @@ button.primary:hover {
   /* The posting's opening in the triage pane. Body size, not chrome: it is
    the only prose on the surface and the one thing being judged. Clamped so a
    long opening cannot push the two decision buttons off the pane. */
+.feed-weak-more {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-3) 0 0;
+}
+
 .feed-nomatch-actions {
   display: flex;
   flex-wrap: wrap;

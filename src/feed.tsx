@@ -391,6 +391,16 @@ export function FeedTab({
   // sort applied inside each band. The list stays flat and in this order so
   // j/k keeps stepping through it — the bands are headings inside one list,
   // not three separate ones.
+  // Weak matches are folded away until asked for (approved direction, this
+  // session). The band rendered "0 matching skills" against an empty bar,
+  // repeatedly, at someone who is being rejected for a living — and it does
+  // it on a word-boundary keyword heuristic that is wrong often enough to
+  // make the verdict unfair. Surveys of job seekers put rejection first
+  // among the things that damage them and "finding the right jobs to apply
+  // to" second, so a screen that repeats a weak verdict costs on both
+  // counts. Nothing is removed: the count is stated and one press brings
+  // them back.
+  const [showWeak, setShowWeak] = useState(false);
   const visibleItems = useMemo(
     () => {
       const sorted = sortFilterFeed(
@@ -399,14 +409,28 @@ export function FeedTab({
         sortBy,
         minFit,
       );
+      const banded = showWeak
+        ? sorted
+        : sorted.filter((i) => matchBand(i.match_count) !== "weak");
       // A stable sort by band alone, so the chosen sort survives inside it.
-      return [...sorted].sort(
+      return [...banded].sort(
         (a, b) =>
           MATCH_BANDS.indexOf(matchBand(a.match_count)) -
           MATCH_BANDS.indexOf(matchBand(b.match_count)),
       );
     },
-    [items, sortBy, minFit],
+    [items, sortBy, minFit, showWeak],
+  );
+
+  // Counted off the same filtered set the list is built from, so the number
+  // offered cannot disagree with what pressing it reveals.
+  const weakHidden = useMemo(
+    () =>
+      showWeak
+        ? 0
+        : sortFilterFeed(items ?? [], (i) => i.match_count ?? 0, sortBy, minFit)
+            .filter((i) => matchBand(i.match_count) === "weak").length,
+    [items, sortBy, minFit, showWeak],
   );
 
   const [cursor, setCursor] = useState<FeedCursor | null>(null);
@@ -871,6 +895,16 @@ export function FeedTab({
             {t("empty.feedNothingNew")}
           </EmptyState>
         </ul>
+      )}
+      {weakHidden > 0 && (
+        /* Stated, not hidden: the count is the honest part, and one press
+           brings them back. Below the list rather than above it, so the
+           postings worth reading come first. */
+        <div className="feed-weak-more">
+          <Button variant="link" onClick={() => setShowWeak(true)}>
+            {t("feed.showWeak", { count: weakHidden })}
+          </Button>
+        </div>
       )}
       {cursor && (
         <div className="load-more">

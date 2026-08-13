@@ -238,7 +238,9 @@
     "postedAge": "{{age}} geleden",
     "settingsBtn": "Feedbronnen",
     "noFitMatchPage": "Niets op de tot nu toe geladen pagina's komt overeen met dit fit-filter. Verderop in de feed staat mogelijk meer.",
-    "clearFitFilter": "Toon elke fit"
+    "clearFitFilter": "Toon elke fit",
+    "showWeak_one": "Toon {{count}} zwakkere match",
+    "showWeak_other": "Toon {{count}} zwakkere matches"
   },
   "stats": {
     "momentum": {
