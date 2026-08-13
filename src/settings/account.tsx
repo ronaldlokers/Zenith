@@ -6,7 +6,7 @@ import { useAiStatus } from "../ai-status-context";
 import { authClient, signOut, useSession } from "../auth-client";
 import { Button } from "../components";
 import { requestConfirm } from "../hooks";
-import { formatDate } from "../format";
+import { formatDateWithYear } from "../format";
 import "./settings.css";
 
 export function DeleteAccount({
@@ -293,7 +293,14 @@ export function SessionManagement() {
             <span className="session-info">
               <span>{s.userAgent ?? t("account.unknownDevice")}</span>
               <span className="muted small">
-                {s.ipAddress ?? "—"} · {formatDate(String(s.createdAt))}
+                {s.ipAddress ?? "—"} ·{" "}
+                {/* Better Auth hands back a Date, and String(date) is
+                    "Wed Aug 13 2026 ..." — formatDate slices the first ten
+                    characters and appends T00:00:00, which parsed to
+                    Invalid Date and printed it. Normalise to ISO first. A
+                    session's age is also the one date here where the year
+                    matters, so it keeps it. */}
+                {formatDateWithYear(new Date(s.createdAt).toISOString())}
                 {s.token === currentToken ? ` · ${t("account.thisDevice")}` : ""}
               </span>
             </span>

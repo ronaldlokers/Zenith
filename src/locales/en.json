@@ -249,13 +249,14 @@
       "flat": "Steady",
       "none": "No recent activity"
     },
-    "momentumDetail": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that",
     "downloadOfferComparison": "Download offer comparison (PDF)",
     "offerComparisonHeading": "Offer comparison",
     "offerComparisonBreakdown": "Breakdown",
     "offerComparisonEmpty": "No offers yet.",
     "exportData": "Export your data",
-    "exportAllJson": "Everything (JSON)"
+    "exportAllJson": "Everything (JSON)",
+    "momentumDetail_one": "{{recent}} stage advance in the last 2 weeks vs {{prior}} in the 2 weeks before that",
+    "momentumDetail_other": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that"
   },
   "palette": {
     "title": "Jump to…",
@@ -825,7 +826,8 @@
     "deleteDocument": "Delete “{{name}}”?",
     "deleteRoleType": "Delete role type “{{label}}”? Feed keywords for it go too.",
     "discardEdit": "Discard unsaved changes?",
-    "deleteCvVariant": "Delete the CV variant “{{name}}”? This cannot be undone."
+    "deleteCvVariant": "Delete the CV variant “{{name}}”? This cannot be undone.",
+    "deleteWebhook": "Delete this webhook? Its signing secret cannot be recovered."
   },
   "aria": {
     "interactionType": "Interaction type",

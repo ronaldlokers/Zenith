@@ -59,10 +59,35 @@ describe("funnelConversions", () => {
       ["screening", "interview"],
       ["interview", "offer"],
     ]);
+    // Rates only where enough applications reached the previous stage to
+    // make one mean anything: 4 and 3 qualify, 2 and 1 do not.
     expect(c[0].rate).toBeCloseTo(3 / 4);
     expect(c[1].rate).toBeCloseTo(2 / 3);
-    expect(c[2].rate).toBeCloseTo(1 / 2);
-    expect(c[3].rate).toBe(0); // prev=1, count=0
+    expect(c[2].rate, "prev=2 is too few for a percentage").toBeNull();
+    expect(c[3].rate, "prev=1 is too few for a percentage").toBeNull();
+    // The counts behind them are still true and still reported.
+    expect(c.map((x) => [x.prev, x.count])).toEqual([
+      [4, 3],
+      [3, 2],
+      [2, 1],
+      [1, 0],
+    ]);
+  });
+
+  it("says nothing rather than 0% or 100% at the extremes", () => {
+    // Both were live defects on the Insights page: an account with nothing
+    // in it reported "0% from interested" on a search that had not started,
+    // and one application that reached offer reported 100% at every step.
+    // The same code overstating failure at n=0 and success at n=1.
+    expect(funnelConversions([]).every((c) => c.rate === null)).toBe(true);
+    const one: StatusHistoryRow[] = [
+      h(1, "interested", "2026-01-01 00:00:00"),
+      h(1, "applied", "2026-01-02 00:00:00"),
+      h(1, "screening", "2026-01-03 00:00:00"),
+      h(1, "interview", "2026-01-04 00:00:00"),
+      h(1, "offer", "2026-01-05 00:00:00"),
+    ];
+    expect(funnelConversions(one).every((c) => c.rate === null)).toBe(true);
   });
 });
 

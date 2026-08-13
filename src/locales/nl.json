@@ -249,13 +249,14 @@
       "flat": "Stabiel",
       "none": "Geen recente activiteit"
     },
-    "momentumDetail": "{{recent}} stap-vooruitgangen in de afgelopen 2 weken vs {{prior}} in de 2 weken daarvoor",
     "downloadOfferComparison": "Download aanbiedingsvergelijking (PDF)",
     "offerComparisonHeading": "Aanbiedingsvergelijking",
     "offerComparisonBreakdown": "Opbouw",
     "offerComparisonEmpty": "Nog geen aanbiedingen.",
     "exportData": "Exporteer je gegevens",
-    "exportAllJson": "Alles (JSON)"
+    "exportAllJson": "Alles (JSON)",
+    "momentumDetail_one": "{{recent}} fasewissel in de afgelopen 2 weken tegenover {{prior}} in de 2 weken daarvoor",
+    "momentumDetail_other": "{{recent}} fasewissels in de afgelopen 2 weken tegenover {{prior}} in de 2 weken daarvoor"
   },
   "palette": {
     "title": "Ga naar…",
@@ -825,7 +826,8 @@
     "deleteDocument": "“{{name}}” verwijderen?",
     "deleteRoleType": "Functietype “{{label}}” verwijderen? Feed-trefwoorden ervoor gaan mee.",
     "discardEdit": "Niet-opgeslagen wijzigingen weggooien?",
-    "deleteCvVariant": "CV-variant “{{name}}” verwijderen? Dit kan niet ongedaan worden gemaakt."
+    "deleteCvVariant": "CV-variant “{{name}}” verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "deleteWebhook": "Deze webhook verwijderen? De signing secret kan niet worden hersteld."
   },
   "aria": {
     "interactionType": "Type interactie",

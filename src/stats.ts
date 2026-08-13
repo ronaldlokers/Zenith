@@ -40,8 +40,20 @@ export interface Conversion {
   to: Status;
   prev: number;
   count: number;
-  rate: number; // count / prev, or 0 when prev === 0
+  // null when there is not enough behind it to be a rate at all: no
+  // applications reached the previous stage, or so few that the arithmetic
+  // is noise. A zero denominator used to yield 0, so an account with nothing
+  // in it reported "0% from interested" on a search that had not started,
+  // and a single application that reached offer reported 100% at every step
+  // — the same code overstating failure at n=0 and success at n=1, both
+  // drawn at full confidence.
+  rate: number | null;
 }
+
+// Below this many applications at the previous stage, a percentage says more
+// than the data can support. Three is the smallest number where a rate is not
+// just "all of them" or "none of them".
+export const MIN_CONVERSION_N = 3;
 
 // Stage-to-stage conversion: of the apps that reached stage N, the
 // fraction that went on to reach stage N+1.
@@ -56,7 +68,7 @@ export function funnelConversions(history: StatusHistoryRow[]): Conversion[] {
       to: FUNNEL_STAGES[i],
       prev,
       count,
-      rate: prev > 0 ? count / prev : 0,
+      rate: prev >= MIN_CONVERSION_N ? count / prev : null,
     });
   }
   return out;

@@ -122,6 +122,8 @@ export function InsightsTab({
         eyebrow={t("dashboard.momentumTitle")}
         verdict={t(`stats.momentum.${pipe.verdict}`)}
         detail={t("stats.momentumDetail", {
+          // count drives the plural form; recent is what the sentence prints.
+          count: pipe.recent,
           recent: pipe.recent,
           prior: pipe.prior,
         })}
@@ -145,10 +147,13 @@ export function InsightsTab({
               <div className={`dash-fn stage-${st}`} key={st}>
                 <span className="dash-fl">
                   {t(`stages.${st}`)}
-                  {i > 0 && conv[i - 1] ? (
+                  {/* Only when there is a rate to state. Below the
+                      threshold the stage still shows its count — the number
+                      is true, the percentage would not be. */}
+                  {i > 0 && conv[i - 1]?.rate != null ? (
                     <span className="dash-fconv">
                       {t("dashboard.convFrom", {
-                        pct: Math.round(conv[i - 1].rate * 100),
+                        pct: Math.round((conv[i - 1].rate ?? 0) * 100),
                         stage: t(`stages.${FUNNEL_STAGES[i - 1]}`),
                       })}
                     </span>
