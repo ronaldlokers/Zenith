@@ -781,7 +781,10 @@
     "twoFactorDownloadCodes": "Back-upcodes downloaden",
     "webhookDisabled": "uitgeschakeld na herhaalde fouten — verwijder en voeg opnieuw toe",
     "webhookFailing": "faalt ({{count}} op rij)",
-    "webhookOk": "levert af"
+    "webhookOk": "levert af",
+    "deleteTypeEmail": "Typ {{email}} om te bevestigen",
+    "deleteForever": "Verwijder mijn account",
+    "deleteExportFirst": "Eerst een kopie? Instellingen → Gegevens heeft een volledige export."
   },
   "companies": {
     "view": "Weergave",

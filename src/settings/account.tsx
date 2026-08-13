@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { useAiStatus } from "../ai-status-context";
 import { authClient, signOut, useSession } from "../auth-client";
-import { Button } from "../components";
-import { requestConfirm } from "../hooks";
+import { ActionBar, Button } from "../components";
+import { Dialog } from "../ui";
 import { formatDateWithYear } from "../format";
 import "./settings.css";
 
@@ -15,9 +15,25 @@ export function DeleteAccount({
   onError: (message: string | null) => void;
 }) {
   const { t } = useTranslation();
+  const { data: session } = useSession();
   const [busy, setBusy] = useState(false);
+  // A typed confirmation rather than the shared OK/Cancel. This is the only
+  // action in the app that destroys everything — every application,
+  // document, contact and CV — and an OK button is dismissed by the same
+  // reflex that dismisses every other OK button. The established pattern for
+  // an action that takes resources beyond the thing named on the button is
+  // to make the user type its identifier, which cannot be done by reflex.
+  //
+  // The account's own email is the identifier: it is the one string a person
+  // deleting their account certainly knows, and it is already on this page.
+  const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState("");
+  const email = session?.user?.email ?? "";
+  const matches =
+    email.length > 0 && typed.trim().toLowerCase() === email.toLowerCase();
+
   const del = async () => {
-    if (!(await requestConfirm(t("account.deleteConfirm")))) return;
+    if (!matches) return;
     setBusy(true);
     try {
       await api.deleteAccount();
@@ -26,6 +42,7 @@ export function DeleteAccount({
     } catch (e) {
       onError((e as Error).message);
       setBusy(false);
+      setConfirming(false);
     }
   };
   return (
@@ -39,9 +56,50 @@ export function DeleteAccount({
     <div className="settings-danger">
       <h3>{t("account.deleteAccount")}</h3>
       <p className="muted small">{t("account.deleteHint")}</p>
-      <Button variant="danger" disabled={busy} onClick={del}>
+      <Button variant="danger" disabled={busy} onClick={() => setConfirming(true)}>
         {t("account.deleteAccount")}
       </Button>
+      {confirming && (
+        <Dialog
+          label={t("account.deleteAccount")}
+          onClose={() => {
+            setConfirming(false);
+            setTyped("");
+          }}
+        >
+          <h3>{t("account.deleteAccount")}</h3>
+          <p className="small">{t("account.deleteHint")}</p>
+          {/* The way out that is not deletion. Offering the export here is
+              the point at which someone realises they wanted their data,
+              not the settings section they would have to go find. */}
+          <p className="muted small">{t("account.deleteExportFirst")}</p>
+          <label className="settings-field">
+            <span>{t("account.deleteTypeEmail", { email })}</span>
+            <input
+              type="email"
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+            />
+          </label>
+          <ActionBar variant="form">
+            <Button variant="danger" disabled={!matches || busy} onClick={del}>
+              {t("account.deleteForever")}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setConfirming(false);
+                setTyped("");
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
+          </ActionBar>
+        </Dialog>
+      )}
     </div>
   );
 }

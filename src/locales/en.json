@@ -781,7 +781,10 @@
     "twoFactorDownloadCodes": "Download backup codes",
     "webhookDisabled": "disabled after repeated failures — delete and re-add to retry",
     "webhookFailing": "failing ({{count}} in a row)",
-    "webhookOk": "delivering"
+    "webhookOk": "delivering",
+    "deleteTypeEmail": "Type {{email}} to confirm",
+    "deleteForever": "Delete my account",
+    "deleteExportFirst": "Want a copy first? Settings → Data has a full export."
   },
   "companies": {
     "view": "View",
