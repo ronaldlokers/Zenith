@@ -3221,6 +3221,17 @@ summary.bcol-head::after {
   /* The sheet inside is transformed, which does not affect layout — so the
      wrapper is told how tall the scaled result is. */
   height: var(--cv-doc-height, auto);
+  /* Only binds while that height is still auto, which is the window this
+     exists for: the height arrives from a ResizeObserver after the document
+     mounts, so until it does the wrapper is zero-tall and everything below
+     it — the variant rail, the plate's actions — sits high and then drops.
+     Measured at 390px, that put the CV page at CLS 0.445, well past the
+     0.25 "poor" threshold, on the page whose whole job is showing a
+     document. A sheet is A4 and its scale is derived from this element's
+     own width, so the space it will need is knowable before any of it is
+     measured. A definite height wins over aspect-ratio, so the observer's
+     value still takes over for a CV that runs past one page. */
+  aspect-ratio: 210 / 297;
   overflow: hidden;
 }
 
