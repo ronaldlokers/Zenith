@@ -29,6 +29,22 @@ interface IcsEvent {
   date: string;
   summary: string;
   description?: string;
+  /**
+   * Bumped whenever the underlying row changes, so a client that has already
+   * imported this event will replace it. Derived from the row's updated_at
+   * rather than kept anywhere: the feed is stateless, and a value that only
+   * moves forward is what the property means.
+   */
+  sequence: number;
+}
+
+// Whole minutes since the epoch. Seconds would overflow nothing but say more
+// than the data supports — SQLite timestamps here have second resolution and
+// a follow-up is not rescheduled twice in a minute.
+function icsSequence(updatedAt: string | null | undefined): number {
+  if (!updatedAt) return 0;
+  const t = Date.parse(updatedAt.replace(" ", "T") + "Z");
+  return Number.isNaN(t) ? 0 : Math.floor(t / 60000);
 }
 
 function buildIcs(events: IcsEvent[]): string {
@@ -47,6 +63,23 @@ function buildIcs(events: IcsEvent[]): string {
       `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${icsDate(e.date)}`,
       `SUMMARY:${icsEscape(e.summary)}`,
+      // TRANSPARENT, because these are markers rather than commitments. The
+      // default is OPAQUE, so subscribing marked the user busy for the whole
+      // day on every follow-up — visible to anyone doing a free/busy lookup,
+      // which is precisely the exposure the app's own privacy warning about
+      // this feed is trying to prevent.
+      "TRANSP:TRANSPARENT",
+      // Keeps the detail out of shared views on clients that honour it. The
+      // feed names roles and companies, and a subscription lands in whatever
+      // calendar the person actually looks at.
+      "CLASS:PRIVATE",
+      // Without a SEQUENCE some clients will not move an event they have
+      // already imported, and this app has a control that pushes every late
+      // follow-up to a new date at once — so a rescheduled follow-up would
+      // sit on its old day in the user's calendar forever. Derived from the
+      // row's own last change rather than a counter: the feed is stateless.
+      `SEQUENCE:${e.sequence}`,
+      `LAST-MODIFIED:${stamp}`,
     );
     if (e.description) lines.push(`DESCRIPTION:${icsEscape(e.description)}`);
     lines.push("END:VEVENT");
@@ -96,6 +129,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
     const [followUps, deadlines, interviews] = await Promise.all([
       c.env.DB.prepare(
         `SELECT applications.id, applications.title, applications.next_action,
+                applications.updated_at,
                 applications.next_action_at AS date, companies.name AS company_name
          FROM applications
          LEFT JOIN companies ON companies.id = applications.company_id
@@ -104,9 +138,9 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
            AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
       )
         .bind(profile.user_id)
-        .all<{ id: number; title: string; next_action: string | null; date: string; company_name: string | null }>(),
+        .all<{ id: number; title: string; next_action: string | null; updated_at: string | null; date: string; company_name: string | null }>(),
       c.env.DB.prepare(
-        `SELECT applications.id, applications.title,
+        `SELECT applications.id, applications.title, applications.updated_at,
                 applications.deadline_at AS date, companies.name AS company_name
          FROM applications
          LEFT JOIN companies ON companies.id = applications.company_id
@@ -115,7 +149,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
            AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
       )
         .bind(profile.user_id)
-        .all<{ id: number; title: string; date: string; company_name: string | null }>(),
+        .all<{ id: number; title: string; updated_at: string | null; date: string; company_name: string | null }>(),
       c.env.DB.prepare(
         // Deliberately NOT selecting interactions.notes — raw interview notes
         // (candid, often blunt) must never reach an ICS feed that a user might
@@ -139,18 +173,23 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
         date: a.date,
         summary: `${a.next_action ?? "Follow up"}: ${a.title}`,
         description: a.company_name ?? undefined,
+        sequence: icsSequence(a.updated_at),
       })),
       ...deadlines.results.map((a) => ({
         uid: `deadline-${a.id}`,
         date: a.date,
         summary: `Deadline: ${a.title}`,
         description: a.company_name ?? undefined,
+        sequence: icsSequence(a.updated_at),
       })),
       ...interviews.results.map((i) => ({
         uid: `interview-${i.id}`,
         date: i.date,
         summary: `Interview: ${i.title ?? "Unknown"}`,
         description: i.company_name ?? undefined,
+        // interactions have no updated_at; the row is effectively immutable
+        // once logged, so a fixed 0 is honest here.
+        sequence: 0,
       })),
     ];
 
