@@ -732,15 +732,49 @@ app.put("/api/applications/:id", async (c) => {
   if (!body.title) return c.json({ error: "title is required" }, 400);
   const userId = c.get("userId");
   const existing = await c.env.DB.prepare(
-    "SELECT status, job_description, job_description_captured_at FROM applications WHERE id = ? AND user_id = ?",
+    "SELECT status, updated_at, job_description, job_description_captured_at FROM applications WHERE id = ? AND user_id = ?",
   )
     .bind(c.req.param("id"), userId)
     .first<{
       status: string;
+      updated_at: string;
       job_description: string | null;
       job_description_captured_at: string | null;
     }>();
   if (!existing) return c.json({ error: "not found" }, 404);
+  // Optimistic concurrency. This route writes every column from the body, so
+  // a client that loaded the row before someone else's save will carry stale
+  // copies of the fields it did not touch and put them back — measured: two
+  // saves, both 200, one note silently gone. The likely pair is not two
+  // forms, it is a note typed on a phone and then a form saved on a laptop
+  // that had been open since breakfast.
+  //
+  // If-Match with updated_at as the validator, and 412 rather than 409: RFC
+  // 9110 13.1 is explicit that a failed precondition is 412, and keeping the
+  // version in a header leaves the body as the resource rather than a
+  // resource plus bookkeeping.
+  //
+  // Additive on purpose. No header means no precondition, so every existing
+  // caller — the cover-letter panel, the extension, anything else — behaves
+  // exactly as before rather than starting to fail.
+  //
+  // updated_at is datetime('now'), which is second-resolution, so two writes
+  // inside one second are indistinguishable and the second is not caught.
+  // That is the case this is least needed for: the conflict being prevented
+  // is minutes-to-hours old — a form left open — and two saves racing inside
+  // one second are a genuine tie where last-write-wins is a defensible
+  // answer. A monotonic version column would close it and costs a migration
+  // plus every write path; it is not worth that for the remaining sliver.
+  const ifMatch = c.req.header("If-Match");
+  if (ifMatch && ifMatch !== existing.updated_at) {
+    return c.json(
+      {
+        error: "the application changed somewhere else",
+        current_updated_at: existing.updated_at,
+      },
+      412,
+    );
+  }
   const badRef = await findForeignRef(c.env.DB, userId, [
     { table: "companies", id: body.company_id },
     { table: "contacts", id: body.contact_id },

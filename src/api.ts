@@ -44,6 +44,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 401) {
     throw new Error(i18n.t("errors.sessionExpired"));
   }
+  // A precondition that failed: the row moved on under the form. The server
+  // knows what happened and the wire says "the application changed somewhere
+  // else"; the person needs to be told their copy is out of date and that
+  // nothing was lost, which is a different sentence.
+  if (res.status === 412) {
+    throw new Error(i18n.t("errors.staleEdit"));
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(
@@ -61,10 +68,21 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  update: <T>(resource: string, id: number, data: unknown) =>
+  // `expectedUpdatedAt` sends an If-Match precondition, so a save built on a
+  // row that has since changed elsewhere is refused rather than silently
+  // overwriting the parts it did not know about. Optional: callers that omit
+  // it keep the old last-write-wins behaviour, which is what the narrower
+  // panels want — they write one field they have just read.
+  update: <T>(
+    resource: string,
+    id: number,
+    data: unknown,
+    expectedUpdatedAt?: string | null,
+  ) =>
     request<T>(`/api/${resource}/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+      ...(expectedUpdatedAt ? { headers: { "If-Match": expectedUpdatedAt } } : {}),
     }),
   setStatus: <T>(id: number, status: string) =>
     request<T>(`/api/applications/${id}/status`, {

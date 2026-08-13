@@ -364,7 +364,11 @@ export function ApplicationDetailModal({
             onCancel={() => setEditing(false)}
             onSubmit={(data) =>
               api
-                .update("applications", a.id, data)
+                // The precondition goes on this one and not on the narrower
+                // panels: this form writes every column, so it is the save
+                // that can carry a stale copy of a field the person never
+                // opened. A panel that writes one field it just read cannot.
+                .update("applications", a.id, data, a.updated_at)
                 .then(() => {
                   setEditing(false);
                   notify(t("common.saved"));
