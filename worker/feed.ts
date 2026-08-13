@@ -407,7 +407,27 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
       const match_skills = description
         ? matchedSkills(description, skillNames)
         : [];
-      return { ...rest, match_skills, match_count: match_skills.length };
+      // A first-paragraph preview, not the whole description. The pane the
+      // user triages from carried no posting text at all — source, date,
+      // title, company, location, role, salary, matched skills and two
+      // buttons, and not one word of the job — so add and dismiss were being
+      // decided from the title. The full text stays off the wire (it is up to
+      // 8000 chars per row, which is why it was dropped); 400 is about the
+      // first paragraph, which is what candidates skim to decide.
+      const description_snippet = (() => {
+        if (!description) return null;
+        const flat = description.replace(/\s+/g, " ").trim();
+        // The ellipsis belongs where the cut is made. Appending it in the
+        // view put "…" after descriptions that were never truncated, which
+        // says there is more to read when there is not.
+        return flat.length > 400 ? `${flat.slice(0, 400)}…` : flat;
+      })();
+      return {
+        ...rest,
+        description_snippet,
+        match_skills,
+        match_count: match_skills.length,
+      };
     });
     return c.json({ items, nextCursor });
   });

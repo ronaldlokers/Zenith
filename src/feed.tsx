@@ -792,6 +792,15 @@ export function FeedTab({
                   </div>
                 </div>
               )}
+              {/* What the job actually says. Everything above this line is
+                  metadata about the posting; this is the posting. Without it
+                  the accelerators — j/k/a/d and the swipe — were accelerating
+                  a decision made from the title. */}
+              {focusedItem.description_snippet && (
+                <p className="feed-detail-desc">
+                  {focusedItem.description_snippet}
+                </p>
+              )}
               {safeHref(focusedItem.url) && (
                 <a
                   href={safeHref(focusedItem.url)}
