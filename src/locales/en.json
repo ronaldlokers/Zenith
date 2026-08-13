@@ -787,7 +787,12 @@
     "showAll": "Show all",
     "backToLive": "Back to live",
     "stageStrip": "Stages",
-    "allLiveFolded": "Every live stage is folded — only closed applications are showing."
+    "allLiveFolded": "Every live stage is folded — only closed applications are showing.",
+    "noMatchQuery": "Nothing matches “{{query}}”.",
+    "noMatchFilters": "Nothing matches the filters you have set.",
+    "clearSearch": "Clear search",
+    "clearFilters_one": "Clear {{count}} filter",
+    "clearFilters_other": "Clear {{count}} filters"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."

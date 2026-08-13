@@ -787,7 +787,12 @@
     "showAll": "Alles tonen",
     "backToLive": "Terug naar actief",
     "stageStrip": "Fases",
-    "allLiveFolded": "Alle actieve fasen zijn ingeklapt — alleen afgesloten sollicitaties zijn zichtbaar."
+    "allLiveFolded": "Alle actieve fasen zijn ingeklapt — alleen afgesloten sollicitaties zijn zichtbaar.",
+    "noMatchQuery": "Niets komt overeen met “{{query}}”.",
+    "noMatchFilters": "Niets komt overeen met de ingestelde filters.",
+    "clearSearch": "Wis zoekopdracht",
+    "clearFilters_one": "Wis {{count}} filter",
+    "clearFilters_other": "Wis {{count}} filters"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

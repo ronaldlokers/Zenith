@@ -105,7 +105,14 @@ function BoardCard({
           <span className="bwhen">
             {formatDate(a.applied_at ?? a.created_at)}
           </span>
-          <span className="bco">
+          {/* Titled, because this cell clips hard: measured 56px of box
+              against 288px of content at nine unfolded columns, with no way
+              to read the rest short of opening the card. The company is the
+              second thing a job hunter navigates by. */}
+          <span
+            className="bco"
+            title={[a.company_name, a.contact_name].filter(Boolean).join(" · ")}
+          >
             {a.company_name ?? "—"}
             {a.contact_name ? ` · ${a.contact_name}` : ""}
           </span>
@@ -114,13 +121,22 @@ function BoardCard({
         <div className="bfoot">
           <i className="dot" aria-hidden="true" />
           {actionable ? (
-            <span
-              className="baction"
-              title={a.next_action ?? t("detail.followUpFallback")}
-            >
-              {a.next_action ?? t("detail.followUpFallback")}
-              {" · "}
-              {t(`urgency.${urgency}`)}
+            /* The urgency word leads and sits outside the clamp. It used to
+               trail the action text inside a two-line -webkit-line-clamp, so
+               it was the token that got cut on every overdue card — and it
+               is the only *textual* carrier of overdue-versus-due-today.
+               Without it that distinction was the border colour, a 7px dot
+               and the text colour: colour alone, which is 1.4.1. */
+            <span className="baction-wrap">
+              <span className={`baction-urgency u-${urgency}`}>
+                {t(`urgency.${urgency}`)}
+              </span>
+              <span
+                className="baction"
+                title={a.next_action ?? t("detail.followUpFallback")}
+              >
+                {a.next_action ?? t("detail.followUpFallback")}
+              </span>
             </span>
           ) : urgency === "stale" || urgency === "quiet" ? (
             <span className={`bbadge u-${urgency}`}>
@@ -1087,6 +1103,41 @@ export function PipelineTab({
         </Dialog>
       )}
 
+      {/* Nothing matched, but there is data behind it. The board rendered
+          five empty columns, four zero rails and five "+ Add an
+          application" slots — which reads as an empty account rather than
+          an empty result, and offers the one action the user does not want.
+          Names what happened, echoes the query back rather than clearing
+          it, and offers at most two ways out: the guidance on failed
+          searches is consistent that the user's problem is attribution
+          (their query? the data? the app?) and that a dead end is the one
+          thing never to show. The pinned-empty case has had this treatment
+          since #535; the search case never did. */}
+      {filtered.length === 0 && applications.length > 0 && !pinnedOnly && (
+        <EmptyState className="board-empty-search">
+          {q
+            ? t("board.noMatchQuery", { query: query.trim() })
+            : t("board.noMatchFilters")}{" "}
+          {q && (
+            <Button variant="link" onClick={() => setQuery("")}>
+              {t("board.clearSearch")}
+            </Button>
+          )}
+          {activeFilterCount > 0 && (
+            <Button
+              variant="link"
+              onClick={() => {
+                setRoleFilter("all");
+                setCompanyFilter("all");
+                setTagFilter("all");
+              }}
+            >
+              {t("board.clearFilters", { count: activeFilterCount })}
+            </Button>
+          )}
+        </EmptyState>
+      )}
+
       <BoardTab
         applications={filtered}
         pinnedOnly={pinnedOnly}
@@ -1108,7 +1159,7 @@ export function PipelineTab({
         onToggleFold={toggleFold}
         onUnfoldLive={unfoldLive}
         onAdd={onOpenQuickAdd}
-        showAddBlocks={applications.length > 0}
+        showAddBlocks={applications.length > 0 && filtered.length > 0}
       />
 
 

@@ -5057,9 +5057,36 @@ button:not(:disabled):active,
   white-space: nowrap;
 }
 
+/* The urgency word, lifted out of the clamped run. It used to trail the
+   action text inside the two-line clamp, which made it the token that got
+   cut on every overdue card — and it is the only text that separates
+   overdue from due-today. Its own line, ahead of the action, so the clamp
+   below can never reach it. */
+.baction-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  /* Takes the row's free space rather than shrinking to min-content. Without
+     the grow the fit stars (58px, margin-left: auto) squeezed this to 34px
+     and the urgency word clipped at 51px of content — the same defect one
+     level up from the one being fixed. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.baction-urgency {
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--u-edge, var(--muted));
+  white-space: nowrap;
+}
+
 /* The next action is the one line here worth reading in full, and a board
    column is narrow — so it wraps to two lines rather than being cut at the
    first few words. The short variants (badge, comp, freshness) stay on one.  */
+.bfoot .baction-wrap .baction,
 .bfoot .baction {
   white-space: normal;
   display: -webkit-box;
@@ -5071,6 +5098,20 @@ button:not(:disabled):active,
 /* The fit rating rides at the end of the state line rather than in the
    identity strip: in a board column the strip has room for two cells, and a
    third pushed the company name down to four legible characters. */
+/* The stars drop to their own line when the action block cannot fit beside
+   them. At nine unfolded columns the footer's content box is 113px and the
+   dot, the urgency word and five stars need more than that — measured, the
+   action block was left with 34px for a 51px word, so the token this whole
+   change exists to protect clipped anyway. Wrapping gives it the full width
+   and costs one line only on the cards and densities where it was broken. */
+.bfoot {
+  flex-wrap: wrap;
+}
+
+.bfoot .baction-wrap {
+  flex: 1 1 60%;
+}
+
 .bfoot .bfit {
   margin-left: auto;
   flex: 0 0 auto;
