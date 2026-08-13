@@ -31,9 +31,21 @@ describe("CalendarMonth", () => {
   });
 
   test("renders day cells with an event chip for today's entry", () => {
-    render(<CalendarMonth entries={mockEntries} onJump={noop} />);
-    expect(screen.getByRole("grid")).toBeInTheDocument();
+    const { container } = render(
+      <CalendarMonth entries={mockEntries} onJump={noop} />,
+    );
+    expect(container.querySelector(".zui-cal-grid")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Acme Corp" })).toBeInTheDocument();
+  });
+
+  test("does not claim a grid role it cannot honour", () => {
+    // It used to declare role="grid" with no rows, no gridcells, no column
+    // headers, no label and no arrow-key navigation — so a screen reader
+    // entered table mode and found an empty table, which is worse than the
+    // generic-container reading it overrode. If the real structure is ever
+    // built, this test is the thing to change.
+    render(<CalendarMonth entries={mockEntries} onJump={noop} />);
+    expect(screen.queryByRole("grid")).toBeNull();
   });
 
   test("emits zui-cal classes, never the legacy cal- name", () => {

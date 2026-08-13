@@ -843,11 +843,14 @@
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "today": "Today",
-    "eventCount": "{{count}} events",
     "moreEvents": "+{{count}} more",
     "upcoming": "Upcoming",
     "show": "Show calendar",
-    "hide": "Hide calendar"
+    "hide": "Hide calendar",
+    "noUpcoming_one": "Nothing scheduled ahead — {{count}} item is in the past.",
+    "noUpcoming_other": "Nothing scheduled ahead — {{count}} items are in the past.",
+    "eventCount_one": "{{count}} event",
+    "eventCount_other": "{{count}} events"
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"

@@ -367,6 +367,16 @@
   background: color-mix(in srgb, var(--accent) 85%, black);
 }
 
+/* The app's default ring is --accent-ink, which sits on this button's own
+   gold fill at 2.42:1 — under the 3:1 WCAG 2.4.11 needs, on the primary
+   action of the one screen a user cannot work around. Night reads 7.62:1
+   against the fill, and the offset puts the ring on the white card behind
+   it, where it is 17:1. */
+.login-btn:focus-visible {
+  outline: 2px solid var(--night, #14173a);
+  outline-offset: 2px;
+}
+
 .login-btn:disabled {
   opacity: 0.6;
   cursor: default;
@@ -2133,8 +2143,11 @@ select.status {
   font-weight: 700;
 }
 
+/* Overdue is the one state on a follow-up tracker that has to shout, and
+   this made it the faintest tone on the screen — a user opening the
+   calendar to find what is slipping was shown a wall of grey. */
 .agenda-date.past {
-  color: var(--faint);
+  color: var(--danger);
 }
 
 .agenda-items {

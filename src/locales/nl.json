@@ -843,11 +843,14 @@
     "prevMonth": "Vorige maand",
     "nextMonth": "Volgende maand",
     "today": "Vandaag",
-    "eventCount": "{{count}} items",
     "moreEvents": "+{{count}} meer",
     "upcoming": "Binnenkort",
     "show": "Toon agenda",
-    "hide": "Verberg agenda"
+    "hide": "Verberg agenda",
+    "noUpcoming_one": "Niets gepland — {{count}} item ligt in het verleden.",
+    "noUpcoming_other": "Niets gepland — {{count}} items liggen in het verleden.",
+    "eventCount_one": "{{count}} gebeurtenis",
+    "eventCount_other": "{{count}} gebeurtenissen"
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"

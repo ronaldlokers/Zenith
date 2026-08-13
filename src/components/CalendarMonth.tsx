@@ -125,7 +125,16 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
         </span>
       </div>
       <div className="zui-cal-body">
-        <div className="zui-cal-grid" role="grid">
+        {/* No role="grid". It declared one and provided none of what the
+            role promises — measured: 0 rows, 0 gridcells, 0 columnheaders,
+            no label — so a screen reader entered table-navigation mode and
+            found an empty table, with arrow keys doing nothing. That is
+            strictly worse than no role at all, because it overrides the
+            generic-container reading that did work. Reading as plain
+            content is honest; a real grid needs rows, cells, headers and
+            roving arrow-key navigation, which is a bigger piece of work
+            than a role attribute. */}
+        <div className="zui-cal-grid">
           <div className="zui-cal-dow">
             {dow.map((d) => (
               <span key={d}>{d}</span>
@@ -161,8 +170,18 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
         </div>
         <aside className="zui-cal-rail">
           <p className="zui-cal-rail-h">{t("calendar.upcoming")}</p>
+          {/* "Nothing on the agenda yet" is true of an empty calendar and a
+              flat contradiction of a full one: this rail counts only future
+              dates, so with six overdue follow-ups on screen it printed
+              "nothing here" beside "6 events". Nothing scheduled ahead is a
+              different statement from nothing at all, and on a follow-up
+              tracker it is the more common one. */}
           {upcoming.length === 0 && (
-            <p className="muted small">{t("calendar.empty")}</p>
+            <p className="muted small">
+              {entries.length === 0
+                ? t("calendar.empty")
+                : t("calendar.noUpcoming", { count: entries.length })}
+            </p>
           )}
           {upcoming.map((e) => (
             <button
