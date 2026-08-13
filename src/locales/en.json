@@ -853,7 +853,6 @@
     "eventCount_other": "{{count}} events",
     "kind": {
       "due": "Follow-up",
-      "deadline": "Deadline",
       "interaction": "Interview",
       "applied": "Applied"
     }

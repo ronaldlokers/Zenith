@@ -22,6 +22,26 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
 
 // A compact chip label for the month grid: the company (or title) reads at a
 // glance; the full agenda text is the tooltip. Colour comes from the kind.
+// The chip's kind — follow-up, deadline, interview, applied — was carried by
+// its background tint and nothing else, so it did not exist for anyone who
+// cannot separate those hues. Stated in the accessible name instead, with the
+// tint kept as the at-a-glance signal: 1.4.1 allows colour to carry meaning,
+// never to carry it alone.
+//
+// Not prefixed when the sentence already opens with it — agendaText for an
+// applied date reads "Applied to X at Y", and "Applied: Applied to X" is the
+// kind of thing that only sounds fine to whoever wrote the template.
+function kindLabel(
+  e: AgendaEntry,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  const kind = t(`calendar.kind.${e.kind}`);
+  const text = agendaText(e, t);
+  return text.toLowerCase().startsWith(kind.toLowerCase())
+    ? text
+    : `${kind}: ${text}`;
+}
+
 function chipLabel(e: AgendaEntry): string {
   return e.company_name ?? e.title ?? "";
 }
@@ -159,7 +179,7 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
                       // cannot separate those hues, and 8% of men cannot.
                       // The accessible name states it; the tint stays as the
                       // at-a-glance signal for everyone else.
-                      aria-label={`${t(`calendar.kind.${e.kind}`)}: ${agendaText(e, t)}`}
+                      aria-label={kindLabel(e, t)}
                       onClick={() => e.title && onJump(e.title)}
                     >
                       {/* An inner span, because text-overflow does not apply

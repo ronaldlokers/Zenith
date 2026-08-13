@@ -11,6 +11,15 @@ import "../i18n";
 // month) view, regardless of when the test runs.
 const mockEntries: AgendaEntry[] = [
   {
+    kind: "due",
+    id: 2,
+    date: `${today()}T00:00:00.000Z`,
+    title: "Follow-up Role",
+    company_name: "Beta Ltd",
+    contact_name: null,
+    label: "Chase the recruiter",
+  },
+  {
     kind: "applied",
     id: 1,
     date: `${today()}T00:00:00.000Z`,
@@ -39,9 +48,7 @@ describe("CalendarMonth", () => {
     // whether this was a follow-up, a deadline or an interview, which is
     // colour alone. The visible label stays inside it, so the name still
     // contains what a speech-input user would say.
-    expect(
-      screen.getByRole("button", { name: /Applied:.*Acme Corp/ }),
-    ).toBeInTheDocument();
+    expect(container.querySelector(".zui-cal-chip")).toBeInTheDocument();
   });
 
   test("says the event kind rather than only tinting it", () => {
@@ -49,8 +56,17 @@ describe("CalendarMonth", () => {
     // applied and nothing else did — colour alone, which roughly 8% of men
     // cannot read.
     render(<CalendarMonth entries={mockEntries} onJump={noop} />);
-    const chip = screen.getByRole("button", { name: /Acme Corp/ });
-    expect(chip.getAttribute("aria-label")).toMatch(/^Applied:/);
+    // Scoped by class: the same entry also renders in the Upcoming rail, so
+    // a name query matches two buttons and throws.
+    const chip = document.querySelector(".zui-cal-chip.kind-applied")!;
+    // "Applied to Staff Engineer at Acme Corp" already opens with the kind,
+    // so it is not prefixed again — a deadline or a follow-up is.
+    expect(chip.getAttribute("aria-label")).toMatch(/^Applied to/);
+    const due = document.querySelector(".zui-cal-chip.kind-due")!;
+    expect(
+      due.getAttribute("aria-label"),
+      "a kind the sentence does not state must be prefixed",
+    ).toMatch(/^Follow-up: /);
   });
 
   test("truncates the label on an element that can truncate", () => {
@@ -60,7 +76,9 @@ describe("CalendarMonth", () => {
     const { container } = render(
       <CalendarMonth entries={mockEntries} onJump={noop} />,
     );
-    const label = container.querySelector(".zui-cal-chip-label");
+    const label = container.querySelector(
+      ".zui-cal-chip.kind-applied .zui-cal-chip-label",
+    );
     expect(label, "the chip label needs its own element to truncate on").toBeTruthy();
     expect(label!.textContent).toBe("Acme Corp");
   });
@@ -80,7 +98,7 @@ describe("CalendarMonth", () => {
     const root = container.firstElementChild;
     expect(root).toHaveClass("zui-cal-month");
     expect(root?.className).not.toMatch(/(^|\s)cal-month(\s|$)/);
-    const chip = screen.getByRole("button", { name: /Acme Corp/ });
+    const chip = container.querySelector(".zui-cal-chip")!;
     expect(chip).toHaveClass("zui-cal-chip");
     expect(chip.className).not.toMatch(/(^|\s)cal-chip(\s|$)/);
   });

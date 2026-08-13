@@ -853,7 +853,6 @@
     "eventCount_other": "{{count}} gebeurtenissen",
     "kind": {
       "due": "Vervolgactie",
-      "deadline": "Deadline",
       "interaction": "Gesprek",
       "applied": "Gesolliciteerd"
     }
