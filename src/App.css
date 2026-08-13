@@ -4988,6 +4988,28 @@ button:not(:disabled):active,
   position: relative;
 }
 
+/* Below 700px it is a sheet pinned to the bottom of the viewport rather than
+   a block inserted into the page. In flow it pushed the board 249px down an
+   844px screen — one and a half cards left visible — so you refined the
+   filter with the thing being filtered below the fold, which is the exact
+   defect the desktop rule above removes. A sheet keeps the board in place
+   and puts the controls under the thumb; light dismiss (Escape, or a tap
+   outside) is already wired, so it needs no chrome of its own. */
+@media (max-width: 699px) {
+  .board-filters-pop {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottombar-reserve) - var(--space-2));
+    z-index: 30;
+    max-height: 60vh;
+    overflow-y: auto;
+    margin: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: var(--shadow-2);
+  }
+}
+
 /* Overlaid, not inserted. In flow this pushed the whole board 248px down
    the page on open and pulled it back on close — so the columns you were
    filtering left the screen at the exact moment you were refining what they
@@ -4998,7 +5020,11 @@ button:not(:disabled):active,
   .board-filters-pop {
     position: absolute;
     top: 100%;
-    inset-inline-start: 0;
+    /* Anchored to the control that opens it, not the far side of the bar.
+       Opening at the start edge put the panel about 1100px from its own
+       trigger on a wide board — and directly over the first two column
+       headers, so the thing being filtered was behind the filter. */
+    inset-inline-end: 0;
     z-index: 20;
     width: min(30rem, 100%);
   }

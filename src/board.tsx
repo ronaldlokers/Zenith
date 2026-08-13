@@ -725,6 +725,33 @@ export function PipelineTab({
   // Filters behind a Filter button; the Archived modal replaces the old
   // Closed drawer (#346).
   const [showFilters, setShowFilters] = useState(false);
+  const filterTriggerRef = useRef<HTMLButtonElement>(null);
+  const filterPopRef = useRef<HTMLDivElement>(null);
+  // Light dismiss, which is what every popover contract promises and this
+  // one honoured none of: Escape did nothing, clicking away did nothing, and
+  // the only way out was a return trip to the Filter chip — which sits about
+  // 1100px to the right of the panel it opens on a wide board.
+  useEffect(() => {
+    if (!showFilters) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setShowFilters(false);
+      filterTriggerRef.current?.focus();
+    };
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (filterPopRef.current?.contains(t)) return;
+      if (filterTriggerRef.current?.contains(t)) return;
+      setShowFilters(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [showFilters]);
   // Which rails are folded (#535 shell). Kept on profile so it follows you
   // between devices; the defaults stand in until that lands, which is what
   // someone who has never folded anything would see anyway.
@@ -1071,6 +1098,7 @@ export function PipelineTab({
         />
         <button
           type="button"
+          ref={filterTriggerRef}
           className={`board-bar-btn${showFilters || activeFilterCount ? " active" : ""}`}
           aria-expanded={showFilters}
           onClick={() => setShowFilters((v) => !v)}
@@ -1090,7 +1118,7 @@ export function PipelineTab({
       </div>
 
       {showFilters && (
-        <div className="board-filters-pop">
+        <div className="board-filters-pop" ref={filterPopRef}>
           <div className="filters-fields">
             <label className="filter-field">
               <span>{t("filters.role")}</span>
