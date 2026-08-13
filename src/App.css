@@ -1549,6 +1549,7 @@ button.primary:hover {
 .feed-match {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.25rem;
   font-family: var(--mono);
@@ -1581,7 +1582,10 @@ button.primary:hover {
 }
 
 .feed-match-n {
-  flex: 0 0 auto;
+  /* Was flex: 0 0 auto, which forbids shrinking; at 200% text the label
+     pushed past the card edge and was clipped with it. It may shrink now,
+     and the bar beside it gives up room first. */
+  flex: 0 1 auto;
 }
 
 /* People, banded (#535 shell): the ones the ball is with, then everyone
@@ -1774,6 +1778,14 @@ button.primary:hover {
 }
 .feed-row-actions {
   display: flex;
+  /* Wrap, because at 200% text these three buttons measure 456px in a 342px
+     card and the card clips what does not fit — Dismiss was cut off
+     entirely, so the whole triage decision became unreachable for anyone who
+     needs larger text (WCAG 1.4.4 is loss of *functionality*, not only of
+     content). Same treatment, and the same reasoning, as .cv-plate-actions:
+     more locales are coming and the next label that does not fit should
+     reflow rather than need a copy edit. */
+  flex-wrap: wrap;
   gap: 0.4rem;
   flex: 1 1 100%;
   margin-top: 0.4rem;

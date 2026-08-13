@@ -49,6 +49,12 @@
   .zui-statcard-label {
     font-size: var(--text-meta);
     color: var(--muted);
+    /* A flex item will not shrink below its content by default, so at 200%
+       text "OPEN" ran 21px past a 171px tile and the tile clipped it. The
+       label is the only thing saying what the number means, so losing it
+       leaves a bare figure. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   /* Hero tile (elevation tier 3, #458) — one focal KPI per screen: a warm
