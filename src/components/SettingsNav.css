@@ -52,4 +52,27 @@
       gap: 0.3rem;
     }
   }
+
+  /* 70x34 on a phone, which is under the 44px touch floor. Expanded with a
+     centred overlay rather than by growing the control, so the row keeps the
+     compact shape it was designed with and nothing shifts.
+
+     Vertically only: the tabs sit in a row with a 4.8px gap, so a wider
+     overlay would reach 5px into its neighbour and one tab would answer for
+     presses aimed at the next. Height is the axis with room. */
+  @media (pointer: coarse) {
+    .zui-settingsnav button {
+      position: relative;
+    }
+
+    .zui-settingsnav button::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: max(100%, 44px);
+      transform: translateY(-50%);
+    }
+  }
 }

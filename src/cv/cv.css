@@ -401,4 +401,26 @@
       padding: 0;
     }
   }
+
+  /* The variant rail's circles are 34x34, under the 44px touch floor. The
+     rail is a column with an 8px gap and sits 8px from the plate, so 42 is
+     the whole budget: 4px on each side consumes the gap exactly, and 44
+     would have each overlay reach 1px past its neighbour's edge, making the
+     circle above answer for a press aimed at the one below. 42px of reliable
+     target beats 44px that steals its neighbour's presses. */
+  @media (pointer: coarse) {
+    .cv-tool {
+      position: relative;
+    }
+
+    .cv-tool::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 42px);
+      height: max(100%, 42px);
+      transform: translate(-50%, -50%);
+    }
+  }
 }
