@@ -532,12 +532,20 @@ export const STAGE_URGENCY: readonly Status[] = [
   "offer",
 ];
 
-// One definition of "gone quiet", shared by the board and Today. They had two
-// — the board measured a company's own reply rhythm, Today used a flat 21 days
-// — so the board could badge a card GONE QUIET while Today, on the next
-// screen, did not think it was quiet at all. This is Today's meaning: an
-// early-stage application with nothing scheduled that has not moved in three
-// weeks, which is the set that can be closed out in one tap.
+// Today's meaning of "gone quiet": an early-stage application with nothing
+// scheduled that has not moved in three weeks — the set that can be closed
+// out in one tap.
+//
+// This is NOT yet the board's meaning, and an earlier comment here claimed it
+// was. The board still derives its own (board.tsx:850): a company-relative
+// rule, 1.5x that company's own median gap between status changes with a
+// five-day floor, measured from a computed lastActivity rather than
+// updated_at. So the board can badge a card GONE QUIET while this block does
+// not list it — which is exactly what it does on the demo data today.
+//
+// Unifying them is a product decision, not a refactor: the company-relative
+// rule is the better signal but is not a superset, so adopting it changes
+// which applications Today offers to close out.
 export function isGoneQuiet(a: Application, now = Date.now()): boolean {
   if (a.status !== "interested" && a.status !== "applied") return false;
   if (a.next_action_at) return false;

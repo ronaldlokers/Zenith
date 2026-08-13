@@ -5094,13 +5094,19 @@ button:not(:disabled):active,
 @media (pointer: coarse) {
   .top-icon,
   .top-brand,
-  .bottombar-slot {
+  button.bottombar-slot {
     position: relative;
   }
 
+  /* button, not .bottombar-slot alone. The bar's third slot is a <span>
+     wrapping the notification bell, so this overlay landed on an ANCESTOR of
+     the real control and covered its own descendant: the bell stopped
+     responding to touch entirely — a programmatic click still worked, which
+     is why it looked fine. An overlay may only ever sit on the element that
+     handles the press. */
   .top-icon::after,
   .top-brand::after,
-  .bottombar-slot::after {
+  button.bottombar-slot::after {
     content: "";
     position: absolute;
     top: 50%;

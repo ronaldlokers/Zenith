@@ -76,11 +76,14 @@
     filter: brightness(0.97);
   }
 
-  /* Matches the global focus geometry (src/index.css:229) — the real
+  /* Matches the global focus ring in src/index.css. --accent-ink, not
+     --accent: this rule is in @layer components and so overrides the global
+     one, which meant darkening the ring there left every Button still drawing
+     it at 2.05:1 where WCAG 1.4.11 asks 3:1 — the real
      :focus-visible rule, not the [role="button"] one (App.css:1746), which
      targets ARIA-button divs, not <button> elements. */
   .zui-btn:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-ink);
     outline-offset: 2px;
   }
 
