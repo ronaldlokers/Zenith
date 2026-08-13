@@ -1546,7 +1546,15 @@ button.primary:hover {
 }
 
 .feed-match-bar {
-  flex: 1 1 auto;
+  /* Capped, not full-width. The bar is normalised to five skills, so on a
+     538px track a two-skill match drew 320px of empty rail — making the
+     largest element on the card a measure of how little matched. The Weak
+     band was folded away precisely so the screen would stop repeating that
+     verdict; a full-width bar repeated it on every card that remained.
+     Short bars also compare better, which is the reason it is a bar and not
+     a sentence. */
+  flex: 0 0 auto;
+  width: 96px;
   min-width: 0;
   height: 5px;
   border-radius: var(--radius-full);
@@ -1832,6 +1840,62 @@ button.primary:hover {
   /* The posting's opening in the triage pane. Body size, not chrome: it is
    the only prose on the surface and the one thing being judged. Clamped so a
    long opening cannot push the two decision buttons off the pane. */
+/* The card's own brief — the posting's opening and the skills it matched.
+   Shown only where there is no detail pane to carry them, which is every
+   viewport under 900px: on a phone this is the difference between deciding
+   from the job and deciding from its title. */
+/* The only route to the job's own text on a phone, at 21px painted. The
+   overlay gives it the floor without changing the link's look. */
+@media (pointer: coarse) {
+  .feed-row-link {
+    position: relative;
+    display: inline-block;
+  }
+
+  .feed-row-link::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: max(100%, 44px);
+    transform: translateY(-50%);
+  }
+}
+
+.feed-row-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.feed-row-brief-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.feed-row-brief-desc {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  /* The pane says it from here up, and saying it twice on one screen is
+     worse than saying it once. */
+  .feed-row-brief {
+    display: none;
+  }
+}
+
 .feed-weak-more {
   display: flex;
   justify-content: center;

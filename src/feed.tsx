@@ -1059,6 +1059,29 @@ function FeedCard({
             {t("feed.skillsMatch", { count: matched ?? 0 })}
           </span>
         </span>
+        {/* What the posting says, and why it fits, on the card itself.
+            Both live in the detail pane — which is display:none below
+            900px, so on every phone and on an 820px tablet the triage
+            accelerators were accelerating a decision made from a title and
+            a bar. A card that has to be clicked through to find out what it
+            is has failed at its one job. Rendered here and hidden from
+            900px up, where the pane says it instead. */}
+        {(item.description_snippet || item.match_skills.length > 0) && (
+          <div className="feed-row-brief">
+            {item.match_skills.length > 0 && (
+              <span className="feed-row-brief-skills">
+                {item.match_skills.slice(0, 4).map((name) => (
+                  <Chip key={name} matched>
+                    {name}
+                  </Chip>
+                ))}
+              </span>
+            )}
+            {item.description_snippet && (
+              <p className="feed-row-brief-desc">{item.description_snippet}</p>
+            )}
+          </div>
+        )}
         {safeHref(item.url) && (
           <a
             href={safeHref(item.url)}
