@@ -615,6 +615,8 @@
     "benefitsNotes": "Benefits notes",
     "totalComp": "Total comp (est.)",
     "benchmark": "{{pct}}% {{direction}} your median tracked offer ({{n}} others)",
+    "benchmarkFew_one": "{{pct}}% {{direction}} your one other tracked offer",
+    "benchmarkFew_other": "{{pct}}% {{direction}} the middle of your {{count}} other tracked offers",
     "above": "above",
     "below": "below",
     "draftNegotiation": "Draft negotiation talking points",

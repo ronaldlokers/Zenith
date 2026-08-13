@@ -615,6 +615,8 @@
     "benefitsNotes": "Notities secundaire arbeidsvoorwaarden",
     "totalComp": "Totale beloning (geschat)",
     "benchmark": "{{pct}}% {{direction}} je mediane bijgehouden aanbod ({{n}} andere(n))",
+    "benchmarkFew_one": "{{pct}}% {{direction}} je enige andere bijgehouden aanbod",
+    "benchmarkFew_other": "{{pct}}% {{direction}} het midden van je {{count}} andere bijgehouden aanbiedingen",
     "above": "hoger dan",
     "below": "lager dan",
     "draftNegotiation": "Stel onderhandelingspunten op",

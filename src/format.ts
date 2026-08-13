@@ -387,7 +387,13 @@ export function buildNegotiationDraft(
     (o) => o.id !== a.id && o.status === "offer" && o.role_type === a.role_type && totalComp(o) != null,
   );
   const pool = sameRole.length ? sameRole : otherOffers;
-  if (total != null && pool.length) {
+  // Three, not one. This line goes into a brief someone reads out in a
+  // salary conversation, and off a single other offer it was false twice
+  // over: there is no median of one number, and "my other offers" was one
+  // offer. Nothing is lost by the floor — negotiationCompeting above
+  // already names a higher competing offer when there is exactly one, and
+  // says so truthfully.
+  if (total != null && pool.length >= MIN_POOL_FOR_MEDIAN) {
     const med = median(pool.map((o) => totalComp(o)!));
     if (med != null && med > 0 && total < med) {
       lines.push(
@@ -478,6 +484,11 @@ export interface TimeToOffer {
 // was true and the word was not, on the largest type on the page. A median
 // of one value is that value, and calling it a median claims a spread the
 // data does not have.
+// Smallest pool that can carry the word "median" — the same three as
+// stats.ts's MIN_CONVERSION_N, kept here rather than imported because
+// format.ts is the leaf both the app and the worker-side PDF pull from.
+export const MIN_POOL_FOR_MEDIAN = 3;
+
 export function medianTimeToOffer(
   history: { application_id: number; to_status: string; changed_at: string }[],
 ): TimeToOffer {

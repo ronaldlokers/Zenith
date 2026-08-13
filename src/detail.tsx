@@ -47,6 +47,7 @@ import {
   isDue,
   isOverdue,
   median,
+  MIN_POOL_FOR_MEDIAN,
   safeHref,
   totalComp,
   totalCompBreakdown,
@@ -498,14 +499,25 @@ export function ApplicationDetailModal({
                   const med = median(pool.map((o) => totalComp(o)!));
                   if (med == null || med === 0) return null;
                   const diffPct = ((totalComp(a)! - med) / med) * 100;
+                  // "12% above your median tracked offer (1 others)" — a
+                  // median of one value is that value, and the parenthesis
+                  // gave the game away in bad grammar. The comparison is
+                  // still worth stating below three; only the word median
+                  // is not, so a second string states it as what it is.
                   return (
                     <span className="muted small">
-                      {t("offer.benchmark", {
-                        pct: Math.round(Math.abs(diffPct)),
-                        direction:
-                          diffPct >= 0 ? t("offer.above") : t("offer.below"),
-                        n: pool.length,
-                      })}
+                      {t(
+                        pool.length >= MIN_POOL_FOR_MEDIAN
+                          ? "offer.benchmark"
+                          : "offer.benchmarkFew",
+                        {
+                          pct: Math.round(Math.abs(diffPct)),
+                          direction:
+                            diffPct >= 0 ? t("offer.above") : t("offer.below"),
+                          n: pool.length,
+                          count: pool.length,
+                        },
+                      )}
                     </span>
                   );
                 })()}
