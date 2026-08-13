@@ -15,9 +15,11 @@ import {
   formatDate,
   isDead,
   isDue,
+  isGoneQuiet,
   isOverdue,
   parseSqlDate,
   searchWeekNumber,
+  STAGE_URGENCY,
 } from "./format";
 import {
   Button,
@@ -102,12 +104,7 @@ export function DashboardTab({
   // scheduled that haven't moved in 3+ weeks. A graceful, one-tap way to clear
   // ghosted roles: no reply is on them, not you.
   const quiet = applications
-    .filter(
-      (a) =>
-        (a.status === "interested" || a.status === "applied") &&
-        !a.next_action_at &&
-        daysSince(a.updated_at) >= 21,
-    )
+    .filter((a) => isGoneQuiet(a))
     .sort((a, b) => a.updated_at.localeCompare(b.updated_at))
     .slice(0, 5);
 
@@ -172,12 +169,16 @@ export function DashboardTab({
         <div className="today-cols">
           <div className="today-col">
             {heroState === "due" && (
+              /* No onClick in this state. It used to call setNextUpTab("due")
+                 while the tab was already "due" — the largest, warmest target
+                 on the screen, and pressing it changed nothing. A control that
+                 looks pressable and is not teaches people to distrust the
+                 ones that are. The list below it is what acts. */
               <StatCard
                 hero
                 className="today-hero"
                 value={due.length}
                 label={t("today.needYou", { count: due.length })}
-                onClick={() => setNextUpTab("due")}
               />
             )}
             {heroState === "clear" && (
@@ -377,16 +378,24 @@ function NextUpPanel({
   notify: (message: string, undo?: () => void, label?: string) => void;
 }) {
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+
+  // Ranked by what is worth doing, not by what is oldest. Sorting on date
+  // alone put a five-star offer at row four, tinted and buttoned exactly like
+  // an unanswered cold application — the one thing in the pipeline that could
+  // carry a hard week, filed as a chore. Stage leads (an offer outranks an
+  // interested), then fit, then age. Date still breaks ties, so a queue of
+  // same-stage follow-ups reads oldest-first the way it always did.
   const rows = (tab === "due" ? due : upcoming)
     .slice()
     .sort((a, b) => {
-      const byDate = (a.next_action_at ?? "").localeCompare(
-        b.next_action_at ?? "",
-      );
-      if (byDate !== 0) return byDate;
-      return (b.fit_score ?? 0) - (a.fit_score ?? 0);
-    })
-    .slice(0, 6);
+      const byStage = STAGE_URGENCY.indexOf(b.status) - STAGE_URGENCY.indexOf(a.status);
+      if (byStage !== 0) return byStage;
+      const byFit = (b.fit_score ?? 0) - (a.fit_score ?? 0);
+      if (byFit !== 0) return byFit;
+      return (a.next_action_at ?? "").localeCompare(b.next_action_at ?? "");
+    });
+  const visible = showAll ? rows : rows.slice(0, 6);
 
   // Inline follow-up actions (#285) — complete or push a reminder without
   // leaving Today. Opening the row is what actually does the follow-up; these
@@ -459,7 +468,7 @@ function NextUpPanel({
         </p>
       ) : (
         <ul className="today-rows" aria-label={t("nextUp.title")}>
-          {rows.map((a) => (
+          {visible.map((a) => (
             <li key={a.id} className={`stage-${a.status}`}>
               <button
                 className="today-row-open"
@@ -475,8 +484,18 @@ function NextUpPanel({
                       ? ` · ${t("urgency.today")}`
                       : ""}
                 </span>
+                {/* The action leads. This screen's whole premise is "what do
+                    I do now?", and it used to answer "which job is late" —
+                    next_action was populated, led the detail page, the board
+                    card and the notification tray, and was the one thing the
+                    row left out. Without it Done clears a follow-up the user
+                    was never shown. */}
                 <span className="side-title">
-                  {a.title}
+                  {a.next_action ?? a.title}
+                </span>
+                <span className="side-co">
+                  {a.next_action ? `${a.title} · ` : ""}
+                  {a.company_name ?? "—"}
                   {a.fit_score ? (
                     <span className="fit-stars">
                       {" "}
@@ -484,7 +503,6 @@ function NextUpPanel({
                     </span>
                   ) : null}
                 </span>
-                <span className="side-co">{a.company_name ?? "—"}</span>
                 <span className="side-stage">{t(`stages.${a.status}`)}</span>
               </button>
               <span className="nextup-actions">
@@ -508,6 +526,14 @@ function NextUpPanel({
             </li>
           ))}
         </ul>
+      )}
+      {/* The count and the list have to agree. The hero shouted a number the
+          list then capped at six, with nothing to say three were missing and
+          no way to reach them from the screen built to clear them. */}
+      {rows.length > visible.length && (
+        <button className="today-showall" onClick={() => setShowAll(true)}>
+          {t("nextUp.showAll", { count: rows.length })}
+        </button>
       )}
     </section>
   );

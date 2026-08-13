@@ -457,6 +457,7 @@
   },
   "nextUp": {
     "title": "Next up",
+    "showAll": "Show all {{count}}",
     "done": "Done",
     "doneToast": "Follow-up completed",
     "segDue": "Due {{count}}",

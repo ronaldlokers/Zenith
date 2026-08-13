@@ -327,6 +327,11 @@ input[type="radio"] {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  /* --accent-ink, not --accent. The gold ring measured 2.27:1 against a white
+     card and 2.03:1 against the paper ground, where WCAG 1.4.11 asks for 3:1
+     — present on every focusable element and under-contrasted on every one.
+     The darker ink of the same hue keeps the ring unmistakably Zenith's and
+     clears the bar on both grounds. */
+  outline: 2px solid var(--accent-ink);
   outline-offset: 2px;
 }

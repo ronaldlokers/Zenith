@@ -1190,7 +1190,10 @@
 .nextup-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  /* Done and ⋯ sat 8px apart, both inside the right-thumb arc on a phone,
+     and Done mutates data — a mis-tap clears a follow-up whose text the row
+     did not show, recoverable only by catching a toast while scrolling. */
+  gap: var(--space-3);
 }
 
 @media (max-width: 600px) {
@@ -3568,6 +3571,22 @@ summary.bcol-head::after {
   color: var(--faint);
 }
 
+/* The third rail block, carded like the two above it. It rendered on the bare
+   page ground with no border and no radius beside two white, bordered,
+   10px-radius siblings, so it read as text that had fallen out of a card
+   rather than as the third member of a set. Its heading was centred over
+   left-aligned content, which is the other half of the same seam. */
+.today-happened {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.today-happened .col-h {
+  text-align: left;
+}
+
 .today-happened-list {
   list-style: none;
   margin: 0;
@@ -5108,4 +5127,27 @@ button:not(:disabled):active,
     flex-direction: column;
     justify-content: center;
   }
+}
+
+/* The way to the rest of the queue, at the end of the queue. */
+.today-showall {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: var(--space-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--accent-ink);
+  font-family: var(--mono);
+  font-size: var(--text-chrome);
+  text-transform: uppercase;
+  letter-spacing: var(--track-eyebrow);
+  cursor: pointer;
+}
+
+.today-showall:hover,
+.today-showall:focus-visible {
+  border-color: var(--rule);
+  background: var(--surface);
 }

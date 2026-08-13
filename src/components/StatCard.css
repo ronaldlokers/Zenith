@@ -157,4 +157,18 @@
     box-shadow: none;
     color: var(--ink);
   }
+
+  /* The hover lift is movement, and a reduced-motion preference asks for it
+     to stop. The transition here survived an earlier motion pass because that
+     pass looked at App.css and this rule lives in the component. Colour and
+     shadow feedback are deliberately left running. */
+  @media (prefers-reduced-motion: reduce) {
+    .zui-statcard--click {
+      transition: box-shadow 0.12s ease;
+    }
+
+    .zui-statcard--click:hover {
+      transform: none;
+    }
+  }
 }

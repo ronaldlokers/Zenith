@@ -519,3 +519,28 @@ export const CV_LANG_KEY = "zenith_cv_lang";
 export function getCvLanguage(fallback: string): string {
   return localStorage.getItem(CV_LANG_KEY) || fallback;
 }
+
+// Which stage's follow-up is worth doing first. Ordered from least to most
+// urgent so a higher index sorts higher: an offer waiting on a reply outranks
+// a screening, which outranks a speculative "interested". Ranking Today by
+// date alone buried a five-star offer at row four, styled like a chore.
+export const STAGE_URGENCY: readonly Status[] = [
+  "interested",
+  "applied",
+  "screening",
+  "interview",
+  "offer",
+];
+
+// One definition of "gone quiet", shared by the board and Today. They had two
+// — the board measured a company's own reply rhythm, Today used a flat 21 days
+// — so the board could badge a card GONE QUIET while Today, on the next
+// screen, did not think it was quiet at all. This is Today's meaning: an
+// early-stage application with nothing scheduled that has not moved in three
+// weeks, which is the set that can be closed out in one tap.
+export function isGoneQuiet(a: Application, now = Date.now()): boolean {
+  if (a.status !== "interested" && a.status !== "applied") return false;
+  if (a.next_action_at) return false;
+  const days = Math.floor((now - parseSqlDate(a.updated_at)) / 86400000);
+  return days >= 21;
+}

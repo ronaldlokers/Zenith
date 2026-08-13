@@ -104,9 +104,18 @@ describe("DashboardTab (Today)", () => {
         stats={emptyStats}
       />,
     );
-    // The figure and its label are separate elements in the hero tile.
-    const hero = screen.getByRole("button", { name: /things need you today/ });
+    // The figure and its label are separate elements in the hero tile, and
+    // the tile is deliberately NOT a button in this state. It used to be one
+    // whose click set the Next Up tab to "due" while "due" was already the
+    // tab — the largest, warmest target on the screen, and pressing it
+    // changed nothing. A control that looks pressable and is not teaches
+    // people to distrust the ones that are (design critique, 2026-08-13).
+    const hero = screen.getByText(/things need you today/).closest("div");
     expect(hero).toHaveTextContent("2things need you today");
+    expect(
+      screen.queryByRole("button", { name: /things need you today/ }),
+      "the due-state hero must not be a button: its click had no effect",
+    ).toBeNull();
     expect(screen.getByRole("button", { name: "Due 2" })).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Upcoming 1" }),

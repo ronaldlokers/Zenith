@@ -457,6 +457,7 @@
   },
   "nextUp": {
     "title": "Binnenkort",
+    "showAll": "Alle {{count}} tonen",
     "done": "Klaar",
     "doneToast": "Follow-up afgerond",
     "segDue": "Open {{count}}",
