@@ -20,6 +20,12 @@
         "value": "3px",
         "createdAt": "2026-08-13T01:02:07.019Z",
         "reason": "The calendar's event chip is a few pixels tall; 8px would swallow it. Same reasoning as the 2px momentum bar."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "createdAt": "2026-08-13T16:50:39.526Z",
+        "reason": "mask alpha, not a painted colour"
       }
     ]
   }
