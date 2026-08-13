@@ -519,20 +519,33 @@ function NextUpPanel({
   // the debt is not enough — the screen has to be able to absorb it. Every
   // date is restored by a single undo, so this is a reversible act, not a
   // confession.
+  // What the batch escape is allowed to touch. An offer or an interview is
+  // the thing that could end the search; the first run of this control would
+  // have snoozed a five-star offer along with nine dead follow-ups, on one
+  // tap, because it took everything overdue. Those two stages are the user's
+  // to handle one at a time.
+  const isPushable = (a: Application) =>
+    isOverdue(a) && a.status !== "offer" && a.status !== "interview";
+
   const pushAllLate = () => {
-    const late = rows.filter((a) => isOverdue(a));
+    const late = rows.filter(isPushable);
     if (!late.length) return;
     const prev = late.map((a) => ({
       id: a.id,
       next_action: a.next_action ?? null,
       next_action_at: a.next_action_at ?? null,
     }));
-    const at = daysFromToday(7);
     return Promise.all(
-      late.map((a) =>
+      late.map((a, i) =>
         api.updateFollowUp(a.id, {
           next_action: a.next_action ?? null,
-          next_action_at: at,
+          // Spread, not one date. Moving nine follow-ups to a single day
+          // clears this screen and rebuilds the same pile as one cliff a week
+          // out, which is worse than the pile it replaced — the point is to
+          // make next week survivable, not to empty today. Two a day from
+          // three days out, in the order the list is already ranked, so the
+          // most urgent come back first.
+          next_action_at: daysFromToday(3 + Math.floor(i / 2)),
         }),
       ),
     )
@@ -547,7 +560,7 @@ function NextUpPanel({
       .catch((e) => onError((e as Error).message));
   };
 
-  const lateCount = rows.filter((a) => isOverdue(a)).length;
+  const lateCount = rows.filter(isPushable).length;
 
   return (
     <section className="today-nextup">
@@ -647,9 +660,15 @@ function NextUpPanel({
         </button>
       )}
       {tab === "due" && lateCount > 1 && (
-        <button className="today-pushall" onClick={() => void pushAllLate()}>
-          {t("today.pushAll")}
-        </button>
+        /* A real button, and it says how many. This was a 10px muted caption
+           with no border firing an unconfirmed write across every late row —
+           the weakest control on the screen doing the largest thing on it. */
+        <p className="today-pushall">
+          <Button variant="secondary" onClick={() => void pushAllLate()}>
+            {t("today.pushAll", { count: lateCount })}
+          </Button>{" "}
+          <span className="muted small">{t("today.pushAllKeeps")}</span>
+        </p>
       )}
     </section>
   );

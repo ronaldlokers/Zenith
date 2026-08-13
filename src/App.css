@@ -143,6 +143,23 @@
    layout sets its own content padding at ≥900px. */
 .content {
   padding-top: 1rem;
+  /* The bottom bar is position: fixed, so it is outside flow and the page
+     ends underneath it. At 1440x900 with nothing scrolled, the Today
+     screen's last two controls — "show all" and "push all late follow-ups"
+     — sat under the bar: elementFromPoint at their centres returned the bar,
+     and tabbing to them drew the focus ring beneath it, which is a WCAG 2.2
+     2.4.11 (Focus Not Obscured) failure outright.
+
+     rem, not px: the bar's labels scale with text size and so does the bar,
+     so a px reserve would stop covering it at 200%. Measured 59px at normal
+     size; 3.75rem is that plus the gutter it needs to not look pinned. */
+  padding-bottom: calc(3.75rem + var(--space-4));
+}
+
+/* Anything focused near the end of the page scrolls clear of the bar rather
+   than under it. */
+.content :focus-visible {
+  scroll-margin-bottom: calc(3.75rem + var(--space-4));
 }
 
 /* Search launcher — an icon-only button below 900px, a full ⌘K pill at rail
@@ -5182,28 +5199,18 @@ button:not(:disabled):active,
   background: var(--surface);
 }
 
-/* The way out of the pile, at the foot of the pile. Quiet on purpose: it is
-   an escape hatch for a bad week, not the screen's primary act. */
+/* The way out of the pile, at the foot of the pile. It was a borderless
+   10px caption in mono, which made the weakest-looking control on the screen
+   the one that rewrote every late row at once. It is a real secondary button
+   now, carrying its own count, with the exemption stated beside it rather
+   than left to be discovered afterwards. Still not primary: it is an escape
+   hatch for a bad week, not the screen's main act. */
 .today-pushall {
-  display: block;
-  width: 100%;
-  margin-top: var(--space-2);
-  padding: var(--space-2);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: none;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: var(--text-chrome);
-  text-transform: uppercase;
-  letter-spacing: var(--track-eyebrow);
-  cursor: pointer;
-}
-
-.today-pushall:hover,
-.today-pushall:focus-visible {
-  color: var(--ink);
-  background: var(--hover);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
 }
 
 /* The order, said out loud. Ranking by stage then fit beats ranking by date,
@@ -5214,10 +5221,10 @@ button:not(:disabled):active,
   letter-spacing: normal;
 }
 
-/* Both of these are real controls in the thumb zone; 33px was not enough. */
+/* Show-all is a bare button and needs the floor set here; push-all is a
+   Button now and brings its own. */
 @media (pointer: coarse) {
-  .today-showall,
-  .today-pushall {
+  .today-showall {
     min-height: 44px;
   }
 }

@@ -17,9 +17,8 @@
     "overdueOnly_other": "vervolgacties zijn te laat",
     "overdueSince": "oudste sinds {{date}}",
     "mixed": "{{overdue}} te laat · {{today}} vandaag",
-    "pushAll": "Alle late vervolgacties naar volgende week",
-    "pushedAll_one": "{{count}} vervolgactie naar volgende week verplaatst",
-    "pushedAll_other": "{{count}} vervolgacties naar volgende week verplaatst",
+    "pushedAll_one": "{{count}} vervolgactie verzet",
+    "pushedAll_other": "{{count}} vervolgacties verzet, verspreid over de komende dagen",
     "sortedBy": "Gesorteerd op fase, dan match",
     "needYou_other": "taken wachten op je vandaag",
     "quietTitle": "Stil geworden",
@@ -46,7 +45,10 @@
     "happenedAdded": "Je hebt {{title}} toegevoegd",
     "moved": "Deze week verschoven",
     "movedTo": "naar",
-    "noMoves": "Deze week is er niets van fase veranderd."
+    "noMoves": "Deze week is er niets van fase veranderd.",
+    "pushAll_other": "Verzet {{count}} late vervolgacties naar de komende dagen",
+    "pushAllKeeps": "Aanbiedingen en gesprekken blijven staan.",
+    "pushAll_one": "Verzet {{count}} late vervolgactie naar de komende dagen"
   },
   "header": {
     "settings": "Instellingen",

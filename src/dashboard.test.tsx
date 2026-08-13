@@ -1,14 +1,19 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import type { Application, Stats, Status } from "./types";
 import { DashboardTab } from "./dashboard";
 // Side-effect: initializes i18next so `t()` renders real copy instead of keys.
 import "./i18n";
 
+const followUpCalls: { id: number; at: string | null }[] = [];
+
 vi.mock("./api", () => ({
   api: {
     goals: () => Promise.resolve(null),
-    updateFollowUp: () => Promise.resolve(undefined),
+    updateFollowUp: (id: number, body: { next_action_at: string | null }) => {
+      followUpCalls.push({ id, at: body.next_action_at });
+      return Promise.resolve(undefined);
+    },
     archiveApplication: () => Promise.resolve(undefined),
     unarchiveApplication: () => Promise.resolve(undefined),
   },
@@ -152,6 +157,41 @@ describe("DashboardTab (Today)", () => {
         name: /Senior Platform Engineer/,
       })[0],
     ).toBeInTheDocument();
+  });
+
+
+  test("the batch push leaves offers and interviews alone and spreads the rest", async () => {
+    // Both halves were live defects. It took everything overdue, so one tap
+    // on what was then a 10px caption snoozed a five-star offer along with
+    // the dead follow-ups; and it wrote one date to all of them, which
+    // clears the screen and rebuilds the same pile as a single cliff a week
+    // out — worse than the pile it replaced.
+    followUpCalls.length = 0;
+    render(
+      <DashboardTab
+        {...props}
+        applications={[
+          app({ id: 1, next_action_at: iso(-9), status: "applied" }),
+          app({ id: 2, next_action_at: iso(-6), status: "screening" }),
+          app({ id: 3, next_action_at: iso(-4), status: "offer" }),
+          app({ id: 4, next_action_at: iso(-3), status: "interview" }),
+          app({ id: 5, next_action_at: iso(-2), status: "applied" }),
+        ]}
+        stats={emptyStats}
+      />,
+    );
+
+    const push = screen.getByRole("button", { name: /Push 3 late follow-ups/ });
+    expect(
+      push,
+      "the count must exclude the offer and the interview, not just the write",
+    ).toBeInTheDocument();
+    fireEvent.click(push);
+    await waitFor(() => expect(followUpCalls.length).toBe(3));
+
+    expect(followUpCalls.map((c) => c.id).sort()).toEqual([1, 2, 5]);
+    const dates = new Set(followUpCalls.map((c) => c.at));
+    expect(dates.size, "all three landed on one date again").toBeGreaterThan(1);
   });
 
   test("names the unplanned state instead of calling it caught up", () => {

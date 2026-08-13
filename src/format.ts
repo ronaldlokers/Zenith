@@ -162,12 +162,24 @@ export function isDeadlinePast(a: Application): boolean {
   return days !== null && !isDead(a.status) && days < 0;
 }
 
+// The language the interface is actually in, not the browser's. Passing
+// undefined here means "whatever this browser is set to", which put two date
+// systems on one screen: the Today heading formats with i18n.language and
+// read "woensdag 13 augustus" while every row beside it read "Jul 30" on an
+// en-US browser. Read from storage rather than importing i18n, which would
+// make this module depend on React init order; the key is the one i18n's own
+// detector writes.
+function uiLocale(): string | undefined {
+  if (typeof localStorage === "undefined") return undefined;
+  return localStorage.getItem("zenith_lang") ?? undefined;
+}
+
 export function formatDate(d: string): string {
   // Slice to the date part first: most callers pass a date-only "YYYY-MM-DD",
   // but feed posted_at is a full ISO datetime (Adzuna `created`, etc.) — and
   // "<iso>" + "T00:00:00" parses to Invalid Date. Anchoring at local midnight
   // keeps the day stable regardless of the stored time/zone.
-  return new Date(d.slice(0, 10) + "T00:00:00").toLocaleDateString(undefined, {
+  return new Date(d.slice(0, 10) + "T00:00:00").toLocaleDateString(uiLocale(), {
     day: "numeric",
     month: "short",
   });
