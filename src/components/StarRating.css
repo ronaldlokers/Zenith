@@ -42,10 +42,20 @@
        :not(), rather than only styling the interactive class, so a future
        variant that forgets the modifier still gets the target. */
     .zui-starrating:not(.zui-starrating--readonly) .zui-star {
-      /* Vertical only: five stars sit in a row, so width cannot grow without
-         a tap landing on the next star. */
       min-height: 44px;
-      padding: 0 0.25rem;
+      /* 0.5rem, not 0.25rem: at 0.25 each star measured 16px wide — five
+         contiguous targets under the 24px WCAG 2.5.8 floor, on the axis a
+         thumb is least accurate in.
+
+         This rule used to say width could not grow "without a tap landing
+         on the next star". That is true of the invisible 44px box the
+         comment above rejects — absolutely positioned, so it overlaps its
+         neighbours — and not true of padding, which is in flow: widening
+         each star pushes the next one along instead. Measured on a phone
+         profile, 0.25rem vs 0.5rem: widths 16 -> 24, overlapping pairs 0 in
+         both, mis-hits 0 in both, and the row grows 90px -> 130px in a
+         393px viewport. The room was always there. */
+      padding: 0 0.5rem;
     }
   }
 }
