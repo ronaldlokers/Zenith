@@ -20,6 +20,38 @@ function icsEscape(text: string): string {
     .replace(/\n/g, "\\n");
 }
 
+// RFC 5545 3.1: a content line MUST NOT be longer than 75 octets, excluding
+// the line break, and is folded by inserting CRLF followed by a single
+// whitespace character. Nothing here folded, and the limit is octets rather
+// than characters — "Follow up — Senior Platform Engineer, Site Reliability
+// at Northwind Cloud Systems International" measures 105. Tolerant parsers
+// (Google's included) accept the long line, which is why this survived; a
+// strict one is entitled to reject the whole calendar.
+//
+// Folded on byte boundaries that respect UTF-8, because the em dash the
+// summaries use is three octets and splitting it mid-sequence would put a
+// replacement character in the user's calendar. Unfolding happens before
+// escape processing, so a fold landing inside a "\," escape is legal.
+function icsFold(line: string): string {
+  const bytes = new TextEncoder().encode(line);
+  if (bytes.length <= 75) return line;
+  const parts: string[] = [];
+  let start = 0;
+  // 75 for the first line; 74 thereafter, since the continuation's leading
+  // space counts toward the limit.
+  let limit = 75;
+  while (start < bytes.length) {
+    let end = Math.min(start + limit, bytes.length);
+    while (end > start && end < bytes.length && (bytes[end] & 0xc0) === 0x80) {
+      end--;
+    }
+    parts.push(new TextDecoder().decode(bytes.slice(start, end)));
+    start = end;
+    limit = 74;
+  }
+  return parts.join("\r\n ");
+}
+
 function icsDate(d: string): string {
   return d.replace(/[-:]/g, "").slice(0, 8);
 }
@@ -47,15 +79,41 @@ function icsSequence(updatedAt: string | null | undefined): number {
   return Number.isNaN(t) ? 0 : Math.floor(t / 60000);
 }
 
+// SEQUENCE is whole minutes since the epoch (see icsSequence), so it is also
+// the row's last-change time. 0 means the row had no updated_at, and there is
+// nothing better to say than the generation stamp.
+function icsStamp(sequence: number): string {
+  if (!sequence) return nowStamp();
+  return (
+    new Date(sequence * 60000).toISOString().replace(/[-:]/g, "").split(".")[0] +
+    "Z"
+  );
+}
+
+function nowStamp(): string {
+  return new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+}
+
 function buildIcs(events: IcsEvent[]): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//Zenith//Calendar Export//EN",
     "CALSCALE:GREGORIAN",
+    // NAME is the standard property (RFC 7986); X-WR-CALNAME is the
+    // pre-standard one most clients actually read. Both, because dropping
+    // the old one renames every existing subscription to the URL.
+    "NAME:Zenith",
     "X-WR-CALNAME:Zenith",
+    // How often to re-poll. REFRESH-INTERVAL is the standard property and
+    // X-PUBLISHED-TTL is the one Outlook honours; Google ignores both and
+    // polls on its own schedule (commonly 12-24h), which is why the app's
+    // own copy does not promise a refresh time. Costs two lines and helps
+    // the clients that do read them.
+    "REFRESH-INTERVAL;VALUE=DURATION:PT1H",
+    "X-PUBLISHED-TTL:PT1H",
   ];
-  const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const stamp = nowStamp();
   for (const e of events) {
     lines.push(
       "BEGIN:VEVENT",
@@ -79,13 +137,18 @@ function buildIcs(events: IcsEvent[]): string {
       // sit on its old day in the user's calendar forever. Derived from the
       // row's own last change rather than a counter: the feed is stateless.
       `SEQUENCE:${e.sequence}`,
-      `LAST-MODIFIED:${stamp}`,
+      // The row's own last change, not this response's timestamp. Stamped
+      // with generation time it said every event had just changed on every
+      // poll, which is the opposite of what SEQUENCE beside it reports and
+      // enough to make some clients re-notify a follow-up that has not
+      // moved in weeks.
+      `LAST-MODIFIED:${icsStamp(e.sequence)}`,
     );
     if (e.description) lines.push(`DESCRIPTION:${icsEscape(e.description)}`);
     lines.push("END:VEVENT");
   }
   lines.push("END:VCALENDAR");
-  return lines.join("\r\n") + "\r\n";
+  return lines.map(icsFold).join("\r\n") + "\r\n";
 }
 
 export function registerCalendarRoutes(app: Hono<AppEnv>) {

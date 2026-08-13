@@ -82,6 +82,53 @@ describe("calendar ICS feed", () => {
     );
   });
 
+  it("folds every content line to 75 octets", async () => {
+    // RFC 5545 3.1 is a MUST, and the limit is octets rather than
+    // characters — a summary with an em dash in it reaches 75 sooner than
+    // it looks. Tolerant parsers accept the long line, which is exactly why
+    // nothing noticed; a strict one may reject the whole calendar.
+    const long = await env.DB.prepare(
+      `INSERT INTO applications (user_id, title, status, next_action, next_action_at)
+       VALUES ('seed-admin', ?, 'applied', 'Follow up', date('now', '+2 day'))
+       RETURNING id`,
+    )
+      .bind(
+        "Senior Platform Engineer, Site Reliability — Northwind Cloud Systems International",
+      )
+      .first<{ id: number }>();
+    expect(long?.id).toBeTruthy();
+    const ics = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    const over = ics
+      .split("\r\n")
+      .filter((l) => new TextEncoder().encode(l).length > 75);
+    expect(over, "unfolded content lines").toEqual([]);
+
+    // Folding has to be reversible, or the fix corrupts the summary it was
+    // protecting. Unfold the way a client does — CRLF followed by one space
+    // — and the original text is back, em dash intact.
+    const unfolded = ics.replace(/\r\n[ \t]/g, "");
+    expect(unfolded).toContain(
+      "Senior Platform Engineer\\, Site Reliability — Northwind Cloud Systems International",
+    );
+    expect(unfolded).not.toContain("\ufffd");
+  });
+
+  it("tells clients how often to come back", async () => {
+    const ics = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    // The standard property and the one Outlook actually reads.
+    expect(ics).toContain("REFRESH-INTERVAL;VALUE=DURATION:PT1H");
+    expect(ics).toContain("X-PUBLISHED-TTL:PT1H");
+  });
+
+  it("carries no alarms", async () => {
+    // RFC 9074: a client that accepts iCalendar from a third party SHOULD
+    // strip VALARM before storing it, and a published feed has no business
+    // setting alarms on someone else's calendar in the first place — the
+    // app has its own reminders for that.
+    const ics = await (await SELF.fetch(`${BASE}/calendar/${TOKEN}`)).text();
+    expect(ics).not.toContain("BEGIN:VALARM");
+  });
+
   it("404s an unknown token", async () => {
     const res = await SELF.fetch(`${BASE}/calendar/not-a-real-token`);
     expect(res.status).toBe(404);
