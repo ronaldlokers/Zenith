@@ -806,7 +806,25 @@ export function FeedTab({
 
       {visibleItems.length > 0 && (
         <div className="feed-triage">
-          <ul className="cards feed-list" ref={cardsRef}>
+          {/* Named, and explicitly a list. `list-style: none` drops list
+              semantics in Safari with VoiceOver, so the count of postings —
+              the one thing a screen-reader user wants before committing to
+              a triage session — silently disappears. aria-controls ties it
+              to the pane it drives: nothing else told anyone the pane
+              existed, let alone that stepping the list updates it.
+
+              Deliberately not role="listbox". That role is for static
+              options, and every row here holds Add and Dismiss buttons;
+              claiming the pattern would promise semantics the content
+              cannot honour, which is the same mistake the calendar's empty
+              role="grid" made. */}
+          <ul
+            className="cards feed-list"
+            ref={cardsRef}
+            role="list"
+            aria-label={t("feed.listLabel")}
+            aria-controls={focusedItem ? "feed-detail-pane" : undefined}
+          >
             {visibleItems.map((item, i) => (
               <FeedCard
                 key={item.id}
@@ -851,7 +869,11 @@ export function FeedTab({
                 card being focused already says which posting this is, and
                 the pane is what a user reads after arriving. */}
           {focusedItem && (
-            <aside className="feed-detail">
+            <aside
+              className="feed-detail"
+              id="feed-detail-pane"
+              aria-label={t("feed.detailLabel")}
+            >
               <span className="feed-detail-src">
                 {t("feed.viaSource", { source: focusedItem.source })}
                 {focusedItem.posted_at

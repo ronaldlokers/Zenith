@@ -247,7 +247,9 @@
     "hideWeak_other": "Hide {{count}} weaker matches",
     "allWeak_one": "{{count}} posting came in, but none of them mentions a skill from your CV yet.",
     "allWeak_other": "{{count}} postings came in, but none of them mentions a skill from your CV yet.",
-    "addSkills": "Add your skills"
+    "addSkills": "Add your skills",
+    "listLabel": "Postings to triage",
+    "detailLabel": "Selected posting"
   },
   "stats": {
     "momentum": {

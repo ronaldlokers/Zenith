@@ -247,7 +247,9 @@
     "hideWeak_other": "Verberg {{count}} zwakkere matches",
     "allWeak_one": "Er is {{count}} vacature binnengekomen, maar geen enkele noemt een vaardigheid van je cv.",
     "allWeak_other": "Er zijn {{count}} vacatures binnengekomen, maar geen enkele noemt een vaardigheid van je cv.",
-    "addSkills": "Voeg je vaardigheden toe"
+    "addSkills": "Voeg je vaardigheden toe",
+    "listLabel": "Vacatures om te beoordelen",
+    "detailLabel": "Geselecteerde vacature"
   },
   "stats": {
     "momentum": {
