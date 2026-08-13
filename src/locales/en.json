@@ -256,7 +256,8 @@
       "up": "Speeding up",
       "down": "Slowing down",
       "flat": "Steady",
-      "none": "No recent activity"
+      "none": "No recent activity",
+      "early": "Too early to tell"
     },
     "downloadOfferComparison": "Download offer comparison (PDF)",
     "offerComparisonHeading": "Offer comparison",
@@ -971,7 +972,8 @@
     "nothingYet": "Nothing to measure yet — Insights fills in as you apply.",
     "nothingYetCta": "Add your first application",
     "totalComp": "total",
-    "baseRange": "base {{range}}"
+    "baseRange": "base {{range}}",
+    "pace": "{{sent}} of {{goal}} applications sent this week"
   },
   "export": {
     "applications": "Applications",

@@ -256,7 +256,8 @@
       "up": "Versnelt",
       "down": "Vertraagt",
       "flat": "Stabiel",
-      "none": "Geen recente activiteit"
+      "none": "Geen recente activiteit",
+      "early": "Nog te vroeg"
     },
     "downloadOfferComparison": "Download aanbiedingsvergelijking (PDF)",
     "offerComparisonHeading": "Aanbiedingsvergelijking",
@@ -971,7 +972,8 @@
     "nothingYet": "Nog niets te meten — Inzichten vullen zich terwijl je solliciteert.",
     "nothingYetCta": "Voeg je eerste sollicitatie toe",
     "totalComp": "totaal",
-    "baseRange": "basis {{range}}"
+    "baseRange": "basis {{range}}",
+    "pace": "{{sent}} van {{goal}} sollicitaties deze week verstuurd"
   },
   "export": {
     "applications": "Sollicitaties",

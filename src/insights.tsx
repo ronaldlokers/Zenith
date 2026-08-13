@@ -5,8 +5,9 @@
 // numbers" drawer is gone (#486) — it duplicated the cards above it and its
 // only unique piece, data export, now lives in Settings → Data (#485).
 import { useEffect, useState } from "react";
+import { api } from "./api";
 import { useTranslation } from "react-i18next";
-import type { AgendaEntry, Application, Stats } from "./types";
+import type { AgendaEntry, Application, Stats, UserGoal } from "./types";
 import {
   FUNNEL_STAGES,
   funnelConversions,
@@ -17,6 +18,7 @@ import {
 import {
   computePipelineMomentum,
   computeWeeklyMomentum,
+  searchWeekNumber,
   downloadOfferComparisonPdf,
   isDead,
   medianTimeToOffer,
@@ -52,6 +54,19 @@ export function InsightsTab({
 }) {
   const { t } = useTranslation();
   const [showActivity, setShowActivity] = useState(false);
+  const [goal, setGoal] = useState<UserGoal | null>(null);
+  useEffect(() => {
+    let live = true;
+    void api
+      .goals()
+      .then((g) => live && setGoal(g))
+      // A missing goal is not an error state for this page: it just means
+      // there is no target to measure against, and the line is omitted.
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
   // The calendar only draws its month grid from 900px up; below that it falls
   // back to a full agenda list, which on a phone buried the numbers under a
   // scroll of every dated event. So on narrow screens it hides behind a
@@ -75,6 +90,20 @@ export function InsightsTab({
   const conv = funnelConversions(history);
   const resp = responseRate(history);
   const mom = computeWeeklyMomentum(stats.applications, history);
+  // Pace against the user's own target. This page judges how the search is
+  // going and refused the one benchmark they set themselves — the weekly
+  // goal and the start date are both in Settings, and "Week N of your
+  // search" was already translated. Without them a figure has no scale: 5
+  // applications is good or bad depending entirely on what you meant to do.
+  const sentThisWeek = mom.weeks[mom.weeks.length - 1]?.count ?? 0;
+  const searchWeek = searchWeekNumber(
+    goal?.search_started_at ??
+      stats.applications.reduce<string | null>((min, a) => {
+        const d = a.applied_at ?? a.created_at;
+        return d && (!min || d < min) ? d : min;
+      }, null),
+    Date.now(),
+  );
   const weekMax = Math.max(1, ...mom.weeks.map((w) => w.count));
   const pipe = computePipelineMomentum(history);
   const t2o = medianTimeToOffer(history);
@@ -132,6 +161,22 @@ export function InsightsTab({
           — so skimming Insights by heading went straight past everything
           analytic and landed on the calendar. Visually hidden because the
           figures already label themselves on screen. */}
+      {/* Scale, before the figures. A goal of 0 means the user turned the
+          target off, so nothing is stated about pace — the weekly quota was
+          deliberately removed from Today for the same reason, and this must
+          not smuggle it back in for people who declined it. */}
+      {(searchWeek != null || (goal?.weekly_app_goal ?? 0) > 0) && (
+        <p className="insights-pace muted small">
+          {searchWeek != null ? t("goals.searchWeek", { count: searchWeek }) : ""}
+          {searchWeek != null && (goal?.weekly_app_goal ?? 0) > 0 ? " · " : ""}
+          {(goal?.weekly_app_goal ?? 0) > 0
+            ? t("insights.pace", {
+                sent: sentThisWeek,
+                goal: goal!.weekly_app_goal,
+              })
+            : ""}
+        </p>
+      )}
       <h2 className="sr-only">{t("insights.headlineNumbers")}</h2>
       <div className="dash-kpiband">
         <StatCard
