@@ -113,6 +113,14 @@ const railFor = (stage: string) =>
   screen.queryByRole("button", { name: new RegExp(`^Open ${stage},`) });
 const headerFor = (stage: string) =>
   screen.queryByRole("button", { name: `Fold ${stage}` });
+// The column's own heading, which is what says "this rail is rendered as a
+// column" independently of whether it can be folded. Below 900px the fold
+// button is deliberately absent — nothing folds there and an invisible
+// focusable control is worse than none — so headerFor cannot stand in for
+// "the column exists" at that width. The heading is sr-only there, and
+// getByRole finds it: sr-only is clipped, not hidden.
+const headingFor = (stage: string) =>
+  screen.queryByRole("heading", { name: new RegExp(`^${stage}\\b`, "i") });
 // The four closed outcomes collapse into one rail while they are all folded,
 // which is the default. It is the only rail that stands for more than one
 // stage, so it has its own accessible name.
@@ -221,17 +229,20 @@ describe("board rails", () => {
     try {
       profileFolded = "rejected,withdrawn,ghosted,archived";
       renderBoard([]);
-      // Every rail is an open column here — the header is still in the DOM
-      // (CSS hides it at this width), but no rail is folded away. The strip
-      // is a group of buttons rather than a tablist: every column is
-      // rendered, so nothing here selects a panel.
+      // Every rail is an open column here — the heading is still in the DOM
+      // (sr-only at this width, since the strip carries the name visibly),
+      // but no rail is folded away. The strip is a group of buttons rather
+      // than a tablist: every column is rendered, so nothing here selects a
+      // panel.
       const strip = await screen.findByRole("group", { name: "Stages" });
       expect(strip.querySelectorAll("button")).toHaveLength(9);
       expect(
         strip.querySelectorAll("[aria-current=true]"),
       ).toHaveLength(1);
       expect(railFor("Rejected")).toBeNull();
-      expect(headerFor("Rejected")).toBeTruthy();
+      expect(headingFor("Rejected")).toBeTruthy();
+      // and no fold control, because there is nothing to fold here.
+      expect(headerFor("Rejected")).toBeNull();
     } finally {
       window.matchMedia = real;
     }
