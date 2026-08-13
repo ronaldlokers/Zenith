@@ -256,7 +256,8 @@
     "exportData": "Exporteer je gegevens",
     "exportAllJson": "Alles (JSON)",
     "momentumDetail_one": "{{recent}} fasewissel in de afgelopen 2 weken tegenover {{prior}} in de 2 weken daarvoor",
-    "momentumDetail_other": "{{recent}} fasewissels in de afgelopen 2 weken tegenover {{prior}} in de 2 weken daarvoor"
+    "momentumDetail_other": "{{recent}} fasewissels in de afgelopen 2 weken tegenover {{prior}} in de 2 weken daarvoor",
+    "exportCsv": "{{resource}} (CSV)"
   },
   "palette": {
     "title": "Ga naar…",
@@ -946,5 +947,11 @@
     "headlineNumbers": "Kerncijfers",
     "nothingYet": "Nog niets te meten — Inzichten vullen zich terwijl je solliciteert.",
     "nothingYetCta": "Voeg je eerste sollicitatie toe"
+  },
+  "export": {
+    "applications": "Sollicitaties",
+    "companies": "Bedrijven",
+    "contacts": "Contactpersonen",
+    "interactions": "Interacties"
   }
 }

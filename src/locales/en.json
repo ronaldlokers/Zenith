@@ -256,7 +256,8 @@
     "exportData": "Export your data",
     "exportAllJson": "Everything (JSON)",
     "momentumDetail_one": "{{recent}} stage advance in the last 2 weeks vs {{prior}} in the 2 weeks before that",
-    "momentumDetail_other": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that"
+    "momentumDetail_other": "{{recent}} stage advances in the last 2 weeks vs {{prior}} in the 2 weeks before that",
+    "exportCsv": "{{resource}} (CSV)"
   },
   "palette": {
     "title": "Jump to…",
@@ -946,5 +947,11 @@
     "headlineNumbers": "Headline numbers",
     "nothingYet": "Nothing to measure yet — Insights fills in as you apply.",
     "nothingYetCta": "Add your first application"
+  },
+  "export": {
+    "applications": "Applications",
+    "companies": "Companies",
+    "contacts": "Contacts",
+    "interactions": "Interactions"
   }
 }

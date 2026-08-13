@@ -14,7 +14,7 @@ import {
   keyShortcutsEnabled,
 } from "../format";
 import type { RoleTypeDef } from "../types";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ActionBar, Button, SettingsNav } from "../components";
 import { FeedSettings } from "../feed";
 import { TimezoneField } from "./timezone-field";
@@ -65,19 +65,24 @@ export function SettingsPage({
   const { t, i18n } = useTranslation();
   const { data: session } = useSession();
   const location = useLocation();
-  // Deep-linkable sections (#314): /settings?s=feed lands on Feed sources.
+  // Deep-linkable sections (#314): /settings?s=feed lands on Feed sources —
+  // and now leaves that way too. The link was inbound only: switching
+  // section changed the pane and not the URL, so nobody could link one,
+  // bookmark one or survive a refresh, Back left the app entirely, and a
+  // reload after enabling two-factor dropped you on General. Settings is
+  // exactly where a refresh happens.
+  //
+  // Derived from the URL rather than mirrored into state, so there is one
+  // source of truth and the two cannot disagree.
+  const navigate = useNavigate();
   const requested = new URLSearchParams(location.search).get("s");
-  const [section, setSection] = useState<SettingsSection>(
-    SETTINGS_SECTIONS.includes(requested as SettingsSection)
-      ? (requested as SettingsSection)
-      : "general",
-  );
-  useEffect(() => {
-    const q = new URLSearchParams(location.search).get("s");
-    if (q && SETTINGS_SECTIONS.includes(q as SettingsSection)) {
-      setSection(q as SettingsSection);
-    }
-  }, [location.search]);
+  const section: SettingsSection = SETTINGS_SECTIONS.includes(
+    requested as SettingsSection,
+  )
+    ? (requested as SettingsSection)
+    : "general";
+  const setSection = (next: SettingsSection) =>
+    navigate(`/settings?s=${next}`);
   const [cvLang, setCvLang] = useState(() =>
     getCvLanguage(i18n.resolvedLanguage ?? "en"),
   );
