@@ -1,6 +1,6 @@
 // CV editor sections: profile, work experience, education, languages
 // (with their inline forms). Split out of cv.tsx (#452).
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
@@ -32,6 +32,26 @@ export function ProfileSection({
   const { t } = useTranslation();
   const [form, setForm] = useState(profile);
   const set = (patch: Partial<Profile>) => setForm((f) => ({ ...f, ...patch }));
+
+  // Re-seed when the saved profile changes underneath the form. useState's
+  // initial value is read once, so after the tailor panel applied an AI
+  // summary and refreshed the data, this form still held the pre-AI text —
+  // and the user's next Save wrote it back, silently reverting the edit they
+  // had just accepted, on the one field that feature exists to improve.
+  //
+  // Guarded on identity: `profile` is a fresh object on every refetch, so an
+  // unconditional effect would also wipe whatever the user was typing every
+  // time anything else on the page reloaded. Only a real change to the saved
+  // values re-seeds.
+  // Compared by value, not field by field: a hand-written list of fields
+  // silently stops covering the one that gets added next.
+  const savedRef = useRef(JSON.stringify(profile));
+  useEffect(() => {
+    const next = JSON.stringify(profile);
+    if (savedRef.current === next) return;
+    savedRef.current = next;
+    setForm(profile);
+  }, [profile]);
 
   const [submitting, submit] = useSubmitGuard(async () => {
     await api
