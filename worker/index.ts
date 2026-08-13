@@ -1592,10 +1592,16 @@ function sharePageGone(c: Context<AppEnv>) {
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   main { max-width: 26rem; text-align: center }
-  h1 { font-size: 1.25rem; margin: 0 0 0.5rem; font-weight: 600 }
+  /* Real ramp steps, inlined as literals and named — the same discipline
+     the shared-pipeline page above uses, so a drift is obvious on sight:
+       1.375rem --text-heading    0.64rem --text-chrome
+     The first draft of this page used 1.25rem, which is on the ramp but as
+     --text-figure-md, a step for numbers rather than headings, and 0.72rem,
+     which is not on it at all. */
+  h1 { font-size: 1.375rem; margin: 0 0 0.5rem; font-weight: 600 }
   p { margin: 0; color: #b9b8cc; line-height: 1.5 }
   .mark {
-    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase;
     color: #8b8fa8; margin-bottom: 1.25rem;
   }
 </style>
