@@ -5605,13 +5605,55 @@ button:not(:disabled):active,
    covers Ctrl/Cmd+P from any other view: the main tab content, or a
    detail modal if one happens to be open. */
 @media print {
+  /* .bottombar joined this list late and painfully. It is position: fixed,
+     which in print means it repeats on every sheet — measured by rendering
+     the CV to PDF, where "NOTIFICATIONS" appeared three times, once per
+     page, across the foot of the one document a user sends to an employer.
+     The top bar was hidden here from the start; the bottom bar arrived with
+     the Fizzy-philosophy shell after this block was written and nothing
+     brought the two together. Anything else that becomes position: fixed
+     belongs here the day it does. */
   .top,
+  .bottombar,
   .header,
   .toast,
+  /* The stack, not just the toast inside it: the container is the fixed one,
+     so hiding only its children left an empty fixed box on every sheet. */
+  .toast-stack,
+  /* Open when someone hits print, this repeats down the whole job. */
+  .board-filters-pop,
   .error-dismiss,
   button,
   input[type="search"] {
     display: none !important;
+  }
+
+  /* The bar's reserve is for a bar that is no longer there. */
+  .content {
+    padding-bottom: 0 !important;
+  }
+
+  /* Typographic minimums, which cost nothing and only apply on paper: never
+     strand a single line of a paragraph on its own sheet, and never split a
+     card, a row or a section heading across the fold. A printed application
+     that breaks mid-card is harder to read than one that starts the card on
+     the next page. */
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .card,
+  .bcard,
+  .zui-dashcard,
+  .zui-statcard,
+  .detail-section,
+  .cv-doc-entry {
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    break-after: avoid;
   }
 
   body {
