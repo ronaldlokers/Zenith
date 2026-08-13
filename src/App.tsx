@@ -432,20 +432,33 @@ export default function App() {
           onOpenBoard={() => setTab("board")}
         />
 
-      {error && (
-        <p className="error">
-          <ErrorIcon />
-          <span className="error-text">{error}</span>
-          <button
-            type="button"
-            className="error-dismiss"
-            onClick={() => setError(null)}
-            aria-label={t("common.close")}
-          >
-            <RemoveIcon />
-          </button>
-        </p>
-      )}
+      {/* The region is always mounted; only the banner inside it comes and
+          goes. A role="alert" element that appears with its text already in
+          place is announced inconsistently across screen readers — the
+          reliable contract is a live region that is present first and
+          changes afterwards. Before this the failure was visible and
+          silent: the banner rendered, and nothing told anyone not looking
+          at that corner of the page that their change had not been saved.
+
+          The wrapper carries no styling, so the banner keeps its own box
+          and the layout is unchanged — .error is styled by class, not by
+          position. */}
+      <div role="alert" aria-live="assertive">
+        {error && (
+          <p className="error">
+            <ErrorIcon />
+            <span className="error-text">{error}</span>
+            <button
+              type="button"
+              className="error-dismiss"
+              onClick={() => setError(null)}
+              aria-label={t("common.close")}
+            >
+              <RemoveIcon />
+            </button>
+          </p>
+        )}
+      </div>
 
       <main className="content">
         {loading ? (

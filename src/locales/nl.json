@@ -995,5 +995,9 @@
     "companies": "Bedrijven",
     "contacts": "Contactpersonen",
     "interactions": "Interacties"
+  },
+  "errors": {
+    "offline": "Je bent offline — die wijziging is niet opgeslagen. Het werkt weer zodra je verbinding hebt.",
+    "unreachable": "Zenith is niet bereikbaar, dus die wijziging is niet opgeslagen. Controleer je verbinding en probeer het opnieuw."
   }
 }

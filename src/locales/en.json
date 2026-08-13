@@ -995,5 +995,9 @@
     "companies": "Companies",
     "contacts": "Contacts",
     "interactions": "Interactions"
+  },
+  "errors": {
+    "offline": "You're offline — that change wasn't saved. It will work once you're back.",
+    "unreachable": "Couldn't reach Zenith, so that change wasn't saved. Check your connection and try again."
   }
 }
