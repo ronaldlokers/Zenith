@@ -3981,6 +3981,45 @@ summary.bcol-head::after {
    line itself — four rows total 600px against 588px before, about 3px a row
    — and the rows that were worst off are the ones that got shorter. */
 @media (max-width: 600px) {
+  /* One line for the meta, not three. The fit stars are 93-97px wide and sat
+     inline after the company name, wrapping that line to two or three lines
+     on every row that has a score — measured 159px against 114px for the one
+     row without. Six tasks became two on an 844px phone, on the screen whose
+     entire job is the next thing to do.
+
+     The stars keep their place and the company name gives way instead: it is
+     the third fact on a row that already names the action and the stage, and
+     it is the one a reader can afford to see truncated. */
+  /* The batch control is one line's worth of chrome above a list that needs
+     the room. The exemption still has to be said — it is the difference
+     between "pushes everything" and "keeps your offer" — but it can sit
+     under the button rather than beside it, which is what was costing a
+     wrapped 65px block. */
+  .today-pushall {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .today-rows .side-co {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .today-rows .side-co > .side-co-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .today-rows .side-co > .fit-stars {
+    flex: 0 0 auto;
+  }
+
   .today-rows li {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--space-2);

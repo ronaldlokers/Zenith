@@ -34,7 +34,14 @@
      star — worse than a small target. They get real room instead, in the axis
      that has it. */
   @media (pointer: coarse) {
-    .zui-star {
+    /* Interactive ratings only. A read-only rating is a picture of a score —
+       role="img" with the value in its label, nothing to tap — so a 44px
+       touch target is 26px of height bought for a gesture that does not
+       exist. In the Today list that cost every scored row two extra lines
+       and took the screen from six visible tasks to two on an 844px phone.
+       :not(), rather than only styling the interactive class, so a future
+       variant that forgets the modifier still gets the target. */
+    .zui-starrating:not(.zui-starrating--readonly) .zui-star {
       /* Vertical only: five stars sit in a row, so width cannot grow without
          a tap landing on the next star. */
       min-height: 44px;

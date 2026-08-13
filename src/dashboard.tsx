@@ -700,8 +700,14 @@ function NextUpPanel({
                   {a.next_action ?? a.title}
                 </span>
                 <span className="side-co">
-                  {a.next_action ? `${a.title} · ` : ""}
-                  {a.company_name ?? "—"}
+                  {/* The words in their own element, so they can truncate.
+                      A bare text node cannot: with the stars beside it the
+                      line wrapped instead, which is what made every scored
+                      row two lines taller than an unscored one. */}
+                  <span className="side-co-name">
+                    {a.next_action ? `${a.title} · ` : ""}
+                    {a.company_name ?? "—"}
+                  </span>
                   {a.fit_score ? (
                     <span className="fit-stars">
                       {" "}
