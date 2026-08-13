@@ -32,7 +32,7 @@ privacy-respecting web app: no analytics, no tracking, invite-only.
 **Sharing & integrations**
 - **Public stats page** (`/shared/:token`) — aggregate pipeline stats only, never per-application detail or compensation.
 - **Calendar feed** (`/calendar/:token`) — subscribe to follow-ups and interviews as ICS.
-- **Read-only REST API** (`/api/v1`, Bearer key) and **outbound webhooks** (HMAC-signed `X-Zenith-Signature`) on status changes.
+- **Read-only REST API** (`/api/v1`, Bearer key; RFC 9457 problem details on errors, `Link` + `X-Total-Count` on collections) and **outbound webhooks** (HMAC-signed `X-Zenith-Signature`) on status changes.
 - **Web push** notifications for due follow-ups, stale postings, and new feed matches.
 
 **Accounts**

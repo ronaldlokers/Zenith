@@ -3,6 +3,7 @@ import { guardedFetch, isForbiddenUrl } from "./url-guard.js";
 // Consecutive delivery failures before a webhook is switched off (#346).
 const WEBHOOK_DISABLE_AFTER = 10;
 import { Hono } from "hono";
+import type { Context } from "hono";
 import type { AppEnv } from "./index.js";
 
 // Public read-only API + webhooks (#228). Separate /api/v1/* namespace
@@ -212,6 +213,53 @@ export async function triggerWebhooks(
 const applicationColumns =
   "id, company_id, title, role_type, url, source, status, notes, applied_at, next_action, next_action_at, deadline_at, fit_score, created_at, updated_at";
 
+
+// RFC 9457 problem details, for the v1 surface only. The `{error: "..."}`
+// shape stays on /api/webhooks and the rest of /api/*: those are the app's
+// own endpoints, session-authed, and src/api.ts reads `body.error` from
+// them. Changing both at once would have broken the product to tidy its
+// public API.
+//
+// Five fields, and `type` is the one that earns its keep: a URI a client can
+// branch on, stable across wording changes, where matching on a human
+// sentence is not. They are relative URIs deliberately — the spec allows it,
+// and an absolute one would bake this deployment's hostname into every error
+// body a self-hosted instance emits.
+type ProblemKind =
+  | "missing-token"
+  | "invalid-token"
+  | "not-found"
+  | "invalid-request";
+
+const PROBLEM_TITLES: Record<ProblemKind, string> = {
+  "missing-token": "Missing bearer token",
+  "invalid-token": "Invalid API key",
+  "not-found": "Not found",
+  "invalid-request": "Invalid request",
+};
+
+function problem(
+  c: Context<{ Bindings: Env; Variables: { apiUserId: string } }>,
+  kind: ProblemKind,
+  status: 400 | 401 | 404,
+  detail: string,
+  headers: Record<string, string> = {},
+) {
+  return c.json(
+    {
+      type: `/problems/${kind}`,
+      title: PROBLEM_TITLES[kind],
+      status,
+      detail,
+      instance: new URL(c.req.url).pathname,
+    },
+    status,
+    // The media type is half the point: it is what tells a generic client
+    // this body is a problem document rather than the resource it asked for.
+    { "Content-Type": "application/problem+json", ...headers },
+  );
+}
+
 export function registerPublicApiRoutes(app: Hono<AppEnv>) {
   const api = new Hono<{ Bindings: Env; Variables: { apiUserId: string } }>();
 
@@ -231,7 +279,7 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
     const auth = c.req.header("Authorization");
     const key = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
     if (!key)
-      return c.json({ error: "missing bearer token" }, 401, {
+      return problem(c, "missing-token", 401, "This endpoint requires a Bearer API key.", {
         "WWW-Authenticate": CHALLENGE,
       });
     const profile = await c.env.DB.prepare(
@@ -240,28 +288,70 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
       .bind(await sha256Hex(key))
       .first<{ user_id: string }>();
     if (!profile)
-      return c.json({ error: "invalid API key" }, 401, {
+      return problem(c, "invalid-token", 401, "The API key is not valid.", {
         "WWW-Authenticate": `${CHALLENGE}, error="invalid_token", error_description="The API key is not valid"`,
       });
     c.set("apiUserId", profile.user_id);
     await next();
   });
 
+  // 20 by default and 100 at most, replacing 50/200. The old bounds were
+  // borrowed from the in-app feed, where the client is this app and knows
+  // what it asked for; an integration is a stranger, and the widely-followed
+  // figures are the ones a stranger will expect.
+  //
+  // Still limit/offset rather than a cursor. A cursor is the right answer
+  // when rows are inserted between pages and offsets slide — at roughly
+  // fifty applications per account, ordered by updated_at, that is a real
+  // but small effect, and a cursor would be a larger change than the problem
+  // justifies. What was actually missing is stated below.
+  const DEFAULT_LIMIT = 20;
+  const MAX_LIMIT = 100;
+
   api.get("/applications", async (c) => {
-    // Bounded like the in-app feed (#285) — a heavy account shouldn't hand
-    // an integration its whole table in one response. `limit`/`offset`.
     const url = new URL(c.req.url);
     const limit = Math.min(
-      200,
-      Math.max(1, Number(url.searchParams.get("limit")) || 50),
+      MAX_LIMIT,
+      Math.max(1, Number(url.searchParams.get("limit")) || DEFAULT_LIMIT),
     );
     const offset = Math.max(0, Number(url.searchParams.get("offset")) || 0);
+    const userId = c.get("apiUserId");
+    const total = await c.env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM applications WHERE user_id = ?",
+    )
+      .bind(userId)
+      .first<{ n: number }>();
     const { results } = await c.env.DB.prepare(
       `SELECT ${applicationColumns} FROM applications WHERE user_id = ? ORDER BY updated_at DESC LIMIT ? OFFSET ?`,
     )
-      .bind(c.get("apiUserId"), limit, offset)
+      .bind(userId, limit, offset)
       .all();
-    return c.json(results);
+
+    // The gap this closes: a client had no way to know whether it had seen
+    // everything except by requesting until a page came back short — which
+    // costs one extra round trip every time, and is ambiguous on a boundary
+    // where the last page is exactly `limit` long.
+    //
+    // Headers rather than an envelope. Wrapping the array in {data, meta}
+    // would break every existing consumer, and this release already changes
+    // the error bodies; one breaking change at a time. RFC 8288 Link is the
+    // standard shape for this and clients that ignore it are unaffected.
+    const count = total?.n ?? 0;
+    const links: string[] = [];
+    const page = (o: number) => {
+      const next = new URL(c.req.url);
+      next.searchParams.set("limit", String(limit));
+      next.searchParams.set("offset", String(o));
+      return `<${next.pathname}${next.search}>`;
+    };
+    if (offset + limit < count) links.push(`${page(offset + limit)}; rel="next"`);
+    if (offset > 0) links.push(`${page(Math.max(0, offset - limit))}; rel="prev"`);
+    links.push(`${page(0)}; rel="first"`);
+
+    return c.json(results, 200, {
+      "X-Total-Count": String(count),
+      Link: links.join(", "),
+    });
   });
 
   api.get("/applications/:id", async (c) => {
@@ -270,7 +360,8 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
     )
       .bind(c.req.param("id"), c.get("apiUserId"))
       .first();
-    if (!result) return c.json({ error: "not found" }, 404);
+    if (!result)
+      return problem(c, "not-found", 404, "No application with that id.");
     return c.json(result);
   });
 
@@ -286,7 +377,8 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
       source?: string;
     }>();
     const title = (body.title ?? "").trim();
-    if (!title) return c.json({ error: "title is required" }, 400);
+    if (!title)
+      return problem(c, "invalid-request", 400, "A non-empty title is required.");
     const userId = c.get("apiUserId");
 
     let companyId: number | null = null;
