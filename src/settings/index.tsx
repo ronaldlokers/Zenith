@@ -238,8 +238,17 @@ export function SettingsPage({
               value={i18n.resolvedLanguage}
               onChange={(e) => {
                 const lang = e.target.value;
+                const previous = i18n.resolvedLanguage ?? "en";
                 i18n.changeLanguage(lang);
-                void api.setLocale(lang).catch(() => {});
+                setApiError(null);
+                // A rejected save has to put the surface back. Swallowed, the
+                // app sat in a language the server had never been told about,
+                // and the next device to sign in disagreed with this one for
+                // no visible reason.
+                void api.setLocale(lang).catch((err) => {
+                  i18n.changeLanguage(previous);
+                  setApiError((err as Error).message);
+                });
               }}
             >
               {LANGUAGES.map(([code, labelKey]) => (
@@ -256,8 +265,13 @@ export function SettingsPage({
             onChange={(next) => {
               // Update the surface first, then mirror it up — same shape as
               // the Language field. The select must not wait on the request.
+              const previous = timezone;
               setTimezone(next);
-              void api.setTimezone(next).catch(() => {});
+              setApiError(null);
+              void api.setTimezone(next).catch((err) => {
+                setTimezone(previous);
+                setApiError((err as Error).message);
+              });
             }}
           />
         </SettingsRow>

@@ -27,6 +27,11 @@ export function NotificationSettings() {
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Separate from `error`, which renders inside the push block — and that
+  // block only exists on a browser that supports push. Reporting an email
+  // failure through it would have shown nothing at all on the browsers most
+  // likely to have one.
+  const [emailError, setEmailError] = useState<string | null>(null);
   // Email has nothing to do with push support — fetched and rendered
   // unconditionally below so it never vanishes on a browser without push.
   const [emailReminders, setEmailReminders] = useState(false);
@@ -70,13 +75,26 @@ export function NotificationSettings() {
   // Language and Time zone fields. Sends only the key that changed: the
   // endpoint takes a partial so a concurrent change to the other key isn't
   // clobbered.
+  // A rejected save has to put the switch back and say so. Swallowing it
+  // left the checkbox showing a preference the server never received —
+  // toggle the weekly digest with the network down and the box stayed
+  // ticked, silently, which is the one outcome worse than the save failing.
+  // This component already renders `error`, so it costs nothing to use it.
   const toggleReminders = (checked: boolean) => {
     setEmailReminders(checked);
-    void api.setEmailPreferences({ emailReminders: checked }).catch(() => {});
+    setEmailError(null);
+    void api.setEmailPreferences({ emailReminders: checked }).catch((e) => {
+      setEmailReminders(!checked);
+      setEmailError((e as Error).message);
+    });
   };
   const toggleDigest = (checked: boolean) => {
     setEmailDigest(checked);
-    void api.setEmailPreferences({ emailDigest: checked }).catch(() => {});
+    setEmailError(null);
+    void api.setEmailPreferences({ emailDigest: checked }).catch((e) => {
+      setEmailDigest(!checked);
+      setEmailError((e as Error).message);
+    });
   };
 
   const subscribe = async () => {
@@ -144,6 +162,7 @@ export function NotificationSettings() {
       <div className="admin-invite">
         <h3>{t("account.emailSection")}</h3>
         <p className="muted small">{t("account.emailHint")}</p>
+        {emailError && <p className="login-error">{emailError}</p>}
         <label className="settings-field settings-check">
           <input
             type="checkbox"
