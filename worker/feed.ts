@@ -356,12 +356,13 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     binds.push(limit);
 
     const { results } = await c.env.DB.prepare(
-      `SELECT feed_items.*
+      `SELECT feed_items.*,
+              COALESCE(feed_item_status.status, 'new') AS status
        FROM feed_items
        LEFT JOIN feed_item_status
          ON feed_item_status.feed_item_id = feed_items.id
          AND feed_item_status.user_id = ?
-       WHERE COALESCE(feed_item_status.status, 'new') = 'new'
+       WHERE COALESCE(feed_item_status.status, 'new') IN ('new', 'saved')
          AND NOT EXISTS (
            SELECT 1 FROM feed_company_blocklist
            WHERE feed_company_blocklist.user_id = ?
@@ -526,6 +527,34 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
   // status = 'new', because "new" is what the absence of a row already means
   // (the feed list reads COALESCE(status, 'new')) — two ways to say the same
   // thing is how the two drift.
+  // Save / unsave. Deliberately not a pipeline state: a saved posting stays
+  // in the feed and never becomes an application, so the counts every other
+  // surface reads — the board, the funnel, the response rate — keep meaning
+  // "things I actually applied to". Triage had only two doors before, so a
+  // maybe had to go through the one marked "applied".
+  app.post("/api/feed/:id/save", async (c) => {
+    await c.env.DB.prepare(
+      `INSERT INTO feed_item_status (feed_item_id, user_id, status)
+       VALUES (?, ?, 'saved')
+       ON CONFLICT (feed_item_id, user_id) DO UPDATE SET status = 'saved'`,
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
+  });
+
+  app.post("/api/feed/:id/unsave", async (c) => {
+    // Deletes rather than writing 'new', for the same reason undismiss does:
+    // the absence of a row is already what "new" means to the list query.
+    await c.env.DB.prepare(
+      `DELETE FROM feed_item_status
+       WHERE feed_item_id = ? AND user_id = ? AND status = 'saved'`,
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .run();
+    return c.body(null, 204);
+  });
+
   app.post("/api/feed/:id/undismiss", async (c) => {
     await c.env.DB.prepare(
       `DELETE FROM feed_item_status

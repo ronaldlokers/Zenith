@@ -220,7 +220,7 @@
     "viewPosting": "Bekijk vacature ↗",
     "addToJobs": "Toevoegen aan pijplijn",
     "dismiss": "Negeren",
-    "triageHint": "j / k navigeren · a toevoegen · d negeren",
+    "triageHint": "j / k navigeren · a toevoegen · s bewaren · d negeren",
     "skillsMatch_one": "{{count}} passende vaardigheid",
     "skillsMatch_other": "{{count}} passende vaardigheden",
     "whyItFits_one": "Komt overeen met 1 van je vaardigheden",
@@ -249,7 +249,9 @@
     "allWeak_other": "Er zijn {{count}} vacatures binnengekomen, maar geen enkele noemt een vaardigheid van je cv.",
     "addSkills": "Voeg je vaardigheden toe",
     "listLabel": "Vacatures om te beoordelen",
-    "detailLabel": "Geselecteerde vacature"
+    "detailLabel": "Geselecteerde vacature",
+    "save": "Bewaar voor later",
+    "saved": "Bewaard"
   },
   "stats": {
     "momentum": {

@@ -527,6 +527,26 @@ export function FeedTab({
       .finally(() => setRefreshing(false));
   };
 
+  // Keep for later: the third door. It writes only to the feed's own status,
+  // so a maybe never becomes an application and no pipeline count moves.
+  const toggleSave = (item: FeedItem) => {
+    const saved = item.status === "saved";
+    setItems((prev) =>
+      (prev ?? []).map((i) =>
+        i.id === item.id ? { ...i, status: saved ? "new" : "saved" } : i,
+      ),
+    );
+    const call = saved ? api.unsaveFeedItem : api.saveFeedItem;
+    void call(item.id).catch((e) => {
+      setItems((prev) =>
+        (prev ?? []).map((i) =>
+          i.id === item.id ? { ...i, status: saved ? "saved" : "new" } : i,
+        ),
+      );
+      onError((e as Error).message);
+    });
+  };
+
   const dismissingIds = useRef<Set<number>>(new Set());
   const dismiss = (item: FeedItem) => {
     // Same in-flight guard addToPipeline has. Without it a fast double-d
@@ -637,6 +657,7 @@ export function FeedTab({
     focusedIndex,
     addToPipeline,
     dismiss,
+    toggleSave,
   });
   useEffect(() => {
     triageRef.current = {
@@ -644,6 +665,7 @@ export function FeedTab({
       focusedIndex,
       addToPipeline,
       dismiss,
+      toggleSave,
     };
   });
 
@@ -674,7 +696,8 @@ export function FeedTab({
         el.isContentEditable
       )
         return;
-      const { items, focusedIndex, addToPipeline, dismiss } = triageRef.current;
+      const { items, focusedIndex, addToPipeline, dismiss, toggleSave } =
+        triageRef.current;
       const list = items ?? [];
       // ArrowDown/ArrowUp alongside j/k. The cards carry a roving tabindex
       // (0 on the focused one, -1 on the rest), which is the ARIA convention
@@ -695,6 +718,12 @@ export function FeedTab({
         if (target) {
           e.preventDefault();
           addToPipeline(target);
+        }
+      } else if (e.key === "s") {
+        const target = list[focusedIndex];
+        if (target) {
+          e.preventDefault();
+          toggleSave(target);
         }
       } else if (e.key === "d") {
         const target = list[focusedIndex];
@@ -853,6 +882,7 @@ export function FeedTab({
                 adding={addingIds.has(item.id)}
                 onAdd={() => addToPipeline(item)}
                 onDismiss={() => dismiss(item)}
+                onToggleSave={() => toggleSave(item)}
                 onSelect={() => {
                   kbNav.current = false;
                   setFocusedIndex(i);
@@ -932,6 +962,21 @@ export function FeedTab({
                   disabled={addingIds.has(focusedItem.id)}
                 >
                   {t("feed.addToJobs")}
+                </Button>
+                {/* The pane carries the same three doors as the card. Above
+                    900px the row's own actions are hidden and this cluster
+                    is the only one a pointer user can reach, so a control
+                    that exists solely on the card would not exist at all on
+                    a desktop. */}
+                <Button
+                  variant={
+                    focusedItem.status === "saved" ? "primary" : "secondary"
+                  }
+                  onClick={() => toggleSave(focusedItem)}
+                >
+                  {focusedItem.status === "saved"
+                    ? t("feed.saved")
+                    : t("feed.save")}
                 </Button>
                 <Button
                   variant="secondary"
@@ -1015,6 +1060,7 @@ function FeedCard({
   adding,
   onAdd,
   onDismiss,
+  onToggleSave,
   onSelect,
   matched,
   band,
@@ -1026,6 +1072,7 @@ function FeedCard({
   adding: boolean;
   onAdd: () => void;
   onDismiss: () => void;
+  onToggleSave: () => void;
   onSelect: () => void;
   matched: number | null;
   // Set only on the first card of a band, which draws the heading above
@@ -1142,6 +1189,19 @@ function FeedCard({
         )}
       </div>
       <div className="feed-row-actions">
+        {/* Keep for later. The third door triage never had: without it a
+            posting you were unsure about could only go into the pipeline,
+            which is the number the board, the funnel and the response rate
+            all read — so a maybe became an application you never sent. */}
+        <Button
+          variant={item.status === "saved" ? "primary" : "secondary"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSave();
+          }}
+        >
+          {item.status === "saved" ? t("feed.saved") : t("feed.save")}
+        </Button>
         <Button
           variant="primary"
           onClick={(e) => {

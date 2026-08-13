@@ -231,6 +231,10 @@ export const api = {
     }),
   dismissFeedItem: (id: number) =>
     request<void>(`/api/feed/${id}/dismiss`, { method: "POST" }),
+  saveFeedItem: (id: number) =>
+    request<void>(`/api/feed/${id}/save`, { method: "POST" }),
+  unsaveFeedItem: (id: number) =>
+    request<void>(`/api/feed/${id}/unsave`, { method: "POST" }),
   undismissFeedItem: (id: number) =>
     request<void>(`/api/feed/${id}/undismiss`, { method: "POST" }),
   addFeedItem: (id: number) =>

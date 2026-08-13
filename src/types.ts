@@ -144,7 +144,9 @@ export interface FeedItem {
   role_type: RoleType;
   posted_at: string | null;
   fetched_at: string;
-  status: "new" | "added" | "dismissed";
+  // "saved" is the feed's own third outcome — kept for later, never an
+  // application, so it does not touch any pipeline count.
+  status: "new" | "added" | "dismissed" | "saved";
   board_slug: string | null;
   // The posting's opening, so the triage pane can show what the job actually
   // says. The FULL description is still not shipped — it is up to 8000 chars

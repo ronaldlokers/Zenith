@@ -220,7 +220,7 @@
     "viewPosting": "View posting ↗",
     "addToJobs": "Add to pipeline",
     "dismiss": "Dismiss",
-    "triageHint": "j / k move · a add · d dismiss",
+    "triageHint": "j / k move · a add · s keep · d dismiss",
     "skillsMatch_one": "{{count}} matching skill",
     "skillsMatch_other": "{{count}} matching skills",
     "whyItFits_one": "Matches 1 of your skills",
@@ -249,7 +249,9 @@
     "allWeak_other": "{{count}} postings came in, but none of them mentions a skill from your CV yet.",
     "addSkills": "Add your skills",
     "listLabel": "Postings to triage",
-    "detailLabel": "Selected posting"
+    "detailLabel": "Selected posting",
+    "save": "Keep for later",
+    "saved": "Kept"
   },
   "stats": {
     "momentum": {
