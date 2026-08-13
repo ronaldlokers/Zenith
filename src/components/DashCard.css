@@ -41,6 +41,25 @@
     box-shadow: var(--shadow-2);
   }
 
+  /* The same treatment StatCard already carries (StatCard.css:171), and this
+     is the only owned component that lifts on hover without it. Currently
+     latent — no caller on any route passes onClick, so the variant does not
+     render — which is exactly why it is worth closing now: the first caller
+     that does would reintroduce uncovered movement silently, and the
+     component ships in Storybook with the variant regardless.
+
+     The shadow stays. Depth is feedback, not motion, and killing it too
+     would leave the hover with nothing to say. */
+  @media (prefers-reduced-motion: reduce) {
+    .zui-dashcard--click {
+      transition: box-shadow 0.12s ease;
+    }
+
+    .zui-dashcard--click:hover {
+      transform: none;
+    }
+  }
+
   /* App.css:4764 — the eyebrow heading. */
   .zui-dashcard-head {
     font-family: var(--mono);
