@@ -199,6 +199,14 @@ export function DashboardTab({
       ) : (
         <div className="today-cols">
           <div className="today-col">
+            {/* The hero states what the screen is about — "9 follow-ups are
+                late", "nothing due" — and it changes after every Done,
+                Snooze and batch push. Without a live region a screen-reader
+                user acts on a row, hears the toast, and is never told the
+                thing the sighted user reads first has changed. polite, not
+                assertive: it is a summary, and it must not cut across the
+                toast that confirms the action itself. */}
+            <div aria-live="polite">
             {heroState === "due" && (
               /* No onClick. It used to call setNextUpTab("due") while "due"
                  was already the tab — the largest, warmest target on the
@@ -256,6 +264,8 @@ export function DashboardTab({
                 </p>
               </>
             )}
+
+            </div>
 
             <AscentStrip live={live} />
 
@@ -449,6 +459,7 @@ function NextUpPanel({
 }) {
   const { t } = useTranslation();
   const [showAll, setShowAll] = useState(false);
+  const [pushing, setPushing] = useState(false);
 
   // Ranked by what is worth doing, not by what is oldest. Sorting on date
   // alone put a five-star offer at row four, tinted and buttoned exactly like
@@ -562,20 +573,29 @@ function NextUpPanel({
       next_action: a.next_action ?? null,
       next_action_at: a.next_action_at ?? null,
     }));
-    return Promise.all(
-      late.map((a, i) =>
-        api.updateFollowUp(a.id, {
-          next_action: a.next_action ?? null,
+    // Sequential, not Promise.all. This fires one write per late row with no
+    // cap: at the ~50 applications the product is specified around, a bad
+    // month is thirty parallel writes on one tap. `pushing` closes the other
+    // half — a second tap before the first settled duplicated the work while
+    // the undo closure still held the pre-first-tap state.
+    setPushing(true);
+    return late
+      .reduce(
+        (chain, a, i) =>
+          chain.then(() =>
+            api.updateFollowUp(a.id, {
+              next_action: a.next_action ?? null,
           // Spread, not one date. Moving nine follow-ups to a single day
           // clears this screen and rebuilds the same pile as one cliff a week
           // out, which is worse than the pile it replaced — the point is to
           // make next week survivable, not to empty today. Two a day from
           // three days out, in the order the list is already ranked, so the
           // most urgent come back first.
-          next_action_at: daysFromToday(3 + Math.floor(i / 2)),
-        }),
-      ),
-    )
+              next_action_at: daysFromToday(3 + Math.floor(i / 2)),
+            }),
+          ),
+        Promise.resolve<unknown>(undefined),
+      )
       .then(() => onChanged())
       .then(() =>
         notify(t("today.pushedAll", { count: late.length }), () =>
@@ -584,7 +604,8 @@ function NextUpPanel({
             .catch((e) => onError((e as Error).message)),
         ),
       )
-      .catch((e) => onError((e as Error).message));
+      .catch((e) => onError((e as Error).message))
+      .finally(() => setPushing(false));
   };
 
   const lateCount = rows.filter(isPushable).length;
@@ -599,15 +620,24 @@ function NextUpPanel({
           )}
         </h2>
         <SegmentedControl role="group" aria-label={t("nextUp.title")}>
+          {/* Both switches clear the expansion. showAll had no collapse and
+              was never reset, so expanding Due to forty rows left Upcoming
+              expanded too, with no way back to six short of a remount. */}
           <SegmentedControl.Item
             active={tab === "due"}
-            onClick={() => onTab("due")}
+            onClick={() => {
+              setShowAll(false);
+              onTab("due");
+            }}
           >
             {t("nextUp.segDue", { count: due.length })}
           </SegmentedControl.Item>
           <SegmentedControl.Item
             active={tab === "upcoming"}
-            onClick={() => onTab("upcoming")}
+            onClick={() => {
+              setShowAll(false);
+              onTab("upcoming");
+            }}
           >
             {t("nextUp.segUpcoming", { count: upcoming.length })}
           </SegmentedControl.Item>
@@ -709,7 +739,11 @@ function NextUpPanel({
            with no border firing an unconfirmed write across every late row —
            the weakest control on the screen doing the largest thing on it. */
         <p className="today-pushall">
-          <Button variant="secondary" onClick={() => void pushAllLate()}>
+          <Button
+            variant="secondary"
+            disabled={pushing}
+            onClick={() => void pushAllLate()}
+          >
             {t("today.pushAll", { count: lateCount })}
           </Button>{" "}
           <span className="muted small">{t("today.pushAllKeeps")}</span>

@@ -3836,6 +3836,47 @@ summary.bcol-head::after {
   white-space: nowrap;
 }
 
+/* The phone row. Measured at 390x844 the answer text — the whole reason the
+   screen exists — had 136px to itself while the row's first line ran the
+   full 330px with a ~200px gutter in the middle of it: the action wrapped to
+   two and three lines beside empty space. Two causes, both fixed here.
+
+   The action cluster came out of the row's second column, so the text no
+   longer competes with it for width; it sits on its own line, right-aligned,
+   which also takes Done out of the same horizontal band as the row-open
+   target it used to sit beside. Research on mis-taps is consistent that
+   spacing does more than size, and adjacent primary-and-destructive in the
+   thumb arc is the case it warns about — Done drops the application off
+   Today entirely.
+
+   And the stage label stops spanning every row of the inner grid, so it
+   fills the gutter on the date line instead of reserving a column down the
+   whole row. The title and company then span the full width.
+
+   Measured at 390x844: the action text goes from 136px wide and wrapping to
+   two lines, to 327px on one line, on every row. The trade is the action
+   line itself — four rows total 600px against 588px before, about 3px a row
+   — and the rows that were worst off are the ones that got shorter. */
+@media (max-width: 600px) {
+  .today-rows li {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-2);
+  }
+
+  .today-rows li .nextup-actions {
+    justify-content: flex-end;
+  }
+
+  .today-row-open .side-stage {
+    grid-row: 1;
+  }
+
+  .today-row-open .side-title,
+  .today-row-open .side-co {
+    grid-column: 1 / -1;
+  }
+}
+
 /* This week — volume as an observation, over the moves that actually
    happened. Not a quota, and no streak: a zero week is told plainly. */
 .today-card-h {
