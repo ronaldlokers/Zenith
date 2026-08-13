@@ -4883,8 +4883,16 @@ button:not(:disabled):active,
 .dash-oc,
 .side-title,
 .side-co-name,
-.co-name,
-.contact-name,
+/* .co is the company/contact secondary line, and on Companies it renders
+   `c.website` — a URL, the canonical string with nothing to break at. It
+   spilled 238px past its own row at 390px (602 vs 364) with the parent set
+   to overflow: visible, so it drew over whatever sat beside it. It did not
+   scroll the page, which is why the page-level sweep missed it.
+
+   This replaces `.co-name` and `.contact-name`, which I put here on the
+   strength of a probe run against /network — a path that is not a route and
+   falls through to Today. Neither class exists anywhere in the app. */
+.co,
 .notes {
   overflow-wrap: anywhere;
 }
