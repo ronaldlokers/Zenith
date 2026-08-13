@@ -3258,6 +3258,11 @@ summary.bcol-head::after {
   font-size: var(--doc-name);
   font-weight: 700;
   letter-spacing: -0.01em;
+  /* The sheet is a fixed 210mm; a long unbroken name ran past it and took
+     the page's horizontal scroll with it. A real printed CV wraps the name
+     rather than running off the paper, so this is what the preview should
+     show as well. */
+  overflow-wrap: anywhere;
 }
 
 .cv-doc-head {
@@ -4866,6 +4871,24 @@ button:not(:disabled):active,
 }
 .dash-offers li:first-child .dash-orow { border-top: none; }
 .dash-orow:hover { background: var(--hover); }
+/* Same reasoning as .btitle above: these render text a person pasted from a
+   job posting, and a German company name or a bare URL offers nothing to
+   break at. Measured at 390px with "Rheinmetalldienstleistungsgesellschaft
+   mbHundCoKGaA00" in the user-content fields only — Today, Companies,
+   Insights and the CV preview each pushed the document past the viewport and
+   the whole page scrolled sideways. The board did not, because .btitle had
+   already learned this. No hyphens: a broken URL is normal, a hyphenated one
+   is wrong. */
+.dash-ot,
+.dash-oc,
+.side-title,
+.side-co-name,
+.co-name,
+.contact-name,
+.notes {
+  overflow-wrap: anywhere;
+}
+
 .dash-ot { font-weight: 560; font-size: var(--text-body); }
 .dash-ov { font-family: var(--serif); font-weight: 600; text-align: right; }
 .dash-oc { font-size: var(--text-meta); grid-column: 1 / -1; }

@@ -1,5 +1,4 @@
 import { readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 // The zenith-design skill tells an agent what the production component
