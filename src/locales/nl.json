@@ -781,7 +781,8 @@
     "showingPinned": "Vastgezette sollicitaties",
     "showAll": "Alles tonen",
     "backToLive": "Terug naar actief",
-    "stageStrip": "Fases"
+    "stageStrip": "Fases",
+    "allLiveFolded": "Alle actieve fasen zijn ingeklapt — alleen afgesloten sollicitaties zijn zichtbaar."
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

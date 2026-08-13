@@ -781,7 +781,8 @@
     "showingPinned": "Showing pinned applications",
     "showAll": "Show all",
     "backToLive": "Back to live",
-    "stageStrip": "Stages"
+    "stageStrip": "Stages",
+    "allLiveFolded": "Every live stage is folded — only closed applications are showing."
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."

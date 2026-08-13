@@ -4850,6 +4850,17 @@ button:not(:disabled):active,
   border-color: var(--accent);
 }
 
+/* The way back from the closed-only view. Sits above the columns rather
+   than inside one, because at that moment every live column is a folded
+   rail 40px wide and there is nowhere in them to put a sentence. */
+.board-allfolded {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0 0 0.7rem;
+}
+
 /* column header funnel proportion */
 .bcol-prop { height: 3px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; margin: 0 0.1rem 0.55rem; }
 .bcol-prop > i { display: block; height: 100%; border-radius: var(--radius-full); }

@@ -107,7 +107,16 @@ export function ApplicationDetailModal({
   // Three intent groups (#479) instead of six peer tabs: Track (timeline +
   // documents), Prep (interview prep + AI practice), Tailor (ATS + cover
   // letter). Clusters the tools by the question you're actually asking.
-  const [secTab, setSecTab] = useState<"track" | "prep" | "tailor">("prep");
+  // Prep is the right opener while the application is live, and nonsense once
+  // it is not: a rejected application opened on "Interview prep", offering a
+  // mock interview and a salary-negotiation rehearsal for a job that is gone.
+  // A closed application has one question left — what happened and when — so
+  // it opens on Track. Initial state rather than a derived value: the tab is
+  // the user's to change afterwards, and recomputing it would drag them back
+  // here every time the row refetched.
+  const [secTab, setSecTab] = useState<"track" | "prep" | "tailor">(
+    isTerminalStatus(application.status) ? "track" : "prep",
+  );
   const [inlineField, setInlineField] = useState<null | "followup" | "notes">(
     null,
   );

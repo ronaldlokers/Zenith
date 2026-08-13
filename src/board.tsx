@@ -45,6 +45,9 @@ import { ActionBar, Button, CardMenu, EmptyState, StarRating } from "./component
 // and re-run everything downstream of it.
 const EMPTY_FOLD: ReadonlySet<BoardRail> = new Set();
 
+const isPipelineRail = (rail: BoardRail): boolean =>
+  (PIPELINE as readonly BoardRail[]).includes(rail);
+
 function BoardCard({
   a,
   urgency,
@@ -166,6 +169,7 @@ function BoardTab({
   onDetailIdChange,
   folded,
   onToggleFold,
+  onUnfoldLive,
   onAdd,
   showAddBlocks,
 }: CrudTabProps & {
@@ -186,6 +190,7 @@ function BoardTab({
   onDetailIdChange?: (id: number | null) => void;
   folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
+  onUnfoldLive: () => void;
   onAdd: (stage: Status) => void;
   // False on a board with nothing on it yet: the add blocks are for filing
   // into a particular stage, which only means something once there is a
@@ -418,6 +423,21 @@ function BoardTab({
       <EmptyState className="board-empty-pinned">
         {t("board.nothingPinned")}
       </EmptyState>
+    )}
+    {PIPELINE.every((r) => shownFolded.has(r)) && (
+      /* Folding every live stage at once is a thing a single press does —
+         "Closed applications" from the menu, the "c" key, and the link on
+         Insights all land here. The way back was a toast, which is gone the
+         moment it times out or the page reloads, and the fold is saved on
+         the server: miss it once and the board opens on nothing but closed
+         work from then on, with five rails to unfold by hand and nothing
+         saying so. A persistent state needs a persistent way out. */
+      <div className="board-allfolded">
+        <span className="muted small">{t("board.allLiveFolded")}</span>{" "}
+        <Button variant="link" onClick={onUnfoldLive}>
+          {t("board.backToLive")}
+        </Button>
+      </div>
     )}
     <div
       className="board"
@@ -669,6 +689,14 @@ export function PipelineTab({
     },
     [onError],
   );
+  // Unfolds every live stage in one save. Five toggles would be five
+  // requests and five chances to end up half-open.
+  const unfoldLive = () =>
+    applyFold(
+      new Set([...folded].filter((r) => !isPipelineRail(r))),
+      new Set(folded),
+    );
+
   const toggleFold = (rail: BoardRail) => {
     const next = new Set(folded);
     if (!next.delete(rail)) next.add(rail);
@@ -1078,6 +1106,7 @@ export function PipelineTab({
         onDetailIdChange={onOpenJob}
         folded={folded}
         onToggleFold={toggleFold}
+        onUnfoldLive={unfoldLive}
         onAdd={onOpenQuickAdd}
         showAddBlocks={applications.length > 0}
       />
