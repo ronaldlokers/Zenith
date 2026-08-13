@@ -784,7 +784,10 @@
     "webhookOk": "levert af",
     "deleteTypeEmail": "Typ {{email}} om te bevestigen",
     "deleteForever": "Verwijder mijn account",
-    "deleteExportFirst": "Eerst een kopie? Instellingen → Gegevens heeft een volledige export."
+    "deleteExportFirst": "Eerst een kopie? Instellingen → Gegevens heeft een volledige export.",
+    "resetPasswordFor": "Wachtwoord opnieuw instellen voor {{user}}",
+    "reset2faFor": "Tweestapsverificatie opnieuw instellen voor {{user}}",
+    "removeUserFor": "Verwijder {{user}}"
   },
   "companies": {
     "view": "Weergave",

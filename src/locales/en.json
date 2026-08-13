@@ -784,7 +784,10 @@
     "webhookOk": "delivering",
     "deleteTypeEmail": "Type {{email}} to confirm",
     "deleteForever": "Delete my account",
-    "deleteExportFirst": "Want a copy first? Settings → Data has a full export."
+    "deleteExportFirst": "Want a copy first? Settings → Data has a full export.",
+    "resetPasswordFor": "Reset password for {{user}}",
+    "reset2faFor": "Reset two-factor for {{user}}",
+    "removeUserFor": "Remove {{user}}"
   },
   "companies": {
     "view": "View",

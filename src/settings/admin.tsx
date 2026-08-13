@@ -102,18 +102,32 @@ export function AdminUsers({
               ) : null}
             </span>
             {u.id !== session?.user.id && (
+              /* Each control names its user. On screen the row supplies that
+                 — the buttons sit beside the name — but the accessible name
+                 was just "Remove", so tabbing through a list of accounts
+                 offered three identical destructive controls with nothing to
+                 tell them apart. The visible label is unchanged; only the
+                 announced one gains the name (WCAG 2.5.3 keeps the visible
+                 text as a prefix of it). */
               <span className="admin-user-actions">
-                <button onClick={() => resetPassword(u)}>
+                <button
+                  aria-label={t("account.resetPasswordFor", { user: u.name ?? u.email })}
+                  onClick={() => resetPassword(u)}
+                >
                   {t("account.resetPassword")}
                 </button>
                 {u.twoFactorEnabled ? (
-                  <button onClick={() => reset2fa(u)}>
+                  <button
+                    aria-label={t("account.reset2faFor", { user: u.name ?? u.email })}
+                    onClick={() => reset2fa(u)}
+                  >
                     {t("account.reset2fa")}
                   </button>
                 ) : null}
                 <Button
                   variant="danger"
                   className="zui-admin-user-remove"
+                  aria-label={t("account.removeUserFor", { user: u.name ?? u.email })}
                   onClick={() => remove(u)}
                 >
                   {t("account.removeUser")}
