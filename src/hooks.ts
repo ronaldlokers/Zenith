@@ -5,6 +5,26 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { keyShortcutsEnabled } from "./format";
 
+// Marks that a chunk-load failure has already triggered one reload this
+// session. Lives here rather than beside the boundary that uses it because
+// this file exports no components, which is what keeps react-refresh's
+// only-export-components rule satisfied.
+//
+// sessionStorage rather than state: a reload discards state by definition,
+// so an in-memory counter would permit an infinite reload loop — a worse
+// failure than the white page being handled.
+export const CHUNK_RETRY_KEY = "zenith_chunk_reload";
+
+// Cleared once the app has mounted, so the one-shot reload is available
+// again for the next deploy rather than being spent for the session.
+export function clearChunkRetry(): void {
+  try {
+    sessionStorage.removeItem(CHUNK_RETRY_KEY);
+  } catch {
+    /* storage disabled; nothing to clear */
+  }
+}
+
 // Guards an async submit against double-fire (#261) and exposes a busy
 // flag for disabling the button. The wrapped handler already returns a
 // promise (the api chain), so we just await it and reset when it settles.

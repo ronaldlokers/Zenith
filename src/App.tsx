@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import { ChunkBoundary } from "./chunk-boundary";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "./api";
@@ -61,6 +62,7 @@ import {
 import { isDead, isDue, isOverdue } from "./format";
 import { useAppData, useToasts } from "./app-data";
 import {
+  clearChunkRetry,
   useGlobalShortcuts,
   useNotificationNavigation,
   useScrolled,
@@ -231,6 +233,13 @@ export default function App() {
   // every deep link in the moment before its data lands.
   const missingJob =
     tab === "board" && detailIdFromUrl != null && !loading && !routedJob;
+  // The app mounted, so whatever chunk failure prompted a reload is behind
+  // us. Clearing the marker returns the one-shot reload to the next deploy
+  // rather than spending it for the rest of the session.
+  useEffect(() => {
+    clearChunkRetry();
+  }, []);
+
   useEffect(() => {
     if (!missingJob) return;
     notify(t("board.applicationGone"));
@@ -502,6 +511,7 @@ export default function App() {
         {loading ? (
           <Skeleton />
         ) : (
+          <ChunkBoundary>
           <Suspense fallback={<Skeleton />}>
             {tab === "overview" && showOnboarding && (
               <OnboardingChecklist {...onboardingProps} />
@@ -661,6 +671,7 @@ export default function App() {
               />
             )}
           </Suspense>
+          </ChunkBoundary>
         )}
       </main>
       </div>

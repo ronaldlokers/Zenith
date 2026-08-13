@@ -1004,6 +1004,7 @@
   "errors": {
     "offline": "You're offline — that change wasn't saved. It will work once you're back.",
     "unreachable": "Couldn't reach Zenith, so that change wasn't saved. Check your connection and try again.",
-    "sessionExpired": "Your session has expired — reload the page and sign in again."
+    "sessionExpired": "Your session has expired — reload the page and sign in again.",
+    "chunkFailed": "Part of the app could not be loaded. This usually means a new version was released while you had Zenith open."
   }
 }
