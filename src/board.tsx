@@ -196,6 +196,7 @@ function BoardTab({
   onToggleFold,
   onUnfoldLive,
   onOpenClosedGroup,
+  onCloseClosedGroup,
   onAdd,
   showAddBlocks,
 }: CrudTabProps & {
@@ -219,6 +220,7 @@ function BoardTab({
   onToggleFold: (rail: BoardRail) => void;
   onUnfoldLive: () => void;
   onOpenClosedGroup: () => void;
+  onCloseClosedGroup: () => void;
   onAdd: (stage: Status) => void;
   // False on a board with nothing on it yet: the add blocks are for filing
   // into a particular stage, which only means something once there is a
@@ -483,6 +485,22 @@ function BoardTab({
         {t("board.nothingPinned")}
       </EmptyState>
     )}
+    {!closedGrouped &&
+      !isNarrow &&
+      !pinnedOnly &&
+      CLOSED_RAILS.some((r) => !shownFolded.has(r)) && (
+        /* The way back. Opening the closed group is one press; closing it
+           again was four, one per rail, each its own server write — so a
+           glance at what ended cost more to undo than to do. The control
+           that opens it should have a counterpart, which is what
+           collapse-all is for. */
+        <div className="board-allfolded">
+          <span className="muted small">{t("board.closedOpen")}</span>{" "}
+          <Button variant="link" onClick={onCloseClosedGroup}>
+            {t("board.closeClosedGroup")}
+          </Button>
+        </div>
+      )}
     {PIPELINE.every((r) => shownFolded.has(r)) && (
       /* Folding every live stage at once is a thing a single press does —
          "Closed applications" from the menu, the "c" key, and the link on
@@ -812,6 +830,9 @@ export function PipelineTab({
       new Set([...folded].filter((r) => !CLOSED_RAILS.includes(r))),
       new Set(folded),
     );
+
+  const closeClosedGroup = () =>
+    applyFold(new Set([...folded, ...CLOSED_RAILS]), new Set(folded));
 
   const unfoldLive = () =>
     applyFold(
@@ -1281,6 +1302,7 @@ export function PipelineTab({
         onToggleFold={toggleFold}
         onUnfoldLive={unfoldLive}
         onOpenClosedGroup={openClosedGroup}
+        onCloseClosedGroup={closeClosedGroup}
         onAdd={onOpenQuickAdd}
         showAddBlocks={applications.length > 0 && filtered.length > 0}
       />

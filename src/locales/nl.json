@@ -807,7 +807,9 @@
     "closedGroup": "Afgesloten",
     "openClosedGroup_one": "Afgesloten sollicitaties openen, {{count}} sollicitatie",
     "openClosedGroup_other": "Afgesloten sollicitaties openen, {{count}} sollicitaties",
-    "showingPinnedNow": "Alleen vastgezette sollicitaties zichtbaar."
+    "showingPinnedNow": "Alleen vastgezette sollicitaties zichtbaar.",
+    "closedOpen": "Afgesloten sollicitaties zijn zichtbaar.",
+    "closeClosedGroup": "Weer inklappen"
   },
   "activityFeed": {
     "empty": "Nog niets. Statuswijzigingen, gelogde contactmomenten en bijgevoegde documenten verschijnen hier."

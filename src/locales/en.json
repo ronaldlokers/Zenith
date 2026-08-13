@@ -807,7 +807,9 @@
     "closedGroup": "Closed",
     "openClosedGroup_one": "Open closed applications, {{count}} application",
     "openClosedGroup_other": "Open closed applications, {{count}} applications",
-    "showingPinnedNow": "Showing pinned applications only."
+    "showingPinnedNow": "Showing pinned applications only.",
+    "closedOpen": "Closed applications are showing.",
+    "closeClosedGroup": "Fold them away"
   },
   "activityFeed": {
     "empty": "Nothing yet. Status changes, logged touchpoints, and attached documents all show up here."
