@@ -1,6 +1,6 @@
 // CV builder extracted from App.tsx (#285 split) — the CV tab and its
 // profile / work-experience / education / languages sections + forms.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { api } from "./api";
@@ -77,6 +77,34 @@ export function CVTab({
     load();
   }, [load]);
 
+  // The preview is laid out at real A4 (210mm wide) and scaled to whatever
+  // room the column has. Measured rather than guessed at, because the column
+  // width depends on the rail, the viewport and the template — and the whole
+  // point of this preview is that its proportions are true.
+  const docViewRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const host = docViewRef.current;
+    if (!host) return;
+    const MM = 96 / 25.4; // CSS px per mm
+    const apply = () => {
+      const sheet = host.firstElementChild as HTMLElement | null;
+      if (!sheet) return;
+      const scale = Math.min(1, host.clientWidth / (210 * MM));
+      host.style.setProperty("--cv-scale", String(scale));
+      // scrollHeight, not the 297mm minimum: a CV that runs onto a second
+      // page has to make the wrapper taller, or the overflow is clipped.
+      host.style.setProperty(
+        "--cv-doc-height",
+        `${Math.ceil(sheet.scrollHeight * scale)}px`,
+      );
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(host);
+    if (host.firstElementChild) ro.observe(host.firstElementChild);
+    return () => ro.disconnect();
+  });
+
   if (!profile || !workExp || !education || !languages) {
     return <Skeleton />;
   }
@@ -98,6 +126,7 @@ export function CVTab({
       native: tCv("cv.proficiency.native"),
     },
   };
+
 
   const active = versions.find((v) => v.id === activeId) ?? null;
   // A saved variant is a JSON snapshot; a corrupt one falls back to live
@@ -246,7 +275,11 @@ export function CVTab({
               </span>
             </div>
             <div className="cv-card-cols">
-              <div className="cv-doc-view" aria-label={t("cv.livePreview")}>
+              <div
+                className="cv-doc-view"
+                aria-label={t("cv.livePreview")}
+                ref={docViewRef}
+              >
                 <CvPreview
                   profile={shown.profile}
                   workExperience={shown.workExperience}

@@ -3093,22 +3093,39 @@ summary.bcol-head::after {
 .cv-doc-view {
   width: 100%;
   min-width: 0;
+  /* The sheet inside is transformed, which does not affect layout — so the
+     wrapper is told how tall the scaled result is. */
+  height: var(--cv-doc-height, auto);
+  overflow: hidden;
 }
 
-/* Styled HTML CV document (#386) — a truthful, themable preview of the export
-   (white page, dark ink) that replaces the embedded PDF viewer. Type is scaled
-   down to the small preview column. */
+/* Styled HTML CV document (#386) — a truthful, themable preview of the
+   export (white page, dark ink) that replaces the embedded PDF viewer.
+
+   Laid out at real A4 and scaled as a whole, rather than having its type
+   shrunk to fit the column. The page geometry is generateCvPdf's, read off
+   the source: 210x297mm, 18mm margins, and a first baseline 20mm down. That
+   makes "does this fit on one page" a question the preview can answer,
+   which is the question a CV is actually judged on — and the old preview
+   answered it wrong by about 3.5x.
+
+   --cv-scale is set from the container width by a ResizeObserver; the
+   wrapper carries the scaled height so the layout below does not sit under
+   a transformed element. */
 .cv-doc {
-  min-height: 100%;
+  width: 210mm;
+  min-height: 297mm;
   box-sizing: border-box;
   background: var(--doc-ground);
   color: var(--doc-ink);
   font-family: var(--sans);
   font-size: var(--doc-text);
   line-height: 1.42;
-  padding: 16px 18px;
+  padding: 20mm 18mm 18mm;
   border-radius: var(--doc-radius);
   box-shadow: var(--shadow-1);
+  transform: scale(var(--cv-scale, 1));
+  transform-origin: top left;
 }
 
 .cv-doc-name {
