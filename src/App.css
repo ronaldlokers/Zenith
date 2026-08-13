@@ -2730,11 +2730,15 @@ select.status {
 }
 
 @media (min-width: 900px) {
-  .app:has(.board),
-  .app:has(.board-swimlanes) {
-    max-width: 1280px;
-  }
-
+  /* The `.app:has(.board)`/`:has(.cv-layout)` max-widths that used to sit
+     here, and the three `:has(…) > main` ones further down, are gone. Every
+     one was unreachable: they start at 900px, 1000px or 1100px, and the
+     tab-class block that replaced them starts at 900px and wins at every
+     width they cover — two of them only on source order, which is the kind
+     of dependency that holds until someone moves a block. They also carried
+     the hazard the tab classes exist to remove, since `:has()` cannot match
+     until the content mounts. Widths verified unchanged at 900, 1000, 1100,
+     1280 and 1440 across eight routes. */
   .board {
     align-items: start;
   }
@@ -3397,10 +3401,6 @@ summary.bcol-head::after {
 }
 
 @media (min-width: 1100px) {
-  .app:has(.cv-layout) {
-    max-width: 1100px;
-  }
-
   /* The CV's second track held the side panel — completeness, versions, the
      live preview. All three are on the plate now (#535), so the builder was
      left filling two thirds of a row and sitting narrower than the plate
@@ -4549,15 +4549,9 @@ summary.bcol-head::after {
 
 /* Network grid gets a deliberate width under the sidebar shell (#314). */
 @media (min-width: 1000px) {
-  .app:has(.network-page) > main {
-    max-width: 1000px;
-  }
 }
 
 @media (min-width: 1000px) {
-  .app:has(.overview) > main {
-    max-width: 1000px;
-  }
 }
 
 /* Job page two-column (#314) — facts/status/actions left, content
@@ -4583,10 +4577,6 @@ summary.bcol-head::after {
 }
 
 @media (min-width: 1100px) {
-  .app:has(.job-page) > main {
-    max-width: 1200px;
-  }
-
   .job-page .detail-pane {
     max-width: none;
   }
