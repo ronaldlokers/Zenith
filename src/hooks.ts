@@ -308,7 +308,21 @@ export function useNotificationNavigation() {
     const onMessage = (e: MessageEvent) => {
       const data = e.data as { type?: string; url?: string } | null;
       if (data?.type === "notification-navigate" && typeof data.url === "string") {
-        navigate(data.url);
+        // Same check the service worker makes before openWindow, repeated
+        // here because this is a second door into navigation and a message
+        // handler cannot assume who sent it. Anything that does not resolve
+        // under this origin becomes the root: the tap should still open the
+        // app, which is what the person meant by it.
+        let path = "/";
+        try {
+          const resolved = new URL(data.url, window.location.origin);
+          if (resolved.origin === window.location.origin) {
+            path = resolved.pathname + resolved.search;
+          }
+        } catch {
+          path = "/";
+        }
+        navigate(path);
       }
     };
     navigator.serviceWorker.addEventListener("message", onMessage);

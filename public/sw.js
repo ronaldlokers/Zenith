@@ -90,9 +90,31 @@ self.addEventListener("push", (event) => {
   );
 });
 
+// A notification's url arrives from the push payload. That payload is this
+// app's own and Web Push is encrypted end to end, so this is not a known
+// exploit — but it is server-supplied input reaching openWindow() and
+// react-router, and `new URL("https://elsewhere/", origin)` resolves to
+// elsewhere, not to a path under origin. The realistic route to trouble is a
+// misconfiguration rather than an attacker: a notification built with a full
+// origin in it — a preview deployment's, say — would silently take people
+// off this instance when they tapped it.
+//
+// Same-origin or nothing. A path that does not resolve under this origin is
+// replaced by the root rather than dropped: the tap should still open the
+// app, which is what the person meant by it.
+function safePath(raw) {
+  try {
+    const resolved = new URL(raw ?? "/", self.location.origin);
+    if (resolved.origin !== self.location.origin) return "/";
+    return resolved.pathname + resolved.search;
+  } catch {
+    return "/";
+  }
+}
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const path = event.notification.data?.url ?? "/";
+  const path = safePath(event.notification.data?.url);
   // Absolute for openWindow; the relative path is what the SPA routes on.
   const target = new URL(path, self.location.origin).href;
   event.waitUntil(
