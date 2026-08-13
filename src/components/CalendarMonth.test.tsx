@@ -35,7 +35,34 @@ describe("CalendarMonth", () => {
       <CalendarMonth entries={mockEntries} onJump={noop} />,
     );
     expect(container.querySelector(".zui-cal-grid")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Acme Corp" })).toBeInTheDocument();
+    // The name carries the kind now — the tint was the only thing saying
+    // whether this was a follow-up, a deadline or an interview, which is
+    // colour alone. The visible label stays inside it, so the name still
+    // contains what a speech-input user would say.
+    expect(
+      screen.getByRole("button", { name: /Applied:.*Acme Corp/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("says the event kind rather than only tinting it", () => {
+    // The chip's background carried follow-up / deadline / interview /
+    // applied and nothing else did — colour alone, which roughly 8% of men
+    // cannot read.
+    render(<CalendarMonth entries={mockEntries} onJump={noop} />);
+    const chip = screen.getByRole("button", { name: /Acme Corp/ });
+    expect(chip.getAttribute("aria-label")).toMatch(/^Applied:/);
+  });
+
+  test("truncates the label on an element that can truncate", () => {
+    // text-overflow does not apply to a flex item, and the chip is a flex
+    // container — so with the rule on the chip the label was sliced
+    // mid-word instead of ellipsised. It lives on an inner span now.
+    const { container } = render(
+      <CalendarMonth entries={mockEntries} onJump={noop} />,
+    );
+    const label = container.querySelector(".zui-cal-chip-label");
+    expect(label, "the chip label needs its own element to truncate on").toBeTruthy();
+    expect(label!.textContent).toBe("Acme Corp");
   });
 
   test("does not claim a grid role it cannot honour", () => {
@@ -53,7 +80,7 @@ describe("CalendarMonth", () => {
     const root = container.firstElementChild;
     expect(root).toHaveClass("zui-cal-month");
     expect(root?.className).not.toMatch(/(^|\s)cal-month(\s|$)/);
-    const chip = screen.getByRole("button", { name: "Acme Corp" });
+    const chip = screen.getByRole("button", { name: /Acme Corp/ });
     expect(chip).toHaveClass("zui-cal-chip");
     expect(chip.className).not.toMatch(/(^|\s)cal-chip(\s|$)/);
   });

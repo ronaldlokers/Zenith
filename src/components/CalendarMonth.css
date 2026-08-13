@@ -120,7 +120,9 @@
 
     .zui-cal-chip {
       --k: var(--muted);
-      display: block;
+      /* One display, not two. This rule declared block here and flex below;
+         the later won, so the chip was a flex container while reading as a
+         block — which is why the ellipsis below never fired. */
       width: 100%;
       text-align: left;
       border: none;
@@ -138,10 +140,17 @@
       font-size: var(--text-chrome);
       line-height: 1.45;
       color: var(--ink);
+      cursor: pointer;
+    }
+
+    /* The truncation lives on the label, not the chip: text-overflow does
+       not apply to a flex item, so with the rule on the flex container the
+       label was sliced mid-word instead of ellipsised. */
+    .zui-cal-chip-label {
+      min-width: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      cursor: pointer;
     }
     .zui-cal-more {
       padding-left: 3px;

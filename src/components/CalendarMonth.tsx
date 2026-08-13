@@ -153,9 +153,20 @@ export function CalendarMonth({ entries, onJump }: CalendarMonthProps) {
                       key={`${e.kind}-${e.id}`}
                       className={`zui-cal-chip kind-${e.kind}`}
                       title={agendaText(e, t)}
+                      // The kind — follow-up, deadline, interview, applied —
+                      // was carried by the chip's background tint and
+                      // nothing else, so it did not exist for anyone who
+                      // cannot separate those hues, and 8% of men cannot.
+                      // The accessible name states it; the tint stays as the
+                      // at-a-glance signal for everyone else.
+                      aria-label={`${t(`calendar.kind.${e.kind}`)}: ${agendaText(e, t)}`}
                       onClick={() => e.title && onJump(e.title)}
                     >
-                      {chipLabel(e)}
+                      {/* An inner span, because text-overflow does not apply
+                          to a flex item: the chip is display:flex, so the
+                          ellipsis rule never fired and labels were sliced
+                          mid-word ("Brightpath Talent P"). */}
+                      <span className="zui-cal-chip-label">{chipLabel(e)}</span>
                     </button>
                   ))}
                   {c.events.length > MAX && (

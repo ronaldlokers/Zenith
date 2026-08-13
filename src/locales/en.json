@@ -850,7 +850,13 @@
     "noUpcoming_one": "Nothing scheduled ahead — {{count}} item is in the past.",
     "noUpcoming_other": "Nothing scheduled ahead — {{count}} items are in the past.",
     "eventCount_one": "{{count}} event",
-    "eventCount_other": "{{count}} events"
+    "eventCount_other": "{{count}} events",
+    "kind": {
+      "due": "Follow-up",
+      "deadline": "Deadline",
+      "interaction": "Interview",
+      "applied": "Applied"
+    }
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"

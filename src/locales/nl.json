@@ -850,7 +850,13 @@
     "noUpcoming_one": "Niets gepland — {{count}} item ligt in het verleden.",
     "noUpcoming_other": "Niets gepland — {{count}} items liggen in het verleden.",
     "eventCount_one": "{{count}} gebeurtenis",
-    "eventCount_other": "{{count}} gebeurtenissen"
+    "eventCount_other": "{{count}} gebeurtenissen",
+    "kind": {
+      "due": "Vervolgactie",
+      "deadline": "Deadline",
+      "interaction": "Gesprek",
+      "applied": "Gesolliciteerd"
+    }
   },
   "contact": {
     "linkedinLink": "LinkedIn ↗"
