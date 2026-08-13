@@ -3990,18 +3990,42 @@ summary.bcol-head::after {
      The stars keep their place and the company name gives way instead: it is
      the third fact on a row that already names the action and the stage, and
      it is the one a reader can afford to see truncated. */
+  /* The band above the list. On an 844px phone the chrome between the top
+     bar and the first task ran 342px — a date line, a hero, the ascent
+     strip, a panel heading with its own sort note, and the batch escape —
+     for a screen whose critical content is the tasks themselves. Each piece
+     earns its place; none of them earns its margins at this width.
+
+     The sort note moves onto its own line rather than sharing with the
+     heading, which is what forced the head to wrap to 77px: the segmented
+     control could not fit beside both. */
+  .today-nextup-head {
+    gap: 0.35rem 0.5rem;
+    margin-bottom: var(--space-1);
+  }
+
+  /* The sort note goes. It explains an order the list demonstrates anyway —
+     stage, then fit, both of which are printed on every row — and at this
+     width it was the third item in a head that could only fit two, forcing
+     the segmented control onto its own line and costing more height than
+     the sentence is worth. It stays on desktop, where the head has room. */
+  .today-sortnote {
+    display: none;
+  }
+
+  .today-hero {
+    margin-bottom: var(--space-2);
+  }
+
+  .today-ascent {
+    margin-bottom: var(--space-1);
+  }
+
   /* The batch control is one line's worth of chrome above a list that needs
      the room. The exemption still has to be said — it is the difference
      between "pushes everything" and "keeps your offer" — but it can sit
      under the button rather than beside it, which is what was costing a
      wrapped 65px block. */
-  .today-pushall {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
-    margin-bottom: var(--space-2);
-  }
-
   .today-rows .side-co {
     display: flex;
     align-items: baseline;
@@ -5538,6 +5562,20 @@ button:not(:disabled):active,
   gap: var(--space-2);
   /* Above the list now, so the margin belongs below it. */
   margin: 0 0 var(--space-3);
+}
+
+/* Placed after the rule it overrides, not with the other phone rules higher
+   up the file: both are one class, so a tie goes to whichever comes last.
+   Stacked and tight here — the button is too wide to share a line with its
+   exemption at 390px, and 20px of gap and margin was being spent to
+   separate two things that belong together. */
+@media (max-width: 600px) {
+  .today-pushall {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    margin-bottom: var(--space-1);
+  }
 }
 
 /* The order, said out loud. Ranking by stage then fit beats ranking by date,
