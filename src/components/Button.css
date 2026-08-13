@@ -296,4 +296,25 @@
     white-space: normal;
     max-width: 100%;
   }
+
+  /* Touch hit area (design audit). The painted control keeps its size — the
+     design's control height is 34px and the mark is what the layout is built
+     on — while a centred pseudo-element gives a finger the 44px the guideline
+     asks for. Coarse pointers only, so nothing on a mouse changes by a pixel.
+     Measured before: 36-40px tall in compact rows. */
+  @media (pointer: coarse) {
+    .zui-btn {
+      position: relative;
+    }
+
+    .zui-btn::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
 }

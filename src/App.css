@@ -3528,9 +3528,27 @@ summary.bcol-head::after {
 }
 
 @media (min-width: 900px) {
+  /* Two tracks, not three equal ones. The first column is the task path —
+     what is due, with its actions — and the other two are glanceable
+     summaries. Measured on the demo set at 1440: 767px of content in the
+     first column against 195 and 64 in the others, so a third of the screen
+     did the work and two thirds stood empty while the due list wrapped every
+     title onto two lines.
+     The summaries stack into one rail: three items in a two-track grid put
+     the first in column one (spanning both rows) and the other two under
+     each other on the right. */
   .today-cols {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
     align-items: start;
+  }
+
+  /* The rail hugs its own content instead of being stretched by the task
+     column beside it. */
+  .today-rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
   }
 }
 
@@ -4205,6 +4223,16 @@ button:not(:disabled):active,
   .bcol.drag-over {
     transition: none;
   }
+
+  /* The disclosure marker is the last thing here that actually moves: it
+     rotates as a stage opens. The rotation still happens — the arrow has to
+     end up pointing the right way, and that is state, not decoration — it
+     just stops being animated. Colour and shadow transitions are left alone
+     on purpose: they carry feedback without moving anything, and a blanket
+     kill would take that with them. */
+  summary.bcol-head::after {
+    transition: none;
+  }
 }
 
 /* Settings checkbox row (#346). */
@@ -4326,7 +4354,15 @@ button:not(:disabled):active,
 @media (min-width: 900px) { .dash-cols { grid-template-columns: 1.05fr 0.95fr; } }
 /* Insights runs three columns of figures; the dashboard's two-column split is
    an asymmetric pair and stays that way. */
-@media (min-width: 900px) { .dash-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; } }
+/* The funnel carries five bars and their conversions; the other two are a
+   short list and a card. Equal thirds gave the densest column the same room
+   as the thinnest (measured 327px against 77px tall). */
+@media (min-width: 900px) {
+  .dash-cols-3 {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.2rem;
+  }
+}
 
 /* The dashboard content card (.dash-card, its lead/click variants, and the
    .dash-ch heading + .dash-win pill) now lives in the owned DashCard component
@@ -4510,6 +4546,18 @@ button:not(:disabled):active,
   background: var(--surface);
   box-shadow: var(--shadow-1);
 }
+/* The bar is a pill only while it is one line. Measured: 45px tall down to
+   610px, 51px at 600, 84px at 414 and below — at which point a 999px radius
+   makes 42px end caps around a two-line block, so the ends bow out and the
+   first control starts a finger's width from the edge. The breakpoint sits
+   at the measured wrap, not at a round number. Below it the bar is a
+   rounded rectangle on the documented scale. */
+@media (max-width: 609px) {
+  .board-bar {
+    border-radius: var(--radius-lg);
+  }
+}
+
 .board-search-icon {
   display: inline-flex;
   align-items: center;
@@ -5016,5 +5064,48 @@ button:not(:disabled):active,
     border: none;
     box-shadow: none;
     padding: 0;
+  }
+}
+
+/* Touch hit area (design audit). The painted control keeps its size — the
+   design's control height is 34px and the mark is what the layout is built
+   on — while a centred pseudo-element gives a finger the 44px the guideline
+   asks for. Coarse pointers only, so nothing on a mouse changes by a pixel.
+   Measured before: top-icon 38x38, top-brand 116x35, stage-chip 114x33, bottombar-slot 156x27, detail-rail-step 88x20. */
+@media (pointer: coarse) {
+  .top-icon,
+  .top-brand,
+  .bottombar-slot {
+    position: relative;
+  }
+
+  .top-icon::after,
+  .top-brand::after,
+  .bottombar-slot::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* The packed sets: real room on touch rather than an overlay that would
+   collide with the control next to it. min-height rather than padding, which
+   is what the goal actually is — the first attempt at this set padding to
+   0.5rem and made the chip 2px *shorter*, because it already carried 0.55rem.
+   Measured before: stage-chip 114x33, detail-rail-step 88x20. */
+@media (pointer: coarse) {
+  .stage-chip,
+  .detail-rail-step {
+    min-height: 44px;
+  }
+
+  .detail-rail-step {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 }

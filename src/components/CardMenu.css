@@ -47,4 +47,25 @@
   .zui-cardmenu-fu-actions { display: flex; gap: 0.4rem; }
   .zui-cardmenu-fu-actions button { padding: 0.3rem 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
   .zui-cardmenu-fu-actions button.primary { background: var(--accent); color: var(--accent-text); border: none; }
+
+  /* Touch hit area (design audit). The painted control keeps its size — the
+     design's control height is 34px and the mark is what the layout is built
+     on — while a centred pseudo-element gives a finger the 44px the guideline
+     asks for. Coarse pointers only, so nothing on a mouse changes by a pixel.
+     Measured before: 40x40. */
+  @media (pointer: coarse) {
+    .zui-cardmenu-btn {
+      position: relative;
+    }
+
+    .zui-cardmenu-btn::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+  }
 }
