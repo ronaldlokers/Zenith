@@ -74,7 +74,11 @@ export function CompaniesTab({
       .catch((e) => onError((e as Error).message));
 
   return (
-    <section>
+    /* A stable hook for the page, not for one of its two views. The shell's
+       width rules keyed on .company-grid, which only exists in grid view, so
+       switching to list put the whole app back inside the 1120px cap — the
+       top bar inset by 160px while the fixed bottom bar stayed full width. */
+    <section className="network-page">
       <Toolbar>
         <input
           type="search"

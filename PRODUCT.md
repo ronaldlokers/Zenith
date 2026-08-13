@@ -26,7 +26,7 @@ Three claims a neighboring tracker could not truthfully copy:
 
 1. **Pipeline rigor, sales-CRM grade.** Stages, `status_history`, time-in-stage, ghost rate, conversion funnel and side-by-side offer comparison. Zenith diagnoses where the search is failing; a list-of-applications tracker only records what was sent.
 2. **Sourcing and pipeline are one loop.** The feed (Adzuna plus any Greenhouse / Ashby board the user follows, filtered by their own role keywords) is part of the system, not an external site the user pastes from. Swipe a listing into the pipeline; the application carries its origin.
-3. **Personal-tool craft at product polish.** Mobile-first parity (not a shrunk desktop), keyboard-fast, three themes, full en/nl, fast on a free-tier Worker. The category norm is heavy, slow and monetized against the user.
+3. **Personal-tool craft at product polish.** Mobile-first parity (not a shrunk desktop), keyboard-fast, full en/nl, fast on a free-tier Worker. The category norm is heavy, slow and monetized against the user.
 
 Privacy (no analytics, no telemetry, no trackers, self-hostable, exportable, BYO AI key) is a **standing constraint and a principle**, not the headline claim — it must never be traded away, and it is not the reason someone chooses Zenith.
 
@@ -48,7 +48,7 @@ Durable constraints:
 - **Invite-only, no public sign-up.** No rate limits or quotas for now.
 - **The five stage hues are locked by measured separation**, not by specific values: every pair stays distinguishable under normal vision and all three dichromacies, and every stage stays readable as label text. Enforced in CI.
 - **The public share page carries aggregate stats only** — never per-application detail, never compensation.
-- **Exactly three themes:** Automatic (follows OS), Light, Dark. No others.
+- **Light only.** Automatic and Dark were removed with the #535 shell (`docs/superpowers/specs/2026-08-12-fizzy-shell-design.md`): there is no `data-theme` attribute and no `prefers-color-scheme` branch in any stylesheet, and `test-node/locked-decisions.spec.ts` fails if one reappears. The palette is contrast-tuned against one ground; a second theme silently untunes it.
 - **Strict en/nl key parity**; more locales planned, so every user-facing string is externalized.
 - **Responsive parity** — mobile is first-class, not a fallback.
 - Server-side fetches of user-supplied URLs pass an SSRF guard.

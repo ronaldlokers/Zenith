@@ -61,7 +61,9 @@
     background: var(--accent-soft);
     border-radius: 999px;
     padding: 0.05rem 0.4rem;
-    font-size: 0.54rem;
+    /* The smallest documented step, rather than 0.54rem which was below
+       every one of them. */
+    font-size: var(--text-glyph);
     letter-spacing: 0.04em;
   }
 

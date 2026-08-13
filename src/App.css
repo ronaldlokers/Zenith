@@ -4018,7 +4018,7 @@ summary.bcol-head::after {
   .app:has(.board-swimlanes),
   .app:has(.cv-layout),
   .app:has(.settings-page),
-  .app:has(.company-grid),
+  .app:has(.network-page),
   .app:has(.dash),
     .app:has(.calendar-view),
 .app:has(.feed-triage),
@@ -4053,7 +4053,7 @@ summary.bcol-head::after {
     max-width: 1100px;
   }
 
-  .app:has(.company-grid) .content,
+  .app:has(.network-page) .content,
   .app:has(.job-page) .content {
     max-width: 1000px;
   }
@@ -4074,7 +4074,7 @@ summary.bcol-head::after {
 
 /* Network grid gets a deliberate width under the sidebar shell (#314). */
 @media (min-width: 1000px) {
-  .app:has(.company-grid) > main {
+  .app:has(.network-page) > main {
     max-width: 1000px;
   }
 }

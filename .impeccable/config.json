@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "1rem",
+        "createdAt": "2026-08-13T01:01:50.862Z",
+        "reason": "Glyph and input sizes, not type-ramp text: the ⋯/× menu triggers render a character as an icon with line-height:1, and .zui-palette-input is a text field at 16px, which is what stops iOS zooming the page on focus. Verified case by case in the design audit."
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "2px",
+        "createdAt": "2026-08-13T01:02:06.987Z",
+        "reason": "A 4px-tall momentum bar: 2px is half its height, and the documented 8px would round it away entirely. A shape at this scale is not on the radius scale."
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "3px",
+        "createdAt": "2026-08-13T01:02:07.019Z",
+        "reason": "The calendar's event chip is a few pixels tall; 8px would swallow it. Same reasoning as the 2px momentum bar."
+      }
+    ]
+  }
+}
