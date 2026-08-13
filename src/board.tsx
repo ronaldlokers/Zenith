@@ -88,15 +88,6 @@ function BoardCard({
           the menu that toggles it. The dot is decorative — the text beside
           it is what a screen reader gets. */}
       {a.pinned_at && <span className="sr-only">{t("bottomBar.pinned")}</span>}
-      <CardMenu
-        a={a}
-        onMove={onMove}
-        onSetFollowUp={onSetFollowUp}
-        onOpenDetail={onOpenDetail}
-        onArchive={onArchive}
-        onUnarchive={onUnarchive}
-        onTogglePin={onTogglePin}
-      />
       <div className="bcard-body" {...rowActivate(onOpenDetail)}>
         {/* Identity strip, flush to the card edge: when it started, who it is
             with, and what kind of role. Every cell is a block — padding on an
@@ -163,6 +154,22 @@ function BoardCard({
           ) : null}
         </div>
       </div>
+      {/* After the body in the DOM, though it paints over the card's top
+          right corner: .zui-cardmenu is position: absolute, so its place in
+          the tree costs nothing visually and everything to a keyboard. It
+          used to come first, so tabbing through a column announced "Actions
+          for Senior Platform Engineer" before anything had said which card
+          you were on — the actions for a thing you had not been told about
+          yet. */}
+      <CardMenu
+        a={a}
+        onMove={onMove}
+        onSetFollowUp={onSetFollowUp}
+        onOpenDetail={onOpenDetail}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
+        onTogglePin={onTogglePin}
+      />
     </article>
   );
 }
