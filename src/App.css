@@ -2631,10 +2631,12 @@ select.status {
 
   /* The strip already carries the stage name and its count, and nothing
      folds here, so the column header would be a second copy with a control
-     that does nothing. */
-  .board > .bcol > .bcol-head {
-    display: none;
-  }
+     that does nothing — visually. It is not display: none, because that
+     took it out of the accessibility tree too and left the phone board's
+     outline at h1 followed by every card title at h3, with no stage
+     against any of them. board.tsx renders it sr-only here instead, and
+     drops the fold button rather than leaving an invisible focusable
+     control behind. */
 }
 
 /* The stage strip: every rail, the one you are on filled with its own ink.

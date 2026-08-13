@@ -607,19 +607,39 @@ function BoardTab({
           >
             {/* The stage is a heading: without it the board hands a screen
                 reader fifteen card titles and no structure to hang them on,
-                and the outline skips h1 straight to h3. */}
-            <h2 className="bcol-head">
-              <button
-                type="button"
-                className="bcol-fold"
-                aria-expanded="true"
-                aria-label={t("board.foldRail", { stage: label })}
-                onClick={() => onToggleFold(rail)}
-              >
-                <FoldIcon />
-                {label}
-              </button>
-              <span className="n">{count}</span>
+                and the outline skips h1 straight to h3.
+
+                On the narrow carousel it was display: none, which took it
+                out of the accessibility tree as well as off the screen —
+                so the phone board was exactly the outline this heading
+                exists to prevent, h1 followed by seventeen h3 card titles
+                with no stage against any of them. The strip above carries
+                the name and count visibly there, so the heading goes
+                sr-only rather than away.
+
+                Without the button, deliberately: nothing folds on the
+                carousel (shownFolded is empty below 900px), and an
+                invisible focusable control is worse than no control. That
+                is also why the label cannot simply be hidden with CSS —
+                it lives inside the button. */}
+            <h2 className={`bcol-head${isNarrow ? " sr-only" : ""}`}>
+              {isNarrow ? (
+                `${label} (${count})`
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="bcol-fold"
+                    aria-expanded="true"
+                    aria-label={t("board.foldRail", { stage: label })}
+                    onClick={() => onToggleFold(rail)}
+                  >
+                    <FoldIcon />
+                    {label}
+                  </button>
+                  <span className="n">{count}</span>
+                </>
+              )}
             </h2>
             {live && (
               <div className="bcol-prop" aria-hidden="true">
