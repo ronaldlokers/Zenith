@@ -5939,3 +5939,13 @@ button:not(:disabled):active,
   }
 }
 
+
+/* The backup-code acknowledgement (2FA setup). Checkbox and label on one
+   line so the claim reads as a sentence rather than a form field. */
+.tfa-saved-ack {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  font-size: var(--text-body);
+}

@@ -752,6 +752,8 @@
     "twoFactorError": "Couldn't do that — check your password.",
     "twoFactorScanHint": "Add this secret to your authenticator app (Google Authenticator, 1Password, etc.):",
     "twoFactorBackupCodesHint": "Save these backup codes somewhere safe — each works once if you lose access to your authenticator app.",
+    "twoFactorCodesShownOnce": "These codes are shown once. Zenith cannot show them again.",
+    "twoFactorSavedCodes": "I have saved my backup codes",
     "twoFactorCodePlaceholder": "Code from your app",
     "twoFactorVerified": "Verified — 2FA is working.",
     "twoFactorVerifyError": "That code didn't verify. 2FA is still enabled — try again.",

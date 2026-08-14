@@ -186,6 +186,16 @@ export function TwoFactorSettings() {
     null,
   );
   const [verifyCode, setVerifyCode] = useState("");
+  // These codes are shown exactly once. There is no route in the app to view
+  // or regenerate them, and Login.tsx accepts one in place of a TOTP code, so
+  // they are the only way back into an account whose authenticator is gone.
+  //
+  // Close was a plain button next to them: one click, by the same reflex that
+  // dismisses every other Close, and the sole recovery path went with it. The
+  // account-deletion flow on this page already argues that an action taking
+  // more than the button names should not be reachable by reflex; this is the
+  // same argument with the consequence one step further away.
+  const [savedCodes, setSavedCodes] = useState(false);
   const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
 
   const enable = async (e: FormEvent) => {
@@ -238,6 +248,7 @@ export function TwoFactorSettings() {
           <p className="muted small">{t("account.twoFactorScanHint")}</p>
           <p className="tfa-secret">{secret}</p>
           <p className="muted small">{t("account.twoFactorBackupCodesHint")}</p>
+          <p className="muted small">{t("account.twoFactorCodesShownOnce")}</p>
           <ul className="tfa-backup-codes">
             {setup.backupCodes.map((c) => (
               <li key={c}>{c}</li>
@@ -273,7 +284,23 @@ export function TwoFactorSettings() {
             </button>
           </form>
           {verifyMessage && <p className="muted small">{verifyMessage}</p>}
-          <button onClick={() => setSetup(null)}>{t("common.close")}</button>
+          <label className="tfa-saved-ack">
+            <input
+              type="checkbox"
+              checked={savedCodes}
+              onChange={(e) => setSavedCodes(e.target.checked)}
+            />
+            <span>{t("account.twoFactorSavedCodes")}</span>
+          </label>
+          <button
+            disabled={!savedCodes}
+            onClick={() => {
+              setSetup(null);
+              setSavedCodes(false);
+            }}
+          >
+            {t("common.close")}
+          </button>
         </>
       ) : (
         <form onSubmit={enabled ? disable : enable}>

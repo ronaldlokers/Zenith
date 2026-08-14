@@ -752,6 +752,8 @@
     "twoFactorError": "Kon dit niet doen — controleer je wachtwoord.",
     "twoFactorScanHint": "Voeg dit geheim toe aan je authenticator-app (Google Authenticator, 1Password, etc.):",
     "twoFactorBackupCodesHint": "Bewaar deze back-upcodes op een veilige plek — elke werkt eenmalig als je geen toegang meer hebt tot je authenticator-app.",
+    "twoFactorCodesShownOnce": "Deze codes worden één keer getoond. Zenith kan ze niet opnieuw laten zien.",
+    "twoFactorSavedCodes": "Ik heb mijn back-upcodes opgeslagen",
     "twoFactorCodePlaceholder": "Code uit je app",
     "twoFactorVerified": "Geverifieerd — 2FA werkt.",
     "twoFactorVerifyError": "Die code kon niet worden geverifieerd. 2FA staat nog steeds aan — probeer het opnieuw.",
