@@ -32,13 +32,31 @@ export type Notify = (
 
 // The toast queue + notify(), lifted out of App. A queue rather than a
 // single slot (#346): a second notify used to erase a live undo window
-// before its 6s elapsed. Cap the stack so a burst can't tower; oldest
-// drops first.
+// before its 6s elapsed. Cap the stack so a burst can't tower.
+//
+// The cap dropped the oldest, and the oldest is often the one that matters.
+// Delete an application and move three cards on the board inside the six
+// seconds — each move notifies — and the Undo was pushed off the stack while
+// deleteWithUndo's timer kept running: the delete committed with the only way
+// back already gone from the screen.
+//
+// So a toast carrying an undo is not interchangeable with one reporting
+// something that already happened, and eviction takes the oldest toast
+// without one first. If every toast on the stack carries an undo the oldest
+// still goes — there is nothing better to drop, and letting the stack grow
+// would be the tower the cap exists to prevent.
+const MAX_TOASTS = 3;
 export function useToasts() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const notify = useCallback<Notify>((message, undo, label) => {
     const id = Date.now() + Math.random();
-    setToasts((cur) => [...cur, { id, message, undo, label }].slice(-3));
+    setToasts((cur) => {
+      const next = [...cur, { id, message, undo, label }];
+      if (next.length <= MAX_TOASTS) return next;
+      const informational = next.findIndex((toast) => !toast.undo);
+      const drop = informational === -1 ? 0 : informational;
+      return [...next.slice(0, drop), ...next.slice(drop + 1)];
+    });
     window.setTimeout(
       () => setToasts((cur) => cur.filter((t) => t.id !== id)),
       undo ? 6000 : 3000,
