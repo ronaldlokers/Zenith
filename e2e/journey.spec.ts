@@ -88,6 +88,63 @@ async function rawAxeViolations(page: Page) {
   });
 }
 
+// The state every account starts in, and the one every sweep this session
+// missed. Two defects lived here undetected — a heading level skipped on the
+// onboarding checklist, which only renders while the account is empty, and a
+// link that stopped being distinguishable from its sentence — and both were
+// found by CI rather than by any of the passes run against a database with
+// data in it.
+//
+// Two ways in, because neither alone is enough. A filtered view is empty in
+// any database, so it works on a developer machine with real data in it; the
+// bare routes are only genuinely empty on a fresh checkout, which is what CI
+// has. Between them the empty rendering is exercised wherever this runs.
+describe("with nothing to show", () => {
+  it("draws an empty result set without breaking anything", async () => {
+    const page = await signedIn();
+    const failures: string[] = [];
+    for (const path of [
+      "/board?q=zzz-nothing-matches-this",
+      "/companies?q=zzz-nothing-matches-this",
+      "/people?q=zzz-nothing-matches-this",
+      "/feed?q=zzz-nothing-matches-this",
+    ]) {
+      await page.goto(BASE + path);
+      await page.waitForSelector("main, .content");
+      const violations = await axeViolations(page);
+      if (violations.length) failures.push(`${path}: ${violations.join(", ")}`);
+    }
+    expect(failures).toEqual([]);
+    await page.context().close();
+  }, 180_000);
+
+  it("keeps the heading order it promises on every page", async () => {
+    // heading-order is how someone navigating by headings knows where they
+    // are. The onboarding checklist skipped a level on the first screen a new
+    // account shows, and nothing caught it because the checklist is gone as
+    // soon as there is anything to see.
+    const page = await signedIn();
+    const failures: string[] = [];
+    for (const path of ["/overview", "/board", "/insights", "/cv", "/settings"]) {
+      await page.goto(BASE + path);
+      await page.waitForSelector("main, .content");
+      await animationsSettled(page);
+      const levels = await page.evaluate(() =>
+        [...document.querySelectorAll("h1,h2,h3,h4,h5,h6")]
+          .filter((h) => (h as HTMLElement).offsetParent !== null)
+          .map((h) => Number(h.tagName[1])),
+      );
+      for (let i = 1; i < levels.length; i++) {
+        if (levels[i] - levels[i - 1] > 1) {
+          failures.push(`${path}: h${levels[i - 1]} jumps to h${levels[i]}`);
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+    await page.context().close();
+  }, 180_000);
+});
+
 describe("the journey a person actually takes", () => {
   it("adds an application and it is still there after a reload", async () => {
     const page = await signedIn();
