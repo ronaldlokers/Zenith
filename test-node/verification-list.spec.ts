@@ -25,8 +25,11 @@ function checksCommands(): string[] {
     .filter((c) => !c.startsWith("|"));
 }
 
-// Setup, not verification — there is nothing for a person to run and read.
-const SETUP = new Set(["npm ci"]);
+// Setup, not verification — there is nothing here for a person to run and
+// read. Installing a browser is the same kind of step as installing packages:
+// it makes a gate possible rather than being one. The gate it enables,
+// `npm run e2e`, is documented like the rest.
+const SETUP = new Set(["npm ci", "npx playwright install --with-deps chromium"]);
 
 // The brief prescribes the local form where it differs from CI's, with the
 // reason written beside it. Both spellings count as documented.

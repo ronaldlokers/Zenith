@@ -95,3 +95,4 @@ scripts/.seed-admin.sql
 # scripts/storybook-shots.mjs comparison captures (sb-baseline/, sb-after/)
 sb-*/
 coverage/
+e2e/.auth.json
