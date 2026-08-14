@@ -43,10 +43,10 @@ export default defineConfig({
       // test written against it found a heading stranded at the foot of a
       // page in the CV people send to employers.
       thresholds: {
-        statements: 38,
-        branches: 34,
-        functions: 27,
-        lines: 38,
+        statements: 43,
+        branches: 38,
+        functions: 30,
+        lines: 43,
       },
     },
     projects: [

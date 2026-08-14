@@ -138,6 +138,26 @@ export interface ResponseTime {
   waiting: number;
   /** Days the longest of those has been waiting, for scale. */
   longestWait: number | null;
+  /**
+   * How many of those waiting have been waiting longer than any reply that
+   * ever arrived. Null until there are enough answers to say it.
+   *
+   * The point is to turn open-ended waiting into something that can be acted
+   * on. Uncertainty is the part of a job search that does the damage —
+   * research on job-search stress is consistent that not knowing is harder to
+   * carry than a no — and "still waiting" says nothing about whether an
+   * answer is still coming.
+   *
+   * Deliberately measured against this account's own replies rather than a
+   * published figure. The industry numbers exist (a first response typically
+   * lands in about a week, and past three weeks a reply is unlikely), but
+   * they describe a market, not a person's field or seniority, and this page
+   * already prefers the reader's own median for the same reason. Beyond the
+   * slowest reply anyone has actually sent you is a statement that is true by
+   * construction, and it is a floor rather than a verdict: it says answers
+   * have stopped arriving by this point, not that the answer is no.
+   */
+  beyondAnyReply: number | null;
 }
 
 // How long employers actually take to answer — the metric a job seeker can
@@ -188,11 +208,18 @@ export function responseTime(
     if (next) answered.push(days);
     else waits.push(days);
   }
+  const slowestReply = answered.length ? Math.max(...answered) : null;
   return {
     median: answered.length >= MIN_CONVERSION_N ? median(answered) : null,
     n: answered.length,
     waiting: waits.length,
     longestWait: waits.length ? Math.max(...waits) : null,
+    // Same floor as the median: below it the slowest reply is one sample and
+    // says nothing about where replies stop.
+    beyondAnyReply:
+      answered.length >= MIN_CONVERSION_N && slowestReply != null
+        ? waits.filter((d) => d > slowestReply).length
+        : null,
   };
 }
 

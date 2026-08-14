@@ -245,7 +245,13 @@ describe("responseTime", () => {
 
   it("ignores applications that never reached applied", () => {
     const r = responseTime([h(1, "interested", day(0))], NOW);
-    expect(r).toEqual({ median: null, n: 0, waiting: 0, longestWait: null });
+    expect(r).toEqual({
+      median: null,
+      n: 0,
+      waiting: 0,
+      longestWait: null,
+      beyondAnyReply: null,
+    });
   });
 });
 
@@ -290,5 +296,71 @@ describe("timestamps in either shape", () => {
       Date.UTC(2026, 7, 14),
     );
     expect(out.median).toBe(4);
+  });
+});
+
+// Turning "still waiting" into something that can be acted on. The research
+// on job-search stress is consistent that uncertainty is the part that does
+// the damage — not knowing is harder to carry than a no — and a bare count of
+// open applications says nothing about whether an answer is still coming.
+//
+// Measured against this account's own replies rather than a published figure:
+// past the slowest reply that ever arrived, answers have stopped coming here.
+describe("applications waiting longer than any reply ever took", () => {
+  const applied = (id: number, day: string) => ({
+    application_id: id,
+    to_status: "applied",
+    from_status: null,
+    changed_at: `2026-01-${day} 09:00:00`,
+  });
+  const replied = (id: number, day: string) => ({
+    application_id: id,
+    to_status: "screening",
+    from_status: "applied",
+    changed_at: `2026-01-${day} 09:00:00`,
+  });
+  const NOW = Date.parse("2026-01-31T09:00:00Z");
+
+  it("counts the ones past the slowest reply, and no others", () => {
+    const history = [
+      // Three answers: 2, 4 and 6 days. The slowest reply is 6.
+      applied(1, "01"), replied(1, "03"),
+      applied(2, "01"), replied(2, "05"),
+      applied(3, "01"), replied(3, "07"),
+      // Waiting 5 days — inside the range replies have arrived in.
+      applied(4, "26"),
+      // Waiting 20 and 30 days — past it.
+      applied(5, "11"),
+      applied(6, "01"),
+    ];
+    const r = responseTime(history, NOW);
+    expect(r.n).toBe(3);
+    expect(r.waiting).toBe(3);
+    expect(
+      r.beyondAnyReply,
+      "a wait still inside the range replies arrive in was counted as past it",
+    ).toBe(2);
+  });
+
+  it("says nothing until there are enough replies to say it", () => {
+    // One reply is not a distribution: calling a 10-day wait unusual on the
+    // strength of a single 2-day answer is a claim the data cannot carry.
+    const history = [
+      applied(1, "01"), replied(1, "03"),
+      applied(2, "01"),
+    ];
+    expect(responseTime(history, NOW).beyondAnyReply).toBeNull();
+  });
+
+  it("counts none when everything open is still inside the range", () => {
+    const history = [
+      applied(1, "01"), replied(1, "11"),
+      applied(2, "01"), replied(2, "12"),
+      applied(3, "01"), replied(3, "13"),
+      applied(4, "29"),
+    ];
+    const r = responseTime(history, NOW);
+    expect(r.waiting).toBe(1);
+    expect(r.beyondAnyReply).toBe(0);
   });
 });
