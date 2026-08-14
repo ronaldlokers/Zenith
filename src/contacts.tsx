@@ -125,7 +125,11 @@ export function ContactsTab({
             run(() =>
               editing === "new"
                 ? api.create("contacts", data)
-                : api.update("contacts", editing.id, data),
+                : // The version this form was opened at. It writes every
+                  // column from a copy loaded when the page did, so without
+                  // this a save quietly reverts an outreach status or a note
+                  // set somewhere else since.
+                  api.update("contacts", editing.id, data, editing.updated_at),
             )
           }
         />

@@ -114,7 +114,8 @@ export function CompaniesTab({
           onSubmit={(data) =>
             run(async () =>
               editing !== "new"
-                ? api.update("companies", editing.id, data)
+                ? // The version this form was opened at — see contacts.tsx.
+                  api.update("companies", editing.id, data, editing.updated_at)
                 : api.create<Company>("companies", data),
             )
           }

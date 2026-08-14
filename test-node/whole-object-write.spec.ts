@@ -64,14 +64,20 @@ function topLevelArgs(args: string): string[] {
 
 describe("whole-object saves", () => {
   it("never spread a record that was loaded earlier", () => {
-    // The rule, stated once for every resource. A form passing its own fields
-    // (`data`) is a whole-object write by definition and is fine — the person
-    // just saw all of them. Spreading a record the panel is *holding* is the
-    // defect: it writes columns the panel never showed, from whenever it
-    // loaded.
+    // The rule, stated once for every resource: a whole-object write either
+    // sends only what it owns, or carries the version it was loaded at.
     //
-    // Exempt when a version is passed, because then the route refuses a stale
-    // write instead of silently applying it.
+    // An earlier version of this comment said a form passing `data` is fine
+    // "because the person just saw all of them". That is not true of these
+    // forms — they seed state from the record they were opened with, so they
+    // resend columns the person never saw (an outreach status, a follow-up
+    // date) from whenever the page loaded. They are whole-object writes from
+    // a snapshot, exactly like the panels were.
+    //
+    // The difference is what can be done about it. A panel that owns one
+    // field can send one field, which removes the conflict. A form genuinely
+    // writes everything, so it has to detect one instead: If-Match, which is
+    // the fourth argument and why passing it exempts the call.
     const offenders: string[] = [];
     for (const file of sources(SRC)) {
       const text = readFileSync(file, "utf8");

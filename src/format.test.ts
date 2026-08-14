@@ -89,6 +89,7 @@ function makeContact(overrides: Partial<Contact> = {}): Contact {
     follow_up_at: null,
     outreach_status: "not_contacted",
     created_at: "2026-01-01 00:00:00",
+    updated_at: "2026-01-01 00:00:00",
     ...overrides,
   };
 }
