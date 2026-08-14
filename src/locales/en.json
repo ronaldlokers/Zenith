@@ -1005,6 +1005,9 @@
     "replyTooFew": "Not enough replies yet to say how long they take.",
     "replyWaiting": "{{count}} still waiting, the longest {{days}} days.",
     "replyBeyond": "{{count}} of them have waited longer than any reply you have had.",
+    "gapsTitle": "Asked for, not on your CV",
+    "gapsHint": "Across the {{count}} postings you have saved a description for. These are skills you have listed but no role in your history shows.",
+    "gapsAsked": "in {{count}} of them",
     "fromNOffers": "from {{count}} offer"
   },
   "export": {

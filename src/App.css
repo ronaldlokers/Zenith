@@ -5949,3 +5949,15 @@ button:not(:disabled):active,
   margin: var(--space-3) 0;
   font-size: var(--text-body);
 }
+
+/* Recurring skill gaps (insights). A plain list under a ruled heading, the
+   same shape as the Activity section it sits above — it is a reading, not a
+   control surface. */
+.insights-gap-list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

@@ -7,7 +7,15 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { useTranslation } from "react-i18next";
-import type { AgendaEntry, Application, Stats, UserGoal } from "./types";
+import type {
+  AgendaEntry,
+  Application,
+  Skill,
+  Stats,
+  UserGoal,
+  WorkExperience,
+} from "./types";
+import { recurringGaps } from "./skill-demand";
 import {
   FUNNEL_STAGES,
   funnelConversions,
@@ -57,6 +65,8 @@ export function InsightsTab({
   const { t } = useTranslation();
   const [showActivity, setShowActivity] = useState(false);
   const [goal, setGoal] = useState<UserGoal | null>(null);
+  const [cvSkills, setCvSkills] = useState<Skill[]>([]);
+  const [cvWork, setCvWork] = useState<WorkExperience[]>([]);
   useEffect(() => {
     let live = true;
     void api
@@ -64,6 +74,19 @@ export function InsightsTab({
       .then((g) => live && setGoal(g))
       // A missing goal is not an error state for this page: it just means
       // there is no target to measure against, and the line is omitted.
+      .catch(() => {});
+    Promise.all([
+      api.list<Skill>("skills"),
+      api.list<WorkExperience>("work-experience"),
+    ])
+      .then(([s, w]) => {
+        if (!live) return;
+        setCvSkills(s);
+        setCvWork(w);
+      })
+      // A CV that cannot be read is not an error state for this page either:
+      // the recurring-gaps block is simply omitted, and everything else on
+      // the screen is unaffected by it.
       .catch(() => {});
     return () => {
       live = false;
@@ -96,6 +119,11 @@ export function InsightsTab({
   // median is over answers received and says nothing on its own about the
   // ones still out.
   const rtime = responseTime(history, Date.now());
+  // Which gaps recur, across every posting saved rather than one at a time.
+  // The skills and work history are not on this page's payload, so they are
+  // fetched here; the block is omitted entirely until they arrive rather than
+  // rendering a heading over nothing.
+  const { gaps, postings } = recurringGaps(applications, cvSkills, cvWork);
   const mom = computeWeeklyMomentum(stats.applications, history);
   // Pace against the user's own target. This page judges how the search is
   // going and refused the one benchmark they set themselves — the weekly
@@ -450,6 +478,30 @@ export function InsightsTab({
         </DashCard>
       </div>
 
+
+      {/* Named only when several postings agree. One posting asking for
+          something is a job ad; four asking for the same thing is a pattern,
+          and only the second is worth acting on. The count is postings rather
+          than mentions on purpose — a verbose ad repeating a word six times
+          is still one employer. */}
+      {gaps.length > 0 && postings >= 3 && (
+        <div className="insights-gaps">
+          <h2 className="ruled-h">{t("insights.gapsTitle")}</h2>
+          <p className="muted small">
+            {t("insights.gapsHint", { count: postings })}
+          </p>
+          <ul className="insights-gap-list">
+            {gaps.slice(0, 5).map((g) => (
+              <li key={g.name}>
+                <strong>{g.name}</strong>{" "}
+                <span className="muted small">
+                  {t("insights.gapsAsked", { count: g.asked })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Activity is a section of this screen like the ones above it, not a
           full-width button floating under them. */}

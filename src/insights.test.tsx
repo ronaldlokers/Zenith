@@ -4,10 +4,13 @@ import { MemoryRouter } from "react-router-dom";
 import { InsightsTab } from "./insights";
 import type { Application, Stats } from "./types";
 
+const listed: Record<string, unknown[]> = { skills: [], "work-experience": [] };
+
 vi.mock("./api", () => ({
   api: {
     goals: () => Promise.resolve({ weekly_app_goal: 5, search_started_at: null }),
     interactions: () => Promise.resolve([]),
+    list: (resource: string) => Promise.resolve(listed[resource] ?? []),
   },
 }));
 
@@ -100,5 +103,61 @@ describe("the reply-time line", () => {
       screen.queryByText(/longer than any reply/i),
       "one reply is not a distribution",
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("the recurring gaps block", () => {
+  const withJd = (id: number, jd: string | null) =>
+    ({ id, status: "applied", job_description: jd }) as unknown as Application;
+
+  function renderWithApps(apps: Application[]) {
+    render(
+      <MemoryRouter>
+        <InsightsTab
+          {...props}
+          applications={apps}
+          stats={statsWith([h(1, "applied", day(10))])}
+        />
+      </MemoryRouter>,
+    );
+  }
+
+  it("names a skill several postings ask for that no role backs", async () => {
+    listed.skills = [{ id: 1, name: "Terraform" }, { id: 2, name: "Go" }];
+    listed["work-experience"] = [{ id: 1, skills: [{ id: 2, name: "Go" }] }];
+    renderWithApps([
+      withJd(1, "terraform and go"),
+      withJd(2, "terraform please"),
+      withJd(3, "terraform again, plus go"),
+    ]);
+    expect(await screen.findByText("Terraform")).toBeInTheDocument();
+    expect(screen.getByText(/in 3 of them/i)).toBeInTheDocument();
+    expect(
+      screen.queryByText("Go"),
+      "a skill the work history already evidences was listed as a gap",
+    ).not.toBeInTheDocument();
+  });
+
+  it("stays quiet below three saved descriptions", async () => {
+    // One posting asking for something is a job ad, not a pattern. Naming it
+    // here would send someone to rewrite a CV on the strength of one advert.
+    listed.skills = [{ id: 1, name: "Terraform" }];
+    listed["work-experience"] = [];
+    renderWithApps([withJd(1, "terraform"), withJd(2, "terraform")]);
+    await screen.findByText(/still waiting|typically come|Not enough replies/i);
+    expect(screen.queryByText("Terraform")).not.toBeInTheDocument();
+  });
+
+  it("stays quiet when the CV cannot be read", async () => {
+    // The fetch failing must cost this block and nothing else on the page.
+    listed.skills = [];
+    listed["work-experience"] = [];
+    renderWithApps([
+      withJd(1, "terraform"),
+      withJd(2, "terraform"),
+      withJd(3, "terraform"),
+    ]);
+    await screen.findByText(/still waiting|typically come|Not enough replies/i);
+    expect(screen.queryByText(/Asked for, not on your CV/i)).not.toBeInTheDocument();
   });
 });
