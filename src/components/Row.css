@@ -35,6 +35,29 @@
       padding 0.15s ease, min-height 0.15s ease;
   }
 
+  /* The whole row is the click target, but the role that says so cannot sit
+     on the <li>: role="button" overrides listitem, and the <ul> then reports
+     a list containing no items — measured with axe on the company and person
+     lists, where it costs a screen reader the count and the "3 of 12"
+     position on every row. So callers wrap their .l1/.l2 in .zui-rowbtn and
+     put the activation on that, leaving the <li> its native semantics.
+     https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/listitem_role
+
+     The ring has to come back out to the row. .zui-row clips its own overflow,
+     so an outline drawn on a child is cut off at the row's edge — :has() puts
+     it back on the element it used to be on, unchanged. (Allowed here: the
+     project's :has() ban is about layout properties, which an outline is
+     not.) Values match index.css:338 rather than referencing it, because this
+     file has to describe the component on its own for Storybook. */
+  .zui-row > .zui-rowbtn:focus-visible {
+    outline: none;
+  }
+
+  .zui-row:has(> .zui-rowbtn:focus-visible) {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: 2px;
+  }
+
   /* App.css:1567 — callers keep the .l1/.l2 class names on their children. */
   .zui-row .l1 {
     display: flex;

@@ -187,7 +187,11 @@ export function ContactsTab({
                 <span className="people-band-n">({rest.length})</span>
               </li>
             )}
-            <Row {...rowActivate(() => setDetailId(c.id))}>
+            <Row>
+              <div
+                className="zui-rowbtn"
+                {...rowActivate(() => setDetailId(c.id))}
+              >
               <div className="l1">
                 <strong>{c.name}</strong>
                 <span className="co">
@@ -208,6 +212,7 @@ export function ContactsTab({
                     {t("outreach.followUpDue")}: {formatDate(c.follow_up_at)}
                   </span>
                 )}
+              </div>
               </div>
             </Row>
           </Fragment>

@@ -162,10 +162,11 @@ export function CompaniesTab({
               !isDead(a.status),
           ).length;
           return (
-          <Row
-            key={c.id}
-            {...rowActivate(() => setDetailId(c.id))}
-          >
+          <Row key={c.id}>
+            <div
+              className="zui-rowbtn"
+              {...rowActivate(() => setDetailId(c.id))}
+            >
             <div className="l1">
               <strong>
                 {c.name}
@@ -184,6 +185,7 @@ export function CompaniesTab({
                 <span className="co">{c.website}</span>
               </div>
             )}
+            </div>
           </Row>
           );
         })}
