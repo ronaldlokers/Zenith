@@ -198,8 +198,16 @@ describe("DashboardTab (Today)", () => {
     await waitFor(() => expect(followUpCalls.length).toBe(3));
 
     expect(followUpCalls.map((c) => c.id).sort()).toEqual([1, 2, 5]);
-    const dates = new Set(followUpCalls.map((c) => c.at));
-    expect(dates.size, "all three landed on one date again").toBeGreaterThan(1);
+
+    // The dates themselves, not just that there is more than one of them.
+    // Found by mutation: "spread from tomorrow" passed a size check while
+    // rebuilding the pile a day later, which is the thing the spread exists
+    // to prevent. Two a day, starting three days out, most urgent first —
+    // the rule the code comment states, asserted rather than implied.
+    expect(
+      followUpCalls.map((c) => c.at),
+      "the batch no longer lands two a day from three days out",
+    ).toEqual([iso(3), iso(3), iso(4)]);
   });
 
   test("names the unplanned state instead of calling it caught up", () => {
