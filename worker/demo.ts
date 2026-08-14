@@ -44,6 +44,25 @@ const USER_TABLES = [
 // Delete every user-scoped row for one user. Shared by the demo reset and
 // the per-user sample-data toggle (#281).
 export async function wipeUserData(env: Env, userId: string): Promise<void> {
+  // The documents rows are only pointers; the files themselves are in R2, and
+  // nothing here used to touch it. Deleting an account therefore removed every
+  // record of a person and left their CVs and cover letters in the bucket —
+  // permanently, and beyond reach, because the rows that named the keys were
+  // the only way to find them again.
+  //
+  // First, and not merely for tidiness: after the rows go there is nothing
+  // left that can name a key. If the bucket call throws, the rows survive too,
+  // so the account is still there to delete again rather than half-erased.
+  const { results } = await env.DB.prepare(
+    "SELECT key FROM documents WHERE user_id = ?",
+  )
+    .bind(userId)
+    .all<{ key: string }>();
+  // R2 takes up to 1000 keys per call.
+  for (let i = 0; i < results.length; i += 1000) {
+    await env.DOCS.delete(results.slice(i, i + 1000).map((r) => r.key));
+  }
+
   for (const table of USER_TABLES) {
     await env.DB.prepare(`DELETE FROM ${table} WHERE user_id = ?`)
       .bind(userId)
