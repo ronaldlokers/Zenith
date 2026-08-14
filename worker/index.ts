@@ -934,6 +934,15 @@ app.patch("/api/applications/:id", async (c) => {
     sets.push("notes = ?");
     vals.push(body.notes ?? null);
   }
+  // The cover-letter panel writes through here rather than PUT. It used to
+  // send { ...application, cover_letter }, and PUT writes every column, so a
+  // page loaded before a note was typed elsewhere put the old note back —
+  // measured: notes and fit_score both reverted to null by a save the person
+  // thought only touched their cover letter.
+  if ("cover_letter" in body) {
+    sets.push("cover_letter = ?");
+    vals.push(body.cover_letter ?? null);
+  }
   if ("fit_score" in body) {
     const fit = body.fit_score;
     if (fit != null && !(Number.isInteger(fit) && fit >= 1 && fit <= 5)) {
