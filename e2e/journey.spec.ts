@@ -155,6 +155,64 @@ describe("with nothing to show", () => {
 // The CSS says every animation can be turned off. This is whether the
 // browser agrees — a media query in a stylesheet nobody exercises under the
 // preference is a claim, not a behaviour.
+// Offline. The service worker has unit tests — what it caches, what it
+// refuses to cache, that it bounds the asset cache — but nothing has ever
+// asked what a person sees. The shell is cached at install and every
+// navigation, so the app should come up; the API cannot, so it should say so
+// in the words written for exactly this (errors.offlineRead) rather than the
+// browser's own dinosaur or a blank page.
+describe("with no connection", () => {
+  it("still comes up, and says why it is empty", async () => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+    });
+    const page = await context.newPage();
+    // Warm it: the shell is cached on navigation, so there has to have been
+    // one. This is the real condition too — nobody's first ever visit is
+    // offline.
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector(".bottombar");
+    await page.waitForFunction(() => !!navigator.serviceWorker?.controller, undefined, {
+      timeout: 20_000,
+    });
+
+    // One reload while the worker is already controlling, so the asset
+    // requests go through its fetch handler and land in the cache.
+    await page.reload();
+    await page.waitForSelector(".bottombar");
+    await page.waitForTimeout(1000);
+
+    await context.setOffline(true);
+    const nav = await page.goto(`${BASE}/board`).then(
+      (r) => `status=${r?.status()}`,
+      (e) => `threw ${String(e).slice(0, 60)}`,
+    );
+    await page.waitForTimeout(3000);
+    expect(nav, "the cached shell did not answer").toContain("status=200");
+    await page.waitForSelector("main", { timeout: 20_000 });
+    const shown = await page.locator("body").innerText();
+    expect(
+      shown.length,
+      "offline gave a blank page rather than the cached shell",
+    ).toBeGreaterThan(40);
+    // The app's own words, not the browser's error page.
+    expect(
+      shown,
+      "offline is not explained in the app's own copy",
+    ).toMatch(/offline|couldn't reach|try again/i);
+    // And not the sign-in form: the session is intact, the network is not,
+    // and a password box cannot help with that.
+    expect(
+      shown,
+      "offline presented a sign-in form that cannot work",
+    ).not.toMatch(/sign in to your pipeline/i);
+
+    await context.setOffline(false);
+    await context.close();
+  }, 180_000);
+});
+
 describe("for someone who asked for less motion", () => {
   it("opens a dialog without animating it", async () => {
     const context = await browser.newContext({
