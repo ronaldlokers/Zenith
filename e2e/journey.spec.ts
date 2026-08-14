@@ -152,6 +152,41 @@ describe("with nothing to show", () => {
 // The fourth state, and the first one every visit passes through. The
 // skeleton is aria-hidden — correct, three empty cards are not worth reading
 // aloud — which left nothing at all to say content was on its way.
+// The CSS says every animation can be turned off. This is whether the
+// browser agrees — a media query in a stylesheet nobody exercises under the
+// preference is a claim, not a behaviour.
+describe("for someone who asked for less motion", () => {
+  it("opens a dialog without animating it", async () => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+      reducedMotion: "reduce",
+    });
+    const page = await context.newPage();
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector(".bottombar");
+
+    await page.keyboard.press("n");
+    await page.waitForSelector('[aria-modal="true"]');
+    // Immediately: with the animation off there is nothing to wait for, and
+    // the dialog is fully opaque on the frame it appears.
+    const opacity = await page.evaluate(() => {
+      const el = document.querySelector('[aria-modal="true"]');
+      return el ? getComputedStyle(el).opacity : null;
+    });
+    expect(
+      opacity,
+      "the dialog is still fading in for someone who asked it not to",
+    ).toBe("1");
+
+    const running = await page.evaluate(() =>
+      document.getAnimations().filter((a) => a.playState === "running").length,
+    );
+    expect(running, "something is still animating").toBe(0);
+    await context.close();
+  }, 180_000);
+});
+
 describe("while the data is still coming", () => {
   it("tells someone who cannot see the skeleton that it is loading", async () => {
     const context = await browser.newContext({
