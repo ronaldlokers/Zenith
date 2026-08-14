@@ -1,4 +1,12 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ChunkBoundary } from "./chunk-boundary";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -270,6 +278,20 @@ export default function App() {
       ? [{ data: "admin" as const, to: "admin" as const, active: tab === "admin", icon: <AdminIcon />, label: t("admin.navLabel") }]
       : []),
   ];
+  // Returning from an application should put the keyboard back on the card
+  // it came from. Tracked here because the board unmounts entirely while an
+  // application is routed, so it cannot remember this for itself.
+  const [returnFocusId, setReturnFocusId] = useState<number | null>(null);
+  const lastDetailId = useRef<number | null>(null);
+  useEffect(() => {
+    if (detailIdFromUrl != null) {
+      lastDetailId.current = detailIdFromUrl;
+    } else if (lastDetailId.current != null) {
+      setReturnFocusId(lastDetailId.current);
+      lastDetailId.current = null;
+    }
+  }, [detailIdFromUrl]);
+
   // Named by the nav rather than by a table of its own, so a destination
   // cannot be renamed in one place and keep its old name in the other. The
   // routed job takes its own title: a bookmark or a history entry for one
@@ -618,6 +640,8 @@ export default function App() {
                 onOpenJob={(id: number | null) =>
                   navigate(boardTarget(id ?? undefined))
                 }
+                focusCardId={returnFocusId}
+                onFocusRestored={() => setReturnFocusId(null)}
                 onOpenQuickAdd={(stage) => {
                   setQuickAddStage(stage);
                   setShowQuickAdd(true);
