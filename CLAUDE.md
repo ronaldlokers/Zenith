@@ -37,7 +37,8 @@ Run and confirm green:
 - `npm run build`
 - `npm run lint` (oxlint) — must be clean, zero warnings; don't introduce any (exhaustive-deps in particular).
 - `npx vitest run --no-file-parallelism` — parallel runs flake locally (CI is authoritative). vitest-pool-workers storage is isolated **per test file**, shared within a file; put destructive whole-account tests in their own spec file.
-- en/nl key parity (every key in both locales).
+- `npx wrangler types --check` — the one gate that used to live only in CI, which is exactly how it caught a green-locally branch: `worker-configuration.d.ts` is generated and records the workerd version it came from, so a dependency bump makes it stale while tsc, build, lint, the whole suite and a browser smoke test all still pass. Regenerate with `npx wrangler types` and commit the result.
+- en/nl key parity (every key in both locales) — enforced by `test-node/locale-parity.spec.ts`, so the suite above already covers it; listed because it is a rule to design to, not only one to check.
 
 For non-trivial UI, **verify against the live render**, not just the DOM: run the app and screenshot at the real viewport. Local rig: `npm run dev`; local D1 needs `wrangler d1 migrations apply zenith --local` first (and again after restoring any `.wrangler/state` DB snapshot). Snapshot + restore the local DB around any data mutations.
 
