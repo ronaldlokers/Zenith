@@ -48,7 +48,16 @@ function loadWorker() {
       },
       delete: async (req) => entries.delete(keyOf(req)),
       add: async (req) => {
-        entries.set(keyOf(req), { ok: true });
+        // "/" answers with a document referencing the entry assets, which is
+        // what precacheShellAssets reads to know what the shell needs to boot.
+        const key = keyOf(req);
+        const html =
+          '<script type="module" src="/assets/index-abc123.js"></script>' +
+          '<link rel="stylesheet" href="/assets/index-abc123.css">';
+        entries.set(key, {
+          ok: true,
+          clone: () => ({ text: async () => (key === "/" ? html : "") }),
+        });
       },
     };
     caches.set(name, cache);
@@ -139,6 +148,39 @@ describe("service worker", () => {
     // refers to are the ones most recently requested.
     expect(keys.at(-1)).toContain("chunk-199");
     expect(keys.some((k) => k.includes("chunk-0.js"))).toBe(false);
+  });
+
+  it("precaches what the shell needs to boot, not just the shell", async () => {
+    // The shell alone answers 200 and renders nothing. On the visit that
+    // installs the worker, the assets were requested before it was
+    // controlling, so opportunistic caching never saw them — offline after a
+    // single visit the document came back and its scripts did not.
+    const { handlers, openCache } = loadWorker();
+    const install = handlers.get("install");
+    expect(install, "the worker registered no install handler").toBeTruthy();
+    let installed: Promise<unknown> | undefined;
+    install!({ waitUntil: (p: Promise<unknown>) => { installed = p; } });
+    await installed;
+
+    const assets = await openCache("zenith-assets-v1").keys();
+    expect(
+      assets,
+      "the entry script was not precached, so the cached shell cannot boot",
+    ).toContain("/assets/index-abc123.js");
+    expect(assets).toContain("/assets/index-abc123.css");
+  });
+
+  it("does not precache a lazily-loaded route's chunk", async () => {
+    // Only what the document references. Precaching every chunk at install
+    // would download the whole app to serve a shell.
+    const { handlers, openCache } = loadWorker();
+    const install = handlers.get("install");
+    let installed: Promise<unknown> | undefined;
+    install!({ waitUntil: (p: Promise<unknown>) => { installed = p; } });
+    await installed;
+    expect(await openCache("zenith-assets-v1").keys()).not.toContain(
+      "/assets/admin-lazy.js",
+    );
   });
 
   it("leaves a cache under the limit alone", async () => {

@@ -168,20 +168,14 @@ describe("with no connection", () => {
       storageState: STATE,
     });
     const page = await context.newPage();
-    // Warm it: the shell is cached on navigation, so there has to have been
-    // one. This is the real condition too — nobody's first ever visit is
-    // offline.
+    // One visit, and no reload. The worker precaches the entry assets at
+    // install from the shell it just fetched, so a single visit is enough —
+    // it was not before, and the page came back 200 and blank.
     await page.goto(`${BASE}/board`);
     await page.waitForSelector(".bottombar");
     await page.waitForFunction(() => !!navigator.serviceWorker?.controller, undefined, {
       timeout: 20_000,
     });
-
-    // One reload while the worker is already controlling, so the asset
-    // requests go through its fetch handler and land in the cache.
-    await page.reload();
-    await page.waitForSelector(".bottombar");
-    await page.waitForTimeout(1000);
 
     await context.setOffline(true);
     const nav = await page.goto(`${BASE}/board`).then(
