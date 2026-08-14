@@ -29,7 +29,7 @@ export function Dialog({
   // the shell behind it taken out of reach in one place rather than at each
   // call site.
   useScrollLock(true);
-  useInertBackground(true);
+  useInertBackground(true, ref);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();

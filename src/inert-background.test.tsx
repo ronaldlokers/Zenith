@@ -53,6 +53,43 @@ describe("inert background", () => {
     expect(back.hasAttribute("inert")).toBe(false);
   });
 
+  test("spares the branch the dialog is nested in", () => {
+    // The notification panel hangs off the bottom bar rather than off a
+    // backdrop of its own, so "skip the backdrop" would inert the bar and
+    // take the panel out of reach with it — the dialog disabling itself.
+    const bar = shell();
+    const panel = document.createElement("div");
+    const search = document.createElement("button");
+    bar.append(search, panel);
+    const other = shell();
+
+    renderHook(() => useInertBackground(true, { current: panel }));
+    expect(
+      bar.hasAttribute("inert"),
+      "the bar holds the dialog, so inerting it would disable the dialog",
+    ).toBe(false);
+    expect(other.hasAttribute("inert")).toBe(true);
+    // Sparing the branch is not enough on its own: the bar's own controls sit
+    // beside the open panel, and left alone they stayed reachable.
+    expect(
+      search.hasAttribute("inert"),
+      "the bar's other controls are behind the panel, not part of it",
+    ).toBe(true);
+  });
+
+  test("leaves a backdrop alone wherever it sits", () => {
+    // inert takes pointer events with it, so an inerted backdrop is a modal
+    // that click-outside no longer closes.
+    const bar = shell();
+    const back = document.createElement("div");
+    back.className = "zui-notification-backdrop";
+    const panel = document.createElement("div");
+    bar.append(back, panel);
+
+    renderHook(() => useInertBackground(true, { current: panel }));
+    expect(back.hasAttribute("inert")).toBe(false);
+  });
+
   test("does nothing when it is not active", () => {
     const bar = shell();
     renderHook(() => useInertBackground(false));

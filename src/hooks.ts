@@ -1,7 +1,7 @@
 // Small shared hooks + the app-wide confirm() service, extracted from
 // App.tsx (#285 split). No React components here, so react-refresh's
 // only-export-components rule stays satisfied.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate } from "react-router-dom";
 import { keyShortcutsEnabled } from "./format";
 
@@ -115,21 +115,46 @@ export function useScrollLock(active: boolean): void {
 // accessibility tree *and* from focus and pointer events, which is the whole
 // of what "behind a modal" should mean, and it has been baseline since 2023.
 //
-// Applied to the shell siblings rather than to the app root, because the
-// backdrop is a child of that root — inerting the root would inert the
-// dialog too. Anything that is not itself a backdrop is fair game, which
-// also keeps a second dialog live when one opens on top of another.
-export function useInertBackground(active: boolean): void {
+// Applied to the shell siblings rather than to the app root, because every
+// dialog lives somewhere inside that root — inerting the root would inert the
+// dialog too. Pass the dialog's own ref and the branch holding it is spared;
+// everything else goes out of reach, which also keeps an outer dialog live
+// when a second opens on top of it.
+export function useInertBackground(
+  active: boolean,
+  dialog?: RefObject<Element | null>,
+): void {
   useEffect(() => {
     if (!active) return;
     const root = document.querySelector(".app");
     if (!root) return;
+    const self = dialog?.current ?? null;
     const hidden: Element[] = [];
-    for (const child of Array.from(root.children)) {
-      if (child.classList.contains("modal-backdrop")) continue;
-      if (child.hasAttribute("inert")) continue;
-      child.setAttribute("inert", "");
-      hidden.push(child);
+    // A backdrop is the dialog's own dismissal surface, and inert takes
+    // pointer events with it — inerting one leaves a modal that click-outside
+    // no longer closes.
+    const spare = (el: Element) =>
+      el.hasAttribute("inert") || /backdrop/.test(String(el.className));
+    const take = (el: Element) => {
+      if (spare(el)) return;
+      el.setAttribute("inert", "");
+      hidden.push(el);
+    };
+
+    if (self && root.contains(self)) {
+      // Walk from the dialog up to the root, taking the siblings at each
+      // level. Sparing the whole branch that holds the dialog is not enough:
+      // the notification panel hangs off the bottom bar, so sparing the bar
+      // left its search and filter reachable right beside the open panel.
+      let node: Element = self;
+      while (node !== root && node.parentElement) {
+        for (const sibling of Array.from(node.parentElement.children)) {
+          if (sibling !== node) take(sibling);
+        }
+        node = node.parentElement;
+      }
+    } else {
+      for (const child of Array.from(root.children)) take(child);
     }
     return () => {
       // Only what this dialog set: a nested dialog leaves the outer one's
@@ -137,7 +162,7 @@ export function useInertBackground(active: boolean): void {
       // underneath the outer one.
       for (const el of hidden) el.removeAttribute("inert");
     };
-  }, [active]);
+  }, [active, dialog]);
 }
 
 // Dialog focus management (#261) — moves focus into the dialog on open and
