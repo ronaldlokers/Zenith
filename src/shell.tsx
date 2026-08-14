@@ -146,7 +146,11 @@ export function BottomBar({
           of every open column, and the bar's three slots are meant to be the
           things you reach for from anywhere rather than the things you do
           most. */}
-      <button className="bottombar-slot" onClick={onPinned}>
+      <button
+        className="bottombar-slot"
+        onClick={onPinned}
+        aria-label={t("bottomBar.pinned")}
+      >
         <PinIcon />
         <span className="bottombar-label">{t("bottomBar.pinned")}</span>
         {pinnedCount > 0 && (
@@ -156,7 +160,11 @@ export function BottomBar({
         )}
         <kbd className="bottombar-key">p</kbd>
       </button>
-      <button className="bottombar-slot mid" onClick={onSearch}>
+      <button
+        className="bottombar-slot mid"
+        onClick={onSearch}
+        aria-label={t("header.search")}
+      >
         <SearchIcon />
         <span className="bottombar-label">{t("header.search")}</span>
         <kbd className="bottombar-key">{isMac ? "\u2318K" : "Ctrl+K"}</kbd>

@@ -722,8 +722,14 @@
   text-transform: none;
 }
 
-/* Room for words: below this the glyphs do the work, which is also why the
-   labels are not simply hidden with sr-only — there is nothing to read. */
+/* Room for words: below this the glyphs do the work. The labels are display:
+   none rather than sr-only on purpose — but that took the buttons' names with
+   them, since display: none is removed from the accessibility tree as well as
+   from the page. Measured with axe at 390px: two slots with no accessible name
+   at all, announcing as "button". The names now live in aria-label on the
+   buttons themselves, which does not depend on what the CSS chooses to show —
+   and matches the visible label exactly where one is shown, so the accessible
+   name still contains it (2.5.3). */
 @media (min-width: 700px) {
   .bottombar-label,
   .bottombar-key {
