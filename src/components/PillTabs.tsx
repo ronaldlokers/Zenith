@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { tablistKeyDown } from "./tablist-keys";
 import "./PillTabs.css";
 
 // The network subnav's pill tablist (App.css:1007): a bordered capsule whose
@@ -51,6 +53,7 @@ export function PillTabs<K extends string>({
   idPrefix,
   ...rest
 }: PillTabsProps<K>) {
+  const refs = useRef(new Map<K, HTMLElement | null>()).current;
   return (
     <div className="zui-pilltabs" role="tablist" aria-label={rest["aria-label"]}>
       {tabs.map(({ key, label }) => (
@@ -59,10 +62,22 @@ export function PillTabs<K extends string>({
           type="button"
           role="tab"
           id={idPrefix ? `${idPrefix}-tab-${key}` : undefined}
+          ref={(el) => {
+            refs.set(key, el);
+          }}
           aria-selected={active === key}
           aria-controls={idPrefix ? `${idPrefix}-panel-${key}` : undefined}
+          tabIndex={active === key ? 0 : -1}
           className={active === key ? "active" : undefined}
           onClick={() => onSelect(key)}
+          onKeyDown={(e) =>
+            tablistKeyDown(e, {
+              keys: tabs.map((t) => t.key),
+              active,
+              onSelect,
+              refs,
+            })
+          }
         >
           {label}
         </button>

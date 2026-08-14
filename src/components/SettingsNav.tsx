@@ -6,8 +6,13 @@ import "./SettingsNav.css";
 //
 // A nav, not a tablist: the sections are page-level destinations (Settings
 // deep-links them via /settings?s=…), so the active one is marked with
-// aria-current, matching the markup this replaces. Do not "upgrade" it to
-// role="tab" — that would promise arrow-key roving this does not implement.
+// aria-current. Do not "upgrade" it to role="tab": TabBar and PillTabs are
+// tablists and now carry the full arrow-key pattern, and this is not one of
+// them — these sections are addresses, not panels of a single view.
+//
+// "page" rather than the "true" the replaced markup used. Both are valid, and
+// the token exists to say what kind of current thing it is: each section has
+// its own URL, so page is the accurate one (#517).
 //
 // SettingsNav.css fully describes it rather than depending on App.css, which
 // Storybook never loads — including the mobile block, which is the layout on
@@ -37,7 +42,7 @@ export function SettingsNav<K extends string>({
           key={key}
           type="button"
           className={active === key ? "active" : undefined}
-          aria-current={active === key ? "true" : undefined}
+          aria-current={active === key ? "page" : undefined}
           onClick={() => onSelect(key)}
         >
           {label}

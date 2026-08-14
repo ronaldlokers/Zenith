@@ -8,11 +8,12 @@ const SECTIONS = [
 ];
 
 describe("SettingsNav", () => {
-  // aria-current, not aria-selected: this is a nav, not a tablist, and the
-  // markup it replaces used aria-current.
+  // aria-current, not aria-selected: this is a nav, not a tablist. The token
+  // is "page" because each section has its own URL (#517) — the replaced
+  // markup said "true", which is valid but says less.
   test("marks the active section with aria-current", () => {
     render(<SettingsNav sections={SECTIONS} active="data" onSelect={() => {}} aria-label="Settings" />);
-    expect(screen.getByRole("button", { name: "Data" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: "Data" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("button", { name: "Account" })).not.toHaveAttribute("aria-current");
   });
 

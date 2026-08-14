@@ -17,11 +17,23 @@ describe("TabBar", () => {
 
   // The panel lives with the caller, so the wiring between tab and panel is
   // the component's contract — a wrong id silently unlabels the panel.
-  test("wires each tab to its panel by id", () => {
+  //
+  // Every tab keeps its own id, because the panel labels itself with the
+  // active one. Only the active tab points back at a panel: the caller
+  // renders that one and no other, so this used to leave every inactive tab
+  // referring to an id that exists on no render (#517).
+  test("wires the active tab to its panel, and gives every tab an id", () => {
     render(<TabBar tabs={TABS} active="prep" onSelect={() => {}} idPrefix="detail" aria-label="Sections" />);
-    const tab = screen.getByRole("tab", { name: "Track" });
-    expect(tab).toHaveAttribute("id", "detail-tab-track");
-    expect(tab).toHaveAttribute("aria-controls", "detail-panel-track");
+    const inactive = screen.getByRole("tab", { name: "Track" });
+    expect(inactive).toHaveAttribute("id", "detail-tab-track");
+    expect(
+      inactive,
+      "an inactive tab points at a panel the caller does not render",
+    ).not.toHaveAttribute("aria-controls");
+    expect(screen.getByRole("tab", { name: "Prep" })).toHaveAttribute(
+      "aria-controls",
+      "detail-panel-prep",
+    );
   });
 
   test("reports the selected key", () => {
