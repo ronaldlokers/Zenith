@@ -52,7 +52,10 @@ describe("the journey a person actually takes", () => {
   it("adds an application and it is still there after a reload", async () => {
     const page = await signedIn();
     await page.goto(`${BASE}/board`);
-    await page.waitForSelector("[data-card-id]");
+    // The board's own chrome, not a card: a fresh database has no
+    // applications, and waiting for one is how this passed on a developer
+    // machine and timed out in CI.
+    await page.waitForSelector(".board-bar, .bottombar");
 
     await page.keyboard.press("n");
     await page.waitForSelector('[aria-modal="true"]');
@@ -65,7 +68,7 @@ describe("the journey a person actually takes", () => {
     // The board, not wherever the save routed to — and after a reload, which
     // is what proves the row reached D1 rather than React state.
     await page.goto(`${BASE}/board`);
-    await page.waitForSelector("[data-card-id]");
+    await page.waitForSelector(".board-bar, .bottombar");
     await expect
       .poll(() => page.getByText("E2E Platform Engineer").count(), {
         timeout: 15_000,
@@ -79,7 +82,7 @@ describe("the journey a person actually takes", () => {
     // the accessible-name defect lived and where jsdom cannot follow.
     const page = await signedIn(390);
     await page.goto(`${BASE}/board`);
-    await page.waitForSelector("[data-card-id]");
+    await page.waitForSelector(".bottombar");
 
     const names = await page.evaluate(() =>
       [...document.querySelectorAll(".bottombar-slot")].map(

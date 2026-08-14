@@ -51,9 +51,18 @@ export async function setup() {
     hashPassword: (p: string) => Promise<string>;
   };
   const hash = await hashPassword(password);
+  // INSERT OR REPLACE, not UPDATE. Migration 0024 creates the seed-admin user
+  // and says in its own comment that it deliberately leaves the password to a
+  // script — so on a fresh checkout there is no account row at all, and an
+  // UPDATE changes nothing and reports success. That is why this passed
+  // locally, where an earlier run had left a credential behind, and failed in
+  // CI on the first attempt.
   sh("npx", [
     "wrangler", "d1", "execute", D1, "--local", "--command",
-    `UPDATE account SET password = '${hash}' WHERE id = 'seed-admin-credential'`,
+    `INSERT OR REPLACE INTO account
+       (id, accountId, providerId, userId, password, createdAt, updatedAt)
+     VALUES ('seed-admin-credential', 'seed-admin', 'credential', 'seed-admin',
+             '${hash}', datetime('now'), datetime('now'))`,
   ]);
   // A predictable board. The seeded profile folds four rails away, so a
   // quick-added application lands in a folded one and is invisible — which
@@ -69,10 +78,14 @@ export async function setup() {
   ]);
   const address = JSON.parse(email)[0].results[0].email as string;
 
+  // Its own process group, so teardown can take the whole tree down. Killing
+  // just the npx shim leaves workerd running and vitest waiting on it — "close
+  // timed out after 10000ms" in CI.
   server = spawn("npx", ["wrangler", "dev", "--local", "--port", "8799"], {
     stdio: "ignore",
-    detached: false,
+    detached: true,
   });
+  server.unref();
   await waitFor(BASE + "/");
 
   const browser = await chromium.launch();
@@ -88,5 +101,10 @@ export async function setup() {
 }
 
 export async function teardown() {
-  server?.kill("SIGTERM");
+  if (!server?.pid) return;
+  try {
+    process.kill(-server.pid, "SIGTERM");
+  } catch {
+    // already gone
+  }
 }
