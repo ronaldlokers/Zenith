@@ -40,11 +40,45 @@ async function trimAssetCache(cache) {
   );
 }
 
+// The shell alone is not enough to boot. Assets are cached opportunistically
+// on fetch, and on the very visit that installs this worker they were
+// requested before it was controlling the page — so they never reached the
+// cache. Offline after a single visit, the document came back 200 and its
+// scripts did not: a blank page.
+//
+// So the entry assets are precached here, read out of the shell that was just
+// fetched rather than from a build-time manifest. The filenames are
+// content-hashed and change every deploy; parsing the document that references
+// them keeps this correct without a generated list to keep in step.
+//
+// Only what the document itself references — the entry script and stylesheet
+// and anything it preloads. Lazily-loaded chunks stay opportunistic, which is
+// the existing behaviour and the right one: precaching every route's chunk at
+// install would download the whole app to serve a shell.
+async function precacheShellAssets(cache) {
+  const res = await cache.match("/");
+  if (!res) return;
+  const html = await res.clone().text();
+  const urls = [
+    ...html.matchAll(/<(?:script|link)[^>]+(?:src|href)="(\/assets\/[^"]+)"/g),
+  ].map((m) => m[1]);
+  if (!urls.length) return;
+  const assets = await caches.open(ASSET_CACHE);
+  // Individually, so one 404 does not reject the whole install and leave the
+  // worker uninstalled.
+  await Promise.all(
+    [...new Set(urls)].map((url) => assets.add(url).catch(() => {})),
+  );
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(SHELL_CACHE)
-      .then((cache) => cache.add("/"))
+      .then(async (cache) => {
+        await cache.add("/");
+        await precacheShellAssets(cache);
+      })
       .then(() => self.skipWaiting()),
   );
 });
