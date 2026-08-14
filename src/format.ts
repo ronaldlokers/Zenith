@@ -500,12 +500,30 @@ export function medianTimeToOffer(
   }
   const durations: number[] = [];
   for (const rows of byApp.values()) {
-    const a = rows.find((r) => r.to_status === "applied");
-    const o = rows.find((r) => r.to_status === "offer");
-    if (a && o) {
-      const d = (parseSqlDate(o.changed_at) - parseSqlDate(a.changed_at)) / 86400000;
-      if (d >= 0) durations.push(d);
-    }
+    // Sorted here rather than trusting the caller. The rows arrive ordered by
+    // changed_at today, which is why find() looked correct — but this is a
+    // pure function in the leaf both the app and the PDF pull from, and a
+    // statistic that is right only because of an ORDER BY in another file is
+    // not right, it is lucky.
+    const byTime = [...rows].sort(
+      (x, y) => parseSqlDate(x.changed_at) - parseSqlDate(y.changed_at),
+    );
+    const offer = byTime.find((r) => r.to_status === "offer");
+    if (!offer) continue;
+    const offerAt = parseSqlDate(offer.changed_at);
+    // The *last* apply before the offer, not the first. Re-applying is a
+    // supported workflow (#217) — a different role, a referral this time, a
+    // reopened req — and measuring from the first attempt charges the offer
+    // with a rejection and the months of silence before someone tried again.
+    // On a real re-application that read 69 days where the apply that led to
+    // the offer was 10 days out.
+    const applied = byTime.filter(
+      (r) => r.to_status === "applied" && parseSqlDate(r.changed_at) <= offerAt,
+    );
+    const last = applied[applied.length - 1];
+    if (!last) continue;
+    const d = (offerAt - parseSqlDate(last.changed_at)) / 86400000;
+    if (d >= 0) durations.push(d);
   }
   return { days: median(durations), n: durations.length };
 }
