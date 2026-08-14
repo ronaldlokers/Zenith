@@ -55,8 +55,28 @@ async function settled(page: Page, selector: string) {
   );
 }
 
+/**
+ * Waits until nothing on the page is mid-animation. Three separate false
+ * contrast readings have come from sampling a fade: the two dialogs, and a
+ * toast on a route that redirects. Text at partial opacity measures against
+ * whatever shows through it, which is a fact about the snapshot rather than
+ * about any colour.
+ */
+async function animationsSettled(page: Page) {
+  await page.waitForFunction(
+    () => document.getAnimations().every((a) => a.playState !== "running"),
+    undefined,
+    { timeout: 10_000 },
+  );
+}
+
 /** Violations axe can judge in a real browser, contrast included. */
 async function axeViolations(page: Page) {
+  await animationsSettled(page);
+  return rawAxeViolations(page);
+}
+
+async function rawAxeViolations(page: Page) {
   return page.evaluate(async () => {
     const res = await (window as unknown as { axe: { run: (d: Document) => Promise<{ violations: { id: string; impact: string; nodes: unknown[] }[] }> } })
       .axe.run(document);
@@ -121,6 +141,10 @@ describe("what a browser can judge and jsdom cannot", () => {
     it(`every page is clean at ${width}px`, async () => {
       const page = await signedIn(width);
       const failures: string[] = [];
+      // No hardcoded application id: CI starts from an empty database, where
+      // /board/9001 is a dead deep link that redirects to the board with a
+      // toast — and the toast, caught mid-fade, read as a contrast failure.
+      // A real application is opened by clicking one, in behaviour.spec.
       for (const path of [
         "/board",
         "/overview",
@@ -130,7 +154,6 @@ describe("what a browser can judge and jsdom cannot", () => {
         "/people",
         "/cv",
         "/settings",
-        "/board/9001",
       ]) {
         await page.goto(BASE + path);
         await page.waitForSelector("main, .content");

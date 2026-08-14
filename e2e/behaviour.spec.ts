@@ -1,6 +1,9 @@
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { BASE, STATE } from "./setup";
+
+const AXE = readFileSync("node_modules/axe-core/axe.min.js", "utf8");
 
 // Behaviours fixed this session that only exist in a browser. Each was found
 // by hand, fixed, and then guarded by a unit test that cannot actually see the
@@ -27,6 +30,7 @@ async function board(width = 1440): Promise<Page> {
     viewport: { width, height: 900 },
     storageState: STATE,
   });
+  await context.addInitScript({ content: AXE });
   const page = await context.newPage();
   await page.goto(`${BASE}/board`);
   await page.waitForSelector(".bottombar");
@@ -67,6 +71,17 @@ describe("opening an application", () => {
       undefined,
       { timeout: 10_000 },
     );
+    // The one detail page the suite sees is this one — opened by clicking a
+    // real application rather than guessing an id that CI's fresh database
+    // does not have.
+    const violations = await page.evaluate(async () => {
+      const res = await (window as unknown as { axe: { run: (d: Document) => Promise<{ violations: { id: string; impact: string; nodes: unknown[] }[] }> } }).axe.run(document);
+      return res.violations
+        .filter((v) => v.id !== "region")
+        .map((v) => `${v.impact} ${v.id} (${v.nodes.length})`);
+    });
+    expect(violations, "the application detail page").toEqual([]);
+
     const focused = await page.evaluate(() => ({
       tag: document.activeElement?.tagName,
       text: document.activeElement?.textContent?.trim(),
