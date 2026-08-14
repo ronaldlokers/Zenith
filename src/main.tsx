@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './app-styles.css'
-import './i18n'
+import { i18nReady } from './i18n'
 import App from './App.tsx'
 import { AuthGate } from './AuthGate.tsx'
 import { AiStatusProvider } from './ai-status.tsx'
@@ -13,17 +13,22 @@ import { AiStatusProvider } from './ai-status.tsx'
 // cleared: nothing reads it, and leaving it costs nothing while making the
 // decision reversible without having to reconstruct anyone's preference.
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <BrowserRouter>
-      <AuthGate>
-        <AiStatusProvider>
-          <App />
-        </AiStatusProvider>
-      </AuthGate>
-    </BrowserRouter>
-  </StrictMode>,
-)
+// Waits on the active locale, which for English is already resolved. A
+// non-English visitor would otherwise get a frame of fallback copy before
+// their own arrived.
+void i18nReady.then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <BrowserRouter>
+        <AuthGate>
+          <AiStatusProvider>
+            <App />
+          </AiStatusProvider>
+        </AuthGate>
+      </BrowserRouter>
+    </StrictMode>,
+  )
+})
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {

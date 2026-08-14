@@ -18,6 +18,13 @@ import { describe, expect, it } from "vitest";
 //   entry CSS  18.52 kB gzipped   (the whole redesign added 1.28 kB)
 //   entry JS   61.13 kB gzipped   (the whole redesign added 1.44 kB)
 //
+// Re-baselined when the locales stopped being bundled into the entry. Both
+// languages were compiled in, so every visitor downloaded every translation
+// of every string and read one set; English alone now loads eagerly and the
+// entry went 68.97 -> 55.97 kB gzipped. The JS budget is tightened to match,
+// because a budget carrying 13 kB of slack stops catching anything:
+//   entry JS   55.97 kB gzipped   (nl moved to a 14.56 kB chunk of its own)
+//
 // Gzip is a proxy here, not the shipped figure. Cloudflare serves these
 // brotli — checked against a preview deployment, which returns
 // content-encoding: br — and brotli comes out about 15% smaller:
@@ -33,7 +40,7 @@ import { describe, expect, it } from "vitest";
 // Vendor chunks are deliberately not budgeted here. react/i18n are split so
 // they cache across deploys, and their size is a dependency decision rather
 // than something this app's own changes move.
-const BUDGETS = { css: 21 * 1024, js: 69 * 1024 };
+const BUDGETS = { css: 21 * 1024, js: 63 * 1024 };
 
 const DIST = new URL("../dist/client/assets", import.meta.url).pathname;
 

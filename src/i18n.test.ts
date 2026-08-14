@@ -12,4 +12,5 @@ describe("document language", () => {
     await i18n.changeLanguage("en");
     expect(document.documentElement.lang).toBe("en");
   });
+
 });
