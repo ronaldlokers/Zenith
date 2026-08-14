@@ -149,6 +149,39 @@ describe("with nothing to show", () => {
 // load failed. It renders a different screen entirely — LoadFailed, with the
 // retry #597 added — and nothing has ever looked at it. That is the same gap
 // the empty state turned out to be, and the empty state held two defects.
+// The fourth state, and the first one every visit passes through. The
+// skeleton is aria-hidden — correct, three empty cards are not worth reading
+// aloud — which left nothing at all to say content was on its way.
+describe("while the data is still coming", () => {
+  it("tells someone who cannot see the skeleton that it is loading", async () => {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+    });
+    // Held open long enough to observe. Without the delay the load wins the
+    // race on a fast machine and the assertion reads an already-loaded page.
+    await context.route("**/api/**", async (route) => {
+      if (/auth|session/.test(route.request().url())) return route.continue();
+      await new Promise((r) => setTimeout(r, 2500));
+      return route.continue();
+    });
+    const page = await context.newPage();
+    await page.goto(`${BASE}/board`);
+
+    await page.waitForSelector(".zui-skeleton");
+    const announced = await page.evaluate(() =>
+      [...document.querySelectorAll('[role="status"]')]
+        .map((el) => (el.textContent || "").trim())
+        .filter(Boolean),
+    );
+    expect(
+      announced.join(" "),
+      "the skeleton is aria-hidden and nothing else says anything is happening",
+    ).toMatch(/loading/i);
+    await context.close();
+  }, 180_000);
+});
+
 describe("when the data does not arrive", () => {
   /** A page whose API calls all fail, session aside. */
   async function broken(width = 1440): Promise<Page> {
