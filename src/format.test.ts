@@ -26,6 +26,7 @@ import {
   isOverdue,
   parseSqlDate,
   today,
+  workdaysFromToday,
 } from "./format";
 
 const ORIGINAL_TZ = process.env.TZ;
@@ -380,5 +381,71 @@ describe("formatDate", () => {
 
   it("accepts a full ISO datetime (feed posted_at) by slicing to its date component", () => {
     expect(dayOf(formatDate("2026-08-04T23:30:00Z"))).toBe(4);
+  });
+});
+
+// A date the app chooses lands on a working day, and successive dates stay
+// spread. Follow-ups are contact with an employer: a Saturday date means the
+// item shows as due on a day nothing can be done about it.
+describe("workdaysFromToday", () => {
+  // Pinned rather than relative: the whole behaviour is about which weekday
+  // the result falls on, so a test computed from "now" asserts a different
+  // thing every day. The first version of this change passed only because it
+  // happened to be run on a Friday.
+  const at = (iso: string, fn: () => void) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(`${iso}T12:00:00`));
+    try {
+      fn();
+    } finally {
+      vi.useRealTimers();
+    }
+  };
+
+  it("counts working days, skipping the weekend between them", () => {
+    // Wednesday 2026-08-12: Thu, Fri, Mon, Tue.
+    at("2026-08-12", () => {
+      expect(workdaysFromToday(1)).toBe("2026-08-13");
+      expect(workdaysFromToday(2)).toBe("2026-08-14");
+      expect(workdaysFromToday(3)).toBe("2026-08-17");
+      expect(workdaysFromToday(4)).toBe("2026-08-18");
+    });
+  });
+
+  it("keeps successive days apart rather than collapsing them onto Monday", () => {
+    // The reason this counts working days instead of nudging a calendar date
+    // off the weekend. Under that first version, three and four days from a
+    // Wednesday were Saturday and Sunday and both became the same Monday —
+    // which rebuilds the pile the batch push exists to clear.
+    at("2026-08-12", () => {
+      expect(workdaysFromToday(3)).not.toBe(workdaysFromToday(4));
+    });
+  });
+
+  it("starts from Monday when asked on a Saturday", () => {
+    at("2026-08-15", () => expect(workdaysFromToday(1)).toBe("2026-08-17"));
+  });
+
+  it("never lands on a weekend, or earlier than asked", () => {
+    // Checked across a full week of starting days, so the rule is not
+    // asserted from one convenient Wednesday.
+    for (const start of [
+      "2026-08-10", "2026-08-11", "2026-08-12", "2026-08-13",
+      "2026-08-14", "2026-08-15", "2026-08-16",
+    ]) {
+      at(start, () => {
+        for (let d = 1; d <= 10; d++) {
+          const chosen = workdaysFromToday(d);
+          expect(
+            chosen >= daysFromToday(d),
+            `${start} + ${d} moved backwards to ${chosen}`,
+          ).toBe(true);
+          const [y, m, dd] = chosen.split("-").map(Number);
+          const dow = new Date(y, m - 1, dd, 12).getDay();
+          expect(dow, `${start} + ${d} landed on a weekend`).toBeGreaterThan(0);
+          expect(dow).toBeLessThan(6);
+        }
+      });
+    }
   });
 });

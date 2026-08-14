@@ -139,6 +139,43 @@ export function daysFromToday(days: number): string {
   return `${y}-${m}-${day}`;
 }
 
+// The nth working day from today, for dates the app chooses itself.
+//
+// Follow-ups are contact with an employer, so a Saturday date is not a plan —
+// the mail sits until Monday, and meanwhile the item shows as due on a day
+// nothing can be done about it, which is exactly the pile the follow-up
+// features exist to prevent. Hiring-side response data agrees on the shape:
+// Monday is backlog and Friday afternoon is gone, with midweek answering
+// best.
+//
+// Counting working days rather than taking a calendar date and pushing it off
+// the weekend, which was the first version of this and was wrong: from a
+// Wednesday, three days out and four days out are Saturday and Sunday, and
+// both then land on the same Monday. That collapses the batch push's spread
+// into one day — rebuilding the pile it exists to prevent, at the one moment
+// someone is trying to clear it.
+//
+// Deliberately only applied where the app picks the date — snoozing by a
+// number of days, and the batch push. A date typed by hand is left exactly as
+// typed: someone scheduling a Saturday reminder has a reason, and quietly
+// moving it would be the app overruling an explicit choice.
+export function workdaysFromToday(days: number): string {
+  if (days <= 0) return daysFromToday(days);
+  let counted = 0;
+  let offset = 0;
+  // Bounded rather than while(true): a calendar bug that stops advancing
+  // should fail a test, not hang the tab.
+  while (counted < days && offset < days * 3 + 7) {
+    offset++;
+    const iso = daysFromToday(offset);
+    const [y, m, d] = iso.split("-").map(Number);
+    // Midday, so a DST transition at midnight cannot shift the weekday.
+    const dow = new Date(y, m - 1, d, 12).getDay();
+    if (dow !== 0 && dow !== 6) counted++;
+  }
+  return daysFromToday(offset);
+}
+
 export function isDue(a: Application): boolean {
   return !!a.next_action_at && !isDead(a.status) && a.next_action_at <= today();
 }

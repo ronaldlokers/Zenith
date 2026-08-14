@@ -11,7 +11,7 @@ import type { Application, StatusHistoryRow, Stats, UserGoal } from "./types";
 import { api } from "./api";
 import {
   computeWeeklyMomentum,
-  daysFromToday,
+  workdaysFromToday,
   formatDate,
   isDead,
   isDue,
@@ -430,7 +430,10 @@ function NextUpPanel({
       next_action: a.next_action ?? null,
       next_action_at: a.next_action_at ?? null,
     };
-    const at = daysFromToday(days);
+    // The app is choosing this date, so it lands on a working day — a
+    // follow-up dated Saturday is not a plan, it is an item that shows as due
+    // when nothing can be done about it.
+    const at = workdaysFromToday(days);
     return Promise.resolve(
       api.updateFollowUp(a.id, {
         next_action: a.next_action ?? null,
@@ -516,7 +519,7 @@ function NextUpPanel({
           // make next week survivable, not to empty today. Two a day from
           // three days out, in the order the list is already ranked, so the
           // most urgent come back first.
-              next_action_at: daysFromToday(3 + Math.floor(i / 2)),
+              next_action_at: workdaysFromToday(3 + Math.floor(i / 2)),
             }),
           ),
         Promise.resolve<unknown>(undefined),
