@@ -2,7 +2,16 @@
    zui- name AiKeyGate emits. muted/small still come from utilities.css —
    this is the one App.css-only rule the gate needed. */
 @layer components {
+  /* Underlined, not only recoloured. #606 moved this from --accent to
+     --accent-ink because gold on a card is 2.27:1 as text — but --accent-ink
+     sits 1.13:1 from the muted prose around it, so the link stopped being
+     distinguishable from the sentence it lives in. 1.4.1 asks for something
+     other than colour, or 3:1 against the surrounding text plus a hover cue;
+     an underline is the one that does not need the colour to carry two jobs
+     at once. Caught by the browser suite, which is the only layer that can
+     compare a link against the text beside it. */
   .zui-ai-key-gate a {
     color: var(--accent-ink);
+    text-decoration: underline;
   }
 }

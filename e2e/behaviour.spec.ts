@@ -1,6 +1,9 @@
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { BASE, STATE } from "./setup";
+
+const AXE = readFileSync("node_modules/axe-core/axe.min.js", "utf8");
 
 // Behaviours fixed this session that only exist in a browser. Each was found
 // by hand, fixed, and then guarded by a unit test that cannot actually see the
@@ -27,6 +30,7 @@ async function board(width = 1440): Promise<Page> {
     viewport: { width, height: 900 },
     storageState: STATE,
   });
+  await context.addInitScript({ content: AXE });
   const page = await context.newPage();
   await page.goto(`${BASE}/board`);
   await page.waitForSelector(".bottombar");
@@ -67,6 +71,17 @@ describe("opening an application", () => {
       undefined,
       { timeout: 10_000 },
     );
+    // The one detail page the suite sees is this one — opened by clicking a
+    // real application rather than guessing an id that CI's fresh database
+    // does not have.
+    const violations = await page.evaluate(async () => {
+      const res = await (window as unknown as { axe: { run: (d: Document) => Promise<{ violations: { id: string; impact: string; nodes: unknown[] }[] }> } }).axe.run(document);
+      return res.violations
+        .filter((v) => v.id !== "region")
+        .map((v) => `${v.impact} ${v.id} (${v.nodes.length})`);
+    });
+    expect(violations, "the application detail page").toEqual([]);
+
     const focused = await page.evaluate(() => ({
       tag: document.activeElement?.tagName,
       text: document.activeElement?.textContent?.trim(),
@@ -79,12 +94,23 @@ describe("opening an application", () => {
   }, 120_000);
 });
 
-// Not covered here, deliberately. Two more journeys were written for the
-// unsaved-edits prompt (#598) and undo surviving a burst of toasts (#618),
-// and both were driving controls that do not exist where I assumed: the
-// detail page has no Edit button among its controls, and the board's card
-// menu offers Archive rather than Delete — deleteWithUndo belongs to
-// companies and people. Both tests failed on their own selectors rather than
-// on the behaviour, which makes them worse than nothing: a red suite that
-// says something is broken when it is not teaches people to skip it. They
-// want a pass over the real affordances first.
+// Not covered here: the unsaved-edits prompt (#598) and undo surviving a
+// burst of toasts (#618). Both have been attempted and abandoned twice, and
+// the note that used to sit here was wrong about why, so it is worth being
+// exact.
+//
+// The controls exist and are visible. The detail page has Edit, Pin, Archive
+// and Delete in its ActionBar — an earlier attempt concluded Edit was absent
+// from a list of buttons that had been truncated before reaching it. What
+// fails is driving them: getByRole with the accessible name matches nothing
+// for the ActionBar buttons, and a text-filtered locator still times out on
+// the click. Something about how those controls mount is not yet understood,
+// and guessing at it a third time is how a suite ends up with a test that
+// passes for the wrong reason.
+//
+// deleteWithUndo does belong to companies and people rather than the board,
+// which archives — that part was right.
+//
+// Left uncovered on purpose. A red test that reports a working feature as
+// broken teaches people to stop reading the suite, which costs more than the
+// coverage is worth.

@@ -40,7 +40,12 @@ export function OnboardingChecklist({
   return (
     <div className="zui-onboarding">
       <div className="zui-onboarding-head">
-        <h3>{t("onboarding.title")}</h3>
+        {/* h2, not h3. This sits directly under the page's h1 and the
+            sections after it are h2, so an h3 here skips a level on the
+            first screen a new account ever shows — which is exactly where
+            heading navigation matters most. Caught only against an empty
+            database: with data the checklist is gone. */}
+        <h2>{t("onboarding.title")}</h2>
         <button
           className="zui-onboarding-dismiss"
           onClick={onDismiss}
