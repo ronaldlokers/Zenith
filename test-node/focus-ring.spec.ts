@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 // index.css:338 moved the focus ring from --accent to --accent-ink, with the
@@ -17,8 +17,20 @@ import { join } from "node:path";
 // A source check rather than a rendered one because that is where the mistake
 // is legible — the rule looked local and correct, and only the cascade made it
 // wrong.
-const INDEX = readFileSync(join(__dirname, "../src/index.css"), "utf8");
-const APP = readFileSync(join(__dirname, "../src/App.css"), "utf8");
+const SRC = join(__dirname, "../src");
+const INDEX = readFileSync(join(SRC, "index.css"), "utf8");
+
+/** Every stylesheet under src/, because the ring is set in more than two. */
+function stylesheets(dir: string): { path: string; css: string }[] {
+  const out: { path: string; css: string }[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...stylesheets(p));
+    else if (entry.name.endsWith(".css"))
+      out.push({ path: p.slice(SRC.length + 1), css: readFileSync(p, "utf8") });
+  }
+  return out;
+}
 
 /** Strips comments so a colour named while explaining it is not a match. */
 const code = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -76,11 +88,16 @@ describe("focus ring", () => {
   it("is never repainted with the under-contrasted accent", () => {
     // The whole failure was one rule reintroducing --accent for a subset of
     // elements. Any rule doing that again fails here, wherever it lives.
-    const offenders = [...focusRules(INDEX), ...focusRules(APP)].filter((r) =>
-      /outline[^;]*var\(--accent\)/.test(r.body),
+    // Every stylesheet, not the two the first version of this checked: the
+    // component CSS files set the ring too, and TabBar.css was still painting
+    // it --accent when this only looked at index.css and App.css.
+    const offenders = stylesheets(SRC).flatMap(({ path, css }) =>
+      focusRules(css)
+        .filter((r) => /outline[^;]*var\(--accent\)/.test(r.body))
+        .map((r) => `${path}: ${r.selector}`),
     );
     expect(
-      offenders.map((o) => o.selector),
+      offenders,
       "a :focus-visible rule sets the ring to --accent, which measures 2.03:1 on the paper ground",
     ).toEqual([]);
   });
@@ -91,5 +108,26 @@ describe("focus ring", () => {
     const base = focusRules(INDEX).find((r) => r.selector === ":focus-visible");
     expect(base, "index.css no longer defines a base focus ring").toBeTruthy();
     expect(base!.body).toMatch(/outline:[^;]*var\(--accent-ink\)/);
+  });
+});
+
+// The ring was one symptom. --accent is the brand gold and it is not a text
+// colour: 2.27:1 on a white card, 2.03:1 on the page, against 4.5:1 for text.
+// It was serving as the label colour in eleven places — the active tab, the
+// "today" markers, document links, the onboarding steps, the invite
+// confirmation — each of them words someone is meant to read.
+describe("the accent is not a text colour", () => {
+  it("is never used as one", () => {
+    const offenders = stylesheets(SRC).flatMap(({ path, css }) =>
+      code(css)
+        .split("\n")
+        .map((line, i) => ({ line: line.trim(), n: i + 1 }))
+        .filter(({ line }) => /^color:\s*var\(--accent\);$/.test(line))
+        .map(({ n }) => `${path}:${n}`),
+    );
+    expect(
+      offenders,
+      "--accent as text measures 2.27:1 on a card; --accent-ink is the readable tone of the same hue",
+    ).toEqual([]);
   });
 });
