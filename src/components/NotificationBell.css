@@ -92,13 +92,33 @@
     overflow-y: auto;
   }
 
+  /* The row's own decoration stays on the li — the rule, the unread wash and
+     the hover all want the full width. Everything that lays the content out
+     moved to the child that now carries role="button", because the role
+     cannot sit on the li without overriding listitem and emptying the list.
+     The child is the li's only content and fills it, so the wash and the
+     hover still cover exactly what they covered. */
   .zui-notification-list li {
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  }
+
+  .zui-notification-item {
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
     padding: 0.55rem 0.7rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
     cursor: pointer;
+  }
+
+  /* The list scrolls and the panel clips, so a ring drawn on the item is cut
+     off at the panel's edge. Put it back on the row, as Row.css does. */
+  .zui-notification-item:focus-visible {
+    outline: none;
+  }
+
+  .zui-notification-list li:has(> .zui-notification-item:focus-visible) {
+    outline: 2px solid var(--accent-ink);
+    outline-offset: -2px;
   }
 
   .zui-notification-list li:last-child {

@@ -127,8 +127,11 @@ export function CompaniesTab({
             <li
               key={c.id}
               className="company-tile"
-              {...rowActivate(() => setDetailId(c.id))}
-            >
+              >
+              <div
+                className="company-tile-body"
+                {...rowActivate(() => setDetailId(c.id))}
+              >
               <div className="company-logo company-logo-placeholder" aria-hidden="true">
                 {c.name.slice(0, 1).toUpperCase()}
               </div>
@@ -136,6 +139,7 @@ export function CompaniesTab({
                 {c.name}
                 {c.is_agency ? <Badge>{t("company.agencyBadge")}</Badge> : null}
               </span>
+              </div>
             </li>
           ))}
           {visible.length === 0 && (

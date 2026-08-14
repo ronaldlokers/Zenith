@@ -112,14 +112,20 @@ export function NotificationBell() {
             </div>
             <ul className="zui-notification-list">
               {(notifications ?? []).map((n) => (
-                <li
-                  key={n.id}
-                  className={n.read_at ? undefined : "unread"}
-                  {...rowActivate(() => openNotification(n))}
-                >
-                  <span className="zui-notification-title">{n.title}</span>
-                  {n.body && <span className="muted small">{n.body}</span>}
-                  <span className="muted small">{formatDate(n.created_at)}</span>
+                <li key={n.id} className={n.read_at ? undefined : "unread"}>
+                  {/* The activation goes on a child, not on the li:
+                      role="button" would override listitem and leave this ul
+                      reporting a list with no items in it. */}
+                  <div
+                    className="zui-notification-item"
+                    {...rowActivate(() => openNotification(n))}
+                  >
+                    <span className="zui-notification-title">{n.title}</span>
+                    {n.body && <span className="muted small">{n.body}</span>}
+                    <span className="muted small">
+                      {formatDate(n.created_at)}
+                    </span>
+                  </div>
                 </li>
               ))}
               {notifications && notifications.length === 0 && (

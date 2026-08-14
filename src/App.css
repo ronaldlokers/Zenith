@@ -1506,17 +1506,23 @@ button.primary:hover {
 
 /* Elevation rule (#314): clickable cards float (--shadow-1), structural
    panels sit flat. */
+/* Same split as .agenda-item: the li keeps the box, a child inside it carries
+   the layout and the role, because role="button" on the li would override
+   listitem and empty the grid's list. */
 .company-tile {
   box-shadow: var(--shadow-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.company-tile-body {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
   text-align: center;
   padding: var(--space-4) var(--space-2);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
@@ -2297,12 +2303,19 @@ select.status {
 
 /* The 3px --faint bar carried no state at all, so it went (#494) rather
    than being converted to a wash. */
+/* The role that makes these rows activatable sits on a child, not on the li:
+   on the li it overrides listitem and leaves the <ul> reporting a list with
+   nothing in it. The li keeps the box; the body carries the padding and the
+   role, and fills the li exactly. */
 .agenda-item {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 0.55rem 0.75rem;
   font-size: var(--text-body);
+}
+
+.agenda-item-body {
+  padding: 0.55rem 0.75rem;
   cursor: pointer;
 }
 
@@ -2334,14 +2347,19 @@ select.status {
 }
 
 .activity-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 0.55rem 0.75rem;
   font-size: var(--text-body);
+}
+
+/* The flex row moves with the padding: the spans are the flex items, so they
+   have to stay siblings inside whatever box lays them out. */
+.activity-item-body {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
   cursor: pointer;
 }
 
