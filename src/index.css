@@ -65,7 +65,11 @@
   --night-raised: #1b1f4d;
   --gold: #d6a441;
   --gold-deep: #c68a2f;
-  --gold-soft: rgba(214, 164, 65, 0.14);
+  /* 0.10, not 0.14. This is the ground under every active tab, pill, filter
+     and settings section — all of which print --accent-ink on it. At 0.14 the
+     composite over the page ground is 4.48:1, a near miss on the 4.5:1 that
+     copy needs. At 0.10 it is 4.59:1 there and 5.11:1 on a card. */
+  --gold-soft: rgba(214, 164, 65, 0.10);
 
   /* Surfaces & ink (light / "Daylight") */
   --bg: #f4f2ec;

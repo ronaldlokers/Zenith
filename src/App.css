@@ -902,7 +902,10 @@
 }
 
 .detail-pill-when {
-  background: color-mix(in srgb, var(--sc, var(--muted)) 18%, var(--surface));
+  /* 10%, matching .bstrip .bwhen and for the same reason: the stage ink is
+     guaranteed on white and on the page, not on a wash of its own stage. At
+     18% the worst stage came out 4.15:1. */
+  background: color-mix(in srgb, var(--sc, var(--muted)) 10%, var(--surface));
   color: var(--sc-ink, var(--ink));
 }
 
@@ -5066,7 +5069,11 @@ button:not(:disabled):active,
 .u-overdue { --u-edge: var(--danger); }
 .u-today { --u-edge: var(--heat-quiet-text); }
 .u-stale { --u-edge: var(--heat-quiet); }
-.u-quiet { --u-edge: var(--faint); }
+/* --muted, not --faint: the quiet badge prints --u-edge on a 14% wash of
+   itself, which put --faint at 3.85:1 over the page. --muted is 4.62:1 there
+   with the wash untouched. --faint is marginal on every ground warmer than
+   plain surface; this is the third place it had to give way. */
+.u-quiet { --u-edge: var(--muted); }
 /* Calm cards carry their stage colour on the spine (#464) — urgency states
    above still override --u-edge to escalate. */
 .u-calm { --u-edge: var(--sc); }
