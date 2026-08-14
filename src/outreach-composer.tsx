@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
+import { requestConfirm } from "./hooks";
 import type { Contact, OutreachTemplate, Profile } from "./types";
 import { Button, FieldLabel } from "./components";
 import { today } from "./format";
@@ -130,9 +131,18 @@ export function OutreachComposer({
       .catch((e) => onError((e as Error).message))
       .finally(() => setBusy(false));
   };
-  const removeTemplate = (tpl: OutreachTemplate) => {
+  const removeTemplate = async (tpl: OutreachTemplate) => {
+    // A template is written, not collected: the text is the work. Every other
+    // delete in the app either confirms first or offers an undo, and this one
+    // did neither — it sat in the same row as the button that selects a
+    // template to use.
+    if (
+      !(await requestConfirm(t("confirm.deleteOutreachTemplate", { name: tpl.name })))
+    ) {
+      return;
+    }
     setBusy(true);
-    Promise.resolve(api.remove("outreach-templates", tpl.id))
+    return Promise.resolve(api.remove("outreach-templates", tpl.id))
       .then(() => {
         if (selectedId === tpl.id) setSelectedId("");
         return loadTemplates();

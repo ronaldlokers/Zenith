@@ -38,7 +38,7 @@ import {
   totalComp,
 } from "./format";
 import { Dialog } from "./ui";
-import { rowActivate } from "./hooks";
+import { rowActivate, requestConfirm } from "./hooks";
 import { ActionBar, Button, CardMenu, EmptyState, StarRating } from "./components";
 
 // A stable empty set, so the narrow board does not allocate one per render
@@ -990,8 +990,14 @@ export function PipelineTab({
       })
       .catch((e) => onError((e as Error).message));
   };
-  const deleteView = (id: number) => {
-    api
+  // The × sits inside the same chip as the button that applies the view, a
+  // few pixels away, and the delete was immediate and permanent. Reaching for
+  // a saved view and removing it instead is the likeliest mis-tap on this
+  // screen, and it was the only destructive control on it with nothing in
+  // the way.
+  const deleteView = async (id: number, name: string) => {
+    if (!(await requestConfirm(t("confirm.deleteSavedView", { name })))) return;
+    return api
       .deleteSavedView(id)
       .then(() => setSavedViews((vs) => vs.filter((v) => v.id !== id)))
       .catch((e) => onError((e as Error).message));
@@ -1243,7 +1249,7 @@ export function PipelineTab({
                 <button
                   className="view-del"
                   aria-label={t("savedViews.delete", { name: v.name })}
-                  onClick={() => deleteView(v.id)}
+                  onClick={() => deleteView(v.id, v.name)}
                 >
                   ×
                 </button>

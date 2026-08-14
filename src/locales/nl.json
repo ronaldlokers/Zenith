@@ -865,6 +865,10 @@
     "deleteRoleType": "Functietype “{{label}}” verwijderen? Feed-trefwoorden ervoor gaan mee.",
     "discardEdit": "Niet-opgeslagen wijzigingen weggooien?",
     "deleteCvVariant": "CV-variant “{{name}}” verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "deleteInteraction": "Dit vastgelegde contactmoment verwijderen? De notities erbij verdwijnen ook.",
+    "deletePrepItem": "Dit voorbereidingspunt verwijderen?",
+    "deleteOutreachTemplate": "Sjabloon “{{name}}” verwijderen? De berichttekst verdwijnt ermee.",
+    "deleteSavedView": "Opgeslagen weergave “{{name}}” verwijderen?",
     "deleteWebhook": "Deze webhook verwijderen? De signing secret kan niet worden hersteld."
   },
   "aria": {

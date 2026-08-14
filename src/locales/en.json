@@ -865,6 +865,10 @@
     "deleteRoleType": "Delete role type “{{label}}”? Feed keywords for it go too.",
     "discardEdit": "Discard unsaved changes?",
     "deleteCvVariant": "Delete the CV variant “{{name}}”? This cannot be undone.",
+    "deleteInteraction": "Delete this logged interaction? What was noted about it goes too.",
+    "deletePrepItem": "Delete this prep item?",
+    "deleteOutreachTemplate": "Delete the template “{{name}}”? The message text goes with it.",
+    "deleteSavedView": "Delete the saved view “{{name}}”?",
     "deleteWebhook": "Delete this webhook? Its signing secret cannot be recovered."
   },
   "aria": {
