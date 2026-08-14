@@ -330,3 +330,82 @@ describe("public share page", () => {
     expect(revoked).toMatch(/<main[\s>]/);
   });
 });
+
+// Every user-authored string that reaches this page, not only the one the
+// code comment names.
+//
+// The comment above escapeHtml says the display name "is the only
+// user-authored string that reaches this page", and the test above covers
+// exactly that string. It is not the only one: the role label shown beside it
+// is derived from an application's role_type, and role_type is bound straight
+// from the request body with no check that it matches a role type that
+// exists. So it is arbitrary text from the account holder, and the escape on
+// it is load-bearing rather than belt-and-braces.
+//
+// Nothing was broken — it is escaped. It was untested, which is the state a
+// refactor removes an escape from without anything going red.
+describe("every user-authored string on the public page", () => {
+  const PAYLOAD = '"><img src=x onerror=alert(1)>';
+
+  it("escapes the role label, which is not a slug once it reaches here", async () => {
+    await seedShared();
+    // A name too: the identity block is gated on one being set, and the role
+    // label lives inside it. Without this the assertion passes against a page
+    // that renders no role at all.
+    await env.DB.prepare(
+      "UPDATE profile SET name = ?, share_show_identity = 1 WHERE user_id = ?",
+    )
+      .bind("Jo Rivera", "seed-admin")
+      .run();
+    // Two of them, so the role is the top one and actually rendered.
+    for (let i = 0; i < 2; i++) {
+      await env.DB.prepare(
+        `INSERT INTO applications (user_id, title, role_type, status)
+         VALUES (?, ?, ?, 'applied')`,
+      )
+        .bind("seed-admin", `Role ${i}`, PAYLOAD)
+        .run();
+    }
+
+    const html = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+    // The label title-cases the slug before rendering, so the payload comes
+    // through as "<Img Src=x ...". A case-sensitive check for "<img" would
+    // pass while a real injection sat on the page — which is what the first
+    // version of this test did.
+    expect(html, "the payload was emitted as markup").not.toMatch(/<img/i);
+    // Title-casing capitalises after every word boundary, so the payload
+    // arrives as "<Img Src=X Onerror=Alert(1)>" — asserted as rendered rather
+    // than as typed, because the transform is part of what reaches the page.
+    expect(html).toContain("&lt;Img Src=X Onerror=Alert(1)&gt;");
+  });
+
+  it("leaves no unescaped angle bracket from any seeded field", async () => {
+    // The rule rather than the two fields known today: seed the payload into
+    // every user-authored string that can reach the page and assert none of
+    // it survives as markup. A third sink added later is covered by this
+    // without anyone remembering to extend it.
+    await seedShared();
+    await env.DB.prepare(
+      "UPDATE profile SET name = ?, share_show_identity = 1 WHERE user_id = ?",
+    )
+      .bind(PAYLOAD, "seed-admin")
+      .run();
+    for (let i = 0; i < 2; i++) {
+      await env.DB.prepare(
+        `INSERT INTO applications (user_id, title, role_type, status)
+         VALUES (?, ?, ?, 'applied')`,
+      )
+        .bind("seed-admin", PAYLOAD, PAYLOAD)
+        .run();
+    }
+
+    const html = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+    // The payload's own markup, in any form that would parse as a tag.
+    // Case-insensitive, because two of these sinks transform the string on
+    // the way through. Not asserting on "onerror=alert" as a substring: the
+    // correctly escaped output contains it as text, so that assertion fails
+    // on a page that is doing exactly the right thing.
+    expect(html, "the payload was emitted as markup").not.toMatch(/<img/i);
+    expect(html, "the payload never reached the page").toMatch(/&lt;[Ii]mg/);
+  });
+});
