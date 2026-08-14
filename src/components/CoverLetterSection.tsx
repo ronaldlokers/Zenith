@@ -57,7 +57,11 @@ export function CoverLetterSection({
   const save = () => {
     setSaving(true);
     api
-      .update("applications", application.id, { ...application, cover_letter: text })
+      // Not update(): that is a PUT of every column, and this panel was
+      // sending { ...application } — a snapshot taken when the detail page
+      // loaded. Anything changed elsewhere since, on a phone or in the page's
+      // own inline controls, was put back as it had been.
+      .patchApplication(application.id, { cover_letter: text })
       .then(() => {
         notify(t("common.saved"));
         return onChanged();

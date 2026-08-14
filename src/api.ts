@@ -213,7 +213,11 @@ export const api = {
     ),
   patchApplication: (
     id: number,
-    fields: { notes?: string | null; fit_score?: number | null },
+    fields: {
+      notes?: string | null;
+      fit_score?: number | null;
+      cover_letter?: string | null;
+    },
   ) =>
     request<import("./types").Application>(`/api/applications/${id}`, {
       method: "PATCH",
