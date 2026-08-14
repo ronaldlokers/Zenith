@@ -2108,17 +2108,37 @@ app.post("/api/applications/:id/documents", async (c) => {
   if (!application) return c.json({ error: "not found" }, 404);
   const contentType =
     c.req.header("Content-Type") ?? "application/octet-stream";
-  const key = `app-${appId}/${Date.now()}-${filename}`;
+  // A random key rather than a timestamped one. The key was
+  // `app-<id>/<Date.now()>-<filename>`, so two uploads of the same filename to
+  // the same application in the same millisecond built the same key — and
+  // since the object is written before the row is claimed, the second put
+  // overwrote the first file while the second insert failed on the unique
+  // key. Measured: one upload answered 201, the other 409, one row survived,
+  // and the object under it held the *other* file's bytes. The row that said
+  // it succeeded served the wrong document from then on.
+  //
+  // Uniqueness by construction ends that, rather than a narrower window.
+  const key = `app-${appId}/${crypto.randomUUID()}-${filename}`;
   await c.env.DOCS.put(key, c.req.raw.body, {
     httpMetadata: { contentType },
   });
-  const result = await c.env.DB.prepare(
-    `INSERT INTO documents (application_id, user_id, key, filename, label, size, content_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
-     RETURNING id, application_id, filename, label, size, content_type, created_at`,
-  )
-    .bind(appId, userId, key, filename, c.req.query("label") ?? null, size, contentType)
-    .first();
+  let result;
+  try {
+    result = await c.env.DB.prepare(
+      `INSERT INTO documents (application_id, user_id, key, filename, label, size, content_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       RETURNING id, application_id, filename, label, size, content_type, created_at`,
+    )
+      .bind(appId, userId, key, filename, c.req.query("label") ?? null, size, contentType)
+      .first();
+  } catch (e) {
+    // The row is the only thing that will ever name this key, so a failed
+    // insert has to take the object with it — otherwise the upload leaves a
+    // file nobody can reach, count or delete. The application being deleted
+    // between the check above and here is the way this happens.
+    await c.env.DOCS.delete(key);
+    throw e;
+  }
   return c.json(result, 201);
 });
 
