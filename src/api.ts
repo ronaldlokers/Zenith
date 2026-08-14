@@ -27,8 +27,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(path, {
-      headers: { "Content-Type": "application/json" },
       ...init,
+      // Merged, not replaced. Spreading init over a headers key dropped the
+      // default outright, so any call that set a header of its own sent its
+      // JSON body as text/plain — the If-Match saves, in practice. Hono
+      // parses the body regardless, so nothing broke; it was a request that
+      // described itself wrongly and worked by the leniency of one parser.
+      //
+      // The caller still wins on a key it sets. Nothing in this file needs
+      // that today — the one call that sends its own content type, the
+      // document upload, uses fetch directly rather than going through here —
+      // so it is the safe direction to merge in rather than a dependency.
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers as Record<string, string> | undefined),
+      },
     });
   } catch {
     throw new Error(networkErrorMessage(init?.method));
