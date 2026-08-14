@@ -48,3 +48,10 @@
     margin: 0.35rem 0 0.9rem;
   }
 }
+
+/* The restored-draft note. Sits between the heading and the form, so it reads
+   before the fields it explains rather than after them. */
+.zui-quickadd-restored {
+  margin: 0 0 var(--space-4);
+  color: var(--muted);
+}

@@ -914,6 +914,7 @@
   },
   "quickAdd": {
     "title": "Add a job",
+    "draftRestored": "Last time this did not save, so we kept what you had typed.",
     "pasteLink": "Paste a link",
     "pasteLinkPlaceholder": "https://… a job posting",
     "import": "Import",
