@@ -67,6 +67,36 @@ describe("chunk boundary", () => {
     expect(screen.getByRole("alert").textContent).toMatch(/new version/i);
   });
 
+  test("does not reload when the chunk failed because there is no network", () => {
+    // An offline dynamic import reports exactly the same message as a chunk
+    // that a deploy removed, and a reload cannot fix the first one. Measured
+    // in a browser: reloading offline navigates to the browser's network
+    // error page — the document is replaced, #root is gone, and anything
+    // typed goes with it. Worse than the white page this boundary exists to
+    // prevent, with its own retry sitting right there unused.
+    vi.stubGlobal("navigator", { ...navigator, onLine: false });
+    render(
+      <ChunkBoundary>
+        <Boom message={CHUNK_ERROR} />
+      </ChunkBoundary>,
+    );
+    expect(reload, "reloaded into a network error page").not.toHaveBeenCalled();
+    // And it still says something, rather than leaving the page blank.
+    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /retry/i })).toBeTruthy();
+  });
+
+  test("still reloads when the network is fine and the chunk is simply gone", () => {
+    // The case the boundary was built for, which the guard must not swallow.
+    vi.stubGlobal("navigator", { ...navigator, onLine: true });
+    render(
+      <ChunkBoundary>
+        <Boom message={CHUNK_ERROR} />
+      </ChunkBoundary>,
+    );
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   test("shows something rather than nothing for any other error", () => {
     // The boundary's whole purpose is that the page is never blank. An error
     // it does not recognise still gets a message and a way out.

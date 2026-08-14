@@ -47,7 +47,25 @@ export class ChunkBoundary extends Component<Props, State> {
   state: State = { failed: false };
 
   static getDerivedStateFromError(error: unknown): State {
-    if (looksLikeChunkFailure(error)) {
+    // A reload is the fix for a chunk that is gone because the deploy moved
+    // on. It is not the fix for a chunk that could not be fetched because
+    // there is no network — and the two are indistinguishable from the error
+    // alone, since an offline dynamic import reports exactly "Failed to fetch
+    // dynamically imported module".
+    //
+    // Reloading offline navigates to the browser's own network error page.
+    // Measured: the document is replaced, #root is gone, and anything typed
+    // goes with it. Worse than the white page this boundary exists to
+    // prevent, because the boundary's own error UI — which has a retry — was
+    // right there.
+    //
+    // navigator.onLine is trusted only when it says false, the rule api.ts
+    // follows: a browser can claim to be online while reaching nothing, so a
+    // false positive here would be a chunk failure we decline to reload for,
+    // which the retry button still covers.
+    const offline =
+      typeof navigator !== "undefined" && navigator.onLine === false;
+    if (looksLikeChunkFailure(error) && !offline) {
       let retried = "1";
       try {
         retried = sessionStorage.getItem(RETRIED) ?? "";
