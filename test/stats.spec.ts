@@ -4,7 +4,6 @@ import {
   funnelConversions,
   responseRate,
   responseTime,
-  medianTimeInStageDays,
   median,
   outcomeBreakdown,
 } from "../src/stats";
@@ -108,19 +107,6 @@ describe("responseRate", () => {
   });
 });
 
-describe("medianTimeInStageDays", () => {
-  it("medians the days spent entering each stage", () => {
-    const now = new Date("2026-01-10T00:00:00Z").getTime();
-    const timings = medianTimeInStageDays(HISTORY, now);
-    const byStage = Object.fromEntries(timings.map((t) => [t.stage, t]));
-    // applied durations: app1 Jan3→Jan6 = 3d, app2 Jan2→Jan5 = 3d,
-    // app3 Jan4→now(Jan10) = 6d  → median of [3,3,6] = 3
-    expect(byStage.applied.median).toBe(3);
-    expect(byStage.applied.n).toBe(3);
-    // screening: app1 Jan6→Jan10 = 4d, app2 Jan5→now = 5d → median 4.5
-    expect(byStage.screening.median).toBeCloseTo(4.5);
-  });
-});
 
 describe("outcomeBreakdown", () => {
   function closed(
@@ -260,5 +246,49 @@ describe("responseTime", () => {
   it("ignores applications that never reached applied", () => {
     const r = responseTime([h(1, "interested", day(0))], NOW);
     expect(r).toEqual({ median: null, n: 0, waiting: 0, longestWait: null });
+  });
+});
+
+// sqlMs is a deliberate copy of format.ts's parseSqlDate — this module is
+// dependency-free on purpose — and it was not a faithful one. The ISO branch
+// is the fix format.ts's own comment records: a value that already carries a
+// T and a Z became "...ZZ", an Invalid Date and then a NaN duration. Nothing
+// feeds these functions ISO today; a copy that has silently diverged from the
+// thing it copies is the point.
+describe("timestamps in either shape", () => {
+  const row = (application_id: number, to_status: string, changed_at: string) =>
+    ({ application_id, to_status, changed_at }) as StatusHistoryRow;
+
+  /** Three answered applications — the floor a median is reported above. */
+  const three = (fmt: (day: number) => string) => [
+    row(1, "applied", fmt(1)), row(1, "screening", fmt(5)),
+    row(2, "applied", fmt(1)), row(2, "screening", fmt(5)),
+    row(3, "applied", fmt(1)), row(3, "rejected", fmt(5)),
+  ];
+
+  it("reads an ISO timestamp as well as SQL's", () => {
+    const sql = responseTime(
+      three((d) => `2026-08-0${d} 09:00:00`),
+      Date.UTC(2026, 7, 14),
+    );
+    const iso = responseTime(
+      three((d) => `2026-08-0${d}T09:00:00.000Z`),
+      Date.UTC(2026, 7, 14),
+    );
+    expect(sql.median).toBe(4);
+    expect(
+      iso.median,
+      "the ISO form produced NaN durations before the copy was fixed",
+    ).toBe(4);
+  });
+
+  it("reads a date with no time on it", () => {
+    // demo.ts seeds status_history with date('now', ?), which has no time
+    // component at all.
+    const out = responseTime(
+      three((d) => `2026-08-0${d}`),
+      Date.UTC(2026, 7, 14),
+    );
+    expect(out.median).toBe(4);
   });
 });
