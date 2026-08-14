@@ -31,6 +31,9 @@ jobs:
       - name: API integration tests
         run: npm test
 
+      - name: Coverage floor
+        run: npm run coverage
+
   preview:
     if: github.event_name == 'pull_request'
     needs: checks
