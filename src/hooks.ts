@@ -181,6 +181,41 @@ export function useDocumentTitle(page: string | null): void {
 
 const APP_NAME = "Zenith";
 
+// Unsaved edits used to leave silently by every door but one. The detail
+// form asks before discarding on Escape — so the app already holds that
+// losing twenty typed fields is worth a question — but a reload, a closed
+// tab, the Back button and a switch to another destination all took them
+// without a word. Measured on all four.
+//
+// The listener is attached only while there is something to lose, which is
+// not tidiness: Firefox refuses the back/forward cache to any page carrying
+// a beforeunload listener, so a permanent one would slow every back
+// navigation in the app to pay for a warning that is almost never needed.
+//
+// Counted, because more than one form can be open at once and the last one
+// to close must not disarm the others.
+let unsavedForms = 0;
+
+export function useUnsavedChanges(active: boolean): void {
+  useEffect(() => {
+    if (!active) return;
+    unsavedForms += 1;
+    // preventDefault is the whole contract; browsers show their own wording
+    // and ignore anything supplied here.
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => {
+      unsavedForms -= 1;
+      window.removeEventListener("beforeunload", warn);
+    };
+  }, [active]);
+}
+
+/** True while an open form holds edits that leaving would discard. */
+export function hasUnsavedChanges(): boolean {
+  return unsavedForms > 0;
+}
+
 // Dialog focus management (#261) — moves focus into the dialog on open and
 // traps Tab within it, so keyboard/AT users can't tab out to the page
 // behind the modal. Attach the returned ref to the dialog element.
