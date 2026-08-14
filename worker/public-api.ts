@@ -135,17 +135,26 @@ export async function triggerWebhooks(
         // (security review, #445): a receiver that 3xx-redirects the delivery
         // to an internal address is otherwise followed blindly. A blocked hop
         // throws, which counts as a failed attempt below.
-        const { res } = await guardedFetch(hook.url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Zenith-Signature": signature,
+        const { res } = await guardedFetch(
+          hook.url,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Zenith-Signature": signature,
+            },
+            body,
+            // A slow/hanging receiver must not tie up the delivery (#285); the
+            // callers run this via ctx.waitUntil, but bound each attempt too.
+            signal: AbortSignal.timeout(5000),
           },
-          body,
-          // A slow/hanging receiver must not tie up the delivery (#285); the
-          // callers run this via ctx.waitUntil, but bound each attempt too.
-          signal: AbortSignal.timeout(5000),
-        });
+          // The payload is signed for this receiver and describes someone's
+          // job hunt. A receiver that redirects it off its own origin is
+          // either misconfigured or redirecting someone else's data
+          // somewhere; both are worth a failed delivery rather than a
+          // silent one.
+          { sameOriginRedirectsOnly: true },
+        );
         if (!res.ok) throw new Error(`receiver returned ${res.status}`);
       };
       // Re-check at delivery time too — the create-time check alone is
