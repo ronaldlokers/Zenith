@@ -1634,6 +1634,42 @@ function shareParseSqlDate(d: string): number {
 // here rather than trusted. The CSP would stop an injected <script> executing,
 // but markup injection into the document is not something to leave to a second
 // line of defence.
+// Content-Disposition carried the stored filename with nothing but the double
+// quotes stripped out, and a filename is whatever the uploader called the
+// file. Two things went wrong with that.
+//
+// A header value is ISO-8859-1 by the spec, so UTF-8 bytes in a quoted-string
+// are not something a browser can be asked to interpret: "Lebenslauf
+// Müller.pdf" and "履歴書.pdf" both went out raw and came back mojibake.
+// RFC 6266 has the answer — an ASCII filename for agents that only understand
+// that, and filename* with the real name percent-encoded as UTF-8.
+//
+// Order matters and is the reason filename comes first: an agent that does
+// not implement filename* is specified to ignore it where it appears after
+// filename, and would otherwise take the encoded form as the literal name.
+//
+// The second thing is worse than cosmetic. A control character in a header
+// value throws where the Response is constructed, so a file whose name held a
+// newline uploaded fine and then answered 500 on every download, for good —
+// the only way out of it was to delete the file.
+function contentDisposition(filename: string): string {
+  const ascii =
+    filename
+      // Everything outside printable ASCII, which is also what removes the
+      // control characters that made the header unconstructable.
+      .replace(/[^\x20-\x7e]/g, "_")
+      .replace(/["\\]/g, "")
+      .trim() || "download";
+  // encodeURIComponent leaves a handful of characters that RFC 5987's
+  // attr-char does not admit; percent-encode those too rather than emit a
+  // value that is only nearly valid.
+  const encoded = encodeURIComponent(filename).replace(
+    /['()*!]/g,
+    (ch) => `%${ch.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encoded}`;
+}
+
 function escapeHtml(v: string): string {
   return v
     .replace(/&/g, "&amp;")
@@ -2080,7 +2116,7 @@ app.get("/api/documents/:id/download", async (c) => {
   return new Response(object.body, {
     headers: {
       "Content-Type": doc.content_type ?? "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${doc.filename.replace(/"/g, "")}"`,
+      "Content-Disposition": contentDisposition(doc.filename),
     },
   });
 });
