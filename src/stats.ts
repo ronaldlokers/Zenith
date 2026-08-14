@@ -12,8 +12,15 @@ export const FUNNEL_STAGES: Status[] = [
   "offer",
 ];
 
+// Deliberately a copy of format.ts's parseSqlDate rather than an import: this
+// module states it is dependency-free so it can be unit-tested without a DOM
+// or a DB, and that is worth more than saving four lines. It was not a
+// faithful copy — the ISO branch is the fix format.ts's own comment records
+// (a value that already has a T and a Z became "...ZZ", an Invalid Date and a
+// NaN), and it had not been carried across. Nothing feeds this ISO today; a
+// copy that has silently diverged from the thing it copies is the point.
 function sqlMs(d: string): number {
-  return new Date(d.replace(" ", "T") + "Z").getTime();
+  return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
 }
 
 // Furthest funnel stage index each application ever reached.
@@ -81,47 +88,19 @@ export function median(xs: number[]): number | null {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 
-export interface StageTiming {
-  stage: Status;
-  median: number;
-  n: number;
-}
-
-// Median days spent in each funnel stage — the transition into a stage to
-// the next transition (or `nowMs` for the current stage). Median over mean
-// so a single very slow employer doesn't skew the number.
-export function medianTimeInStageDays(
-  history: StatusHistoryRow[],
-  nowMs: number,
-): StageTiming[] {
-  const byApp = new Map<number, StatusHistoryRow[]>();
-  for (const row of history) {
-    const list = byApp.get(row.application_id) ?? [];
-    list.push(row);
-    byApp.set(row.application_id, list);
-  }
-  const perStage = new Map<Status, number[]>();
-  for (const rows of byApp.values()) {
-    for (let i = 0; i < rows.length; i++) {
-      const stage = rows[i].to_status;
-      if (!FUNNEL_STAGES.includes(stage)) continue;
-      const start = sqlMs(rows[i].changed_at);
-      const end = i + 1 < rows.length ? sqlMs(rows[i + 1].changed_at) : nowMs;
-      const days = (end - start) / 86400000;
-      if (days < 0) continue;
-      const list = perStage.get(stage) ?? [];
-      list.push(days);
-      perStage.set(stage, list);
-    }
-  }
-  const out: StageTiming[] = [];
-  for (const stage of FUNNEL_STAGES) {
-    const xs = perStage.get(stage);
-    if (!xs || xs.length === 0) continue;
-    out.push({ stage, median: median(xs)!, n: xs.length });
-  }
-  return out;
-}
+// medianTimeInStageDays used to live here. It mixed right-censored durations
+// with completed ones — an application still sitting in a stage contributed
+// "it has been 6 days so far" alongside another's "it took 6 days" — which
+// biases the median downward in proportion to how much is still open. The
+// comment on responseTime below already said so, and said it was safe because
+// the function was on no screen.
+//
+// That is a reason to remove it, not to keep it. It was exported and tested,
+// which is what makes dead code dangerous rather than merely untidy: the next
+// person wanting time-in-stage finds a working, tested implementation and
+// ships the bias. responseTime is the shape to copy instead — the median over
+// the ones that finished, and the count still open reported beside it, rather
+// than one number that quietly folds them together.
 
 export interface ResponseRate {
   applied: number;
