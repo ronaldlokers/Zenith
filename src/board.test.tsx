@@ -1,4 +1,9 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Application, Profile, Status } from "./types";
@@ -91,6 +96,8 @@ function renderBoard(
     notify?: (m: string, undo?: () => void, label?: string) => void;
     // Router state, so the "Closed applications" entry point can be exercised.
     state?: unknown;
+    focusCardId?: number | null;
+    onFocusRestored?: () => void;
   } = {},
 ) {
   return render(
@@ -106,6 +113,8 @@ function renderBoard(
       lastInteractions={[]}
       history={[]}
       onOpenJob={() => {}}
+      focusCardId={over.focusCardId ?? null}
+      onFocusRestored={over.onFocusRestored}
       onOpenQuickAdd={over.onOpenQuickAdd ?? (() => {})}
       onOpenSampleData={() => {}}
     />
@@ -514,3 +523,7 @@ describe("board rails", () => {
     expect(opened).toEqual(["screening"]);
   });
 });
+
+// Back from an application used to leave focus on <body>, so the next Tab
+// started at the top of the board — working through a list of jobs one at a
+// time meant tabbing past every filter again for each one.

@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, test, vi } from "vitest";
 import type { Application, Status } from "./types";
@@ -94,6 +94,19 @@ function renderDetail(over: Partial<Application> = {}) {
   );
   return container;
 }
+
+// Opening an application is a route change, and the one this app makes most.
+// The shell moves focus to the page heading when the page title changes, but
+// this route keeps the board's title — so activating a card left focus on
+// <body>, and the next Tab started at the top of the document rather than in
+// the application just opened.
+describe("detail page focus", () => {
+  test("puts the keyboard on the application it just opened", () => {
+    renderDetail();
+    const heading = screen.getByRole("heading", { level: 2 });
+    expect(document.activeElement).toBe(heading);
+  });
+});
 
 describe("detail page structure", () => {
   test("the tool rails are siblings of the plate, not inside it", () => {

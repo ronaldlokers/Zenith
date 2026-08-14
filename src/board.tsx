@@ -100,7 +100,11 @@ function BoardCard({
           the menu that toggles it. The dot is decorative — the text beside
           it is what a screen reader gets. */}
       {a.pinned_at && <span className="sr-only">{t("bottomBar.pinned")}</span>}
-      <div className="bcard-body" {...rowActivate(onOpenDetail)}>
+      <div
+        className="bcard-body"
+        data-card-id={a.id}
+        {...rowActivate(onOpenDetail)}
+      >
         {/* Identity strip, flush to the card edge: when it started, who it is
             with, and what kind of role. Every cell is a block — padding on an
             inline span does not indent what follows it. */}
@@ -196,6 +200,8 @@ function BoardTab({
   notify,
   onStatus,
   onDetailIdChange,
+  focusCardId,
+  onFocusRestored,
   folded,
   onToggleFold,
   onUnfoldLive,
@@ -212,6 +218,9 @@ function BoardTab({
   attention?: Map<number, Urgency>;
   sort: BoardSort;
   onDetailIdChange?: (id: number | null) => void;
+  /** Card to put the keyboard back on after returning from its application. */
+  focusCardId?: number | null;
+  onFocusRestored?: () => void;
   folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
   onUnfoldLive: () => void;
@@ -287,6 +296,23 @@ function BoardTab({
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+
+  // Coming back from an application puts the keyboard on the card it was
+  // opened from. Without it, Back left focus on <body> and the next Tab
+  // started at the top of the board — so working through a list of jobs one
+  // at a time meant tabbing past every filter again for each one.
+  //
+  // The card may not be there to return to: it can have moved to a folded
+  // rail, or out of the current filter, or been archived from the detail
+  // itself. The restore is cleared either way, so a card that reappears
+  // later cannot pull focus out of whatever is being done by then.
+  useEffect(() => {
+    if (focusCardId == null) return;
+    document
+      .querySelector<HTMLElement>(`[data-card-id="${focusCardId}"]`)
+      ?.focus();
+    onFocusRestored?.();
+  }, [focusCardId, onFocusRestored]);
 
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverRail, setDragOverRail] = useState<BoardRail | null>(null);
@@ -700,6 +726,8 @@ export function PipelineTab({
   onQueryConsumed,
   history,
   onOpenJob,
+  focusCardId,
+  onFocusRestored,
   onOpenQuickAdd,
   onOpenSampleData,
 }: Omit<CrudTabProps, "onDelete"> & {
@@ -712,6 +740,8 @@ export function PipelineTab({
   history: StatusHistoryRow[];
   lastInteractions: { application_id: number; last_at: string }[];
   onOpenJob: (id: number | null) => void;
+  focusCardId?: number | null;
+  onFocusRestored?: () => void;
   onOpenQuickAdd: (stage?: Status) => void;
   onOpenSampleData: () => void;
 }) {
@@ -1301,6 +1331,8 @@ export function PipelineTab({
         notify={notify}
         onStatus={onStatus}
         onDetailIdChange={onOpenJob}
+        focusCardId={focusCardId}
+        onFocusRestored={onFocusRestored}
         folded={folded}
         onToggleFold={toggleFold}
         onUnfoldLive={unfoldLive}

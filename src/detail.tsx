@@ -138,6 +138,20 @@ export function ApplicationDetailModal({
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
   const [editingOutcome, setEditingOutcome] = useState(false);
   const a = application;
+  // Opening an application is a route change, and it is the one this app
+  // makes most. The shell moves focus to the page heading when the page
+  // title changes, but this route keeps the board's title — so activating a
+  // card left focus on <body>: the next Tab started from the top of the
+  // document rather than in the application just opened, and a screen reader
+  // was told nothing had happened.
+  //
+  // Keyed on the id rather than on mount, because the pane stays mounted
+  // while you move between applications.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, [a.id]);
+
 
   // The outcome lives on the latest terminal transition, which is also the
   // row the endpoint writes to — so read it from the same place rather than
@@ -291,7 +305,9 @@ export function ApplicationDetailModal({
         </div>
         <div className="detail-head">
           <div className="detail-head-main">
-            <h2>{a.title}</h2>
+            <h2 ref={headingRef} tabIndex={-1}>
+              {a.title}
+            </h2>
             <span className="detail-co muted small">
               {a.contact_name ? `${a.contact_name} · ` : ""}
               {roleTypes.find((r) => r.slug === a.role_type)?.label ??
