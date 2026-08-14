@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
+import { useDeleteWithUndo } from "./delete-with-undo";
 import { useSubmitGuard } from "../hooks";
 import { EmptyCvIcon, RemoveIcon } from "../icons";
 import {
@@ -260,10 +261,17 @@ export function WorkExperienceSection({
   items: WorkExperience[];
   onChanged: () => Promise<unknown>;
   onError: (message: string | null) => void;
-  notify: (message: string) => void;
+  notify: (message: string, undo?: () => void) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<WorkExperience | "new" | null>(null);
+  const { hidden, remove } = useDeleteWithUndo(
+    "work-experience",
+    onChanged,
+    onError,
+    notify,
+  );
+  const visible = items.filter((w) => !hidden.has(w.id));
   const [newSkill, setNewSkill] = useState<Record<number, string>>({});
 
   const run = (fn: () => Promise<unknown>) =>
@@ -288,8 +296,11 @@ export function WorkExperienceSection({
   };
 
   const move = (index: number, dir: -1 | 1) => {
-    const other = items[index + dir];
-    const item = items[index];
+    // Indexes into the rendered list, not the raw one: a row hidden by a
+    // pending delete shifts every index after it, and reading the other list
+    // here swaps the wrong pair.
+    const other = visible[index + dir];
+    const item = visible[index];
     if (!other) return;
     Promise.all([
       api.patch("work-experience", item.id, { sort_order: other.sort_order }),
@@ -303,7 +314,7 @@ export function WorkExperienceSection({
     <div className="cv-section">
       <h3 className="detail-sub">{t("cv.workExperience")}</h3>
       <ul className="cv-list">
-        {items.map((w, i) => (
+        {visible.map((w, i) => (
           <CvItem key={w.id}>
             <div className="cv-item-head">
               <div>
@@ -328,18 +339,16 @@ export function WorkExperienceSection({
                     },
                     {
                       label: t("cv.moveDown"),
-                      disabled: i === items.length - 1,
+                      disabled: i === visible.length - 1,
                       onSelect: () => move(i, 1),
                     },
                     { label: t("common.edit"), onSelect: () => setEditing(w) },
                     {
                       label: t("common.delete"),
                       danger: true,
-                      onSelect: () =>
-                        api
-                          .remove("work-experience", w.id)
-                          .then(onChanged)
-                          .catch((e) => onError((e as Error).message)),
+                      // Hidden now, committed after the undo window — the
+                      // same contract as every other delete in the app.
+                      onSelect: () => remove(w.id, w.title),
                     },
                   ]}
                 />
@@ -496,10 +505,17 @@ export function EducationSection({
   items: Education[];
   onChanged: () => Promise<unknown>;
   onError: (message: string | null) => void;
-  notify: (message: string) => void;
+  notify: (message: string, undo?: () => void) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState<Education | "new" | null>(null);
+  const { hidden, remove } = useDeleteWithUndo(
+    "education",
+    onChanged,
+    onError,
+    notify,
+  );
+  const visible = items.filter((e) => !hidden.has(e.id));
 
   const run = (fn: () => Promise<unknown>) =>
     fn()
@@ -511,8 +527,11 @@ export function EducationSection({
       .catch((e) => onError((e as Error).message));
 
   const move = (index: number, dir: -1 | 1) => {
-    const other = items[index + dir];
-    const item = items[index];
+    // Indexes into the rendered list, not the raw one: a row hidden by a
+    // pending delete shifts every index after it, and reading the other list
+    // here swaps the wrong pair.
+    const other = visible[index + dir];
+    const item = visible[index];
     if (!other) return;
     Promise.all([
       api.patch("education", item.id, { sort_order: other.sort_order }),
@@ -526,7 +545,7 @@ export function EducationSection({
     <div className="cv-section">
       <h3 className="detail-sub">{t("cv.education")}</h3>
       <ul className="cv-list">
-        {items.map((ed, i) => (
+        {visible.map((ed, i) => (
           <CvItem key={ed.id}>
             <div className="cv-item-head">
               <div>
@@ -549,7 +568,7 @@ export function EducationSection({
                     },
                     {
                       label: t("cv.moveDown"),
-                      disabled: i === items.length - 1,
+                      disabled: i === visible.length - 1,
                       onSelect: () => move(i, 1),
                     },
                     { label: t("common.edit"), onSelect: () => setEditing(ed) },
@@ -557,10 +576,7 @@ export function EducationSection({
                       label: t("common.delete"),
                       danger: true,
                       onSelect: () =>
-                        api
-                          .remove("education", ed.id)
-                          .then(onChanged)
-                          .catch((e) => onError((e as Error).message)),
+                        remove(ed.id, ed.institution),
                     },
                   ]}
                 />
