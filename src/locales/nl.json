@@ -1005,6 +1005,9 @@
     "replyTooFew": "Nog te weinig reacties om te zeggen hoe lang ze duren.",
     "replyWaiting": "{{count}} wachten nog, de langste {{days}} dagen.",
     "replyBeyond": "{{count}} daarvan wachten al langer dan welk antwoord je ooit kreeg.",
+    "gapsTitle": "Gevraagd, niet op je cv",
+    "gapsHint": "Over de {{count}} vacatures waarvan je een beschrijving hebt bewaard. Dit zijn vaardigheden die je hebt genoteerd maar die in geen enkele functie in je geschiedenis terugkomen.",
+    "gapsAsked": "in {{count}} daarvan",
     "fromNOffers": "op basis van {{count}} aanbod"
   },
   "export": {
