@@ -101,6 +101,45 @@ export function useScrollLock(active: boolean): void {
   }, [active]);
 }
 
+// Hides everything behind a modal from assistive technology.
+//
+// The focus trap below stops Tab, and that is all it stops. A screen
+// reader's browse mode walks the document with arrow keys and the VoiceOver
+// rotor lists every control on the page — neither goes through the focus
+// order. Measured with the quick-add dialog open: 27 controls outside it
+// were still reachable, including the whole top bar, the board's search and
+// its filter. Someone could operate the app behind a dialog they cannot see
+// past.
+//
+// `inert` rather than aria-hidden: it removes the subtree from the
+// accessibility tree *and* from focus and pointer events, which is the whole
+// of what "behind a modal" should mean, and it has been baseline since 2023.
+//
+// Applied to the shell siblings rather than to the app root, because the
+// backdrop is a child of that root — inerting the root would inert the
+// dialog too. Anything that is not itself a backdrop is fair game, which
+// also keeps a second dialog live when one opens on top of another.
+export function useInertBackground(active: boolean): void {
+  useEffect(() => {
+    if (!active) return;
+    const root = document.querySelector(".app");
+    if (!root) return;
+    const hidden: Element[] = [];
+    for (const child of Array.from(root.children)) {
+      if (child.classList.contains("modal-backdrop")) continue;
+      if (child.hasAttribute("inert")) continue;
+      child.setAttribute("inert", "");
+      hidden.push(child);
+    }
+    return () => {
+      // Only what this dialog set: a nested dialog leaves the outer one's
+      // work alone, so closing the inner one does not wake the shell up
+      // underneath the outer one.
+      for (const el of hidden) el.removeAttribute("inert");
+    };
+  }, [active]);
+}
+
 // Dialog focus management (#261) — moves focus into the dialog on open and
 // traps Tab within it, so keyboard/AT users can't tab out to the page
 // behind the modal. Attach the returned ref to the dialog element.
