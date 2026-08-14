@@ -79,6 +79,9 @@ export async function sendPushToUser(
           method: payload.method,
           headers: payload.headers,
           body: payload.body,
+          // A push service that never answers must not hold the delivery
+          // pass open; every subscription after this one waits behind it.
+          signal: AbortSignal.timeout(10_000),
         });
         // 404/410 means the browser dropped the subscription (uninstalled,
         // revoked permission, etc.) — clean it up rather than retrying

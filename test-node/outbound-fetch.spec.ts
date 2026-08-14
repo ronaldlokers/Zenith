@@ -86,4 +86,41 @@ describe("outbound fetch", () => {
       /redirect|location/i,
     );
   });
+
+  // Two call sites bounded their fetch and wrote down why — the webhook
+  // delivery ("a slow/hanging receiver must not tie up the delivery") and the
+  // stale-posting cron. Nothing else adopted it: the three AI calls, the push
+  // sender, the three feed pulls and the email provider all waited forever.
+  // Every one of them runs either in a cron nobody is watching or behind a
+  // spinner with no way back but a reload.
+  //
+  // Checked as a rule rather than as a list, because the list was the problem:
+  // the pattern existed in the codebase and simply was not reached for.
+  it("never waits forever on someone else's server", () => {
+    const unbounded: string[] = [];
+    for (const file of workerFiles()) {
+      const rel = file.replace(ROOT, "");
+      // url-guard passes the caller's init straight through, so the signal
+      // belongs to whoever called it; index.ts's only fetch is the ASSETS
+      // binding, which is not the network.
+      if (rel === "worker/url-guard.ts" || rel === "worker/index.ts") continue;
+      const lines = readFileSync(file, "utf8").split("\n");
+      lines.forEach((line, i) => {
+        const code = line.trim();
+        // Prose mentions the call too — push.ts explains what its fetch sends.
+        if (code.startsWith("//") || code.startsWith("*")) return;
+        if (!/(?<![.\w])fetch\(/.test(line)) return;
+        // The call runs to the line that closes it; a signal anywhere inside
+        // counts, however the object literal is formatted.
+        const rest = lines.slice(i, i + 20).join("\n");
+        const close = rest.indexOf("});");
+        const call = close >= 0 ? rest.slice(0, close) : rest;
+        if (!/signal:/.test(call)) unbounded.push(`${rel}:${i + 1}`);
+      });
+    }
+    expect(
+      unbounded,
+      "an outbound fetch with no AbortSignal — a hang here stalls a cron or a spinner",
+    ).toEqual([]);
+  });
 });
