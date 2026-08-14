@@ -114,3 +114,58 @@ describe("opening an application", () => {
 // Left uncovered on purpose. A red test that reports a working feature as
 // broken teaches people to stop reading the suite, which costs more than the
 // coverage is worth.
+
+describe("losing the connection mid-session", () => {
+  it("keeps the app on screen instead of reloading into a browser error", async () => {
+    // #633: going offline replaced the document with
+    // chrome-error://chromewebdata/ — #root gone, and anything typed gone
+    // with it. #634 found why: an offline dynamic import reports the same
+    // message as a chunk a deploy removed, so ChunkBoundary reloaded, and a
+    // reload cannot fix having no network.
+    //
+    // #634 said this was not verifiable here, on the grounds that
+    // setOffline leaves navigator.onLine true. That was wrong — it flips it,
+    // and so does CDP. The earlier reading of `true` came from evaluating on
+    // the error page after the navigation had already happened.
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+    });
+    const page = await context.newPage();
+    const navigations: string[] = [];
+    page.on("framenavigated", (f) => {
+      if (f === page.mainFrame()) navigations.push(f.url());
+    });
+
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector(".bottombar");
+    navigations.length = 0;
+
+    await context.setOffline(true);
+    // Provoke a lazy import: that is the fetch that fails offline and the one
+    // the boundary used to react to.
+    await page
+      .getByRole("button", { name: /open the menu/i })
+      .click()
+      .catch(() => {});
+    await page.waitForTimeout(4000);
+
+    const state = await page.evaluate(() => ({
+      hasRoot: !!document.getElementById("root"),
+      rootLen: document.getElementById("root")?.innerHTML.length ?? 0,
+      onLine: navigator.onLine,
+    }));
+    await context.setOffline(false);
+    await context.close();
+
+    expect(
+      navigations,
+      "the page navigated away — a reload offline lands on the browser's error page",
+    ).toEqual([]);
+    expect(state.hasRoot, "the document was replaced").toBe(true);
+    expect(state.rootLen, "the app rendered nothing").toBeGreaterThan(100);
+    // The premise of the guard: the app has to know it is offline for the
+    // boundary to decline the reload.
+    expect(state.onLine, "the browser never reported being offline").toBe(false);
+  }, 180_000);
+});

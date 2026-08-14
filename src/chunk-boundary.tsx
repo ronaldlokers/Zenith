@@ -63,6 +63,13 @@ export class ChunkBoundary extends Component<Props, State> {
     // follows: a browser can claim to be online while reaching nothing, so a
     // false positive here would be a chunk failure we decline to reload for,
     // which the retry button still covers.
+    //
+    // Covered end to end in e2e/behaviour.spec.ts. The commit that added this
+    // guard said the browser suite could not reach the branch because
+    // Playwright's setOffline leaves navigator.onLine true; that was wrong —
+    // it flips it, and so does CDP's emulateNetworkConditions. The reading
+    // that suggested otherwise was taken on the error page, after the
+    // navigation this prevents had already happened.
     const offline =
       typeof navigator !== "undefined" && navigator.onLine === false;
     if (looksLikeChunkFailure(error) && !offline) {
