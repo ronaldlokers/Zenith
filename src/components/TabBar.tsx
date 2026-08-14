@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { tablistKeyDown } from "./tablist-keys";
 import "./TabBar.css";
 
 // The underline tab bar from the application detail view (App.css:3989):
@@ -29,6 +31,7 @@ export function TabBar<K extends string>({
   idPrefix,
   ...rest
 }: TabBarProps<K>) {
+  const refs = useRef(new Map<K, HTMLElement | null>()).current;
   return (
     <div className="zui-tabbar" role="tablist" aria-label={rest["aria-label"]}>
       {tabs.map(({ key, label }) => (
@@ -37,10 +40,27 @@ export function TabBar<K extends string>({
           type="button"
           role="tab"
           id={`${idPrefix}-tab-${key}`}
+          ref={(el) => {
+            refs.set(key, el);
+          }}
           aria-selected={active === key}
-          aria-controls={`${idPrefix}-panel-${key}`}
+          // Only the active tab's panel is rendered by the caller, so only
+          // the active tab points at one. Emitting it for every tab left two
+          // of three references dangling on every render (#517).
+          aria-controls={
+            active === key ? `${idPrefix}-panel-${key}` : undefined
+          }
+          tabIndex={active === key ? 0 : -1}
           className={active === key ? "active" : undefined}
           onClick={() => onSelect(key)}
+          onKeyDown={(e) =>
+            tablistKeyDown(e, {
+              keys: tabs.map((t) => t.key),
+              active,
+              onSelect,
+              refs,
+            })
+          }
         >
           {label}
         </button>
