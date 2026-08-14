@@ -5,7 +5,7 @@
 // ApplicationForm components (src/components) — see that split's history in
 // git blame for this file. Only ApplicationDetailModal is public; the rest
 // are its internals.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "./api";
@@ -53,7 +53,7 @@ import {
   totalCompBreakdown,
 } from "./format";
 import { Timeline } from "./timeline";
-import { requestConfirm, useFocusTrap } from "./hooks";
+import { requestConfirm } from "./hooks";
 
 export function ApplicationDetailModal({
   application,
@@ -69,7 +69,6 @@ export function ApplicationDetailModal({
   onStatus,
   history,
   onSaveOutcome,
-  asPane,
 }: {
   application: Application;
   allApplications: Application[];
@@ -92,15 +91,10 @@ export function ApplicationDetailModal({
     reason: string | null,
     note: string | null,
   ) => void;
-  // Split-pane mode (#131) — rendered inline in the Jobs sidebar on wide
-  // desktop viewports instead of an overlay modal. Same content either
-  // way; only the outer wrapper (backdrop, click-outside-to-close,
-  // Escape-to-close) differs.
-  asPane?: boolean;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const dialogRef = useFocusTrap<HTMLDivElement>(!asPane);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState(false);
   // Which secondary-column section is shown. The detail page had grown to 7
   // stacked sections (IA review, #448) — a tab sub-nav shows one at a time,
@@ -172,13 +166,11 @@ export function ApplicationDetailModal({
         void requestConfirm(t("confirm.discardEdit")).then((ok) => {
           if (ok) setEditing(false);
         });
-      } else if (!asPane) {
-        onClose();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, asPane, editing, inlineField, t]);
+  }, [onClose, editing, inlineField, t]);
 
   const addTag = () => {
     const name = newTag.trim();
@@ -247,13 +239,11 @@ export function ApplicationDetailModal({
     }
   };
 
-  const pane = (
+  return (
       <div
         ref={dialogRef}
-        className={asPane ? "detail-pane" : "modal detail-modal"}
-        onClick={asPane ? undefined : (e) => e.stopPropagation()}
-        role={asPane ? "region" : "dialog"}
-        aria-modal={asPane ? undefined : true}
+        className="detail-pane"
+        role="region"
         aria-label={a.title}
       >
         {editingOutcome && outcomeStatus && onSaveOutcome && (
@@ -345,11 +335,6 @@ export function ApplicationDetailModal({
                 }
               />
             </div>
-          )}
-          {!asPane && (
-            <Button variant="close" onClick={onClose} aria-label={t("common.close")}>
-              ×
-            </Button>
           )}
         </div>
 
@@ -932,13 +917,6 @@ export function ApplicationDetailModal({
           </div>
         </div>
       </div>
-  );
-
-  if (asPane) return pane;
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      {pane}
-    </div>
   );
 }
 

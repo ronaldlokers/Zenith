@@ -1,7 +1,7 @@
 // Small shared hooks + the app-wide confirm() service, extracted from
 // App.tsx (#285 split). No React components here, so react-refresh's
 // only-export-components rule stays satisfied.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate } from "react-router-dom";
 import { keyShortcutsEnabled } from "./format";
 
@@ -57,6 +57,112 @@ export function rowActivate(onActivate: () => void) {
       }
     },
   } as const;
+}
+
+// Holds the page still while a modal is open. Measured on the CV at both
+// 1440 and 390: with the quick-add dialog up, a wheel gesture scrolled the
+// page behind it from 0 to 800px. On a phone that is worse than
+// disorienting — a dialog that reaches its own end passes the gesture to the
+// page underneath, so you lose your place while trying to read the thing in
+// front of you.
+//
+// Two details that are easy to get wrong, and both cost more than they fix
+// if skipped:
+//
+// Counted, not a boolean. A confirm opened from inside a dialog is a second
+// lock, and releasing on the first close would unlock the page while a modal
+// is still up.
+//
+// The scrollbar is compensated. Setting overflow:hidden removes a classic
+// scrollbar, the content widens by its width, and every fixed element jumps
+// — which is a layout shift introduced by the fix for a scroll. Overlay
+// scrollbars measure 0 and get no padding, so the common case pays nothing.
+let scrollLocks = 0;
+let restorePadding = "";
+
+export function useScrollLock(active: boolean): void {
+  useEffect(() => {
+    if (!active) return;
+    const body = document.body;
+    if (scrollLocks === 0) {
+      const gap = window.innerWidth - document.documentElement.clientWidth;
+      restorePadding = body.style.paddingRight;
+      if (gap > 0) body.style.paddingRight = `${gap}px`;
+      body.style.overflow = "hidden";
+    }
+    scrollLocks += 1;
+    return () => {
+      scrollLocks -= 1;
+      if (scrollLocks === 0) {
+        body.style.overflow = "";
+        body.style.paddingRight = restorePadding;
+      }
+    };
+  }, [active]);
+}
+
+// Hides everything behind a modal from assistive technology.
+//
+// The focus trap below stops Tab, and that is all it stops. A screen
+// reader's browse mode walks the document with arrow keys and the VoiceOver
+// rotor lists every control on the page — neither goes through the focus
+// order. Measured with the quick-add dialog open: 27 controls outside it
+// were still reachable, including the whole top bar, the board's search and
+// its filter. Someone could operate the app behind a dialog they cannot see
+// past.
+//
+// `inert` rather than aria-hidden: it removes the subtree from the
+// accessibility tree *and* from focus and pointer events, which is the whole
+// of what "behind a modal" should mean, and it has been baseline since 2023.
+//
+// Applied to the shell siblings rather than to the app root, because every
+// dialog lives somewhere inside that root — inerting the root would inert the
+// dialog too. Pass the dialog's own ref and the branch holding it is spared;
+// everything else goes out of reach, which also keeps an outer dialog live
+// when a second opens on top of it.
+export function useInertBackground(
+  active: boolean,
+  dialog?: RefObject<Element | null>,
+): void {
+  useEffect(() => {
+    if (!active) return;
+    const root = document.querySelector(".app");
+    if (!root) return;
+    const self = dialog?.current ?? null;
+    const hidden: Element[] = [];
+    // A backdrop is the dialog's own dismissal surface, and inert takes
+    // pointer events with it — inerting one leaves a modal that click-outside
+    // no longer closes.
+    const spare = (el: Element) =>
+      el.hasAttribute("inert") || /backdrop/.test(String(el.className));
+    const take = (el: Element) => {
+      if (spare(el)) return;
+      el.setAttribute("inert", "");
+      hidden.push(el);
+    };
+
+    if (self && root.contains(self)) {
+      // Walk from the dialog up to the root, taking the siblings at each
+      // level. Sparing the whole branch that holds the dialog is not enough:
+      // the notification panel hangs off the bottom bar, so sparing the bar
+      // left its search and filter reachable right beside the open panel.
+      let node: Element = self;
+      while (node !== root && node.parentElement) {
+        for (const sibling of Array.from(node.parentElement.children)) {
+          if (sibling !== node) take(sibling);
+        }
+        node = node.parentElement;
+      }
+    } else {
+      for (const child of Array.from(root.children)) take(child);
+    }
+    return () => {
+      // Only what this dialog set: a nested dialog leaves the outer one's
+      // work alone, so closing the inner one does not wake the shell up
+      // underneath the outer one.
+      for (const el of hidden) el.removeAttribute("inert");
+    };
+  }, [active, dialog]);
 }
 
 // Dialog focus management (#261) — moves focus into the dialog on open and
@@ -216,11 +322,31 @@ export function useGlobalShortcuts(handlers: {
         return;
       }
 
+      // A modal owns the keyboard while it is open. Measured: with the
+      // quick-add dialog up and focus on its Cancel button — a button, so
+      // the "not while typing" guard below does not apply — pressing ","
+      // navigated to Settings *behind* the dialog. The dialog stayed on
+      // screen, focus left its trap, and whatever had been typed was
+      // stranded on a screen the user was no longer on.
+      //
+      // Checked in the DOM rather than threaded through as state: dialogs
+      // are opened from half a dozen places and a prop would have to reach
+      // every one of them, where aria-modal is already on each of them
+      // because assistive technology needs it.
+      //
+      // Only the unmodified single-key shortcuts are suppressed. Cmd/Ctrl-K
+      // is deliberately left alone above: it toggles the palette, which is
+      // itself a modal, and swallowing it would leave the one control that
+      // closes the palette inert.
+      const modalOpen =
+        typeof document !== "undefined" &&
+        !!document.querySelector('[aria-modal="true"]');
+
       // Destination shortcuts (#535 shell). Same guards as the quick-add key
       // below: no modifiers, not while typing, and off entirely when the
       // single-key setting is disabled for speech-input and single-switch
       // users (WCAG 2.1.4).
-      if (!e.metaKey && !e.ctrlKey && !e.altKey && keyShortcutsEnabled()) {
+      if (!modalOpen && !e.metaKey && !e.ctrlKey && !e.altKey && keyShortcutsEnabled()) {
         const el = document.activeElement as HTMLElement | null;
         const typing =
           !!el &&
@@ -259,6 +385,7 @@ export function useGlobalShortcuts(handlers: {
 
       if (
         e.key === "n" &&
+        !modalOpen &&
         !e.metaKey &&
         !e.ctrlKey &&
         !e.altKey &&

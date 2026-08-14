@@ -5,7 +5,12 @@ import { api } from "../api";
 import type { AppNotification } from "../types";
 import { BellIcon } from "../icons";
 import { formatDate } from "../format";
-import { rowActivate, useFocusTrap } from "../hooks";
+import {
+  rowActivate,
+  useFocusTrap,
+  useInertBackground,
+  useScrollLock,
+} from "../hooks";
 import { Button } from "./Button";
 import "./NotificationBell.css";
 
@@ -34,6 +39,11 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<AppNotification[] | null>(null);
   const [open, setOpen] = useState(false);
   const panelRef = useFocusTrap<HTMLDivElement>(open);
+  // It declares aria-modal and traps Tab, so it is a modal and gets what
+  // the shared Dialog gets. Measured with it open: 28 controls outside it
+  // were still reachable by a screen reader's browse mode.
+  useScrollLock(open);
+  useInertBackground(open, panelRef);
 
   const load = useCallback(() => {
     api.notifications().then(setNotifications).catch(() => {});

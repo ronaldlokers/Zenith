@@ -89,7 +89,6 @@ function renderDetail(over: Partial<Application> = {}) {
         notify={() => {}}
         onDelete={() => {}}
         onStatus={() => {}}
-        asPane
       />
     </MemoryRouter>,
   );
