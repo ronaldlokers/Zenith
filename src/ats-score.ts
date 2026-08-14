@@ -1,4 +1,5 @@
 import type { Profile, Skill, WorkExperience } from "./types";
+import { mentionsSkill } from "./skill-match";
 
 // Deterministic, key-free ATS report (#470). Scores the built CV against a
 // pasted job description: keyword coverage (which of the JD-mentioned skills
@@ -26,11 +27,6 @@ export function atsBand(score: number): AtsBand {
   if (score >= 75) return "strong";
   if (score >= 50) return "fair";
   return "weak";
-}
-
-function mentionsSkill(jdLower: string, name: string): boolean {
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`\\b${escaped}\\b`, "i").test(jdLower);
 }
 
 export function atsReport(
