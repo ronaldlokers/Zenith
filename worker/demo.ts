@@ -1,3 +1,4 @@
+import { deleteDocumentObjects } from "./documents.js";
 // Demo account data (#38): a real admin-created user (see the "Invite a
 // user" form in Settings) whose data gets wiped and reseeded with one
 // example of every shipped feature, so it can be shown/tested on
@@ -58,10 +59,7 @@ export async function wipeUserData(env: Env, userId: string): Promise<void> {
   )
     .bind(userId)
     .all<{ key: string }>();
-  // R2 takes up to 1000 keys per call.
-  for (let i = 0; i < results.length; i += 1000) {
-    await env.DOCS.delete(results.slice(i, i + 1000).map((r) => r.key));
-  }
+  await deleteDocumentObjects(env.DOCS, results.map((r) => r.key));
 
   for (const table of USER_TABLES) {
     await env.DB.prepare(`DELETE FROM ${table} WHERE user_id = ?`)
