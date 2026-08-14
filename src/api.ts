@@ -9,15 +9,18 @@ import i18n from "./i18n";
 // api.ts is only ever called from handlers, long after i18n has initialized
 // — the same reasoning cv-snapshot.ts uses. (format.ts avoids the import
 // because it runs during render, which is a different position.)
-function networkErrorMessage(): string {
+function networkErrorMessage(method?: string): string {
+  // A read and a write fail differently to the person reading the message.
+  // Both used the write wording, so a page that would not load announced
+  // "that change wasn't saved" over a screen where nothing had been changed.
+  const read = !method || method.toUpperCase() === "GET";
   // navigator.onLine is only trustworthy when it says false: a browser can
   // report "online" while attached to a network that reaches nothing. So it
   // is used to add certainty, never to withhold it.
-  return i18n.t(
-    typeof navigator !== "undefined" && navigator.onLine === false
-      ? "errors.offline"
-      : "errors.unreachable",
-  );
+  const offline =
+    typeof navigator !== "undefined" && navigator.onLine === false;
+  if (offline) return i18n.t(read ? "errors.offlineRead" : "errors.offline");
+  return i18n.t(read ? "errors.unreachableRead" : "errors.unreachable");
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -28,7 +31,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
     });
   } catch {
-    throw new Error(networkErrorMessage());
+    throw new Error(networkErrorMessage(init?.method));
   }
   // A 401 from this client means one thing: the session is gone. Sign-in
   // goes through auth-client, not through here, so nothing else can produce

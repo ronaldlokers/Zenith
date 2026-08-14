@@ -1006,7 +1006,9 @@
   },
   "errors": {
     "offline": "Je bent offline — die wijziging is niet opgeslagen. Het werkt weer zodra je verbinding hebt.",
+    "offlineRead": "Je bent offline — Zenith kon dit niet ophalen. Het werkt weer zodra je verbinding hebt.",
     "unreachable": "Zenith is niet bereikbaar, dus die wijziging is niet opgeslagen. Controleer je verbinding en probeer het opnieuw.",
+    "unreachableRead": "Zenith is niet bereikbaar, dus dit kon niet worden geladen. Controleer je verbinding en probeer het opnieuw.",
     "sessionExpired": "Je sessie is verlopen — herlaad de pagina en meld je opnieuw aan.",
     "chunkFailed": "Een deel van de app kon niet worden geladen. Meestal betekent dit dat er een nieuwe versie is uitgebracht terwijl Zenith openstond.",
     "staleEdit": "Deze sollicitatie is elders gewijzigd terwijl je aan het bewerken was. Er is niets verloren — laad hem opnieuw en pas je wijziging nogmaals toe."
