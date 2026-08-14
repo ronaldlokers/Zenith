@@ -169,3 +169,74 @@ describe("losing the connection mid-session", () => {
     expect(state.onLine, "the browser never reported being offline").toBe(false);
   }, 180_000);
 });
+
+describe("the chunk boundary while offline", () => {
+  // #634 stopped the automatic reload from landing on the browser's error
+  // page. It left two halves of the same failure untouched, both found by
+  // going offline and opening a tab whose chunk was not already loaded.
+  async function reachTheBoundary(browser: Browser) {
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector(".bottombar");
+    await ctx.setOffline(true);
+    await page
+      .getByRole("link", { name: /people|compan/i })
+      .first()
+      .click()
+      .catch(() => {});
+    await page.waitForSelector(".error", { timeout: 20_000 });
+    return { ctx, page };
+  }
+
+  it("does not blame a release for what the network did", async () => {
+    // The boundary declined to reload *because* it knew the network was gone,
+    // and then explained the failure as "a new version was released while you
+    // had Zenith open". It had already ruled that cause out.
+    const { ctx, page } = await reachTheBoundary(browser);
+    const text = await page.locator(".error-text").innerText();
+    await ctx.setOffline(false);
+    await ctx.close();
+    expect(
+      text,
+      "the offline message names a deploy as the cause",
+    ).not.toMatch(/new version|nieuwe versie/i);
+    expect(text, "the message does not say what actually happened").toMatch(
+      /offline/i,
+    );
+  }, 180_000);
+
+  it("keeps the app on screen when retry is pressed offline", async () => {
+    // The button called window.location.reload() unconditionally — the exact
+    // navigation the automatic path refuses to make while offline. Guarding
+    // one path and not the other left the defect behind a control whose whole
+    // purpose is to be pressed when something is broken.
+    const { ctx, page } = await reachTheBoundary(browser);
+    const navigations: string[] = [];
+    page.on("framenavigated", (f) => {
+      if (f === page.mainFrame()) navigations.push(f.url());
+    });
+
+    await page.locator(".error-dismiss").click();
+    await page.waitForTimeout(3000);
+
+    const state = await page.evaluate(() => ({
+      hasRoot: !!document.getElementById("root"),
+      rootLen: document.getElementById("root")?.innerHTML.length ?? 0,
+      onLine: navigator.onLine,
+    }));
+    await ctx.setOffline(false);
+    await ctx.close();
+
+    expect(
+      navigations,
+      "retry navigated away — offline that is the browser's error page",
+    ).toEqual([]);
+    expect(state.hasRoot, "the document was replaced").toBe(true);
+    expect(state.rootLen, "the app rendered nothing").toBeGreaterThan(100);
+    expect(state.onLine, "the browser never reported being offline").toBe(false);
+  }, 180_000);
+});

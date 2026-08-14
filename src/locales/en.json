@@ -1011,6 +1011,7 @@
     "unreachableRead": "Couldn't reach Zenith, so this couldn't be loaded. Check your connection and try again.",
     "sessionExpired": "Your session has expired — reload the page and sign in again.",
     "chunkFailed": "Part of the app could not be loaded. This usually means a new version was released while you had Zenith open.",
+    "chunkFailedOffline": "Part of the app could not be loaded because you are offline. It will load once you are back.",
     "staleEdit": "This application was changed somewhere else while you were editing. Nothing was lost — reload it and make your change again."
   }
 }

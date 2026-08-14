@@ -41,10 +41,30 @@ interface Props {
 
 interface State {
   failed: boolean;
+  offline: boolean;
 }
 
+/** navigator.onLine is trusted only when it says false — the api.ts rule. */
+const isOffline = () =>
+  typeof navigator !== "undefined" && navigator.onLine === false;
+
 export class ChunkBoundary extends Component<Props, State> {
-  state: State = { failed: false };
+  state: State = { failed: false, offline: isOffline() };
+
+  // The message has to be able to change after it is on screen: someone whose
+  // wifi drops reads "you are offline", reconnects, and the retry then works.
+  // Without this the copy keeps naming a cause that has gone away.
+  private readonly sync = () => this.setState({ offline: isOffline() });
+
+  componentDidMount() {
+    window.addEventListener("online", this.sync);
+    window.addEventListener("offline", this.sync);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("online", this.sync);
+    window.removeEventListener("offline", this.sync);
+  }
 
   static getDerivedStateFromError(error: unknown): State {
     // A reload is the fix for a chunk that is gone because the deploy moved
@@ -70,8 +90,7 @@ export class ChunkBoundary extends Component<Props, State> {
     // it flips it, and so does CDP's emulateNetworkConditions. The reading
     // that suggested otherwise was taken on the error page, after the
     // navigation this prevents had already happened.
-    const offline =
-      typeof navigator !== "undefined" && navigator.onLine === false;
+    const offline = isOffline();
     if (looksLikeChunkFailure(error) && !offline) {
       let retried = "1";
       try {
@@ -90,7 +109,7 @@ export class ChunkBoundary extends Component<Props, State> {
         window.location.reload();
       }
     }
-    return { failed: true };
+    return { failed: true, offline };
   }
 
   render() {
@@ -101,11 +120,28 @@ export class ChunkBoundary extends Component<Props, State> {
     // render.
     return (
       <p className="error" role="alert">
-        <span className="error-text">{i18n.t("errors.chunkFailed")}</span>
+        <span className="error-text">
+          {i18n.t(
+            // Offline, "a new version was released" is a cause this component
+            // has already ruled out — it declined to reload precisely because
+            // it knew the network was gone. Naming the wrong cause sends
+            // someone looking for a fix that does not exist.
+            this.state.offline ? "errors.chunkFailedOffline" : "errors.chunkFailed",
+          )}
+        </span>
         <button
           type="button"
           className="error-dismiss"
           onClick={() => {
+            // The same reload the automatic path refuses to do while offline,
+            // and for the same measured reason: it lands on the browser's own
+            // error page, which replaces the document. Guarding one path and
+            // not the other left the defect sitting behind a button whose
+            // whole purpose is to be pressed when something is broken.
+            if (isOffline()) {
+              this.sync();
+              return;
+            }
             try {
               sessionStorage.removeItem(RETRIED);
             } catch {
