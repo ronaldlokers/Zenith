@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, test } from "vitest";
-import { TopBar } from "./shell";
+import { BottomBar, TopBar } from "./shell";
 // Side-effect: initializes i18next so `t()` renders real copy instead of keys.
 import "./i18n";
 
@@ -74,5 +75,44 @@ describe("top bar", () => {
     const brand = container.querySelector(".top-brand");
     expect(brand?.tagName).toBe("BUTTON");
     expect(brand?.getAttribute("aria-haspopup")).toBe("menu");
+  });
+});
+
+// The bottom bar's slots took their accessible name from the label and the
+// keycap inside them, and both are display: none below 700px — which removes
+// them from the accessibility tree as well as from the page. Measured with
+// axe at 390px: two slots with no accessible name at all, announcing as
+// "button". It only ever showed at mobile width, which is why enumerating the
+// bar at 1440 kept saying it was fine.
+describe("bottom bar", () => {
+  function renderBottom() {
+    // NotificationBell lives in the third slot and navigates, so the bar
+    // needs a router even though nothing here routes.
+    return render(
+      <MemoryRouter>
+        <BottomBar onSearch={() => {}} onPinned={() => {}} pinnedCount={3} />
+      </MemoryRouter>,
+    );
+  }
+
+  test("names its controls without depending on what CSS shows", () => {
+    const { getByRole } = renderBottom();
+    // getByRole with a name is the assertion that matters: it resolves the
+    // accessible name the same way a screen reader does, so a name that only
+    // exists in a visually-hidden-at-this-width span does not satisfy it.
+    expect(getByRole("button", { name: "Pinned" })).toBeTruthy();
+    expect(getByRole("button", { name: "Search" })).toBeTruthy();
+  });
+
+  test("keeps the visible label inside the accessible name", () => {
+    // WCAG 2.5.3: where the label is shown, the accessible name has to
+    // contain it, or voice control cannot address the control by what it
+    // says. The aria-label is the visible string exactly.
+    const { getByRole } = renderBottom();
+    const pinned = getByRole("button", { name: "Pinned" });
+    const visible = pinned.querySelector(".bottombar-label")?.textContent ?? "";
+    expect(
+      pinned.getAttribute("aria-label")?.toLowerCase(),
+    ).toContain(visible.toLowerCase());
   });
 });
