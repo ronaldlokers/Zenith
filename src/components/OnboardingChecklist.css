@@ -16,7 +16,7 @@
     justify-content: space-between;
   }
 
-  .zui-onboarding-head h3 {
+  .zui-onboarding-head h2 {
     margin: 0;
     font-size: var(--text-title);
   }
