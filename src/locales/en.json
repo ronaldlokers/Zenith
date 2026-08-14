@@ -1004,6 +1004,7 @@
     "replyTypical": "Replies typically come after {{days}} days (from {{count}} answered).",
     "replyTooFew": "Not enough replies yet to say how long they take.",
     "replyWaiting": "{{count}} still waiting, the longest {{days}} days.",
+    "replyBeyond": "{{count}} of them have waited longer than any reply you have had.",
     "fromNOffers": "from {{count}} offer"
   },
   "export": {

@@ -316,6 +316,13 @@ export function InsightsTab({
                     days: Math.round(rtime.longestWait),
                   })}`
                 : ""}
+              {/* Named only when it is a fact about this account's own
+                  replies: past the slowest one that ever arrived, answers
+                  have stopped coming. It is what makes the waiting count
+                  actionable rather than just heavy. */}
+              {rtime.beyondAnyReply
+                ? ` ${t("insights.replyBeyond", { count: rtime.beyondAnyReply })}`
+                : ""}
             </p>
           )}
         </DashCard>
