@@ -2196,10 +2196,17 @@ select.status {
 /* Keyboard focus ring for rows made operable via role="button" (#261).
    No border-radius here — it changed the element's shape on focus (#314);
    the outline follows the element's own radius natively. */
-[role="button"]:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+/* No [role="button"]:focus-visible rule here any more. It set the ring to
+   --accent, and it won: App.css is @layer app against index.css's @layer
+   reset, and the attribute selector outranks the bare pseudo-class either
+   way. So every element carrying the role — the board's cards, the company
+   and person rows, 28 of them across the app — drew the gold ring that
+   index.css:338 had already replaced for exactly this reason.
+
+   Measured on a focused row: rgb(214,164,65) against the paper ground is
+   2.03:1, which is the same figure that comment cites, and 1.4.11 asks for
+   3:1. Deleting rather than recolouring, because the global rule is otherwise
+   identical (2px solid, 2px offset) and one ring should have one definition. */
 
 /* Paginated "load more" control (#261) */
 .load-more {
