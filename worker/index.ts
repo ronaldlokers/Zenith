@@ -9,6 +9,7 @@ import { registerOutreachRoutes } from "./outreach.js";
 import { registerGoalRoutes } from "./goals.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
+import { deleteDocumentObjects } from "./documents.js";
 import { deliverDueNotifications, generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { generateWeeklyDigest } from "./digest.js";
 import { registerAiRoutes } from "./ai.js";
@@ -880,8 +881,23 @@ app.put("/api/applications/:id/outcome", async (c) => {
 });
 
 app.delete("/api/applications/:id", async (c) => {
+  const id = c.req.param("id");
+  const userId = c.get("userId");
+  // documents cascades with the row, and the cascade runs inside SQLite where
+  // no code of ours does — so the keys are read here or the files are
+  // stranded. Measured before this: deleting an application left both of its
+  // uploads in the bucket with every row that named them gone.
+  const { results } = await c.env.DB.prepare(
+    "SELECT key FROM documents WHERE application_id = ? AND user_id = ?",
+  )
+    .bind(id, userId)
+    .all<{ key: string }>();
+  await deleteDocumentObjects(
+    c.env.DOCS,
+    results.map((r) => r.key),
+  );
   await c.env.DB.prepare("DELETE FROM applications WHERE id = ? AND user_id = ?")
-    .bind(c.req.param("id"), c.get("userId"))
+    .bind(id, userId)
     .run();
   return c.body(null, 204);
 });
