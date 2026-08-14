@@ -165,6 +165,22 @@ export function useInertBackground(
   }, [active, dialog]);
 }
 
+// Every route rendered under one static <title>, so the browser history, the
+// bookmark list and a tab strip all read "Zenith" nine times over, and a
+// screen reader landing on a new view was told nothing about which one it is
+// (WCAG 2.4.2). The h1 that names each view was already there — this carries
+// it into the title.
+//
+// "<view> · Zenith" rather than the reverse: a tab strip and a history menu
+// both truncate from the right, so the distinguishing half has to come first.
+export function useDocumentTitle(page: string | null): void {
+  useEffect(() => {
+    document.title = page ? `${page} \u00b7 ${APP_NAME}` : APP_NAME;
+  }, [page]);
+}
+
+const APP_NAME = "Zenith";
+
 // Dialog focus management (#261) — moves focus into the dialog on open and
 // traps Tab within it, so keyboard/AT users can't tab out to the page
 // behind the modal. Attach the returned ref to the dialog element.

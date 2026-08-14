@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { authClient, signIn } from "./auth-client";
 import { Logo } from "./icons";
+import { useDocumentTitle } from "./hooks";
 
 export function Login() {
   const { t } = useTranslation();
@@ -14,6 +15,9 @@ export function Login() {
   // enabled; this app has no separate hosted auth page to redirect to,
   // so the same card swaps to a code prompt in place.
   const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
+  // Signed out is a page like any other, and it is the one most likely to be
+  // sitting in a tab strip beside the app itself.
+  useDocumentTitle(t(needsTwoFactor ? "login.twoFactorTitle" : "login.title"));
   const [code, setCode] = useState("");
   const [useBackupCode, setUseBackupCode] = useState(false);
   // Where focus goes when a submit fails. The submit button is disabled

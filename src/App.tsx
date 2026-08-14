@@ -63,6 +63,7 @@ import { isDead, isDue, isOverdue } from "./format";
 import { useAppData, useToasts } from "./app-data";
 import {
   clearChunkRetry,
+  useDocumentTitle,
   useGlobalShortcuts,
   useNotificationNavigation,
   useScrolled,
@@ -269,6 +270,18 @@ export default function App() {
       ? [{ data: "admin" as const, to: "admin" as const, active: tab === "admin", icon: <AdminIcon />, label: t("admin.navLabel") }]
       : []),
   ];
+  // Named by the nav rather than by a table of its own, so a destination
+  // cannot be renamed in one place and keep its old name in the other. The
+  // routed job takes its own title: a bookmark or a history entry for one
+  // application is the case where a generic "Pipeline" helps least.
+  useDocumentTitle(
+    routedJob
+      ? routedJob.title
+      : tab === "settings"
+        ? t("settings.title")
+        : navItems.find((n) => n.active)?.label ?? null,
+  );
+
   // The menu's three tiles carry a live count (shell spec: "icon, label, live
   // count and shortcut"). Each is the number that destination's own screen
   // leads with, so the menu cannot quietly disagree with the page behind it:
