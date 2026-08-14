@@ -47,7 +47,7 @@
   .zui-onboarding li button {
     border: none;
     background: none;
-    color: var(--accent);
+    color: var(--accent-ink);
     cursor: pointer;
     padding: 0;
     font-size: var(--text-body);

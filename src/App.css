@@ -515,7 +515,7 @@
 }
 
 .admin-invite-success {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: var(--text-body);
 }
 
@@ -1162,7 +1162,8 @@
   background: none;
   padding: 0;
   font-size: var(--text-meta);
-  color: var(--accent);
+  /* 2.27:1 on the white card as --accent. These are links someone reads. */
+  color: var(--accent-ink);
   cursor: pointer;
 }
 .detail-recent-all:hover {
@@ -1687,7 +1688,10 @@ button.primary:hover {
 .feed-strip-age {
   margin-left: auto;
   border-left: 0;
-  color: var(--faint);
+  /* --muted, not --faint: this sits on the tinted band, where --faint is
+     4.17:1. --faint is only ever marginal — 4.34:1 on --track, 4.57:1 on the
+     page — so it fails wherever the ground is warmer than plain surface. */
+  color: var(--muted);
   flex: 0 0 auto;
 }
 
@@ -2041,7 +2045,8 @@ button.primary:hover {
 
 .outreach-pill.no_response {
   background: var(--track);
-  color: var(--faint);
+  /* --faint on --track is 4.34:1. Same reason as .feed-strip-age above. */
+  color: var(--muted);
 }
 
 .fit-stars {
@@ -2055,8 +2060,11 @@ button.primary:hover {
   color: var(--muted);
 }
 
+/* --accent-ink, not --accent, here and on every other "today" marker below.
+   Gold on a light card is 2.27:1 — the figure index.css:338 records for this
+   colour — and these are words someone reads, not an accent. */
 .due-line.today {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
@@ -2264,7 +2272,7 @@ select.status {
 }
 
 .agenda-date.today {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 700;
 }
 
@@ -2450,7 +2458,7 @@ select.status {
   font-size: var(--text-chrome);
   text-transform: uppercase;
   letter-spacing: var(--track-chrome);
-  color: var(--accent);
+  color: var(--accent-ink);
   min-width: 4.2rem;
 }
 
@@ -2947,7 +2955,7 @@ summary.bcol-head::after {
 }
 
 .bcard .bmeta .today {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .bcard .bmeta .late {
@@ -3449,7 +3457,7 @@ summary.bcol-head::after {
 }
 
 .side-date.today {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .side-date.late {
@@ -3647,7 +3655,9 @@ summary.bcol-head::after {
 }
 .salary-research-link {
   font-size: var(--text-meta);
-  color: var(--accent);
+  /* --accent is 2.27:1 on a white card, the figure index.css:338 records for
+     this colour. These are links someone reads, not an accent. */
+  color: var(--accent-ink);
   text-decoration: none;
 }
 .salary-research-link:hover {
@@ -5523,7 +5533,14 @@ button:not(:disabled):active,
    the strip alone once a column holds more than one stage (dragging, the
    narrow carousel). */
 .bstrip .bwhen {
-  background: color-mix(in srgb, var(--sc, var(--muted)) 16%, var(--surface));
+  /* The stage ink is guaranteed readable on white and on the page ground —
+     that is the contract stage-palette.spec.ts enforces. This puts it on a
+     third ground the contract never named, a wash of the stage colour itself,
+     and at 16% the worst stage (screening) came out 4.25:1. Eased to 10%,
+     where the worst is 4.57:1. The wash is the lever rather than the ink
+     because the ink is part of the locked palette and carries ΔE constraints
+     against the other four; the wash carries nothing. */
+  background: color-mix(in srgb, var(--sc, var(--muted)) 10%, var(--surface));
   color: var(--sc-ink, var(--ink));
   flex: 0 0 auto;
 }

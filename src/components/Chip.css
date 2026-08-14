@@ -57,9 +57,15 @@
   }
 
   /* App.css:2879 */
+  /* "Matched" is information — which of your keywords this posting hit — so
+     the label has to be readable, not merely gold. --accent on a 15% wash of
+     itself measured 1.83:1. The ink of the same hue on a lighter wash is
+     4.59:1, and the border stays --accent so the chip still reads gold at a
+     glance. The tint eased from 15% to 10% because the ink needed the extra
+     room: at 15% it is 4.44:1, which is a near miss rather than a pass. */
   .zui-chip--matched {
-    background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg));
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-ink);
   }
 }

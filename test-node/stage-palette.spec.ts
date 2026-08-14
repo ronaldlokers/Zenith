@@ -182,6 +182,40 @@ describe("stage palette", () => {
     }
   });
 
+
+  // A third ground the contract did not name. The board's date chip mixes the
+  // stage colour into white and prints the stage ink on the result, so the
+  // ink lands on neither of the two grounds above. Measured with axe at 390px
+  // before this: 4.24-4.39:1 across the cards, under the 4.5:1 this same file
+  // enforces everywhere else.
+  //
+  // The percentage is read out of App.css rather than restated, so easing or
+  // deepening that wash is what this test reacts to — a copy of the number
+  // here would just drift.
+  it("keeps every stage readable on the wash the board prints it on", () => {
+    const APP = readFileSync(join(__dirname, "../src/App.css"), "utf8");
+    const rule = APP.slice(APP.indexOf(".bstrip .bwhen {"));
+    const m = rule
+      .slice(0, rule.indexOf("}"))
+      .match(/color-mix\(in srgb, var\(--sc[^)]*\)[^)]*\)\s*(\d+)%/);
+    expect(m, "could not read the .bwhen wash out of App.css").toBeTruthy();
+    const pct = Number(m![1]) / 100;
+
+    for (const { name, vars } of themes) {
+      for (const s of [...STAGES, "dead"]) {
+        const sc = hex(vars[`st-${s}`]);
+        const ground = sc.map((v, i) =>
+          Math.round(v * pct + [255, 255, 255][i] * (1 - pct)),
+        ) as RGB;
+        const c = contrast(hex(vars[`st-${s}-ink`]), ground);
+        expect(
+          c,
+          `${name}: --st-${s}-ink on a ${m![1]}% wash of its own stage is ${c.toFixed(2)}:1`,
+        ).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+      }
+    }
+  });
+
   // The shell fills small surfaces with the ink tone and prints white on
   // them. That is only defensible while the ink tones stay dark enough, and
   // a hue retune would silently take it away.

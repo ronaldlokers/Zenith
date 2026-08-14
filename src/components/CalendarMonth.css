@@ -109,8 +109,13 @@
       font-size: var(--text-meta);
       color: var(--muted);
     }
+    /* Out-of-month days are context, not decoration — they are still dates
+       someone reads. At 0.4 the number composited to #bbbbc2 on the sunken
+       ground: 1.81:1, where 1.4.3 asks 4.5:1 for text this size. 0.9 is
+       4.75:1 and still lands lighter than an in-month day, which is what the
+       de-emphasis was for. */
     .zui-cal-day.out .zui-cal-daynum {
-      opacity: 0.4;
+      opacity: 0.9;
     }
     .zui-cal-day.today .zui-cal-daynum {
       background: var(--accent);

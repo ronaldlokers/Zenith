@@ -27,12 +27,16 @@
   .zui-tabbar button:hover {
     color: var(--ink);
   }
+  /* The label is --accent-ink, not --accent: gold on a white card is 2.27:1,
+     which is the figure index.css:338 already records for this exact colour.
+     The underline stays --accent — it is an accent beside a label that now
+     carries the state readably, not the only thing saying which tab is on. */
   .zui-tabbar button.active {
-    color: var(--accent);
+    color: var(--accent-ink);
     border-bottom-color: var(--accent);
   }
   .zui-tabbar button:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-ink);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
