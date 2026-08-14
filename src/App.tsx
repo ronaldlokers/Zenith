@@ -72,6 +72,8 @@ import { isDead, isDue, isOverdue } from "./format";
 import { useAppData, useToasts } from "./app-data";
 import {
   clearChunkRetry,
+  hasUnsavedChanges,
+  requestConfirm,
   useDocumentTitle,
   useGlobalShortcuts,
   useNotificationNavigation,
@@ -103,7 +105,17 @@ export default function App() {
   );
   const navigate = useNavigate();
   const { tab, id: detailIdFromUrl } = parsePath(location.pathname);
-  const setTab = (next: Tab) => navigate(TAB_PATHS[next]);
+  // Every in-app destination change funnels through here and through the
+  // detail page's Back button, which is what makes guarding unsaved edits
+  // two lines rather than a router migration: there are no <Route>s to
+  // block, the view is derived from the location.
+  const leaveGuarded = (go: () => void) => {
+    if (!hasUnsavedChanges()) return go();
+    void requestConfirm(t("confirm.discardEdit")).then((ok) => {
+      if (ok) go();
+    });
+  };
+  const setTab = (next: Tab) => leaveGuarded(() => navigate(TAB_PATHS[next]));
   const { data: session } = useSession();
   const sessionUser = session?.user;
   const isAdmin = sessionUser?.role === "admin";
@@ -607,14 +619,16 @@ export default function App() {
                 <Button
                   variant="secondary"
                   className="job-back"
-                  onClick={() => {
-                    // Return to wherever the user came from — dashboard, feed,
-                    // board — not always the pipeline (#448). location.key is
-                    // "default" only on a direct deep-link with no in-app
-                    // history; fall back to the board there.
-                    if (location.key !== "default") navigate(-1);
-                    else navigate(boardTarget());
-                  }}
+                  onClick={() =>
+                    leaveGuarded(() => {
+                      // Return to wherever the user came from — dashboard,
+                      // feed, board — not always the pipeline (#448).
+                      // location.key is "default" only on a direct deep-link
+                      // with no in-app history; fall back to the board there.
+                      if (location.key !== "default") navigate(-1);
+                      else navigate(boardTarget());
+                    })
+                  }
                 >
                   ← {t("common.back")}
                 </Button>

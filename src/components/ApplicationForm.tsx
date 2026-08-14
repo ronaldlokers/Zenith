@@ -4,12 +4,12 @@
 // the shared app form layer (.form/.form-group/.error/.error-text, App.css)
 // which stays in App.css — only the url-row is self-contained styling here
 // (ApplicationForm.css, .zui-url-row*).
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
 import { formatDate, isDead } from "../format";
 import { ErrorIcon } from "../icons";
-import { useSubmitGuard } from "../hooks";
+import { useSubmitGuard, useUnsavedChanges } from "../hooks";
 import type { Application, Company, Contact, RoleTypeDef } from "../types";
 import { ActionBar } from "./ActionBar";
 import { Button } from "./Button";
@@ -43,6 +43,11 @@ export function ApplicationForm({
   const [extraCompanies, setExtraCompanies] = useState<Company[]>([]);
   const [importing, setImporting] = useState(false);
   const [submitting, submit] = useSubmitGuard(onSubmit);
+  // Compared against what the form opened with, so returning a field to its
+  // original value stops counting as a change — a warning that fires on a
+  // form nobody altered is the kind that gets clicked through.
+  const opened = useRef(JSON.stringify(form));
+  useUnsavedChanges(JSON.stringify(form) !== opened.current && !submitting);
   const set = (patch: Partial<Application>) =>
     setForm((f) => ({ ...f, ...patch }));
 
