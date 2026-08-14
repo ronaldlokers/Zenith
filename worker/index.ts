@@ -2535,44 +2535,56 @@ export function shouldRunFeedPull(scheduledAt: Date): boolean {
 export default {
   fetch: app.fetch,
   async scheduled(event, env, ctx) {
+    // Every background task carries its own catch. Without one a rejection
+    // leaves the invocation as a bare "script threw an exception" with
+    // nothing saying which task failed — which is the same reasoning the feed
+    // pull below already had, applied to the two that did not have it.
+    const independently = (label: string, work: Promise<unknown>) =>
+      ctx.waitUntil(
+        work.catch((err: unknown) => {
+          console.error(`scheduled ${label} failed`, err);
+        }),
+      );
+
     if (event.cron === "11 3 * * *") {
-      ctx.waitUntil(runScheduledBackup(env));
+      independently("backup", runScheduledBackup(env));
       return;
     }
     if (event.cron === "0 8 * * 1") {
-      ctx.waitUntil(generateWeeklyDigest(env));
+      independently("weekly digest", generateWeeklyDigest(env));
       return;
     }
     // event.scheduledTime, not Date.now(): a retried or delayed invocation
     // must branch on the time it was scheduled for, or it would skip or
     // double the feed pull.
     if (shouldRunFeedPull(new Date(event.scheduledTime))) {
-      // Separate waitUntil (and its own catch) from the push pass below —
-      // a D1 outage inside one must not stop the other from running, and
-      // an unhandled rejection here would otherwise surface as a bare
-      // "script threw an exception" with no indication which pass failed.
-      // Independent waitUntils also means the two passes start concurrently
-      // rather than sequentially: a notification this run's
-      // generateNotifications inserts can miss this run's push pass (below)
-      // and go out on the next hourly one instead — up to an hour late, not
-      // incorrect.
-      ctx.waitUntil(
+      // Three tasks, three waitUntils, because a D1 outage inside one must
+      // not stop the others. It also means they start concurrently rather
+      // than in sequence: a notification this run's generateNotifications
+      // inserts can miss this run's delivery pass and go out on the next
+      // hourly one instead — up to an hour late, not incorrect.
+      //
+      // The stale-posting check used to sit inside the feed pull's
+      // Promise.all, so a throw there rejected the whole block and
+      // generateNotifications never ran. The feed notification is keyed one
+      // per user per day, so the batch just inserted got no notification at
+      // all rather than a late one. Not a hypothetical pairing either: the
+      // empty-candidate-set throw fixed in #530 was in exactly this function.
+      // It has nothing to do with feed notifications and should not be able
+      // to stop them.
+      //
+      // generateNotifications stays behind refreshFeed, because it is handed
+      // that run's inserted count and genuinely depends on it.
+      independently("stale-posting check", checkStalePostings(env));
+      independently(
+        "feed pull",
         (async () => {
-          const [feedResult] = await Promise.all([
-            refreshFeed(env),
-            checkStalePostings(env),
-          ]);
+          const feedResult = await refreshFeed(env);
           await generateNotifications(env, feedResult.inserted);
-        })().catch((err: unknown) => {
-          console.error("scheduled feed pull failed", err);
-        }),
+        })(),
       );
     }
-    ctx.waitUntil(
-      deliverDueNotifications(env).catch((err: unknown) => {
-        console.error("scheduled notification delivery failed", err);
-      }),
-    );
+    independently("notification delivery", deliverDueNotifications(env));
   },
   async email(message, env, ctx) {
     const subject = message.headers.get("subject") ?? "(no subject)";

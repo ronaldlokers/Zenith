@@ -66,7 +66,21 @@ describe("scheduled handler", () => {
 
     await worker.scheduled(fakeController(Date.UTC(2026, 7, 5, 0, 17)), env, ctx);
 
-    expect(promises).toHaveLength(2); // feed branch + push branch
+    // stale-posting check + feed pull + delivery. Three, not two: the stale
+    // check was moved out of the feed pull's Promise.all, where a throw in it
+    // rejected the block and generateNotifications never ran — and the feed
+    // notification is keyed one per user per day, so that run's batch got no
+    // notification at all rather than a late one.
+    //
+    // The count is the assertion because the behaviour cannot be reached from
+    // here. An end-to-end version was written and thrown away: it seeded an
+    // application so a due-follow-up notification would be observable, and
+    // seeding one removes the very condition that makes checkStalePostings
+    // throw (it batches zero UPDATEs only when there are no applications). It
+    // passed against the old coupling, which is the definition of proving
+    // nothing. Mocking is not available either, for the reason in the comment
+    // above. So: one waitUntil per independent task, counted.
+    expect(promises).toHaveLength(3);
     await Promise.allSettled(promises);
   });
 
@@ -79,7 +93,7 @@ describe("scheduled handler", () => {
 
     await worker.scheduled(fakeController(Date.UTC(2026, 7, 5, 3, 0)), env, ctx);
 
-    expect(promises).toHaveLength(1); // push branch only
+    expect(promises).toHaveLength(1); // delivery branch only
     await Promise.allSettled(promises);
   });
 });
