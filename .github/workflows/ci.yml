@@ -34,6 +34,12 @@ jobs:
       - name: Coverage floor
         run: npm run coverage
 
+      - name: Install Chromium for the browser suite
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser journeys and accessibility
+        run: npm run e2e
+
   preview:
     if: github.event_name == 'pull_request'
     needs: checks

@@ -80,6 +80,23 @@ export default defineConfig({
         },
       },
       {
+        // The browser layer. Opt-in: it needs a Chromium binary, a built app
+        // and a local D1, so it is `npm run e2e` rather than part of the
+        // default suite — but it runs in CI, because the defects it catches
+        // are the ones no other layer can see.
+        test: {
+          name: "e2e",
+          environment: "node",
+          include: ["e2e/**/*.spec.ts"],
+          globalSetup: ["./e2e/setup.ts"],
+          testTimeout: 120_000,
+          hookTimeout: 180_000,
+          // One browser, one board, shared state: parallel specs would race
+          // each other's applications.
+          fileParallelism: false,
+        },
+      },
+      {
         // Repo-level guards that need real filesystem access.
         test: {
           name: "node",
