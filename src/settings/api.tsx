@@ -21,6 +21,10 @@ export function PublicApiSettings({
 }) {
   const { t } = useTranslation();
   const [keyHint, setKeyHint] = useState<string | null>(null);
+  // Whether the key's status is actually known. keyHint === null meant two
+  // different things — "you have no key" and "we could not ask" — and the
+  // panel rendered both as the first one.
+  const [keyKnown, setKeyKnown] = useState(false);
   const [keyCreatedAt, setKeyCreatedAt] = useState<string | null>(null);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [keyBusy, setKeyBusy] = useState(false);
@@ -39,17 +43,33 @@ export function PublicApiSettings({
   );
 
   useEffect(() => {
-    api.profile().then((p) => {
-      setKeyHint(p.api_key_hint);
-      setKeyCreatedAt(p.api_key_created_at);
-    });
+    api
+      .profile()
+      .then((p) => {
+        setKeyHint(p.api_key_hint);
+        setKeyCreatedAt(p.api_key_created_at);
+        setKeyKnown(true);
+      })
+      // The only call in this file that did not report its failure. It left
+      // the panel saying there was no key, which is a claim about someone's
+      // account rather than a missing detail.
+      .catch((e) => onError((e as Error).message));
     loadWebhooks();
-  }, [loadWebhooks]);
+  }, [loadWebhooks, onError]);
 
   const generateKey = async () => {
     // Regenerating (a key already exists) invalidates the current one, so
     // warn — but the first-time generate has nothing to break (#285).
-    if (keyHint && !(await requestConfirm(t("account.regenerateKeyConfirm"))))
+    //
+    // That holds only while keyHint is known to be accurate. When the load
+    // failed it is null, which read as "no key" and skipped this warning —
+    // so a failed read quietly removed the guard on revoking a live key and
+    // breaking whatever was authenticating with it. Unknown is treated as
+    // "there may be one".
+    if (
+      (keyHint || !keyKnown) &&
+      !(await requestConfirm(t("account.regenerateKeyConfirm")))
+    )
       return;
     setKeyBusy(true);
     api
@@ -117,7 +137,18 @@ export function PublicApiSettings({
           <p className="tfa-secret">{newApiKey}</p>
         </>
       )}
-      {keyHint ? (
+      {!keyKnown && !keyHint ? (
+        // Say the status is unknown, and still offer the button: hiding it
+        // would leave someone unable to create a key at all until they
+        // reload, which is a worse answer than asking. generateKey treats
+        // unknown as "there may be one" and warns.
+        <>
+          <p className="muted small">{t("account.apiKeyUnknown")}</p>
+          <button disabled={keyBusy} onClick={generateKey}>
+            {t("account.apiKeyGenerate")}
+          </button>
+        </>
+      ) : keyHint ? (
         <>
           <p className="muted small">
             {keyCreatedAt
