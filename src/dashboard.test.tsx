@@ -169,6 +169,12 @@ describe("DashboardTab (Today)", () => {
 
 
   test("the batch push leaves offers and interviews alone and spreads the rest", async () => {
+    // Pinned to a Wednesday. The dates the push writes are working days now,
+    // so an unpinned assertion says something different depending on the day
+    // it runs — this passed on the Friday it was written and would have
+    // failed in CI midweek.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-08-12T12:00:00"));
     // Both halves were live defects. It took everything overdue, so one tap
     // on what was then a 10px caption snoozed a five-star offer along with
     // the dead follow-ups; and it wrote one date to all of them, which
@@ -204,10 +210,12 @@ describe("DashboardTab (Today)", () => {
     // rebuilding the pile a day later, which is the thing the spread exists
     // to prevent. Two a day, starting three days out, most urgent first —
     // the rule the code comment states, asserted rather than implied.
+    // Wednesday: the third working day is Monday, the fourth is Tuesday.
     expect(
       followUpCalls.map((c) => c.at),
-      "the batch no longer lands two a day from three days out",
-    ).toEqual([iso(3), iso(3), iso(4)]);
+      "the batch no longer lands two a day from three working days out",
+    ).toEqual(["2026-08-17", "2026-08-17", "2026-08-18"]);
+    vi.useRealTimers();
   });
 
   test("names the unplanned state instead of calling it caught up", () => {
