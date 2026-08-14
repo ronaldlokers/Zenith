@@ -727,6 +727,7 @@
     "apiKey": "Personal API key",
     "apiKeyHint": "Read-only access to your applications at GET /api/v1/applications — send it as “Authorization: Bearer <key>”.",
     "apiKeyGenerate": "Generate key",
+    "apiKeyUnknown": "Zenith could not check whether this account has an API key.",
     "apiKeyOnceHint": "Your API key — shown once, save it now. Zenith stores only a hash of it and can't show it again:",
     "apiKeyActive": "A key ending in {{hint}} is active.",
     "apiKeyActiveOn": "A key ending in {{hint}} is active, generated {{date}}.",

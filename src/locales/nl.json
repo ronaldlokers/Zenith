@@ -727,6 +727,7 @@
     "apiKey": "Persoonlijke API-sleutel",
     "apiKeyHint": "Alleen-lezen toegang tot je sollicitaties via GET /api/v1/applications — stuur mee als “Authorization: Bearer <sleutel>”.",
     "apiKeyGenerate": "Sleutel genereren",
+    "apiKeyUnknown": "Zenith kon niet controleren of dit account een API-sleutel heeft.",
     "apiKeyOnceHint": "Je API-sleutel — eenmalig getoond, bewaar hem nu. Zenith bewaart alleen een hash en kan hem niet opnieuw tonen:",
     "apiKeyActive": "Een sleutel eindigend op {{hint}} is actief.",
     "apiKeyActiveOn": "Een sleutel eindigend op {{hint}} is actief, aangemaakt op {{date}}.",

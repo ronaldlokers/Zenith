@@ -60,13 +60,17 @@ export function NotificationBell() {
   const openNotification = (n: AppNotification) => {
     setOpen(false);
     if (!n.read_at) {
-      api.markNotificationRead(n.id).then(load);
+      // Swallowed on purpose, and explicitly: the badge is a convenience,
+      // the panel is already closing, and there is no error surface in this
+      // component to report to. An unhandled rejection instead of this is
+      // the same silence with a console trace nobody reads.
+      api.markNotificationRead(n.id).then(load).catch(() => {});
     }
     if (n.link) navigate(n.link);
   };
 
   const markAllRead = () => {
-    api.markAllNotificationsRead().then(load);
+    api.markAllNotificationsRead().then(load).catch(() => {});
   };
 
   return (
