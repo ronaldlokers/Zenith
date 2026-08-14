@@ -84,8 +84,10 @@ export function OutreachComposer({
 
   const markContacted = () => {
     Promise.resolve(
-      api.update("contacts", contact.id, {
-        ...contact,
+      // Narrow: this owns two fields. It used to PUT { ...contact, … }, and
+      // that route writes every column, so marking someone contacted put the
+      // whole contact back as it was when this panel loaded.
+      api.patch("contacts", contact.id, {
         last_contacted_at: today(),
         outreach_status:
           contact.outreach_status === "not_contacted"

@@ -292,8 +292,8 @@ export function WorkExperienceSection({
     const item = items[index];
     if (!other) return;
     Promise.all([
-      api.update("work-experience", item.id, { ...item, sort_order: other.sort_order }),
-      api.update("work-experience", other.id, { ...other, sort_order: item.sort_order }),
+      api.patch("work-experience", item.id, { sort_order: other.sort_order }),
+      api.patch("work-experience", other.id, { sort_order: item.sort_order }),
     ])
       .then(onChanged)
       .catch((e) => onError((e as Error).message));
@@ -515,8 +515,8 @@ export function EducationSection({
     const item = items[index];
     if (!other) return;
     Promise.all([
-      api.update("education", item.id, { ...item, sort_order: other.sort_order }),
-      api.update("education", other.id, { ...other, sort_order: item.sort_order }),
+      api.patch("education", item.id, { sort_order: other.sort_order }),
+      api.patch("education", other.id, { sort_order: item.sort_order }),
     ])
       .then(onChanged)
       .catch((e) => onError((e as Error).message));

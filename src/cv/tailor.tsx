@@ -61,7 +61,7 @@ export function TailorPanel({
     const item = workExp.find((w) => w.id === id);
     if (!item) return;
     try {
-      await api.update("work-experience", id, { ...item, description });
+      await api.patch("work-experience", id, { description });
       setApplied((s) => new Set(s).add(`exp-${id}`));
       notify(t("cv.tailorApplied"));
       await onApplied();
@@ -77,8 +77,7 @@ export function TailorPanel({
       for (const ex of result.experiences) {
         const item = workExp.find((w) => w.id === ex.id);
         if (item) {
-          await api.update("work-experience", ex.id, {
-            ...item,
+          await api.patch("work-experience", ex.id, {
             description: ex.description,
           });
         }
