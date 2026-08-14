@@ -8,7 +8,6 @@ import { api } from "./api";
 import type {
   Application,
   Company,
-  Contact,
   CrudTabProps,
   JobFilters,
   RoleTypeDef,
@@ -40,7 +39,6 @@ import {
 } from "./format";
 import { Dialog } from "./ui";
 import { rowActivate } from "./hooks";
-import { ApplicationDetailModal } from "./detail";
 import { ActionBar, Button, CardMenu, EmptyState, StarRating } from "./components";
 
 // A stable empty set, so the narrow board does not allocate one per render
@@ -193,17 +191,10 @@ function BoardTab({
   onShowAll,
   attention,
   sort,
-  companies,
-  contacts,
-  roleTypes,
   onChanged,
   onError,
   notify,
-  onDelete,
   onStatus,
-  history,
-  onSaveOutcome,
-  initialDetailId,
   onDetailIdChange,
   folded,
   onToggleFold,
@@ -212,22 +203,14 @@ function BoardTab({
   onCloseClosedGroup,
   onAdd,
   showAddBlocks,
-}: CrudTabProps & {
+}: Omit<CrudTabProps, "onDelete"> & {
   applications: Application[];
   /** True when the bottom bar's Pinned slot is filtering the board. */
   pinnedOnly: boolean;
   onShowAll: () => void;
-  companies: Company[];
-  contacts: Contact[];
-  roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
-  // Passed straight through to the detail pane, which reads the outcome
-  // recorded on the latest terminal transition off it (#381).
-  history: StatusHistoryRow[];
-  onSaveOutcome: (id: number, reason: string | null, note: string | null) => void;
   attention?: Map<number, Urgency>;
   sort: BoardSort;
-  initialDetailId?: number | null;
   onDetailIdChange?: (id: number | null) => void;
   folded: ReadonlySet<BoardRail>;
   onToggleFold: (rail: BoardRail) => void;
@@ -307,17 +290,6 @@ function BoardTab({
 
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverRail, setDragOverRail] = useState<BoardRail | null>(null);
-  const [detailId, setDetailIdState] = useState<number | null>(
-    initialDetailId ?? null,
-  );
-  useEffect(() => {
-    setDetailIdState(initialDetailId ?? null);
-  }, [initialDetailId]);
-  const setDetailId = (id: number | null) => {
-    setDetailIdState(id);
-    onDetailIdChange?.(id);
-  };
-  const detailApp = applications.find((a) => a.id === detailId) ?? null;
 
   // One bucket per rail, filled in a single pass. Every application lands on
   // exactly one rail (railOf resolves archived-and-rejected), so the counts
@@ -433,7 +405,7 @@ function BoardTab({
 
   const cardProps = (a: Application) => ({
     urgency: urgencyOf(a),
-    onOpenDetail: () => setDetailId(a.id),
+    onOpenDetail: () => onDetailIdChange?.(a.id),
     onMove: (status: string) => move(a, status),
     onSetFollowUp: (date: string | null, text: string | null) =>
       setFollowUp(a.id, date, text),
@@ -711,24 +683,6 @@ function BoardTab({
         </button>
       )}
       </div>
-      {detailApp && (
-        <ApplicationDetailModal
-          key={detailApp.id}
-          application={detailApp}
-          allApplications={applications}
-          companies={companies}
-          contacts={contacts}
-          roleTypes={roleTypes}
-          onClose={() => setDetailId(null)}
-          onChanged={onChanged}
-          onError={onError}
-          notify={notify}
-          onDelete={onDelete}
-          onStatus={onStatus}
-          history={history}
-          onSaveOutcome={onSaveOutcome}
-        />
-      )}
     </>
   );
 }
@@ -736,31 +690,26 @@ function BoardTab({
 export function PipelineTab({
   applications,
   companies,
-  contacts,
   roleTypes,
   onChanged,
   onError,
   notify,
-  onDelete,
   onStatus,
   lastInteractions,
   initialQuery,
   onQueryConsumed,
   history,
-  onSaveOutcome,
   onOpenJob,
   onOpenQuickAdd,
   onOpenSampleData,
-}: CrudTabProps & {
+}: Omit<CrudTabProps, "onDelete"> & {
   applications: Application[];
   companies: Company[];
-  contacts: Contact[];
   roleTypes: RoleTypeDef[];
   onStatus: (id: number, status: Status) => void;
   initialQuery?: string;
   onQueryConsumed?: () => void;
   history: StatusHistoryRow[];
-  onSaveOutcome: (id: number, reason: string | null, note: string | null) => void;
   lastInteractions: { application_id: number; last_at: string }[];
   onOpenJob: (id: number | null) => void;
   onOpenQuickAdd: (stage?: Status) => void;
@@ -1347,17 +1296,10 @@ export function PipelineTab({
         onShowAll={() => setPinnedOnly(false)}
         attention={attention}
         sort={sort}
-        companies={companies}
-        contacts={contacts}
-        roleTypes={roleTypes}
         onChanged={onChanged}
         onError={onError}
         notify={notify}
-        onDelete={onDelete}
         onStatus={onStatus}
-        history={history}
-        onSaveOutcome={onSaveOutcome}
-        initialDetailId={null}
         onDetailIdChange={onOpenJob}
         folded={folded}
         onToggleFold={toggleFold}

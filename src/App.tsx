@@ -586,7 +586,6 @@ export default function App() {
                   onStatus={setStatus}
                   history={statsData?.history ?? []}
                   onSaveOutcome={saveOutcome}
-                  asPane
                 />
               </section>
             )}
@@ -594,17 +593,14 @@ export default function App() {
               <PipelineTab
                 applications={visibleApps}
                 companies={visibleCompanies}
-                contacts={visibleContacts}
                 roleTypes={roleTypes}
                 onChanged={reload}
                 onError={setError}
                 notify={notify}
-                onDelete={deleteWithUndo}
                 onStatus={setStatus}
                 initialQuery={jumpQuery}
                 onQueryConsumed={() => setJumpQuery("")}
                 history={statsData?.history ?? []}
-                onSaveOutcome={saveOutcome}
                 lastInteractions={statsData?.interactions ?? []}
                 onOpenJob={(id: number | null) =>
                   navigate(boardTarget(id ?? undefined))

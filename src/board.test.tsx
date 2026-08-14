@@ -98,16 +98,13 @@ function renderBoard(
     <PipelineTab
       applications={applications}
       companies={[]}
-      contacts={[]}
       roleTypes={[]}
       onChanged={() => Promise.resolve()}
       onError={over.onError ?? (() => {})}
       notify={over.notify ?? (() => {})}
-      onDelete={() => {}}
       onStatus={() => {}}
       lastInteractions={[]}
       history={[]}
-      onSaveOutcome={() => {}}
       onOpenJob={() => {}}
       onOpenQuickAdd={over.onOpenQuickAdd ?? (() => {})}
       onOpenSampleData={() => {}}
@@ -360,16 +357,13 @@ describe("board rails", () => {
         <PipelineTab
           applications={[app({ id: 4, status: "applied" })]}
           companies={[]}
-          contacts={[]}
           roleTypes={[]}
           onChanged={() => Promise.resolve()}
           onError={() => {}}
           notify={() => {}}
-          onDelete={() => {}}
           onStatus={(id, status) => moves.push([id, status])}
           lastInteractions={[]}
           history={[]}
-          onSaveOutcome={() => {}}
           onOpenJob={() => {}}
           onOpenQuickAdd={() => {}}
           onOpenSampleData={() => {}}
@@ -394,16 +388,13 @@ describe("board rails", () => {
         <PipelineTab
           applications={[app({ id: 6, status: "applied" })]}
           companies={[]}
-          contacts={[]}
           roleTypes={[]}
           onChanged={() => Promise.resolve()}
           onError={() => {}}
           notify={() => {}}
-          onDelete={() => {}}
           onStatus={(id, status) => moves.push([id, status])}
           lastInteractions={[]}
           history={[]}
-          onSaveOutcome={() => {}}
           onOpenJob={() => {}}
           onOpenQuickAdd={() => {}}
           onOpenSampleData={() => {}}
@@ -423,16 +414,13 @@ describe("board rails", () => {
         <PipelineTab
           applications={[app({ id: 5, status: "applied" })]}
           companies={[]}
-          contacts={[]}
           roleTypes={[]}
           onChanged={() => Promise.resolve()}
           onError={() => {}}
           notify={() => {}}
-          onDelete={() => {}}
           onStatus={(id, status) => moves.push([id, status])}
           lastInteractions={[]}
           history={[]}
-          onSaveOutcome={() => {}}
           onOpenJob={() => {}}
           onOpenQuickAdd={() => {}}
           onOpenSampleData={() => {}}
