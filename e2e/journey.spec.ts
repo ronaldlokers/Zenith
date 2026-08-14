@@ -35,6 +35,26 @@ async function signedIn(width = 1440): Promise<Page> {
   return context.newPage();
 }
 
+/**
+ * Waits for a fading element to finish arriving. The dialogs animate in from
+ * opacity 0 over ~0.18s, and axe run against a half-faded modal reports its
+ * text as low-contrast against the scrim showing through — nine violations
+ * that are an artefact of when the snapshot was taken, not of any colour.
+ * It passed locally and failed on a slower CI runner, which is the shape of
+ * every animation race.
+ */
+async function settled(page: Page, selector: string) {
+  await page.waitForSelector(selector);
+  await page.waitForFunction(
+    (sel) => {
+      const el = document.querySelector(sel);
+      return !!el && getComputedStyle(el).opacity === "1";
+    },
+    selector,
+    { timeout: 10_000 },
+  );
+}
+
 /** Violations axe can judge in a real browser, contrast included. */
 async function axeViolations(page: Page) {
   return page.evaluate(async () => {
@@ -95,19 +115,66 @@ describe("the journey a person actually takes", () => {
 });
 
 describe("what a browser can judge and jsdom cannot", () => {
-  for (const [name, path] of [
-    ["the board", "/board"],
-    ["an application", "/board/9001"],
-    ["settings", "/settings"],
-  ] as const) {
-    for (const width of [1440, 390]) {
-      it(`${name} has no accessibility violations at ${width}px`, async () => {
-        const page = await signedIn(width);
+  // Every signed-in route, both widths, in two contexts rather than twelve:
+  // launching a context per assertion was most of the suite's runtime.
+  for (const width of [1440, 390] as const) {
+    it(`every page is clean at ${width}px`, async () => {
+      const page = await signedIn(width);
+      const failures: string[] = [];
+      for (const path of [
+        "/board",
+        "/overview",
+        "/insights",
+        "/feed",
+        "/companies",
+        "/people",
+        "/cv",
+        "/settings",
+        "/board/9001",
+      ]) {
         await page.goto(BASE + path);
         await page.waitForSelector("main, .content");
-        expect(await axeViolations(page)).toEqual([]);
-        await page.context().close();
-      }, 120_000);
-    }
+        const violations = await axeViolations(page);
+        if (violations.length) failures.push(`${path}: ${violations.join(", ")}`);
+      }
+      expect(failures).toEqual([]);
+      await page.context().close();
+    }, 180_000);
   }
+
+  it("the pages a stranger can reach are clean too", async () => {
+    // No session: the sign-in page and the public share link. Both were
+    // missing a main landmark until #608 and #610, and both are the first
+    // thing someone sees.
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await context.addInitScript({ content: AXE });
+    const page = await context.newPage();
+    const failures: string[] = [];
+    for (const path of ["/", "/shared/demo-share-token"]) {
+      await page.goto(BASE + path);
+      await page.waitForSelector("main");
+      const violations = await axeViolations(page);
+      if (violations.length) failures.push(`${path}: ${violations.join(", ")}`);
+    }
+    expect(failures).toEqual([]);
+    await context.close();
+  }, 180_000);
+
+  it("a dialog is clean while it is open", async () => {
+    // Only reachable with something on screen: axe over a page at rest never
+    // sees the notification list, which is where a defect sat until #608.
+    const page = await signedIn();
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector(".bottombar");
+
+    await page.keyboard.press("n");
+    await settled(page, '[aria-modal="true"]');
+    expect(await axeViolations(page), "the quick-add dialog").toEqual([]);
+    await page.keyboard.press("Escape");
+
+    await page.click('button[aria-label^="Notifications"]');
+    await settled(page, ".zui-notification-panel");
+    expect(await axeViolations(page), "the notification panel").toEqual([]);
+    await page.context().close();
+  }, 180_000);
 });
