@@ -38,11 +38,15 @@ export default defineConfig({
       // real defect: an undo button a burst of toasts could take away, a
       // time-to-offer that charged an offer with an earlier rejection, and a
       // JSON body announcing itself as text/plain.
+      // Raised with the tests that earned it: pdf.ts was 350 statements at
+      // zero, generating the documents that leave the product, and the first
+      // test written against it found a heading stranded at the foot of a
+      // page in the CV people send to employers.
       thresholds: {
-        statements: 31,
-        branches: 31,
-        functions: 25,
-        lines: 31,
+        statements: 38,
+        branches: 34,
+        functions: 27,
+        lines: 38,
       },
     },
     projects: [
