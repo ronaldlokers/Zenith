@@ -312,4 +312,21 @@ describe("public share page", () => {
     expect(nonceOf(a)).toBeTruthy();
     expect(nonceOf(a)).not.toBe(nonceOf(b));
   });
+
+  // Both public pages are documents in their own right, not fragments of the
+  // app, so each needs a main landmark — "jump to main content" is how a
+  // screen reader user skips the chrome, and on the share page it had nothing
+  // to jump to. The revoked-link page already had one, which is what made the
+  // gap easy to miss: whichever of the two you looked at first, it was fine.
+  it("wraps both public pages in a main landmark", async () => {
+    await seedShared();
+    const live = await (await SELF.fetch(`${BASE}/shared/${TOKEN}`)).text();
+    expect(live).toMatch(/<main[\s>]/);
+    expect(live).toMatch(/<\/main>/);
+
+    const revoked = await (
+      await SELF.fetch(`${BASE}/shared/definitely-not-a-token`)
+    ).text();
+    expect(revoked).toMatch(/<main[\s>]/);
+  });
 });

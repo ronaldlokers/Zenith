@@ -2019,7 +2019,11 @@ ${barWidths}
 </style>
 </head>
 <body>
-  <div class="wrap">
+  <!-- <main>, not a div. The revoked-link page above already uses one, so
+       this was the only one of the two public pages without a main landmark:
+       axe reports landmark-one-main, and "jump to main content" finds nothing
+       to jump to on the one page strangers actually see. -->
+  <main class="wrap">
     ${
       // With a name on it the person is the subject and the page title is the
       // label; without one there is no subject, so the label is all there is.
@@ -2041,7 +2045,7 @@ ${barWidths}
     <span class="open-count">${S.open(totalOpen)}</span>
     ${rows}
     <footer>${S.footer}</footer>
-  </div>
+  </main>
 </body>
 </html>`;
 
