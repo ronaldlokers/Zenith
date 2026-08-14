@@ -9,7 +9,10 @@ export function resendProvider(apiKey: string, from: string): EmailProvider {
       // Open and click tracking are domain-level settings in the Resend
       // dashboard, not per-request fields — there is no flag here that could
       // disable them. Verify they're off there, not by reading this code.
+      // Reminders and the digest send from a cron. An unanswered call there
+      // stalls the whole run, and nobody is watching it.
       const res = await fetch(ENDPOINT, {
+        signal: AbortSignal.timeout(15_000),
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,

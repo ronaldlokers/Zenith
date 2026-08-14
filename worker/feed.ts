@@ -1,6 +1,10 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 
+// Each board is fetched in turn; one that never answers would otherwise stall
+// the whole pull, and this runs unattended on a cron.
+const FEED_TIMEOUT_MS = 15_000;
+
 // Free job-source ingestion. See issue #16/#34 for the research behind
 // this source list — Indeed and LinkedIn have no usable public API.
 // Role keywords and location filters are configured in the DB
@@ -141,7 +145,7 @@ export async function fetchAdzuna(
         `?app_id=${env.ADZUNA_APP_ID}&app_key=${env.ADZUNA_APP_KEY}` +
         `&results_per_page=10&what=${encodeURIComponent(query)}&content-type=application/json`;
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) });
         if (!res.ok) return [];
         const data = (await res.json()) as {
           results?: Array<{
@@ -194,6 +198,7 @@ export async function fetchGreenhouse(
   try {
     const res = await fetch(
       `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(slug)}/jobs?content=true`,
+      { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) },
     );
     if (!res.ok) return [];
     const data = (await res.json()) as {
@@ -232,6 +237,7 @@ export async function fetchAshby(
   try {
     const res = await fetch(
       `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(slug)}`,
+      { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) },
     );
     if (!res.ok) return [];
     const data = (await res.json()) as {

@@ -83,6 +83,48 @@ export async function getUserAnthropicKey(
   }
 }
 
+// Nothing in the AI chain was bounded: not these fetches, not api.ts on the
+// client. A slow or hanging upstream therefore left the UI in "thinking" with
+// no way back but a reload — the same failure the webhook delivery already
+// guards against with the same tool ("a slow/hanging receiver must not tie up
+// the delivery"), on the calls in this app most likely to be slow.
+//
+// Generous rather than tight: a real generation can take tens of seconds, and
+// a timeout that fires on a working request is worse than none. This is the
+// ceiling for a request that is not coming back, not a latency target.
+const AI_TIMEOUT_MS = 60_000;
+const KEY_CHECK_TIMEOUT_MS = 10_000;
+
+/**
+ * POSTs to the Anthropic messages API with the timeout applied, and turns a
+ * fired timeout into something a person can read. Left as a rejection the
+ * DOMException message ("signal timed out") reaches the error banner
+ * verbatim, which is the browser jargon api.ts already goes to some trouble
+ * to keep out of the UI.
+ */
+async function anthropicMessages(
+  apiKey: string,
+  body: unknown,
+): Promise<Response> {
+  try {
+    return await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(AI_TIMEOUT_MS),
+    });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "TimeoutError") {
+      throw new Error("the AI request timed out — try again");
+    }
+    throw e;
+  }
+}
+
 // Cheap auth check: /v1/models returns 200 for a valid key, 401 otherwise, and
 // bills no tokens. Fixed host, so the url-guard (SSRF for user-supplied URLs)
 // doesn't apply.
@@ -90,6 +132,7 @@ async function validateAnthropicKey(apiKey: string): Promise<boolean> {
   try {
     const res = await fetch("https://api.anthropic.com/v1/models", {
       headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+      signal: AbortSignal.timeout(KEY_CHECK_TIMEOUT_MS),
     });
     return res.ok;
   } catch {
@@ -163,18 +206,10 @@ ${JSON.stringify(
   })),
 )}`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 2048,
-      messages: [{ role: "user", content: prompt }],
-    }),
+  const res = await anthropicMessages(apiKey, {
+    model: "claude-haiku-4-5",
+    max_tokens: 2048,
+    messages: [{ role: "user", content: prompt }],
   });
   if (!res.ok) {
     throw new Error(
@@ -242,18 +277,10 @@ ${JSON.stringify(
   roles.map((r) => ({ title: r.title, company: r.company })),
 )}`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 1536,
-      messages: [{ role: "user", content: prompt }],
-    }),
+  const res = await anthropicMessages(apiKey, {
+    model: "claude-haiku-4-5",
+    max_tokens: 1536,
+    messages: [{ role: "user", content: prompt }],
   });
   if (!res.ok) {
     throw new Error(
@@ -326,19 +353,11 @@ async function callClaudeChat(
   system: string,
   messages: ChatMsg[],
 ): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 1024,
-      system,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
-    }),
+  const res = await anthropicMessages(apiKey, {
+    model: "claude-haiku-4-5",
+    max_tokens: 1024,
+    system,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
   });
   if (!res.ok) {
     throw new Error(
