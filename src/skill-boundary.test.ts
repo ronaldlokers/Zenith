@@ -31,6 +31,34 @@ describe("matching a skill in a job description", () => {
     expect(mentionsSkill("javascript everywhere", "Java")).toBe(false);
   });
 
+  test("nor a skill sitting at the end of a longer word", () => {
+    // Found by mutation: removing the left lookbehind from mentionsSkill broke
+    // nothing in this file. Every prefix case above — "google" for Go,
+    // "react" for R, "javascript" for Java — is caught by the lookahead on
+    // the right, so one side of the boundary had no test at all.
+    //
+    // The suffix case is the common one in this domain. A skill list with SQL
+    // on it against a posting that says MySQL, or Go against one that says
+    // Mongo, matches on a substring that is part of a different technology.
+    //
+    // It is not cosmetic: these feed the ATS keyword score and the feed's fit
+    // signal, which sorts listings and can filter them out. A false match
+    // there reads as a qualification the person does not have.
+    expect(mentionsSkill("we run mysql in production", "SQL")).toBe(false);
+    expect(mentionsSkill("postgresql experience wanted", "SQL")).toBe(false);
+    expect(mentionsSkill("we use mongo for the archive", "Go")).toBe(false);
+    expect(mentionsSkill("everything ships in docker", "R")).toBe(false);
+    expect(mentionsSkill("typescript everywhere", "Script")).toBe(false);
+  });
+
+  test("but still finds the skill when it stands on its own", () => {
+    // The other direction, so the lookbehind cannot be "fixed" by refusing
+    // everything: these are the same words as their own skill.
+    expect(mentionsSkill("strong sql and go experience", "SQL")).toBe(true);
+    expect(mentionsSkill("strong sql and go experience", "Go")).toBe(true);
+    expect(mentionsSkill("mongo and mysql, plus go", "Go")).toBe(true);
+  });
+
   test("C matches a C++ posting, as it always has", () => {
     // Pinned rather than fixed: \b did this too, so it is not something this
     // change introduced. Excluding it needs a rule about which symbols may
@@ -58,5 +86,18 @@ describe("the signals built on it", () => {
     expect(report.matched).toEqual(["C++"]);
     expect(report.missing).toEqual([]);
     expect(report.keywordScore).toBe(100);
+  });
+
+  test("a substring match does not become a matched skill on the report", () => {
+    // The consequence, one layer up: SQL counted as matched against a posting
+    // that only ever says MySQL turns into a keyword score the person did not
+    // earn, and hides the skill from the missing list where they would have
+    // seen it was wanted.
+    const jd = "We run MySQL and MongoDB. Kubernetes experience is a plus.";
+    const work = [
+      { id: 1, description: "Wrote SQL", skills: [{ name: "SQL" }] },
+    ] as unknown as WorkExperience[];
+    const report = atsReport(jd, [skill("SQL")], work, null as Profile | null);
+    expect(report.matched).toEqual([]);
   });
 });
