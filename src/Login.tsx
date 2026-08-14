@@ -73,7 +73,11 @@ export function Login() {
   };
 
   return (
-    <div className="login-stage">
+    // <main>, not a div: this is the whole page when signed out, and without
+    // it the document has no main landmark at all — axe flags it as
+    // landmark-one-main, and a screen reader's "jump to main" finds nothing
+    // to jump to. The signed-in app has had one all along (.content).
+    <main className="login-stage">
       {needsTwoFactor ? (
         <form className="login-card" onSubmit={submitTwoFactor}>
           <button type="button" className="login-back" onClick={backToPassword}>
@@ -203,6 +207,6 @@ export function Login() {
           <p className="login-hint">{t("login.inviteOnly")}</p>
         </form>
       )}
-    </div>
+    </main>
   );
 }

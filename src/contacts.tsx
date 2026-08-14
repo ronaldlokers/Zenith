@@ -137,8 +137,11 @@ export function ContactsTab({
             <li
               key={c.id}
               className="company-tile"
-              {...rowActivate(() => setDetailId(c.id))}
-            >
+              >
+              <div
+                className="company-tile-body"
+                {...rowActivate(() => setDetailId(c.id))}
+              >
               <div className="company-logo company-logo-placeholder" aria-hidden="true">
                 {c.name.slice(0, 1).toUpperCase()}
               </div>
@@ -153,6 +156,7 @@ export function ContactsTab({
                   {t(`outreach.statuses.${c.outreach_status}`)}
                 </span>
               )}
+              </div>
             </li>
           ))}
           {visible.length === 0 && (

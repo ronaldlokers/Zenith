@@ -25,15 +25,20 @@ function sources(dir: string): string[] {
 }
 
 describe("list rows keep their listitem semantics", () => {
-  it("never spreads rowActivate onto a Row", () => {
-    // Matches `<Row ... {...rowActivate(` up to the closing bracket of the
-    // opening tag, so activation on a child element does not trip it.
+  it("never puts the activation on a list item", () => {
+    // <Row> and a bare <li> both, because the first version of this checked
+    // only <Row> — and NotificationBell spreads rowActivate onto its own <li>,
+    // so the same defect was sitting in the notification panel the whole time
+    // this test was passing.
+    //
+    // Matches up to the closing bracket of the opening tag, so activation on
+    // a child element does not trip it.
     const offenders: string[] = [];
     for (const file of sources(SRC)) {
       const text = readFileSync(file, "utf8");
-      for (const m of text.matchAll(/<Row\b[^>]*>/g)) {
+      for (const m of text.matchAll(/<(Row|li)\b[^>]*>/g)) {
         if (m[0].includes("rowActivate")) {
-          offenders.push(`${file.slice(SRC.length + 1)}: ${m[0].slice(0, 60)}`);
+          offenders.push(`${file.slice(SRC.length + 1)}: ${m[0].replace(/\s+/g, " ").slice(0, 60)}`);
         }
       }
     }

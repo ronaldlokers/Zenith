@@ -87,12 +87,13 @@ export function CalendarTab({
             </h3>
             <ul className="agenda-items">
               {(groups.get(day) ?? []).map((e) => (
-                <li
-                  key={`${e.kind}-${e.id}`}
-                  className={`agenda-item kind-${e.kind}`}
-                  {...rowActivate(() => onJump(e))}
-                >
-                  {agendaText(e, t)}
+                <li key={`${e.kind}-${e.id}`} className={`agenda-item kind-${e.kind}`}>
+                  <div
+                    className="agenda-item-body"
+                    {...rowActivate(() => onJump(e))}
+                  >
+                    {agendaText(e, t)}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -165,10 +166,14 @@ export function ActivityTab({
           <li
             key={`${e.kind}-${e.application_id}-${e.ts}`}
             className={`activity-item kind-${e.kind}`}
-            {...rowActivate(() => onOpenJob(e.application_id))}
           >
-            <span className="activity-date">{formatDate(e.ts.slice(0, 10))}</span>
-            <span className="activity-text">{activityText(e, t)}</span>
+            <div
+              className="activity-item-body"
+              {...rowActivate(() => onOpenJob(e.application_id))}
+            >
+              <span className="activity-date">{formatDate(e.ts.slice(0, 10))}</span>
+              <span className="activity-text">{activityText(e, t)}</span>
+            </div>
           </li>
         ))}
       </ul>
