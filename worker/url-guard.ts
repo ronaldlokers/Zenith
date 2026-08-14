@@ -46,17 +46,42 @@ export function isForbiddenUrl(url: URL): boolean {
 
 const MAX_REDIRECTS = 5;
 
+export interface GuardedFetchOptions {
+  /**
+   * Refuse a redirect that leaves the origin the request started on.
+   *
+   * For a webhook the URL is a destination someone configured, not a document
+   * to go and find: following a cross-origin redirect hands the signed
+   * payload to a host they never named, and hides a receiver that moved
+   * behind a delivery that still reports success. GitHub and Stripe both
+   * decline to follow redirects on delivery at all.
+   *
+   * Same-origin hops stay allowed, because the ones that actually occur are
+   * http to https and a trailing slash, and failing those would break working
+   * webhooks to prevent nothing.
+   *
+   * Off for the import scraper and the stale-posting check, where the URL is
+   * a job posting and moving host is exactly what postings do.
+   */
+  sameOriginRedirectsOnly?: boolean;
+}
+
 // fetch() with the policy applied to the initial URL and to every redirect
 // hop. Returns the final response plus the final URL (callers that used
 // `redirect: "follow"` previously read res.url for it).
 export async function guardedFetch(
   rawUrl: string,
   init: Omit<RequestInit, "redirect"> = {},
+  options: GuardedFetchOptions = {},
 ): Promise<{ res: Response; finalUrl: string }> {
+  const origin = new URL(rawUrl).origin;
   let current = new URL(rawUrl);
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     if (isForbiddenUrl(current)) {
       throw new Error("url points at a forbidden host");
+    }
+    if (options.sameOriginRedirectsOnly && current.origin !== origin) {
+      throw new Error("redirect left the origin the request was sent to");
     }
     const res = await fetch(current.toString(), {
       ...init,
