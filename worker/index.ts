@@ -383,6 +383,34 @@ app.put("/api/contacts/:id", async (c) => {
   return c.json(result);
 });
 
+// Narrow writes for the panels that own one or two fields. The outreach
+// composer used PUT with { ...contact, last_contacted_at, outreach_status },
+// and that route writes every column, so "mark contacted" put back the whole
+// contact as it had been when the panel loaded — measured: a note added
+// elsewhere reverted, with the mark reported as saved.
+app.patch("/api/contacts/:id", async (c) => {
+  const body = await c.req.json();
+  const sets: string[] = [];
+  const vals: unknown[] = [];
+  if ("last_contacted_at" in body) {
+    sets.push("last_contacted_at = ?");
+    vals.push(body.last_contacted_at ?? null);
+  }
+  if ("outreach_status" in body) {
+    sets.push("outreach_status = ?");
+    vals.push(body.outreach_status ?? null);
+  }
+  if (!sets.length) return c.json({ error: "nothing to update" }, 400);
+  const result = await c.env.DB.prepare(
+    `UPDATE contacts SET ${sets.join(", ")}
+     WHERE id = ? AND user_id = ? RETURNING *`,
+  )
+    .bind(...vals, c.req.param("id"), c.get("userId"))
+    .first();
+  if (!result) return c.json({ error: "not found" }, 404);
+  return c.json(result);
+});
+
 app.delete("/api/contacts/:id", async (c) => {
   await c.env.DB.prepare("DELETE FROM contacts WHERE id = ? AND user_id = ?")
     .bind(c.req.param("id"), c.get("userId"))

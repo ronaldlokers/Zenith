@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-// PUT /api/applications/:id writes every column from the body, so a caller
-// that spreads an application it loaded earlier puts back stale copies of
-// every field it never showed. The cover-letter panel did exactly that:
+// The PUT routes write every column from the body, so a caller that spreads a
+// record it loaded earlier puts back stale copies of every field it never
+// showed. Four panels did exactly that. The cover-letter one:
 // { ...application, cover_letter }, from a snapshot taken when the detail
 // page loaded. Measured — a note and a fit score typed elsewhere both
 // reverted to null by a save the person thought touched one field.
@@ -44,29 +44,44 @@ function argsOf(text: string, openParen: number): string {
   return "";
 }
 
-/** Top-level comma count + 1, ignoring commas inside nested brackets. */
-function argCount(args: string): number {
-  if (!args.trim()) return 0;
+/** The arguments, split on top-level commas only. */
+function topLevelArgs(args: string): string[] {
+  if (!args.trim()) return [];
+  const out: string[] = [];
   let depth = 0;
-  let n = 1;
+  let cur = "";
   for (const ch of args) {
     if (ch === "(" || ch === "[" || ch === "{") depth++;
     else if (ch === ")" || ch === "]" || ch === "}") depth--;
-    else if (ch === "," && depth === 0) n++;
+    if (ch === "," && depth === 0) {
+      out.push(cur);
+      cur = "";
+    } else cur += ch;
   }
-  return n;
+  out.push(cur);
+  return out;
 }
 
-describe("whole-object application saves", () => {
-  it("always carry the version they were loaded at", () => {
+describe("whole-object saves", () => {
+  it("never spread a record that was loaded earlier", () => {
+    // The rule, stated once for every resource. A form passing its own fields
+    // (`data`) is a whole-object write by definition and is fine — the person
+    // just saw all of them. Spreading a record the panel is *holding* is the
+    // defect: it writes columns the panel never showed, from whenever it
+    // loaded.
+    //
+    // Exempt when a version is passed, because then the route refuses a stale
+    // write instead of silently applying it.
     const offenders: string[] = [];
     for (const file of sources(SRC)) {
       const text = readFileSync(file, "utf8");
-      // .update("applications", … — the PUT that writes every column.
-      for (const m of text.matchAll(/\.update(?:<[^>]*>)?\s*\(\s*"applications"/g)) {
-        const open = text.indexOf("(", m.index! + ".update".length);
+      for (const m of text.matchAll(/\.update(?:<[^>]*>)?\s*\(/g)) {
+        const open = m.index! + m[0].length - 1;
         const args = argsOf(text, open);
-        if (argCount(args) < 4) {
+        const parts = topLevelArgs(args);
+        if (parts.length >= 4) continue; // carries a precondition
+        const payload = parts[2] ?? "";
+        if (/^\s*\{\s*\.\.\./.test(payload)) {
           offenders.push(
             `${file.slice(SRC.length + 1)}: ${args.replace(/\s+/g, " ").slice(0, 70)}`,
           );
@@ -75,17 +90,18 @@ describe("whole-object application saves", () => {
     }
     expect(
       offenders,
-      "a whole-object application save with no If-Match — it will silently revert fields changed elsewhere",
+      "a loaded record spread into a route that writes every column — it will silently revert fields changed elsewhere",
     ).toEqual([]);
   });
 
-  it("still finds the call it is looking for", () => {
-    // The guard above passes trivially if the pattern stops matching — a
-    // rename, a helper, a reformat. This fails when there is nothing left to
-    // check, so the guard cannot go quiet without saying so.
-    const found = sources(SRC).some((f) =>
-      /\.update(?:<[^>]*>)?\s*\(\s*"applications"/.test(readFileSync(f, "utf8")),
+  it("still finds the calls it is looking for", () => {
+    // The guard passes trivially if the pattern stops matching — a rename, a
+    // helper, a reformat. This fails when there is nothing left to check, so
+    // it cannot go quiet without saying so.
+    const calls = sources(SRC).reduce(
+      (n, f) => n + [...readFileSync(f, "utf8").matchAll(/\.update(?:<[^>]*>)?\s*\(/g)].length,
+      0,
     );
-    expect(found, "no whole-object application save is being checked any more").toBe(true);
+    expect(calls, "no whole-object save is being checked any more").toBeGreaterThan(0);
   });
 });

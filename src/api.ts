@@ -223,6 +223,15 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(fields),
     }),
+  // A narrow write: only the fields named in the body. The PUT routes write
+  // every column, so a panel holding a record it loaded earlier reverts
+  // everything it never showed — see test/cover-letter-clobber.spec.ts and
+  // test/contact-clobber.spec.ts. A panel that owns one field uses this.
+  patch: <T>(resource: string, id: number, fields: Record<string, unknown>) =>
+    request<T>(`/api/${resource}/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(fields),
+    }),
   remove: (resource: string, id: number) =>
     request<void>(`/api/${resource}/${id}`, { method: "DELETE" }),
   savedViews: () =>

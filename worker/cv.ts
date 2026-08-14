@@ -125,6 +125,48 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
     return c.json({ ...(result as object), skills: [] }, 201);
   });
 
+  // Narrow writes. The tailor applied a rewritten description with
+  // { ...item, description } through PUT, which writes every column, so it
+  // carried whatever the CV page had loaded — and generation takes long
+  // enough for that to be old. Same for the sort swaps.
+  app.patch("/api/work-experience/:id", async (c) => {
+    const body = await c.req.json();
+    const sets: string[] = [];
+    const vals: unknown[] = [];
+    if ("description" in body) {
+      sets.push("description = ?");
+      vals.push(body.description ?? null);
+    }
+    if ("sort_order" in body) {
+      sets.push("sort_order = ?");
+      vals.push(body.sort_order ?? null);
+    }
+    if (!sets.length) return c.json({ error: "nothing to update" }, 400);
+    const result = await c.env.DB.prepare(
+      `UPDATE work_experience SET ${sets.join(", ")}
+       WHERE id = ? AND user_id = ? RETURNING *`,
+    )
+      .bind(...vals, c.req.param("id"), c.get("userId"))
+      .first();
+    if (!result) return c.json({ error: "not found" }, 404);
+    return c.json(result);
+  });
+
+  app.patch("/api/education/:id", async (c) => {
+    const body = await c.req.json();
+    if (!("sort_order" in body)) {
+      return c.json({ error: "nothing to update" }, 400);
+    }
+    const result = await c.env.DB.prepare(
+      `UPDATE education SET sort_order = ?
+       WHERE id = ? AND user_id = ? RETURNING *`,
+    )
+      .bind(body.sort_order ?? null, c.req.param("id"), c.get("userId"))
+      .first();
+    if (!result) return c.json({ error: "not found" }, 404);
+    return c.json(result);
+  });
+
   app.put("/api/work-experience/:id", async (c) => {
     const body = await c.req.json();
     if (!body.company || !body.title) {
