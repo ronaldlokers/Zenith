@@ -6,6 +6,20 @@ const MONTH_NAMES = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
+// A section heading must not be the last thing on a page. Reserving only the
+// heading's own height did exactly that — measured on a nine-role CV:
+// "EDUCATION" alone at the foot of page 1 and "LANGUAGES" alone at the foot of
+// page 2, both with the entries they introduce overleaf. This is the document
+// that goes to an employer.
+//
+// 10mm is the heading and its rule; 12mm is what an entry reserves for its own
+// title line, so the pair keeps a heading with the thing it announces. The
+// widow/orphan rule every typesetter applies, stated in the two numbers the
+// code already uses.
+const HEADING_BLOCK = 10;
+const FIRST_ENTRY_LINE = 12;
+const HEADING_WITH_FIRST_ENTRY = HEADING_BLOCK + FIRST_ENTRY_LINE;
+
 function formatRange(
   startMonth: number | null,
   startYear: number | null,
@@ -88,7 +102,7 @@ export function generateCvPdf(data: CvPdfData, labels: CvPdfLabels): jsPDF {
   };
 
   const addSectionHeading = (text: string) => {
-    ensureSpace(10);
+    ensureSpace(HEADING_WITH_FIRST_ENTRY);
     y += 2;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
@@ -373,7 +387,7 @@ export function generateInterviewCheatSheet(
   };
 
   const addSectionHeading = (text: string) => {
-    ensureSpace(10);
+    ensureSpace(HEADING_WITH_FIRST_ENTRY);
     y += 2;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
@@ -565,7 +579,7 @@ export function generateCvPdfTwoColumn(
     }
   };
   const addSectionHeading = (text: string) => {
-    ensureSpace(10);
+    ensureSpace(HEADING_WITH_FIRST_ENTRY);
     my += 2;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11.5);
