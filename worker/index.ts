@@ -1739,9 +1739,17 @@ function shareParseSqlDate(d: string): number {
 // whose locales are kept at strict parity, on the one page most likely to be
 // opened by someone who never chose a language. Two locales, same keys, and
 // the stage labels translated rather than a CSS capitalize() of a DB slug.
-// The display name is the only user-authored string that reaches this page,
-// and the page is public and server-rendered outside React — so it is escaped
-// here rather than trusted. The CSP would stop an injected <script> executing,
+// The page is public and server-rendered outside React, so every
+// user-authored string reaching it is escaped here rather than trusted.
+//
+// This said "the display name is the only user-authored string that reaches
+// this page". It is not: the role label beside it comes from an
+// application's role_type, which is bound straight from the request body with
+// no check that it names a role type that exists — arbitrary text from the
+// account holder, and the escape on it is load-bearing rather than a second
+// line of defence. Nothing was broken, but only the string this sentence
+// named had a test, which is the state a refactor quietly removes an escape
+// from. The CSP would stop an injected <script> executing,
 // but markup injection into the document is not something to leave to a second
 // line of defence.
 // Content-Disposition carried the stored filename with nothing but the double
