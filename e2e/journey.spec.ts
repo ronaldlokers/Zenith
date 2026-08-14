@@ -35,6 +35,26 @@ async function signedIn(width = 1440): Promise<Page> {
   return context.newPage();
 }
 
+/**
+ * Waits for a fading element to finish arriving. The dialogs animate in from
+ * opacity 0 over ~0.18s, and axe run against a half-faded modal reports its
+ * text as low-contrast against the scrim showing through — nine violations
+ * that are an artefact of when the snapshot was taken, not of any colour.
+ * It passed locally and failed on a slower CI runner, which is the shape of
+ * every animation race.
+ */
+async function settled(page: Page, selector: string) {
+  await page.waitForSelector(selector);
+  await page.waitForFunction(
+    (sel) => {
+      const el = document.querySelector(sel);
+      return !!el && getComputedStyle(el).opacity === "1";
+    },
+    selector,
+    { timeout: 10_000 },
+  );
+}
+
 /** Violations axe can judge in a real browser, contrast included. */
 async function axeViolations(page: Page) {
   return page.evaluate(async () => {
@@ -148,12 +168,12 @@ describe("what a browser can judge and jsdom cannot", () => {
     await page.waitForSelector(".bottombar");
 
     await page.keyboard.press("n");
-    await page.waitForSelector('[aria-modal="true"]');
+    await settled(page, '[aria-modal="true"]');
     expect(await axeViolations(page), "the quick-add dialog").toEqual([]);
     await page.keyboard.press("Escape");
 
     await page.click('button[aria-label^="Notifications"]');
-    await page.waitForSelector(".zui-notification-panel");
+    await settled(page, ".zui-notification-panel");
     expect(await axeViolations(page), "the notification panel").toEqual([]);
     await page.context().close();
   }, 180_000);
