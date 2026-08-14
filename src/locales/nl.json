@@ -914,6 +914,7 @@
   },
   "quickAdd": {
     "title": "Vacature toevoegen",
+    "draftRestored": "Dit werd de vorige keer niet opgeslagen, dus we hebben bewaard wat je had ingevuld.",
     "pasteLink": "Plak een link",
     "pasteLinkPlaceholder": "https://… een vacature",
     "import": "Importeren",

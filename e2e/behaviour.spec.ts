@@ -240,3 +240,99 @@ describe("the chunk boundary while offline", () => {
     expect(state.onLine, "the browser never reported being offline").toBe(false);
   }, 180_000);
 });
+
+describe("a write that fails while the session is gone", () => {
+  // "+ Add job" belongs to the board's empty state, so a locator built on it
+  // passes alone and fails in a full run, where earlier specs have left
+  // applications behind. The shortcut works in both, but pressed straight
+  // after a navigation it lands before its handler is mounted — so press it
+  // until it takes.
+  async function openQuickAdd(page: Page) {
+    await expect
+      .poll(async () => {
+        await page.keyboard.press("n");
+        return page.locator('[aria-modal="true"]').count();
+      }, { timeout: 20_000 })
+      .toBeGreaterThan(0);
+  }
+
+  it("keeps the typed job across the reload it tells you to do", async () => {
+    // The session can expire with the dialog open, and the tab has no way to
+    // know until it writes. That part was already handled: the 401 leaves the
+    // dialog up, keeps the fields, and says so.
+    //
+    // What it says is "reload the page and sign in again" — which discards
+    // the typed job, because it lived only in component state. The advice was
+    // sound and destroyed the thing it was protecting.
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector(".bottombar");
+
+    await page.keyboard.press("n");
+    await page.waitForSelector('[aria-modal="true"]');
+    await page.getByLabel("Title", { exact: true }).fill("E2E Draft Survives");
+
+    // The 401 is served here rather than by clearing the cookie. Clearing it
+    // mid-write aborts a request wrangler dev does not survive: it answered
+    // the next document with its own crash page and then stopped listening,
+    // which failed every spec after this one with ERR_CONNECTION_REFUSED.
+    // The code under test is the client's, and it sees the same response
+    // either way.
+    await page.route("**/api/applications", async (route) => {
+      if (route.request().method() !== "POST") return route.fallback();
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Unauthorized" }),
+      });
+    });
+    await page.locator('[aria-modal="true"] button[type=submit]').click();
+    await page.waitForFunction(
+      () => /expired|verlopen/i.test(document.body.innerText),
+      undefined,
+      { timeout: 20_000 },
+    );
+    await page.unroute("**/api/applications");
+
+    // Do exactly what the message asks: start again on a fresh document.
+    // A new document on the same origin, so sessionStorage carries across
+    // exactly as it does for someone who reloads and signs back in.
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector(".bottombar");
+    // The visible control rather than the "n" shortcut: pressed straight after
+    // a reload the key lands before its handler is mounted, which fails the
+    // test for a reason that has nothing to do with drafts.
+    await openQuickAdd(page);
+
+    const title = await page
+      .getByLabel("Title", { exact: true })
+      .inputValue();
+    const note = await page
+      .locator('[aria-modal="true"] [role="status"]')
+      .first()
+      .innerText()
+      .catch(() => "");
+
+    // One-shot: closing and reopening must not resurrect it, or every
+    // abandoned job comes back the next time the dialog is opened.
+    await page.keyboard.press("Escape");
+    await page.waitForSelector('[aria-modal="true"]', { state: "detached" });
+    await openQuickAdd(page);
+    const second = await page
+      .getByLabel("Title", { exact: true })
+      .inputValue();
+
+    await ctx.close();
+    expect(title, "the typed job did not survive the reload").toBe(
+      "E2E Draft Survives",
+    );
+    expect(note, "nothing told the person their draft was kept").toMatch(
+      /kept|bewaard/i,
+    );
+    expect(second, "the draft came back a second time").toBe("");
+  }, 180_000);
+});

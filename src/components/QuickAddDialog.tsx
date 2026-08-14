@@ -12,6 +12,49 @@ import { ActionBar } from "./ActionBar";
 import { Button } from "./Button";
 import "./QuickAddDialog.css";
 
+// A failed submit is the one moment the typed job is only in this component's
+// state, and the advice for the commonest cause of one — an expired session —
+// is "reload the page and sign in again", which discards exactly that. So the
+// draft is written down when a submit fails and read back once on the next
+// mount.
+//
+// Deliberately one-shot and failure-only. Persisting every keystroke would
+// mean cancelling the dialog and opening it later hands back a job the person
+// already decided against, which is a different and more annoying bug.
+const DRAFT_KEY = "zenith_quickadd_draft";
+
+interface Draft {
+  title: string;
+  companyId: number | null;
+  url: string;
+  status: Status;
+}
+
+function takeDraft(): Draft | null {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(DRAFT_KEY);
+    const d = JSON.parse(raw) as Partial<Draft>;
+    if (typeof d.title !== "string" || !d.title) return null;
+    return {
+      title: d.title,
+      companyId: typeof d.companyId === "number" ? d.companyId : null,
+      url: typeof d.url === "string" ? d.url : "",
+      // Validated rather than trusted: the value is round-tripped through
+      // storage a person can edit, and an unknown status reaches the board as
+      // a column that does not exist.
+      status: STATUSES.includes(d.status as Status)
+        ? (d.status as Status)
+        : "interested",
+    };
+  } catch {
+    // Private mode, disabled storage, or malformed JSON. A lost draft is bad;
+    // a dialog that throws on open is worse.
+    return null;
+  }
+}
+
 export interface QuickAddDialogProps {
   companies: Company[];
   // The stage to open on. The board's add block sets it to its own column;
@@ -30,12 +73,17 @@ export function QuickAddDialog({
   onError,
 }: QuickAddDialogProps) {
   const { t } = useTranslation();
-  const [title, setTitle] = useState("");
-  const [companyId, setCompanyId] = useState<number | null>(null);
-  const [url, setUrl] = useState("");
+  const [restored] = useState(takeDraft);
+  const [title, setTitle] = useState(restored?.title ?? "");
+  const [companyId, setCompanyId] = useState<number | null>(
+    restored?.companyId ?? null,
+  );
+  const [url, setUrl] = useState(restored?.url ?? "");
   // The board's add block opens this against the column it sits in, so what
   // you add lands where you asked for it (#535).
-  const [status, setStatus] = useState<Status>(initialStatus ?? "interested");
+  const [status, setStatus] = useState<Status>(
+    restored?.status ?? initialStatus ?? "interested",
+  );
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
   const [extraCompanies, setExtraCompanies] = useState<Company[]>([]);
@@ -89,6 +137,14 @@ export function QuickAddDialog({
       })
       .then((a) => onCreated(a, open))
       .catch((e) => {
+        try {
+          sessionStorage.setItem(
+            DRAFT_KEY,
+            JSON.stringify({ title: title.trim(), companyId, url: url.trim(), status }),
+          );
+        } catch {
+          /* nothing can be kept; the dialog still holds it until reload */
+        }
         onError((e as Error).message);
         setBusy(false);
       });
@@ -97,6 +153,11 @@ export function QuickAddDialog({
   return (
     <Dialog label={t("quickAdd.title")} onClose={onClose}>
       <h2>{t("quickAdd.title")}</h2>
+      {restored && (
+        <p className="zui-quickadd-restored small" role="status">
+          {t("quickAdd.draftRestored")}
+        </p>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
