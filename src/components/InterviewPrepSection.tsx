@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
+import { requestConfirm } from "../hooks";
 import type { PrepItem } from "../types";
 import { RemoveIcon } from "../icons";
 import { Button } from "./Button";
@@ -66,11 +67,16 @@ export function InterviewPrepSection({
       .then(load)
       .catch((e) => onError((e as Error).message));
 
-  const removeItem = (id: number) =>
-    api
+  const removeItem = async (id: number) => {
+    // Written while preparing, and deleted from a list being worked through
+    // shortly before the interview it is for. A mis-tap there is expensive at
+    // exactly the wrong moment.
+    if (!(await requestConfirm(t("confirm.deletePrepItem")))) return;
+    return api
       .remove("prep-items", id)
       .then(load)
       .catch((e) => onError((e as Error).message));
+  };
 
   // Reorder via sort_order swap (#207) — same pattern as the CV
   // sections (#94) rather than native drag, which is deliberately

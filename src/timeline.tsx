@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import { Badge, Button } from "./components";
 import { formatDate, today } from "./format";
+import { requestConfirm } from "./hooks";
 import { RemoveIcon } from "./icons";
 import "./timeline.css";
 import { INTERACTION_TYPES } from "./types";
@@ -150,15 +151,19 @@ export function Timeline({
               variant="danger"
               className="zui-tl-del"
               aria-label={t("common.delete")}
-              onClick={() =>
-                api
+              onClick={async () => {
+                // A logged interaction is a record of something that
+                // happened, with what was said noted against a date. Unlike a
+                // list entry it cannot be retyped from memory.
+                if (!(await requestConfirm(t("confirm.deleteInteraction")))) return;
+                return api
                   .remove("interactions", it.id)
                   .then(() => {
                     onItemsChanged?.();
                     return load();
                   })
-                  .catch((e) => onError((e as Error).message))
-              }
+                  .catch((e) => onError((e as Error).message));
+              }}
             >
               <RemoveIcon />
             </Button>
