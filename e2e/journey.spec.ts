@@ -145,6 +145,75 @@ describe("with nothing to show", () => {
   }, 180_000);
 });
 
+// The third state a page can be in, after "has data" and "has none": the
+// load failed. It renders a different screen entirely — LoadFailed, with the
+// retry #597 added — and nothing has ever looked at it. That is the same gap
+// the empty state turned out to be, and the empty state held two defects.
+describe("when the data does not arrive", () => {
+  /** A page whose API calls all fail, session aside. */
+  async function broken(width = 1440): Promise<Page> {
+    const context = await browser.newContext({
+      viewport: { width, height: 900 },
+      storageState: STATE,
+    });
+    await context.addInitScript({ content: AXE });
+    await context.route("**/api/**", (route) =>
+      /auth|session/.test(route.request().url())
+        ? route.continue()
+        : route.fulfill({
+            status: 500,
+            contentType: "application/json",
+            body: '{"error":"boom"}',
+          }),
+    );
+    return context.newPage();
+  }
+
+  it("says so, offers a way back, and is readable while doing it", async () => {
+    const page = await broken();
+    const failures: string[] = [];
+    for (const path of ["/board", "/overview", "/insights", "/cv"]) {
+      await page.goto(BASE + path);
+      await page.waitForSelector("main, .content");
+      await animationsSettled(page);
+
+      const retry = await page
+        .getByRole("button", { name: /retry|try again/i })
+        .count();
+      if (!retry) failures.push(`${path}: no way to retry`);
+
+      const violations = await axeViolations(page);
+      if (violations.length) failures.push(`${path}: ${violations.join(", ")}`);
+    }
+    expect(failures).toEqual([]);
+    await page.context().close();
+  }, 180_000);
+
+  it("does not claim the account is empty", async () => {
+    // The failure #597 fixed: a board that could not load drew "Nothing
+    // tracked yet" over an account with fifteen applications in it, and
+    // offered to load sample data.
+    const page = await broken();
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector("main, .content");
+
+    // Dismissing the banner is part of the reproduction, not incidental. The
+    // original defect was that a dismissed error left the board's own empty
+    // state behind it — and a version of this test that skipped the dismiss
+    // passed with the fix removed, which is the only reason it is here.
+    const dismiss = page.locator(".error-dismiss");
+    if (await dismiss.count()) await dismiss.first().click();
+    await animationsSettled(page);
+
+    const text = await page.locator("main, .content").first().innerText();
+    expect(
+      text,
+      "a failed load is being reported as an account with nothing in it",
+    ).not.toMatch(/nothing tracked yet|sample data/i);
+    await page.context().close();
+  }, 180_000);
+});
+
 describe("the journey a person actually takes", () => {
   it("adds an application and it is still there after a reload", async () => {
     const page = await signedIn();
