@@ -303,8 +303,9 @@ app.post("/api/companies", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO companies (user_id, ${COMPANY_COLUMNS.join(", ")})
-     VALUES (?, ${COMPANY_COLUMNS.map(() => "?").join(", ")}) RETURNING *`,
+    `INSERT INTO companies (user_id, updated_at, ${COMPANY_COLUMNS.join(", ")})
+     VALUES (?, datetime('now'), ${COMPANY_COLUMNS.map(() => "?").join(", ")})
+     RETURNING *`,
   )
     .bind(c.get("userId"), ...companyValues(body))
     .first();
@@ -314,8 +315,35 @@ app.post("/api/companies", async (c) => {
 app.put("/api/companies/:id", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
+  // Optimistic concurrency, the same shape as applications and contacts: the
+  // form seeds from the record loaded when the page opened and writes every
+  // column, so a save from a stale copy reverts fields it never showed. 412
+  // per RFC 9110 13.1.
+  //
+  // Additive: no header, no precondition. updated_at is second-resolution, so
+  // two writes inside one second are a tie last-write-wins settles — the
+  // conflict worth catching is a form left open for minutes.
+  const ifMatch = c.req.header("If-Match");
+  if (ifMatch) {
+    const existing = await c.env.DB.prepare(
+      "SELECT updated_at FROM companies WHERE id = ? AND user_id = ?",
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .first<{ updated_at: string | null }>();
+    if (!existing) return c.json({ error: "not found" }, 404);
+    if (ifMatch !== existing.updated_at) {
+      return c.json(
+        {
+          error: "the company changed somewhere else",
+          current_updated_at: existing.updated_at,
+        },
+        412,
+      );
+    }
+  }
   const result = await c.env.DB.prepare(
-    `UPDATE companies SET ${COMPANY_COLUMNS.map((col) => `${col} = ?`).join(", ")}
+    `UPDATE companies SET ${COMPANY_COLUMNS.map((col) => `${col} = ?`).join(", ")},
+         updated_at = datetime('now')
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(...companyValues(body), c.req.param("id"), c.get("userId"))
@@ -358,8 +386,9 @@ app.post("/api/contacts", async (c) => {
   ]);
   if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   const result = await c.env.DB.prepare(
-    `INSERT INTO contacts (user_id, ${CONTACT_COLUMNS.join(", ")})
-     VALUES (?, ${CONTACT_COLUMNS.map(() => "?").join(", ")}) RETURNING *`,
+    `INSERT INTO contacts (user_id, updated_at, ${CONTACT_COLUMNS.join(", ")})
+     VALUES (?, datetime('now'), ${CONTACT_COLUMNS.map(() => "?").join(", ")})
+     RETURNING *`,
   )
     .bind(c.get("userId"), ...contactValues(body))
     .first();
@@ -372,9 +401,37 @@ app.put("/api/contacts/:id", async (c) => {
   const badRef = await findForeignRef(c.env.DB, c.get("userId"), [
     { table: "companies", id: body.company_id },
   ]);
+  // Optimistic concurrency, the same shape as applications: the form seeds
+  // from the record loaded when the page opened and writes every column, so a
+  // save made from a stale copy reverts fields it never showed. 412 per RFC
+  // 9110 13.1, and the header keeps the body as the resource.
+  //
+  // Additive: no header, no precondition, so every existing caller behaves as
+  // before. updated_at is second-resolution, so two writes inside one second
+  // are a tie that last-write-wins settles — the conflict worth catching is a
+  // form left open for minutes.
+  const ifMatch = c.req.header("If-Match");
+  if (ifMatch) {
+    const existing = await c.env.DB.prepare(
+      "SELECT updated_at FROM contacts WHERE id = ? AND user_id = ?",
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .first<{ updated_at: string | null }>();
+    if (!existing) return c.json({ error: "not found" }, 404);
+    if (ifMatch !== existing.updated_at) {
+      return c.json(
+        {
+          error: "the contact changed somewhere else",
+          current_updated_at: existing.updated_at,
+        },
+        412,
+      );
+    }
+  }
   if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   const result = await c.env.DB.prepare(
-    `UPDATE contacts SET ${CONTACT_COLUMNS.map((col) => `${col} = ?`).join(", ")}
+    `UPDATE contacts SET ${CONTACT_COLUMNS.map((col) => `${col} = ?`).join(", ")},
+         updated_at = datetime('now')
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(...contactValues(body), c.req.param("id"), c.get("userId"))
@@ -402,7 +459,7 @@ app.patch("/api/contacts/:id", async (c) => {
   }
   if (!sets.length) return c.json({ error: "nothing to update" }, 400);
   const result = await c.env.DB.prepare(
-    `UPDATE contacts SET ${sets.join(", ")}
+    `UPDATE contacts SET ${sets.join(", ")}, updated_at = datetime('now')
      WHERE id = ? AND user_id = ? RETURNING *`,
   )
     .bind(...vals, c.req.param("id"), c.get("userId"))

@@ -217,6 +217,7 @@ export interface Company {
   is_agency: number;
   notes: string | null;
   created_at: string;
+  updated_at: string | null;
 }
 
 export type OutreachStatus =
@@ -239,6 +240,7 @@ export interface Contact {
   follow_up_at: string | null;
   outreach_status: OutreachStatus;
   created_at: string;
+  updated_at: string | null;
 }
 
 export interface Application {
