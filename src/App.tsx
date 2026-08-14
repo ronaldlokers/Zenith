@@ -60,6 +60,7 @@ import { useSession } from "./auth-client";
 import {
   Button,
   CommandPalette,
+  LoadFailed,
   OnboardingChecklist,
   OutcomeDialog,
   PillTabs,
@@ -139,6 +140,7 @@ export default function App() {
     error,
     setError,
     loading,
+    loadFailed,
     reload,
     deleteWithUndo,
     setStatus,
@@ -534,7 +536,10 @@ export default function App() {
           and the layout is unchanged — .error is styled by class, not by
           position. */}
       <div role="alert" aria-live="assertive">
-        {error && (
+        {/* Not while the retry screen is up: one failure should produce one
+            report, and that screen already names it and offers the way out.
+            Both showed, so a failed first load stacked two error messages. */}
+        {error && !loadFailed && (
           <p className="error">
             <ErrorIcon />
             <span className="error-text">{error}</span>
@@ -553,6 +558,13 @@ export default function App() {
       <main className="content">
         {loading ? (
           <Skeleton />
+        ) : loadFailed ? (
+          /* The load did not happen, so every screen below would be drawing
+             conclusions from an empty list — the board said "Nothing tracked
+             yet" and offered to load sample data, to an account with fifteen
+             applications in it. It also gave no way back other than a browser
+             refresh: the banner dismisses, it does not retry. */
+          <LoadFailed onRetry={reload} />
         ) : (
           <ChunkBoundary>
           <Suspense fallback={<Skeleton />}>

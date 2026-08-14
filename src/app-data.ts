@@ -1,7 +1,7 @@
 // App-level controller hooks, extracted from App.tsx (shell split). These
 // own the cross-cutting data + toast state that every tab reads through
 // props; no React components here, so react-refresh stays satisfied.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { TFunction } from "i18next";
 import { api } from "./api";
@@ -67,6 +67,18 @@ export function useAppData(
   const [roleTypes, setRoleTypes] = useState<RoleTypeDef[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Distinct from `error`, which any failed mutation also sets. This one says
+  // "the app has no data because the load did not happen", which is the only
+  // condition under which a screen must not draw its empty state: a board
+  // that failed to load rendered "Nothing tracked yet" over an account with
+  // fifteen applications in it.
+  //
+  // Only the first load can set it. reload() also runs after mutations, and a
+  // refresh that fails on top of a view that already has data must leave that
+  // view alone — replacing a working board with a retry screen would be a
+  // worse failure than the one it is reporting.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const loadedOnce = useRef(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
 
   const reload = useCallback(async () => {
@@ -86,8 +98,11 @@ export function useAppData(
       setRoleTypes(roles);
       setStatsData(st);
       setError(null);
+      setLoadFailed(false);
+      loadedOnce.current = true;
     } catch (e) {
       setError((e as Error).message);
+      if (!loadedOnce.current) setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -252,6 +267,7 @@ export function useAppData(
     error,
     setError,
     loading,
+    loadFailed,
     reload,
     deleteWithUndo,
     setStatus,
