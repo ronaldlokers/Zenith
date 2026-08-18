@@ -336,3 +336,81 @@ describe("a write that fails while the session is gone", () => {
     expect(second, "the draft came back a second time").toBe("");
   }, 180_000);
 });
+
+describe("the network view's tabs", () => {
+  it("points the tablist at a panel that is really there", async () => {
+    // #517 left this view with a tablist and no tabpanel: the tabs announced
+    // themselves as controlling something that did not exist in the
+    // accessibility tree. Checked in a browser rather than jsdom because the
+    // association is only worth anything once both halves are rendered by the
+    // real app.
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/companies`);
+    await page.waitForSelector('[role="tablist"]');
+
+    const active = page.locator('[role="tab"][aria-selected="true"]');
+    const controls = await active.getAttribute("aria-controls");
+    expect(controls, "the active tab points at no panel").toBeTruthy();
+
+    const panel = page.locator(`#${controls}`);
+    expect(await panel.count(), "the panel the tab names is not rendered").toBe(1);
+    expect(await panel.getAttribute("role")).toBe("tabpanel");
+    // The panel names itself with the tab, which is what a screen reader
+    // reads out when focus lands inside it.
+    expect(await panel.getAttribute("aria-labelledby")).toBe(
+      await active.getAttribute("id"),
+    );
+
+    // The inactive tab must not point at anything, since its panel is not
+    // rendered.
+    const inactive = page.locator('[role="tab"][aria-selected="false"]').first();
+    expect(await inactive.getAttribute("aria-controls")).toBeNull();
+    await ctx.close();
+  }, 180_000);
+
+  it("changes the selected tab with the arrow keys", async () => {
+    // Asserts selection, not focus. Measured: with the explicit focus move
+    // deleted from tablist-keys.ts, this view still ends with focus on the
+    // newly selected tab — these tabs are routes, so the re-render comes from
+    // the router and the browser arrives at the same end state on its own.
+    // A focus assertion here would therefore pass either way, which is worth
+    // saying rather than leaving a test that looks like it covers something
+    // it cannot. The focus move is covered in
+    // src/components/tablist-keyboard.test.tsx, where removing it fails.
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      storageState: STATE,
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/companies`);
+    await page.waitForSelector('[role="tablist"]');
+
+    const before = await page
+      .locator('[role="tab"][aria-selected="true"]')
+      .getAttribute("id");
+    await page.locator('[role="tab"][aria-selected="true"]').focus();
+    await page.keyboard.press("ArrowRight");
+    await page.waitForFunction(
+      (was) =>
+        document.querySelector('[role="tab"][aria-selected="true"]')?.id !== was,
+      before,
+      { timeout: 10_000 },
+    );
+
+    const now = await page
+      .locator('[role="tab"][aria-selected="true"]')
+      .getAttribute("id");
+    expect(now, "the arrow key did not change the selected tab").not.toBe(before);
+    // The panel follows the tab, which is the half a stale aria-controls
+    // would break.
+    const controls = await page
+      .locator('[role="tab"][aria-selected="true"]')
+      .getAttribute("aria-controls");
+    expect(await page.locator(`#${controls}`).count()).toBe(1);
+    await ctx.close();
+  }, 180_000);
+});

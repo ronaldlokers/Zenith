@@ -33,14 +33,12 @@ export interface PillTabsProps<K extends string> {
   onSelect: (key: K) => void;
   /**
    * Namespaces the tab/panel ids: `${idPrefix}-tab-${key}` / `-panel-`.
-   * Omit where the caller renders no tabpanel — the network view does not —
-   * so this component skips aria-controls rather than point it at nothing.
-   * That's this component's own choice, not a family rule: TabBar's call
-   * site (src/detail.tsx) renders only the active tab's panel yet still
-   * emits aria-controls for all three tabs, so two of them point at ids that
-   * don't exist on every render. Both are faithful copies of the markup they
-   * replaced, so neither is a regression — just don't take TabBar's aria-
-   * controls wiring as a pattern to extend.
+   * Omit where the caller renders no tabpanel, and this skips the id wiring
+   * rather than point it at nothing.
+   *
+   * Both call sites render only the active panel, so only the active tab
+   * points at one — the same rule TabBar follows (#517). Every tab keeps its
+   * own id regardless, because the panel labels itself with the active tab.
    */
   idPrefix?: string;
   "aria-label": string;
@@ -55,7 +53,11 @@ export function PillTabs<K extends string>({
 }: PillTabsProps<K>) {
   const refs = useRef(new Map<K, HTMLElement | null>()).current;
   return (
-    <div className="zui-pilltabs" role="tablist" aria-label={rest["aria-label"]}>
+    <div
+      className="zui-pilltabs"
+      role="tablist"
+      aria-label={rest["aria-label"]}
+    >
       {tabs.map(({ key, label }) => (
         <button
           key={key}
@@ -66,7 +68,9 @@ export function PillTabs<K extends string>({
             refs.set(key, el);
           }}
           aria-selected={active === key}
-          aria-controls={idPrefix ? `${idPrefix}-panel-${key}` : undefined}
+          aria-controls={
+            idPrefix && active === key ? `${idPrefix}-panel-${key}` : undefined
+          }
           tabIndex={active === key ? 0 : -1}
           className={active === key ? "active" : undefined}
           onClick={() => onSelect(key)}

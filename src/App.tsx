@@ -204,12 +204,16 @@ export default function App() {
     if (onboardingDismissed) return;
     void Promise.allSettled([
       api.profile().then(setOnboardingProfile),
-      api.feedConfig().then((cfg) => setFeedConfigured(cfg.keywords.length > 0)),
-      api.goals().then((g) =>
-        setGoalConfigured(
-          g.search_started_at != null || g.weekly_app_goal !== 5,
+      api
+        .feedConfig()
+        .then((cfg) => setFeedConfigured(cfg.keywords.length > 0)),
+      api
+        .goals()
+        .then((g) =>
+          setGoalConfigured(
+            g.search_started_at != null || g.weekly_app_goal !== 5,
+          ),
         ),
-      ),
     ]).then(() => setOnboardingChecked(true));
     // Settled, not fulfilled: a failed probe still ends the not-yet-known
     // state. Leaving it pending would hide the checklist from the new
@@ -241,7 +245,7 @@ export default function App() {
   // back-button friendly.
   const routedJob =
     tab === "board" && detailIdFromUrl != null
-      ? visibleApps.find((a) => a.id === detailIdFromUrl) ?? null
+      ? (visibleApps.find((a) => a.id === detailIdFromUrl) ?? null)
       : null;
 
   // A deep link whose application is gone. Push notifications, calendar
@@ -277,19 +281,63 @@ export default function App() {
   // pinned separately (rail foot / last tab). `data` drives the mobile
   // scroll-into-view probe (tabsRef).
   const navItems: NavItem[] = [
-    { data: "overview", to: "overview", active: tab === "overview", icon: <NavOverviewIcon />, label: t("tabs.overview") },
-    { data: "pipeline", to: "board", active: tab === "board", icon: <NavPipelineIcon />, label: t("tabs.pipeline") },
-    { data: "feed", to: "feed", active: tab === "feed", icon: <NavFeedIcon />, label: t("tabs.feed") },
+    {
+      data: "overview",
+      to: "overview",
+      active: tab === "overview",
+      icon: <NavOverviewIcon />,
+      label: t("tabs.overview"),
+    },
+    {
+      data: "pipeline",
+      to: "board",
+      active: tab === "board",
+      icon: <NavPipelineIcon />,
+      label: t("tabs.pipeline"),
+    },
+    {
+      data: "feed",
+      to: "feed",
+      active: tab === "feed",
+      icon: <NavFeedIcon />,
+      label: t("tabs.feed"),
+    },
     // Named for what it holds rather than for the abstraction: the shell spec
     // lists this destination as "People & companies", and the menu row and the
     // page title both read this label.
-    { data: "network", to: "companies", active: tab === "companies" || tab === "contacts", icon: <NavNetworkIcon />, label: t("tabs.network") },
-    { data: "cv", to: "cv", active: tab === "cv", icon: <NavCvIcon />, label: t("tabs.cv") },
-    { data: "insights", to: "insights", active: tab === "insights", icon: <NavInsightsIcon />, label: t("tabs.insights") },
+    {
+      data: "network",
+      to: "companies",
+      active: tab === "companies" || tab === "contacts",
+      icon: <NavNetworkIcon />,
+      label: t("tabs.network"),
+    },
+    {
+      data: "cv",
+      to: "cv",
+      active: tab === "cv",
+      icon: <NavCvIcon />,
+      label: t("tabs.cv"),
+    },
+    {
+      data: "insights",
+      to: "insights",
+      active: tab === "insights",
+      icon: <NavInsightsIcon />,
+      label: t("tabs.insights"),
+    },
     // Admin-only destination (#457) — the dedicated admin area, appended so it
     // shows in the rail and mobile tabs only for admins.
     ...(isAdmin
-      ? [{ data: "admin" as const, to: "admin" as const, active: tab === "admin", icon: <AdminIcon />, label: t("admin.navLabel") }]
+      ? [
+          {
+            data: "admin" as const,
+            to: "admin" as const,
+            active: tab === "admin",
+            icon: <AdminIcon />,
+            label: t("admin.navLabel"),
+          },
+        ]
       : []),
   ];
   // Returning from an application should put the keyboard back on the card
@@ -315,7 +363,7 @@ export default function App() {
       ? routedJob.title
       : tab === "settings"
         ? t("settings.title")
-        : navItems.find((n) => n.active)?.label ?? null,
+        : (navItems.find((n) => n.active)?.label ?? null),
   );
 
   // The menu's three tiles carry a live count (shell spec: "icon, label, live
@@ -357,7 +405,10 @@ export default function App() {
   // A genuinely new account sees it a beat later instead of instantly,
   // which is the honest trade: before the data lands, nobody knows.
   const showOnboarding =
-    onboardingChecked && !loading && !onboardingDismissed && !onboardingComplete;
+    onboardingChecked &&
+    !loading &&
+    !onboardingDismissed &&
+    !onboardingComplete;
   const onboardingProps = {
     profileDone: !!(onboardingProfile?.name && onboardingProfile?.email),
     companyDone: companies.length > 0,
@@ -536,7 +587,7 @@ export default function App() {
           onOpenBoard={() => setTab("board")}
         />
 
-      {/* The region is always mounted; only the banner inside it comes and
+        {/* The region is always mounted; only the banner inside it comes and
           goes. A role="alert" element that appears with its text already in
           place is announced inconsistently across screen readers — the
           reliable contract is a live region that is present first and
@@ -547,205 +598,224 @@ export default function App() {
           The wrapper carries no styling, so the banner keeps its own box
           and the layout is unchanged — .error is styled by class, not by
           position. */}
-      <div role="alert" aria-live="assertive">
-        {/* Not while the retry screen is up: one failure should produce one
+        <div role="alert" aria-live="assertive">
+          {/* Not while the retry screen is up: one failure should produce one
             report, and that screen already names it and offers the way out.
             Both showed, so a failed first load stacked two error messages. */}
-        {error && !loadFailed && (
-          <p className="error">
-            <ErrorIcon />
-            <span className="error-text">{error}</span>
-            <button
-              type="button"
-              className="error-dismiss"
-              onClick={() => setError(null)}
-              aria-label={t("common.close")}
-            >
-              <RemoveIcon />
-            </button>
-          </p>
-        )}
-      </div>
+          {error && !loadFailed && (
+            <p className="error">
+              <ErrorIcon />
+              <span className="error-text">{error}</span>
+              <button
+                type="button"
+                className="error-dismiss"
+                onClick={() => setError(null)}
+                aria-label={t("common.close")}
+              >
+                <RemoveIcon />
+              </button>
+            </p>
+          )}
+        </div>
 
-      <main className="content">
-        {loading ? (
-          <Skeleton />
-        ) : loadFailed ? (
-          /* The load did not happen, so every screen below would be drawing
+        <main className="content">
+          {loading ? (
+            <Skeleton />
+          ) : loadFailed ? (
+            /* The load did not happen, so every screen below would be drawing
              conclusions from an empty list — the board said "Nothing tracked
              yet" and offered to load sample data, to an account with fifteen
              applications in it. It also gave no way back other than a browser
              refresh: the banner dismisses, it does not retry. */
-          <LoadFailed onRetry={reload} />
-        ) : (
-          <ChunkBoundary>
-          <Suspense fallback={<Skeleton />}>
-            {tab === "overview" && showOnboarding && (
-              <OnboardingChecklist {...onboardingProps} />
-            )}
-            {tab === "overview" && (
-              <DashboardTab
-                applications={visibleApps}
-                onOpenJob={(id) => navigate(boardTarget(id))}
-                onGoToJobs={() => setTab("board")}
-                onError={setError}
-                onChanged={reload}
-                stats={statsData}
-                notify={notify}
-                onOpenQuickAdd={() => setShowQuickAdd(true)}
-              />
-            )}
-            {tab === "insights" && (
-              <InsightsTab
-                applications={visibleApps}
-                onGoToJobs={() => setTab("board")}
-                onOpenJob={(id) => navigate(boardTarget(id))}
-                // Same target the "c" shortcut and the menu use: the closed
-                // rails are folded by default, so landing on a bare board
-                // would show none of what the link promised.
-                onShowClosed={() =>
-                  navigate(boardTarget(), { state: { showClosed: true } })
-                }
-                onError={setError}
-                onJump={(title) => {
-                  setJumpQuery(title);
-                  setTab("board");
-                }}
-                stats={statsData}
-              />
-            )}
-            {routedJob && (
-              <section className="job-page">
-                <Button
-                  variant="secondary"
-                  className="job-back"
-                  onClick={() =>
-                    leaveGuarded(() => {
-                      // Return to wherever the user came from — dashboard,
-                      // feed, board — not always the pipeline (#448).
-                      // location.key is "default" only on a direct deep-link
-                      // with no in-app history; fall back to the board there.
-                      if (location.key !== "default") navigate(-1);
-                      else navigate(boardTarget());
-                    })
-                  }
-                >
-                  ← {t("common.back")}
-                </Button>
-                <ApplicationDetailModal
-                  key={routedJob.id}
-                  application={routedJob}
-                  allApplications={visibleApps}
-                  companies={visibleCompanies}
-                  contacts={visibleContacts}
-                  roleTypes={roleTypes}
-                  onClose={() => navigate(boardTarget())}
-                  onChanged={reload}
-                  onError={setError}
-                  notify={notify}
-                  onDelete={deleteWithUndo}
-                  onStatus={setStatus}
-                  history={statsData?.history ?? []}
-                  onSaveOutcome={saveOutcome}
-                />
-              </section>
-            )}
-            {tab === "board" && !routedJob && (
-              <PipelineTab
-                applications={visibleApps}
-                companies={visibleCompanies}
-                roleTypes={roleTypes}
-                onChanged={reload}
-                onError={setError}
-                notify={notify}
-                onStatus={setStatus}
-                initialQuery={jumpQuery}
-                onQueryConsumed={() => setJumpQuery("")}
-                history={statsData?.history ?? []}
-                lastInteractions={statsData?.interactions ?? []}
-                onOpenJob={(id: number | null) =>
-                  navigate(boardTarget(id ?? undefined))
-                }
-                focusCardId={returnFocusId}
-                onFocusRestored={() => setReturnFocusId(null)}
-                onOpenQuickAdd={(stage) => {
-                  setQuickAddStage(stage);
-                  setShowQuickAdd(true);
-                }}
-                onOpenSampleData={() => navigate("/settings?s=data")}
-              />
-            )}
-            {tab === "feed" && (
-              <FeedTab
-                onError={setError}
-                notify={notify}
-                roleTypes={roleTypes}
-                onOpenSettings={() => navigate("/settings?s=feed")}
-                onGoToCv={() => navigate("/cv")}
-                onChanged={reload}
-                onOpenJob={(id) => navigate(boardTarget(id))}
-              />
-            )}
-            {(tab === "companies" || tab === "contacts") && (
-              <PillTabs<"companies" | "contacts">
-                tabs={[
-                  { key: "companies", label: t("tabs.companies") },
-                  { key: "contacts", label: t("tabs.people") },
-                ]}
-                active={tab}
-                onSelect={setTab}
-                aria-label={t("tabs.network")}
-              />
-            )}
-            {tab === "companies" && (
-              <CompaniesTab
-                companies={visibleCompanies}
-                applications={visibleApps}
-                contacts={visibleContacts}
-                onChanged={reload}
-                onError={setError}
-                notify={notify}
-                onDelete={deleteWithUndo}
-                initialQuery={jumpQuery}
-                initialDetailId={detailIdFromUrl}
-                onDetailIdChange={(id) =>
-                  navigate(id ? `/companies/${id}` : "/companies")
-                }
-              />
-            )}
-            {tab === "contacts" && (
-              <ContactsTab
-                contacts={visibleContacts}
-                companies={visibleCompanies}
-                onChanged={reload}
-                onError={setError}
-                notify={notify}
-                onDelete={deleteWithUndo}
-                initialQuery={jumpQuery}
-                initialDetailId={detailIdFromUrl}
-                onDetailIdChange={(id) =>
-                  navigate(id ? `/people/${id}` : "/people")
-                }
-              />
-            )}
-            {tab === "cv" && <CVTab onError={setError} notify={notify} />}
-            {tab === "admin" && isAdmin && <AdminPage onError={setError} />}
-            {tab === "settings" && (
-              <SettingsPage
-                roleTypes={roleTypes}
-                onRoleTypesChanged={reload}
-                notify={notify}
-              />
-            )}
-          </Suspense>
-          </ChunkBoundary>
-        )}
-      </main>
+            <LoadFailed onRetry={reload} />
+          ) : (
+            <ChunkBoundary>
+              <Suspense fallback={<Skeleton />}>
+                {tab === "overview" && showOnboarding && (
+                  <OnboardingChecklist {...onboardingProps} />
+                )}
+                {tab === "overview" && (
+                  <DashboardTab
+                    applications={visibleApps}
+                    onOpenJob={(id) => navigate(boardTarget(id))}
+                    onGoToJobs={() => setTab("board")}
+                    onError={setError}
+                    onChanged={reload}
+                    stats={statsData}
+                    notify={notify}
+                    onOpenQuickAdd={() => setShowQuickAdd(true)}
+                  />
+                )}
+                {tab === "insights" && (
+                  <InsightsTab
+                    applications={visibleApps}
+                    onGoToJobs={() => setTab("board")}
+                    onOpenJob={(id) => navigate(boardTarget(id))}
+                    // Same target the "c" shortcut and the menu use: the closed
+                    // rails are folded by default, so landing on a bare board
+                    // would show none of what the link promised.
+                    onShowClosed={() =>
+                      navigate(boardTarget(), { state: { showClosed: true } })
+                    }
+                    onError={setError}
+                    onJump={(title) => {
+                      setJumpQuery(title);
+                      setTab("board");
+                    }}
+                    stats={statsData}
+                  />
+                )}
+                {routedJob && (
+                  <section className="job-page">
+                    <Button
+                      variant="secondary"
+                      className="job-back"
+                      onClick={() =>
+                        leaveGuarded(() => {
+                          // Return to wherever the user came from — dashboard,
+                          // feed, board — not always the pipeline (#448).
+                          // location.key is "default" only on a direct deep-link
+                          // with no in-app history; fall back to the board there.
+                          if (location.key !== "default") navigate(-1);
+                          else navigate(boardTarget());
+                        })
+                      }
+                    >
+                      ← {t("common.back")}
+                    </Button>
+                    <ApplicationDetailModal
+                      key={routedJob.id}
+                      application={routedJob}
+                      allApplications={visibleApps}
+                      companies={visibleCompanies}
+                      contacts={visibleContacts}
+                      roleTypes={roleTypes}
+                      onClose={() => navigate(boardTarget())}
+                      onChanged={reload}
+                      onError={setError}
+                      notify={notify}
+                      onDelete={deleteWithUndo}
+                      onStatus={setStatus}
+                      history={statsData?.history ?? []}
+                      onSaveOutcome={saveOutcome}
+                    />
+                  </section>
+                )}
+                {tab === "board" && !routedJob && (
+                  <PipelineTab
+                    applications={visibleApps}
+                    companies={visibleCompanies}
+                    roleTypes={roleTypes}
+                    onChanged={reload}
+                    onError={setError}
+                    notify={notify}
+                    onStatus={setStatus}
+                    initialQuery={jumpQuery}
+                    onQueryConsumed={() => setJumpQuery("")}
+                    history={statsData?.history ?? []}
+                    lastInteractions={statsData?.interactions ?? []}
+                    onOpenJob={(id: number | null) =>
+                      navigate(boardTarget(id ?? undefined))
+                    }
+                    focusCardId={returnFocusId}
+                    onFocusRestored={() => setReturnFocusId(null)}
+                    onOpenQuickAdd={(stage) => {
+                      setQuickAddStage(stage);
+                      setShowQuickAdd(true);
+                    }}
+                    onOpenSampleData={() => navigate("/settings?s=data")}
+                  />
+                )}
+                {tab === "feed" && (
+                  <FeedTab
+                    onError={setError}
+                    notify={notify}
+                    roleTypes={roleTypes}
+                    onOpenSettings={() => navigate("/settings?s=feed")}
+                    onGoToCv={() => navigate("/cv")}
+                    onChanged={reload}
+                    onOpenJob={(id) => navigate(boardTarget(id))}
+                  />
+                )}
+                {(tab === "companies" || tab === "contacts") && (
+                  <PillTabs<"companies" | "contacts">
+                    tabs={[
+                      { key: "companies", label: t("tabs.companies") },
+                      { key: "contacts", label: t("tabs.people") },
+                    ]}
+                    active={tab}
+                    onSelect={setTab}
+                    idPrefix="network"
+                    aria-label={t("tabs.network")}
+                  />
+                )}
+                {/* The panel the tablist above points at. It lives here rather
+                than inside the tab components because only the wrapper needs
+                the role — threading a prop through both of them would buy
+                nothing (#517). */}
+                {tab === "companies" && (
+                  <div
+                    role="tabpanel"
+                    id="network-panel-companies"
+                    aria-labelledby="network-tab-companies"
+                  >
+                    <CompaniesTab
+                      companies={visibleCompanies}
+                      applications={visibleApps}
+                      contacts={visibleContacts}
+                      onChanged={reload}
+                      onError={setError}
+                      notify={notify}
+                      onDelete={deleteWithUndo}
+                      initialQuery={jumpQuery}
+                      initialDetailId={detailIdFromUrl}
+                      onDetailIdChange={(id) =>
+                        navigate(id ? `/companies/${id}` : "/companies")
+                      }
+                    />
+                  </div>
+                )}
+                {tab === "contacts" && (
+                  <div
+                    role="tabpanel"
+                    id="network-panel-contacts"
+                    aria-labelledby="network-tab-contacts"
+                  >
+                    <ContactsTab
+                      contacts={visibleContacts}
+                      companies={visibleCompanies}
+                      onChanged={reload}
+                      onError={setError}
+                      notify={notify}
+                      onDelete={deleteWithUndo}
+                      initialQuery={jumpQuery}
+                      initialDetailId={detailIdFromUrl}
+                      onDetailIdChange={(id) =>
+                        navigate(id ? `/people/${id}` : "/people")
+                      }
+                    />
+                  </div>
+                )}
+                {tab === "cv" && <CVTab onError={setError} notify={notify} />}
+                {tab === "admin" && isAdmin && <AdminPage onError={setError} />}
+                {tab === "settings" && (
+                  <SettingsPage
+                    roleTypes={roleTypes}
+                    onRoleTypesChanged={reload}
+                    notify={notify}
+                  />
+                )}
+              </Suspense>
+            </ChunkBoundary>
+          )}
+        </main>
       </div>
 
       <BottomBar
         onSearch={() => setShowPalette(true)}
-        onPinned={() => navigate(boardTarget(), { state: { showPinned: true } })}
+        onPinned={() =>
+          navigate(boardTarget(), { state: { showPinned: true } })
+        }
         pinnedCount={pinnedCount}
       />
       <ConfirmHost />
