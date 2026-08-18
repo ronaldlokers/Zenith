@@ -10,6 +10,7 @@ import { registerGoalRoutes } from "./goals.js";
 import { getAuth } from "./auth.js";
 import { resetDemoData, seedSampleData, wipeUserData } from "./demo.js";
 import { deleteDocumentObjects } from "./documents.js";
+import { resolveOriginalSender } from "./forwarded-email.js";
 import { deliverDueNotifications, generateNotifications, registerNotificationRoutes } from "./notifications.js";
 import { generateWeeklyDigest } from "./digest.js";
 import { registerAiRoutes } from "./ai.js";
@@ -2582,9 +2583,8 @@ export async function logInboundEmail(
 
   // Contacts are per-user now, so the same sender address could match a
   // contact belonging to more than one user. Matching purely on address
-  // (see #179 for a real fix distinguishing the original sender) can't
-  // disambiguate that case — skip rather than guess and log against the
-  // wrong user's contact.
+  // can't disambiguate that case — skip rather than guess and log against
+  // the wrong user's contact.
   const { results: contacts } = await env.DB.prepare(
     "SELECT id, user_id, outreach_status FROM contacts WHERE lower(email) = ?",
   )
@@ -2690,6 +2690,12 @@ export default {
   },
   async email(message, env, ctx) {
     const subject = message.headers.get("subject") ?? "(no subject)";
-    ctx.waitUntil(logInboundEmail(env, message.from, subject));
+    // The envelope From is the forwarder, not the recruiter, whenever this is
+    // used the way it actually is — see worker/forwarded-email.ts (#179).
+    ctx.waitUntil(
+      resolveOriginalSender(message.raw, message.from).then((sender) =>
+        logInboundEmail(env, sender.address, subject),
+      ),
+    );
   },
 } satisfies ExportedHandler<Env>;
