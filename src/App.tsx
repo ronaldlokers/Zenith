@@ -116,10 +116,34 @@ export default function App() {
     });
   };
   const setTab = (next: Tab) => leaveGuarded(() => navigate(TAB_PATHS[next]));
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("add") !== "job") return;
+    const take = (k: string) => params.get(k)?.trim() || undefined;
+    setPrefill({
+      title: take("title"),
+      company: take("company"),
+      url: take("url"),
+    });
+    setShowQuickAdd(true);
+    // Strip the capture params, keeping any others. replace, not push: the
+    // Back button should leave the board, not step back into a dialog that
+    // has already been answered.
+    for (const k of ["add", "title", "company", "url"]) params.delete(k);
+    const rest = params.toString();
+    navigate(`${location.pathname}${rest ? `?${rest}` : ""}`, { replace: true });
+  }, [location.search, location.pathname, navigate]);
   const { data: session } = useSession();
   const sessionUser = session?.user;
   const isAdmin = sessionUser?.role === "admin";
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  // Arriving from the bookmarklet (#61): ?add=job with what the posting said
+  // about itself. Read once into state and cleared from the address bar, so a
+  // reload or a shared link does not reopen a half-filled dialog.
+  const [prefill, setPrefill] = useState<
+    { title?: string; company?: string; url?: string } | undefined
+  >();
   // Which stage a board add block opened the dialog for (#535). Every other
   // entry point leaves it unset and the dialog picks its own default.
   const [quickAddStage, setQuickAddStage] = useState<Status | undefined>();
@@ -443,10 +467,15 @@ export default function App() {
         <QuickAddDialog
           companies={visibleCompanies}
           initialStatus={quickAddStage}
-          onClose={() => setShowQuickAdd(false)}
+          prefill={prefill}
+          onClose={() => {
+            setShowQuickAdd(false);
+            setPrefill(undefined);
+          }}
           onError={setError}
           onCreated={(a, open) => {
             setShowQuickAdd(false);
+            setPrefill(undefined);
             notify(t("common.saved"));
             // Navigate on the optimistic append instead of blocking on the
             // five-endpoint reload — the page fills in as data lands.

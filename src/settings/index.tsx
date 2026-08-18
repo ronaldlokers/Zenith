@@ -16,6 +16,7 @@ import {
 import type { RoleTypeDef } from "../types";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ActionBar, Button, SettingsNav } from "../components";
+import { CaptureBookmarklet } from "./bookmarklet-section";
 import { FeedSettings } from "../feed";
 import { TimezoneField } from "./timezone-field";
 import { SettingsRow } from "./row";
@@ -466,6 +467,7 @@ export function SettingsPage({
         )}
         {section === "integrations" && session && (
           <div className="account-section">
+            <CaptureBookmarklet />
             <PublicApiSettings onError={setApiError} />
             <NotificationSettings />
           </div>

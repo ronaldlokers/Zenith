@@ -80,6 +80,12 @@
     "confirm": "Bevestigen",
     "open": "Openen"
   },
+  "capture": {
+    "title": "Voeg een vacature toe vanaf de pagina waar je bent",
+    "hint": "Sleep deze link naar je bladwijzerbalk. Klik erop bij een vacature: Zenith opent met de titel, het bedrijf en het adres al ingevuld, en jij bevestigt voordat er iets wordt opgeslagen.",
+    "linkLabel": "Aan Zenith toevoegen",
+    "privacy": "De bladwijzer leest alleen wat de pagina zelf al publiceert. Er wordt niets vanaf de vacaturesite verstuurd en er gaat geen sleutel of wachtwoord mee."
+  },
   "savedViews": {
     "namePrompt": "Naam voor deze weergave",
     "saved": "Weergave “{{name}}” opgeslagen",

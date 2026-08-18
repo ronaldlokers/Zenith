@@ -57,6 +57,12 @@ function takeDraft(): Draft | null {
 
 export interface QuickAddDialogProps {
   companies: Company[];
+  /**
+   * Values captured from a job posting (#61), which win over a restored
+   * draft: someone arriving from the bookmarklet is adding the job they were
+   * just looking at, not resuming an older one.
+   */
+  prefill?: { title?: string; company?: string; url?: string };
   // The stage to open on. The board's add block sets it to its own column;
   // everything else leaves it unset and gets "interested".
   initialStatus?: Status;
@@ -67,18 +73,28 @@ export interface QuickAddDialogProps {
 
 export function QuickAddDialog({
   companies,
+  prefill,
   initialStatus,
   onClose,
   onCreated,
   onError,
 }: QuickAddDialogProps) {
   const { t } = useTranslation();
-  const [restored] = useState(takeDraft);
-  const [title, setTitle] = useState(restored?.title ?? "");
-  const [companyId, setCompanyId] = useState<number | null>(
-    restored?.companyId ?? null,
-  );
-  const [url, setUrl] = useState(restored?.url ?? "");
+  const [restored] = useState(() => (prefill ? null : takeDraft()));
+  const [title, setTitle] = useState(prefill?.title ?? restored?.title ?? "");
+  const [companyId, setCompanyId] = useState<number | null>(() => {
+    if (prefill?.company) {
+      // Matched by name rather than created: a captured site name is a guess,
+      // and quietly minting a company from it would leave the list full of
+      // near-duplicates nobody chose to add.
+      const hit = companies.find(
+        (c) => c.name.toLowerCase() === prefill.company!.trim().toLowerCase(),
+      );
+      return hit?.id ?? null;
+    }
+    return restored?.companyId ?? null;
+  });
+  const [url, setUrl] = useState(prefill?.url ?? restored?.url ?? "");
   // The board's add block opens this against the column it sits in, so what
   // you add lands where you asked for it (#535).
   const [status, setStatus] = useState<Status>(
