@@ -1000,6 +1000,11 @@
   }
 }
 
+/* .subnav moved to the owned PillTabs component (src/components/PillTabs.css).
+   Its `margin: 0.25rem 0 0.9rem` went with it: that is call-site spacing
+   inherited from this band rather than a decision about the control, so a
+   future reader may legitimately move it back out to the call site. */
+
 /* The primary actions sit on the plate, below the card — they act on the
    application the card describes, so they belong to its mount rather than to
    its contents. */

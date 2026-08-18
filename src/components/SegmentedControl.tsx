@@ -35,7 +35,18 @@ export function SegmentedControl({
   );
 }
 
-export interface SegmentedItemProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+/**
+ * Everything a button takes except the two this component owns.
+ *
+ * `aria-pressed` is derived from `active`, and `type` defaults to "button" so
+ * an Item inside a form cannot submit it by accident. Both were already
+ * unwinnable at runtime — `...rest` is spread before the derived attributes,
+ * so a caller's value is overwritten — but the type still advertised them as
+ * settable, which is a contract that disagrees with the behaviour. A caller
+ * reading the type would reasonably expect passing them to do something.
+ */
+export interface SegmentedItemProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "aria-pressed"> {
   /** Selected state — drives both the styling hook and aria-pressed. */
   active: boolean;
 }
