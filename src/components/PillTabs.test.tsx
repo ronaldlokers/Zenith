@@ -15,16 +15,27 @@ describe("PillTabs", () => {
     expect(screen.getByRole("tab", { name: "People" })).toHaveAttribute("aria-selected", "false");
   });
 
-  test("wires each tab to its panel when panel ids exist", () => {
+  // Every tab keeps its own id, because the panel labels itself with the
+  // active one. Only the active tab points back at a panel: the caller
+  // renders that one and no other (#517).
+  test("wires the active tab to its panel, and gives every tab an id", () => {
     render(<PillTabs tabs={TABS} active="companies" onSelect={() => {}} idPrefix="network" aria-label="Network" />);
-    const tab = screen.getByRole("tab", { name: "People" });
-    expect(tab).toHaveAttribute("id", "network-tab-contacts");
-    expect(tab).toHaveAttribute("aria-controls", "network-panel-contacts");
+    const inactive = screen.getByRole("tab", { name: "People" });
+    expect(inactive).toHaveAttribute("id", "network-tab-contacts");
+    expect(
+      inactive,
+      "an inactive tab points at a panel the caller does not render",
+    ).not.toHaveAttribute("aria-controls");
+    expect(screen.getByRole("tab", { name: "Companies" })).toHaveAttribute(
+      "aria-controls",
+      "network-panel-companies",
+    );
   });
 
-  // The network view renders no tabpanel, so without idPrefix the component
-  // must emit no aria-controls at all — an aria-controls pointing at an id
-  // that does not exist is a worse defect than the missing association.
+  // A caller that renders no tabpanel passes no idPrefix, and the component
+  // emits no aria-controls at all — pointing at an id that does not exist is
+  // a worse defect than the missing association. (The network view does
+  // render one now, but the option stays for callers that do not.)
   test("omits aria-controls when no idPrefix is given", () => {
     render(<PillTabs tabs={TABS} active="companies" onSelect={() => {}} aria-label="Network" />);
     const tab = screen.getByRole("tab", { name: "People" });
