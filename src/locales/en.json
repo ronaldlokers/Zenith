@@ -80,6 +80,12 @@
     "confirm": "Confirm",
     "open": "Open"
   },
+  "capture": {
+    "title": "Add a job from the page you are on",
+    "hint": "Drag this link to your bookmarks bar. On a job posting, click it: Zenith opens with the title, company and address already filled in, and you confirm before anything is saved.",
+    "linkLabel": "Add to Zenith",
+    "privacy": "The bookmark reads only what the page already publishes about itself. Nothing is sent from the job site, and it carries no key or password."
+  },
   "savedViews": {
     "namePrompt": "Name this view",
     "saved": "Saved view “{{name}}”",

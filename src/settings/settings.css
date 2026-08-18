@@ -259,3 +259,16 @@
     justify-self: start;
   }
 }
+
+/* The capture bookmarklet is dragged, not clicked, so it reads as a chip you
+   can pick up rather than as a control that does something here. */
+.capture-bookmarklet {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: grab;
+}
