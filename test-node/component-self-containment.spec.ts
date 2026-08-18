@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, it } from "vitest";
 
 // A component that borrows a class from App.css renders differently in
 // Storybook (which loads no App.css) than in the app — the catalog then
@@ -102,13 +102,28 @@ function stripComments(src: string): string {
 
 // ---- CSS side: which classes a stylesheet defines ------------------------
 
+/**
+ * CSS block comments only.
+ *
+ * The scanner above strips `//` too, which is right for TypeScript and wrong
+ * here: `//` starts no comment in CSS, so a stylesheet containing
+ * `url(https://example.com/f.woff2)` had everything after the scheme's
+ * slashes eaten, taking any class named later on that line with it. Latent —
+ * no stylesheet has such a URL today — and it fails toward reporting a
+ * violation that is not there, which is the safe direction but still a lost
+ * afternoon for whoever adds the first web font.
+ */
+function stripCssComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, " ");
+}
+
 export function classesIn(css: string): Set<string> {
   // Matches a class token wherever it appears in a selector, including
   // inside a compound (`.a.b`) or descendant (`.a > button.b`) selector —
   // the class counts as defined even though no rule targets it standalone
   // (Documents.css's `.zui-btn.zui-btn--danger.tl-del` is exactly this).
   return new Set(
-    [...stripComments(css).matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]),
+    [...stripCssComments(css).matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]),
   );
 }
 
@@ -352,5 +367,33 @@ describe("classesIn", () => {
     expect(classesIn(".zui-btn.zui-btn--danger.tl-del { color: red; }")).toEqual(
       new Set(["zui-btn", "zui-btn--danger", "tl-del"]),
     );
+  });
+});
+
+describe("the stylesheet scanner", () => {
+  it("keeps the classes on a line that also holds a URL", () => {
+    // The reason CSS gets its own comment stripper: // is not a comment here.
+    // Reusing the TypeScript one ate everything after the scheme's slashes,
+    // and any class named later on that line went with it.
+    // On one line with the URL, which is the whole point: // eats to the end
+    // of the line, so a fixture that puts the class underneath survives the
+    // bug and passes either way. This one failed to reproduce it at first.
+    const css = `@font-face { src: url(https://example.com/geist.woff2); } .zui-thing-after-a-url { color: red; }`;
+    expect(
+      classesIn(css).has("zui-thing-after-a-url"),
+      "a class defined after a URL was swallowed by the comment stripper",
+    ).toBe(true);
+  });
+
+  it("still ignores a class named only inside a block comment", () => {
+    // The other direction: block comments are real in CSS and a class named
+    // in one is not defined by it.
+    const css = `/* .zui-only-mentioned {} */ .zui-real {}`;
+    const found = classesIn(css);
+    expect(found.has("zui-real")).toBe(true);
+    expect(
+      found.has("zui-only-mentioned"),
+      "a class mentioned in a comment counted as defined",
+    ).toBe(false);
   });
 });
