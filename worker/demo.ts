@@ -231,10 +231,16 @@ export async function seedSampleData(
   )
     .bind(userId, globex!.id)
     .first<{ id: number }>();
+  // The full trail, matching what historyFor() gives every bulk application
+  // below — including its terminal ones, where it spells out
+  // interested → applied → ghosted. This example used to land on 'ghosted'
+  // from nowhere, which is not a search anyone could have run: it is the one
+  // status you can only arrive at by having applied and heard nothing.
   await env.DB.prepare(
-    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, NULL, 'ghosted')`,
+    `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES
+     (?, ?, NULL, 'interested'), (?, ?, 'interested', 'applied'), (?, ?, 'applied', 'ghosted')`,
   )
-    .bind(ghosted!.id, userId)
+    .bind(ghosted!.id, userId, ghosted!.id, userId, ghosted!.id, userId)
     .run();
 
   // --- Bulk applications scattered (unevenly) across every stage so the
