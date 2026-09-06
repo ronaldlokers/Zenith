@@ -34,6 +34,7 @@ privacy-respecting web app: no analytics, no tracking, invite-only.
 - **Calendar feed** (`/calendar/:token`) — subscribe to follow-ups and interviews as ICS.
 - **REST API** (`/api/v1`, Bearer key; RFC 9457 problem details on errors, `Link` + `X-Total-Count` on collections) — reads applications and your contact details, plus one narrow write, `POST /applications`, which is how the browser extension saves a posting. Treat a key as able to add to your pipeline, not just read it. Also **outbound webhooks** (HMAC-signed `X-Zenith-Signature`) on status changes.
 - **Web push** notifications for due follow-ups, stale postings, and new feed matches.
+- **Inbound email** — forward a recruiter's mail to an address you route at the Worker and it is logged as an interaction on that contact's timeline. Off until you set it up: it needs Cloudflare Email Routing pointed at the Worker, which is a dashboard step rather than anything in `wrangler.jsonc` (see [SELF_HOSTING.md](SELF_HOSTING.md#7-inbound-email-optional)).
 
 **Accounts**
 - Better Auth email/password, two-factor (TOTP), an admin console with invites, JSON/CSV data export, and one-click sample data.

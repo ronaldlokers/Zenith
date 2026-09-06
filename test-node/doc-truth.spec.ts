@@ -46,6 +46,26 @@ describe("the docs describe the app that exists", () => {
     expect(offenders, "light-only is locked; these docs still offer a theme choice").toEqual([]);
   });
 
+  it("documents the infrastructure an exported handler needs", () => {
+    // A secret at least has a name a self-hoster can search for. The email()
+    // handler has nothing: it is enabled entirely from the Cloudflare
+    // dashboard, appears nowhere in wrangler.jsonc, and fires only if someone
+    // has pointed Email Routing at the Worker. Neither README nor
+    // SELF_HOSTING.md mentioned Email Routing at all, so a shipped feature —
+    // forward a recruiter's mail, get the interaction logged — was
+    // undiscoverable and unenablable from the docs.
+    //
+    // Same for scheduled(): the crons live in wrangler.jsonc, but what they do
+    // and what they need is not something a triggers array explains.
+    const index = readFileSync(join(ROOT, "worker/index.ts"), "utf8");
+    if (!/async email\(/.test(index)) return;
+    const selfHosting = read("SELF_HOSTING.md");
+    expect(
+      /email routing/i.test(selfHosting),
+      "the worker exports an email() handler and SELF_HOSTING.md never says how to point mail at it",
+    ).toBe(true);
+  });
+
   it("documents every secret the worker reads", () => {
     // A missing secret is silent by design here — each feature degrades
     // rather than erroring — so the only symptom is a self-hoster whose
