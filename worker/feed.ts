@@ -410,6 +410,35 @@ export function feedPageSql(cursorClause: string): string {
        LIMIT ?`;
 }
 
+// feed_items was insert-only. refreshFeed batch-inserts every candidate every
+// six hours with ON CONFLICT DO NOTHING, and nothing anywhere deleted from it.
+// That is not only wasted space: the nightly backup has to serialise the whole
+// database into one JS object inside a 128 MB Worker, so a table that grows
+// without bound eventually stops the backup working.
+//
+// Sixty days on fetched_at — when Zenith saw the posting, not when the source
+// claims it was published, since posted_at is optional and whatever the board
+// felt like reporting. A two-month-old listing is not a lead any more.
+export const FEED_ITEM_RETENTION_DAYS = 60;
+
+// A feed_item_status row is the user's opinion about a posting — saved, or
+// dismissed — and since #689 those rows travel in their export. Pruning the
+// posting out from under one would leave the export holding a verdict about a
+// job that no longer exists, so anything acted on stays regardless of age.
+export async function pruneFeedItems(env: Env): Promise<{ removed: number }> {
+  const res = await env.DB.prepare(
+    `DELETE FROM feed_items
+      WHERE fetched_at < datetime('now', ?)
+        AND NOT EXISTS (
+          SELECT 1 FROM feed_item_status
+           WHERE feed_item_status.feed_item_id = feed_items.id
+        )`,
+  )
+    .bind(`-${FEED_ITEM_RETENTION_DAYS} days`)
+    .run();
+  return { removed: res.meta.changes ?? 0 };
+}
+
 export function registerFeedRoutes(app: Hono<AppEnv>) {
   app.get("/api/feed", async (c) => {
     const userId = c.get("userId");
