@@ -5,6 +5,7 @@ import { pruneFeedItems, refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { recordCronRun } from "./cron-log.js";
 import { pruneAuthRows } from "./retention.js";
+import { attachDocumentBytes } from "./export-documents.js";
 import { BACKUP_RETENTION_DAYS } from "../src/backup-policy.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
@@ -1294,7 +1295,15 @@ async function buildUserExport(
     const { results } = await exportQuery(env, table, userId).all();
     dump[table] = results;
   }
-  return { exported_at: new Date().toISOString(), ...dump };
+  const omitted = await attachDocumentBytes(
+    env,
+    (dump.documents ?? []) as Record<string, unknown>[],
+  );
+  return {
+    exported_at: new Date().toISOString(),
+    ...dump,
+    omitted_documents: omitted,
+  };
 }
 
 app.get("/api/export", async (c) => {
