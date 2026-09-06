@@ -1,7 +1,7 @@
 // App-level controller hooks, extracted from App.tsx (shell split). These
 // own the cross-cutting data + toast state that every tab reads through
 // props; no React components here, so react-refresh stays satisfied.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import type { TFunction } from "i18next";
 import { api } from "./api";
@@ -301,17 +301,33 @@ export function useAppData(
     [refreshStats],
   );
 
-  const visibleApps = applications.filter(
-    (a) => !hidden.has(`applications:${a.id}`),
+  // Memoised because the whole app is keyed on these four. As bare filters
+  // they were a new array on every render, which made App's
+  // useMemo(..., [visibleApps]) recompute unconditionally — a memo that reads
+  // as an optimisation and never hits. Nothing downstream could skip work
+  // either, and the toast queue lives in the same component, so a toast
+  // appearing and expiring three seconds later re-rendered the whole tree
+  // twice and board.tsx redid its history aggregation both times.
+  //
+  // Correctness is unchanged: the filters were always right, just never the
+  // same object twice.
+  const visibleApps = useMemo(
+    () => applications.filter((a) => !hidden.has(`applications:${a.id}`)),
+    [applications, hidden],
   );
   // Archived applications keep contributing to Stats history but are
   // hidden from the active pipeline views (header count, Board, Next up).
-  const activeApps = visibleApps.filter((a) => !a.archived_at);
-  const visibleCompanies = companies.filter(
-    (c) => !hidden.has(`companies:${c.id}`),
+  const activeApps = useMemo(
+    () => visibleApps.filter((a) => !a.archived_at),
+    [visibleApps],
   );
-  const visibleContacts = contacts.filter(
-    (c) => !hidden.has(`contacts:${c.id}`),
+  const visibleCompanies = useMemo(
+    () => companies.filter((c) => !hidden.has(`companies:${c.id}`)),
+    [companies, hidden],
+  );
+  const visibleContacts = useMemo(
+    () => contacts.filter((c) => !hidden.has(`contacts:${c.id}`)),
+    [contacts, hidden],
   );
 
   return {
