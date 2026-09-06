@@ -7,13 +7,18 @@ import type {
   Status,
 } from "./types";
 
-export const PIPELINE: Status[] = [
-  "interested",
-  "applied",
-  "screening",
-  "interview",
-  "offer",
-];
+// PIPELINE, the SQL date parser and the momentum verdict live in their own
+// module because the Worker needs them too and cannot import this file: the
+// rest of format.ts reaches for localStorage and the PDF helper. Re-exported
+// here so every existing caller keeps its import.
+import {
+  MOMENTUM_MIN_EVENTS,
+  PIPELINE,
+  computePipelineMomentum,
+  parseSqlDate,
+} from "./momentum";
+export { MOMENTUM_MIN_EVENTS, PIPELINE, computePipelineMomentum, parseSqlDate };
+
 
 // Rails on the board (#535 shell): the eight stages in pipeline order, plus
 // the manual archive at the end. Archiving is a flag rather than a status,
@@ -319,9 +324,6 @@ export function sortCards(
   return copy;
 }
 
-export function parseSqlDate(d: string): number {
-  return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
-}
 
 export function median(nums: number[]): number | null {
   if (!nums.length) return null;
@@ -465,47 +467,6 @@ export function totalCompBreakdown(a: Application): string {
 // Forward stage advances in the last 2 weeks vs the two before — the
 // "speeding up / slowing down" verdict shared by the dashboard band and
 // the detailed Stats view (#346).
-// Six forward moves across four weeks — roughly one a week — is the least
-// that makes a fortnight-over-fortnight ratio mean anything here.
-export const MOMENTUM_MIN_EVENTS = 6;
-
-export function computePipelineMomentum(history: { from_status: string | null; to_status: string; changed_at: string }[]) {
-  const now = Date.now();
-  const P = 14 * 86400000;
-  const fwd = (r: { from_status: string | null; to_status: string }) => {
-    const to = PIPELINE.indexOf(r.to_status as Status);
-    const from = r.from_status ? PIPELINE.indexOf(r.from_status as Status) : -1;
-    return to >= 0 && to > from;
-  };
-  const recent = history.filter(
-    (h) => fwd(h) && parseSqlDate(h.changed_at) >= now - P,
-  ).length;
-  const prior = history.filter(
-    (h) =>
-      fwd(h) &&
-      parseSqlDate(h.changed_at) >= now - 2 * P &&
-      parseSqlDate(h.changed_at) < now - P,
-  ).length;
-  let verdict: "up" | "down" | "flat" | "none" | "early";
-  if (recent === 0 && prior === 0) verdict = "none";
-  // Below this many events in the window, a ratio is noise wearing a
-  // verdict's clothes. Two fortnights of one or two stage advances is what a
-  // normal search looks like — and at prior = 1, a single extra move reads
-  // as +100% "speeding up" while one fewer reads as a collapse. The old code
-  // called prior === 0 with any recent movement "speeding up", which is the
-  // most confident thing this function could say off the least evidence.
-  //
-  // A job hunt is mostly flat by nature and mostly read on a bad day, so the
-  // default has to be silence until the signal clears the noise rather than
-  // a grade computed from a delta of one.
-  else if (recent + prior < MOMENTUM_MIN_EVENTS) verdict = "early";
-  else if (prior === 0) verdict = "up";
-  else {
-    const change = (recent - prior) / prior;
-    verdict = change > 0.15 ? "up" : change < -0.15 ? "down" : "flat";
-  }
-  return { verdict, recent, prior };
-}
 
 // Median days from the "applied" transition to "offer", per application
 // that reached offer (#346, lifted from the Stats computation).
