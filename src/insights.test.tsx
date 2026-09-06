@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { InsightsTab } from "./insights";
-import type { Application, Stats } from "./types";
+import type { Application, Stats, Status } from "./types";
 
 const listed: Record<string, unknown[]> = { skills: [], "work-experience": [] };
 
@@ -212,5 +212,36 @@ describe("the where-they-came-from block", () => {
     const extensionRow = screen.getByText("Browser extension").closest("li")!;
     expect(within(extensionRow).getByText("too few to rate")).toBeTruthy();
     expect(within(extensionRow).queryByText(/%/)).toBeNull();
+  });
+});
+
+// README and PRODUCT.md both name ghost rate as a shipped Insights metric.
+// Nothing computed it: "ghosted" was a status, a one-tap action and a bucket
+// of outcome labels, never a fraction.
+describe("the ghost rate", () => {
+  const ended = (id: number, to: Status, reason?: string) =>
+    ({
+      application_id: id,
+      from_status: "applied",
+      to_status: to,
+      changed_at: day(5),
+      ...(reason ? { outcome_reason: reason } : {}),
+    }) as ReturnType<typeof h>;
+
+  it("states the share of finished applications that went silent", () => {
+    renderWith([
+      ended(1, "ghosted" as Status),
+      ended(2, "ghosted" as Status),
+      ended(3, "rejected" as Status, "after_interview"),
+      ended(4, "withdrawn" as Status, "comp_too_low"),
+    ]);
+    expect(screen.getByText(/50% of the applications that ended went silent/i)).toBeTruthy();
+    expect(screen.getByText(/2 of 4/)).toBeTruthy();
+  });
+
+  it("declines to give a percentage off too few finished applications", () => {
+    renderWith([ended(1, "ghosted" as Status)]);
+    expect(screen.getByText(/needs 3 finished applications/i)).toBeTruthy();
+    expect(screen.queryByText(/100%/)).toBeNull();
   });
 });

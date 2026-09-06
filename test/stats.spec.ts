@@ -6,6 +6,7 @@ import {
   responseTime,
   median,
   outcomeBreakdown,
+  ghostRate,
   originBreakdown,
   originChannel,
 } from "../src/stats";
@@ -445,5 +446,85 @@ describe("originBreakdown", () => {
 
   it("returns nothing for an account with no applications", () => {
     expect(originBreakdown([], [])).toEqual([]);
+  });
+});
+
+// README and PRODUCT.md have both named ghost rate as a shipped Insights
+// metric since the stats work landed, and nothing computed it. "ghosted"
+// existed as a status, a one-tap action and a bucket of outcome labels —
+// never as a fraction.
+describe("ghostRate", () => {
+  const end = (
+    application_id: number,
+    to_status: Status,
+    changed_at: string,
+  ): StatusHistoryRow => ({
+    application_id,
+    from_status: "applied",
+    to_status,
+    changed_at,
+  });
+
+  it("is the share of ENDED applications that ended in silence", () => {
+    const g = ghostRate([
+      end(1, "ghosted", "2026-02-01 00:00:00"),
+      end(2, "ghosted", "2026-02-02 00:00:00"),
+      end(3, "rejected", "2026-02-03 00:00:00"),
+      end(4, "withdrawn", "2026-02-04 00:00:00"),
+    ]);
+    expect(g.closed).toBe(4);
+    expect(g.ghosted).toBe(2);
+    expect(g.rate).toBe(0.5);
+  });
+
+  it("leaves applications that are still open out of the denominator", () => {
+    // The censoring point responseTime spells out: an application nobody has
+    // answered yet is not a ghost, it is an unfinished measurement. Counting
+    // it as "not ghosted" understates the rate in exact proportion to how
+    // much of the search is still in flight.
+    const g = ghostRate([
+      ...HISTORY, // four applications, none of them closed
+      end(9, "ghosted", "2026-02-01 00:00:00"),
+      end(10, "ghosted", "2026-02-02 00:00:00"),
+      end(11, "rejected", "2026-02-03 00:00:00"),
+    ]);
+    expect(g.closed, "an open application is not a closed one").toBe(3);
+    expect(g.ghosted).toBe(2);
+    expect(g.rate).toBeCloseTo(2 / 3);
+  });
+
+  it("counts the status the user chose, not a rejection that reads like one", () => {
+    // rejected/no_response is silence too, but the user picked "rejected".
+    // Reclassifying it here would make this disagree with the outcome
+    // breakdown drawn beside it.
+    const g = ghostRate([
+      { application_id: 1, from_status: "applied", to_status: "rejected", changed_at: "2026-02-01 00:00:00", outcome_reason: "no_response" },
+      { application_id: 2, from_status: "applied", to_status: "rejected", changed_at: "2026-02-02 00:00:00", outcome_reason: "no_response" },
+      { application_id: 3, from_status: "applied", to_status: "ghosted", changed_at: "2026-02-03 00:00:00" },
+    ]);
+    expect(g.closed).toBe(3);
+    expect(g.ghosted, "a rejection is not reclassified as a ghost").toBe(1);
+  });
+
+  it("follows an application that was reopened and closed again", () => {
+    // Only the last row counts: ghosted, then reopened to screening, then
+    // rejected, is a rejection.
+    const g = ghostRate([
+      end(1, "ghosted", "2026-02-01 00:00:00"),
+      end(1, "screening", "2026-02-05 00:00:00"),
+      end(1, "rejected", "2026-02-09 00:00:00"),
+      end(2, "ghosted", "2026-02-02 00:00:00"),
+      end(3, "ghosted", "2026-02-03 00:00:00"),
+    ]);
+    expect(g.closed).toBe(3);
+    expect(g.ghosted).toBe(2);
+  });
+
+  it("refuses a rate below the floor, and says nothing at zero", () => {
+    const few = ghostRate([end(1, "ghosted", "2026-02-01 00:00:00")]);
+    expect(few.closed).toBe(1);
+    expect(few.rate, "100% off one ended application is not a rate").toBeNull();
+    const none = ghostRate([]);
+    expect(none).toEqual({ closed: 0, ghosted: 0, rate: null });
   });
 });

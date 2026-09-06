@@ -1025,7 +1025,9 @@
     "originSent_one": "{{count}} sent",
     "originSent_other": "{{count}} sent",
     "originRate": "{{pct}}% replied",
-    "originTooFew": "too few to rate"
+    "originTooFew": "too few to rate",
+    "ghostRate": "{{pct}}% of the applications that ended went silent — {{ghosted}} of {{closed}}.",
+    "ghostRateTooFew": "Ghost rate needs {{count}} finished applications before it means anything."
   },
   "export": {
     "applications": "Applications",
