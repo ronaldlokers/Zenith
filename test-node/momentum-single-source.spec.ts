@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // The share page's momentum verdict was a second implementation of the same
@@ -10,17 +10,25 @@ import { describe, expect, it } from "vitest";
 // pass every behavioural test on the day it was written and diverge the next
 // time the rule moves, which is exactly how the first one got there.
 const ROOT = new URL("..", import.meta.url).pathname;
-const WORKER = readFileSync(`${ROOT}worker/index.ts`, "utf8");
+// Every worker file, not index.ts alone. The share page moved to
+// worker/share.ts in #100 and this guard failed — correctly, but for the wrong
+// reason: it was pinning where the call lives rather than that there is only
+// one implementation. Reading the whole directory says what it means and
+// survives the next move.
+const WORKER = readdirSync(`${ROOT}worker`)
+  .filter((f) => f.endsWith(".ts"))
+  .map((f) => readFileSync(`${ROOT}worker/${f}`, "utf8"))
+  .join("\n");
 
 describe("the momentum rule", () => {
-  it("is called by the worker rather than reimplemented in it", () => {
+  it("is called by the worker rather than reimplemented anywhere in it", () => {
     expect(WORKER).toContain("computePipelineMomentum");
   });
 
   it("has no second ratio living in the worker", () => {
     expect(
       /\(\s*recent\w*\s*-\s*prior\w*\s*\)\s*\/\s*prior/i.test(WORKER),
-      "worker/index.ts computes its own momentum ratio again",
+      "a worker file computes its own momentum ratio again",
     ).toBe(false);
   });
 
