@@ -49,6 +49,86 @@ async function addApplication(page: Page, title: string) {
   return title;
 }
 
+describe("the admin user list", () => {
+  it("groups each account's actions with that account", async () => {
+    // "Remove" deletes an account. The buttons carry per-user aria-labels, so
+    // the screen-reader path was already unambiguous — the visual one was not:
+    // measured, the gap from a name to its own actions was 8px and from those
+    // actions to the *next* name 6px, so by proximity the destructive control
+    // grouped with the account it would not delete.
+    //
+    // Asserted as a comparison rather than against fixed numbers: what matters
+    // is that a row holds together more tightly than rows separate, whatever
+    // the spacing scale becomes.
+    const page = await board(360);
+
+    // A second account, so there is something to confuse. Fixed address and a
+    // tolerated failure, because e2e setup does not delete users and this runs
+    // repeatedly against the same local database.
+    // Two, not one. The signed-in admin's own row has no actions — you cannot
+    // remove yourself — so with a single invitee the only adjacent pair is
+    // (self, other) and there is nothing to compare. The first version made
+    // one account and measured nothing; it passed locally, where earlier runs
+    // had left extra users behind, and failed on CI's clean database.
+    const created = await page.evaluate(async () => {
+      const make = async (n: number) => {
+        const res = await fetch("/api/auth/admin/create-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: `e2e-admin-row-${n}@example.com`,
+            password: "e2e-admin-row-password",
+            name: `E2E Admin Row ${n}`,
+          }),
+        });
+        return `${res.status} ${(await res.text()).slice(0, 120)}`;
+      };
+      return [await make(1), await make(2)].join(" | ");
+    });
+    // Not swallowed. The first version of this did `.catch(() => {})`, and on
+    // CI's fresh database the account was never made — so the measurement had
+    // one row and nothing to compare. The vacuity guard below caught it, but
+    // the failure said "no pair of rows" rather than why, which is a slower
+    // way to learn the same thing. A duplicate is fine on a re-run; anything
+    // else should say what happened.
+    // Not swallowed. The first version did `.catch(() => {})`, so a failed
+    // create surfaced only as "no pair of rows", which is a slower way to
+    // learn the same thing. A duplicate is fine on a re-run.
+    expect(created, "could not create the extra accounts").not.toMatch(/\b(4\d\d|5\d\d)\s/);
+
+    await page.goto(`${BASE}/admin`);
+    await page.waitForLoadState("networkidle");
+    await page.waitForSelector("li.admin-user .admin-user-actions");
+
+    const gaps = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll("li.admin-user")];
+      const withActions = rows.filter((r) => r.querySelector(".admin-user-actions"));
+      const intra = withActions.map((r) => {
+        const n = r.querySelector(".admin-user-id")!.getBoundingClientRect();
+        const a = r.querySelector(".admin-user-actions")!.getBoundingClientRect();
+        return a.top - n.bottom;
+      });
+      const between: number[] = [];
+      for (let i = 1; i < rows.length; i++) {
+        const prev = rows[i - 1].querySelector(".admin-user-actions");
+        if (!prev) continue;
+        between.push(
+          rows[i].querySelector(".admin-user-id")!.getBoundingClientRect().top -
+            prev.getBoundingClientRect().bottom,
+        );
+      }
+      return { intra, between, rows: rows.length };
+    });
+
+    expect(gaps.rows, "needs two accounts to be ambiguous about").toBeGreaterThan(1);
+    expect(gaps.between.length, "no pair of rows to compare").toBeGreaterThan(0);
+    expect(
+      Math.max(...gaps.intra),
+      `actions sit closer to the next account than to their own (${Math.max(...gaps.intra)} vs ${Math.min(...gaps.between)})`,
+    ).toBeLessThan(Math.min(...gaps.between));
+  });
+});
+
 describe("reflow at 320px", () => {
   it("does not make the page scroll sideways", async () => {
     // WCAG 1.4.10: content has to reflow into a 320px viewport without a

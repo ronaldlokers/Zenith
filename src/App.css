@@ -1358,16 +1358,55 @@
 /* Admin user management (#285) */
 /* Needs to outspecify `.settings-list li` (which sets align-items: center) —
    otherwise the stacked user rows render centre-aligned (#469). */
+/* Measured before changing it: the gap from a name to its own actions was
+   8px, and from those actions to the *next* user's name 6px. By proximity the
+   buttons grouped with the row below, so a destructive "Remove" sat closer to
+   the account it would not delete than to the one it would. With per-user
+   aria-labels the screen-reader path was already unambiguous; the visual one
+   was not.
+
+   Two changes, because either alone is thin. The actions tuck under their own
+   name, and a rule separates one account from the next — so the grouping is
+   stated rather than inferred from a two-pixel difference. */
 .settings-list li.admin-user {
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-list li.admin-user:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .admin-user-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/* Once there is room, the actions belong beside the account rather than under
+   it — a destructive control should not be ambiguous about its target even
+   for the moment it takes to read down. Below this they stay stacked: three
+   buttons and an email do not share a line at phone widths without one of
+   them being clipped, which is the problem this is fixing. */
+@media (min-width: 640px) {
+  .settings-list li.admin-user {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .settings-list li.admin-user .admin-user-id {
+    min-width: 0;
+  }
+
+  .admin-user-actions {
+    flex: 0 0 auto;
+  }
 }
 
 .admin-user-actions button {
