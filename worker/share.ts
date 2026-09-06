@@ -26,6 +26,24 @@ function escapeHtml(v: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// The public page's own strings. It is server-rendered outside React, so it
+// cannot reach react-i18next — and it was hard-coded English on a product
+// whose locales are kept at strict parity, on the one page most likely to be
+// opened by someone who never chose a language. Two locales, same keys, and
+// the stage labels translated rather than a CSS capitalize() of a DB slug.
+// The page is public and server-rendered outside React, so every
+// user-authored string reaching it is escaped here rather than trusted.
+//
+// This said "the display name is the only user-authored string that reaches
+// this page". It is not: the role label beside it comes from an
+// application's role_type, which is bound straight from the request body with
+// no check that it names a role type that exists — arbitrary text from the
+// account holder, and the escape on it is load-bearing rather than a second
+// line of defence. Nothing was broken, but only the string this sentence
+// named had a test, which is the state a refactor quietly removes an escape
+// from. The CSP would stop an injected <script> executing,
+// but markup injection into the document is not something to leave to a second
+// line of defence.
 // Exported so test-node/locale-parity.spec.ts can hold it to the same rule as
 // src/locales. It is a second translation table, and it was outside the gate.
 export const SHARE_STRINGS = {

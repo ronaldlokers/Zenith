@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // An uploaded document's content type comes from whoever uploaded it, so the
@@ -15,7 +15,15 @@ import { describe, expect, it } from "vitest";
 // as the cheap tripwire for the route losing the header altogether, and now
 // has to follow one indirection: the value is built by contentDisposition(),
 // so the literal no longer sits in the route.
-const SRC = readFileSync(new URL("../worker/index.ts", import.meta.url), "utf8");
+// Every worker file, not index.ts alone. The download route moved to
+// worker/documents.ts in #93 and this broke — the fifth guard in this repo
+// anchored to a filename rather than to the thing it checks. What it needs is
+// the route, wherever the route lives.
+const WORKER_DIR = new URL("../worker/", import.meta.url);
+const SRC = readdirSync(WORKER_DIR)
+  .filter((f) => f.endsWith(".ts"))
+  .map((f) => readFileSync(new URL(f, WORKER_DIR), "utf8"))
+  .join("\n");
 
 describe("document download", () => {
   it("serves uploads as attachments", () => {
