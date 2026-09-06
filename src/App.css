@@ -4283,6 +4283,23 @@ summary.bcol-head::after {
     flex: 0 0 auto;
   }
 
+  /* The "Moved this week" rows (ul.today-rows.today-moved) render the company name as bare text, with no
+     .side-co-name child for the ellipsis above to act on — so the nowrap set
+     there had nothing to truncate and the name simply ran past the viewport.
+     Measured at 320px: span.side-co scrollWidth 364 in a 257px box, which put
+     the whole document at 395 and failed WCAG 1.4.10 Reflow on the default
+     landing screen.
+     Wrapping rather than truncating: these rows have the vertical room, and a
+     company name is worth reading in full when it is the only thing
+     identifying the application. overflow-wrap: anywhere for the case the
+     name has no spaces to break on. */
+  .today-moved .side-co {
+    display: block;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .today-rows li {
     grid-template-columns: minmax(0, 1fr);
     row-gap: var(--space-2);

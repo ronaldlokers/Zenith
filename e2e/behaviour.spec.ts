@@ -49,6 +49,69 @@ async function addApplication(page: Page, title: string) {
   return title;
 }
 
+describe("reflow at 320px", () => {
+  it("does not make the page scroll sideways", async () => {
+    // WCAG 1.4.10: content has to reflow into a 320px viewport without a
+    // horizontal scrollbar — that width is 1280px at 400% zoom, which is how
+    // someone who needs large text actually reads this.
+    //
+    // The dashboard failed it. A company name in the "Moved this week" list
+    // inherited `white-space: nowrap` from the rule that truncates the *other*
+    // rows, but those rows wrap their name in a .side-co-name child for the
+    // ellipsis to act on and these render bare text — so there was nothing to
+    // truncate and the name ran straight past the viewport: span.side-co
+    // scrollWidth 364 in a 257px box, document at 395.
+    //
+    // Asserted on the document rather than per element on purpose. The board's
+    // stage strip is a deliberate horizontal scroller and its own scrollWidth
+    // exceeds its width by design; what must never happen is the *page*
+    // scrolling sideways.
+    const page = await board(320);
+
+    // Seeded here, not assumed. The name that first exposed this was left in
+    // the local database by an earlier run; e2e setup deletes E2E rows, so a
+    // test relying on it passes with the fix removed — which is exactly what
+    // the first version of this did.
+    await page.evaluate(async () => {
+      const post = (url: string, body: unknown) =>
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }).then((r) => r.json());
+      const company = (await post("/api/companies", {
+        name: "E2E Interminably Long Talent Partners International Consolidated",
+      })) as { id: number };
+      const app = (await post("/api/applications", {
+        title: "E2E Reflow Target",
+        company_id: company.id,
+        status: "interested",
+      })) as { id: number };
+      // A status change is what puts the row in "Moved this week", which is
+      // the list whose company name did not wrap.
+      await fetch(`/api/applications/${app.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "applied" }),
+      });
+    });
+
+    for (const route of ["/", "/board", "/cv", "/insights"]) {
+      await page.goto(`${BASE}${route}`);
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(400);
+      const size = await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+      }));
+      expect(
+        size.scroll,
+        `${route} scrolls sideways at 320px (${size.scroll} > ${size.client})`,
+      ).toBeLessThanOrEqual(size.client + 1);
+    }
+  });
+});
+
 describe("the job title the detail pane focuses", () => {
   it("is not ringed like an editable field", async () => {
     // The two paths that actually paint one. Chromium's :focus-visible
