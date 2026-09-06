@@ -1,0 +1,50 @@
+# Scheduled dependency PRs. Before this, every bump was a manual decision with
+# nothing to prompt it — fine for a hobby project, and a real gap for something
+# meant to be a polished public product, where a security patch should not wait
+# for someone to notice it.
+#
+# READ THIS BEFORE MERGING A WRANGLER BUMP.
+#
+# worker-configuration.d.ts is generated, committed, and records the workerd
+# version it came from. Any bump to wrangler makes it stale, and CI's
+# `wrangler types --check` fails — which is the gate working, not a broken PR.
+# The fix is one command on the branch:
+#
+#     npx wrangler types && git commit -am "chore: regenerate worker types"
+#
+# Without that note this automation would open a PR with an unexplained red
+# check that nobody knows how to finish.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Everything that is not a major, in one PR. On a solo project a bot that
+    # opens fifteen separate PRs a week gets muted, and a muted bot is worse
+    # than none — it looks like coverage that is not there.
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    # Majors stay separate and unbatched: react, vite, typescript and wrangler
+    # majors each want reading, and grouping them hides which one broke the
+    # build.
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # The workflows pin actions/checkout@v4, actions/setup-node@v4 and
+    # actions/github-script@v7 by major, so they drift silently and nothing
+    # else in the repo would ever notice.
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore"
