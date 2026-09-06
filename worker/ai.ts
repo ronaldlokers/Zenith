@@ -128,15 +128,66 @@ async function anthropicMessages(
 // Cheap auth check: /v1/models returns 200 for a valid key, 401 otherwise, and
 // bills no tokens. Fixed host, so the url-guard (SSRF for user-supplied URLs)
 // doesn't apply.
-async function validateAnthropicKey(apiKey: string): Promise<boolean> {
+// What went wrong upstream, as something the reader can act on. Every failure
+// but a 401 used to collapse into "the AI request failed", which is three
+// different instructions wearing one coat: wait, top up, or replace the key.
+// Worse in the other direction too — validateAnthropicKey treated any non-2xx
+// as a bad key, so saving a perfectly good one during a transient rate limit
+// answered "that API key was rejected by Anthropic" and sent people off to
+// regenerate a key that was never broken.
+export type AiFailure =
+  | "rejected"
+  | "rate_limited"
+  | "no_credit"
+  | "upstream"
+  | "failed";
+
+export async function classifyAiFailure(res: Response): Promise<AiFailure> {
+  if (res.status === 401 || res.status === 403) return "rejected";
+  if (res.status === 429) return "rate_limited";
+  if (res.status >= 500) return "upstream";
+  if (res.status === 400) {
+    // Out of credit arrives as a 400 whose message names the balance. The
+    // error *type* is invalid_request_error either way, so the type alone
+    // cannot tell an empty account from a malformed request — the message is
+    // the only thing that separates them.
+    const body = await res
+      .clone()
+      .text()
+      .catch(() => "");
+    if (/credit balance|insufficient|billing/i.test(body)) return "no_credit";
+  }
+  return "failed";
+}
+
+const AI_FAILURE_MESSAGE: Record<AiFailure, string> = {
+  rejected: "Anthropic rejected that API key — check it or create a new one",
+  rate_limited:
+    "Anthropic is rate-limiting this key right now — wait a moment and try again",
+  no_credit:
+    "your Anthropic account is out of credit — top it up and try again",
+  upstream: "Anthropic is having trouble right now — try again shortly",
+  failed: "the AI request failed",
+};
+
+export async function aiRequestError(res: Response): Promise<Error> {
+  return new Error(AI_FAILURE_MESSAGE[await classifyAiFailure(res)]);
+}
+
+async function validateAnthropicKey(
+  apiKey: string,
+): Promise<{ ok: true } | { ok: false; failure: AiFailure }> {
   try {
     const res = await fetch("https://api.anthropic.com/v1/models", {
       headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
       signal: AbortSignal.timeout(KEY_CHECK_TIMEOUT_MS),
     });
-    return res.ok;
+    if (res.ok) return { ok: true };
+    return { ok: false, failure: await classifyAiFailure(res) };
   } catch {
-    return false;
+    // A timeout or a DNS failure says nothing about the key, so it must not
+    // be reported as one.
+    return { ok: false, failure: "upstream" };
   }
 }
 
@@ -211,13 +262,7 @@ ${JSON.stringify(
     max_tokens: 2048,
     messages: [{ role: "user", content: prompt }],
   });
-  if (!res.ok) {
-    throw new Error(
-      res.status === 401
-        ? "your Anthropic key was rejected"
-        : "the AI request failed",
-    );
-  }
+  if (!res.ok) throw await aiRequestError(res);
   const data = await res.json<{ content: { type: string; text?: string }[] }>();
   const text = data.content?.find((b) => b.type === "text")?.text ?? "";
   const parsed = extractJson(text) as Partial<TailorResult>;
@@ -282,13 +327,7 @@ ${JSON.stringify(
     max_tokens: 1536,
     messages: [{ role: "user", content: prompt }],
   });
-  if (!res.ok) {
-    throw new Error(
-      res.status === 401
-        ? "your Anthropic key was rejected"
-        : "the AI request failed",
-    );
-  }
+  if (!res.ok) throw await aiRequestError(res);
   const data = await res.json<{ content: { type: string; text?: string }[] }>();
   const text = data.content?.find((b) => b.type === "text")?.text ?? "";
   const parsed = extractJson(text) as Partial<LinkedinResult>;
@@ -359,13 +398,7 @@ async function callClaudeChat(
     system,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   });
-  if (!res.ok) {
-    throw new Error(
-      res.status === 401
-        ? "your Anthropic key was rejected"
-        : "the AI request failed",
-    );
-  }
+  if (!res.ok) throw await aiRequestError(res);
   const data = await res.json<{ content: { type: string; text?: string }[] }>();
   return data.content?.find((b) => b.type === "text")?.text ?? "";
 }
@@ -388,8 +421,15 @@ export function registerAiRoutes(app: Hono<AppEnv>) {
     if (!apiKey || typeof apiKey !== "string") {
       return c.json({ error: "apiKey is required" }, 400);
     }
-    if (!(await validateAnthropicKey(apiKey))) {
-      return c.json({ error: "that API key was rejected by Anthropic" }, 400);
+    const check = await validateAnthropicKey(apiKey);
+    if (!check.ok) {
+      // 400 only when the key itself is the problem. A rate limit or an
+      // Anthropic outage is not the user's key being wrong, and answering 400
+      // there is what made people regenerate a working one.
+      return c.json(
+        { error: AI_FAILURE_MESSAGE[check.failure] },
+        check.failure === "rejected" ? 400 : 502,
+      );
     }
     const enc = await encryptSecret(c.env, apiKey);
     if (!enc) {
