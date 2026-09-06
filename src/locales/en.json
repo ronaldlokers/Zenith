@@ -1044,5 +1044,13 @@
     "chunkFailed": "Part of the app could not be loaded. This usually means a new version was released while you had Zenith open.",
     "chunkFailedOffline": "Part of the app could not be loaded because you are offline. It will load once you are back.",
     "staleEdit": "This application was changed somewhere else while you were editing. Nothing was lost — reload it and make your change again."
+  },
+  "extension": {
+    "title": "Browser extension",
+    "hint": "Save the job posting in your current tab straight into your pipeline, and autofill an application form from your profile.",
+    "step1": "Open chrome://extensions (or edge://extensions) and turn on Developer mode.",
+    "step2": "Choose Load unpacked and select the extension/ folder from your Zenith checkout.",
+    "step3": "Open the extension's options and set your Zenith URL and an API key.",
+    "keyHint": "The API key it asks for is the one below on this page."
   }
 }
