@@ -497,6 +497,7 @@
     "followUpFallback": "follow up",
     "setFollowUp": "Set follow-up",
     "addNote": "Add note",
+    "fitScoreAria": "Fit score {{value}} of {{max}}",
     "fitSetAria": "Set fit to {{n}}",
     "editFollowUp": "Edit follow-up",
     "editNotes": "Edit notes",

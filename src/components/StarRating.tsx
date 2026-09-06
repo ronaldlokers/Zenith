@@ -6,7 +6,7 @@ import "./StarRating.css";
 // `max` toggleable stars with roving-tabindex arrow/Home/End navigation.
 // Self-contained: no App.css class names, so it renders identically in
 // Storybook (which loads no App.css) and in the app.
-export interface StarRatingProps {
+interface StarRatingBase {
   /** Current rating. `null` means unset. */
   value: number | null;
   /** Number of stars. */
@@ -15,15 +15,32 @@ export interface StarRatingProps {
    *  `readOnly`. */
   onChange?: (next: number | null) => void;
   disabled?: boolean;
-  /** Non-interactive display (board/dashboard/detail fit score, #455) — shows
-   *  all `max` stars filled to `value`, so it reads consistently everywhere
-   *  instead of the old bare "N glyphs" spans. */
-  readOnly?: boolean;
   "aria-labelledby"?: string;
-  "aria-label"?: string;
   /** aria-label for star n; defaults to the star's number. */
   starLabel?: (n: number) => string;
 }
+
+// The read-only variant requires its own label, and the component has no
+// fallback to offer instead. It used to build one — `${value} of ${max}` — and
+// since this component is design-system-owned it knows nothing about i18next,
+// so that string stayed English in every locale. Both call sites relied on it,
+// which is how a Dutch reader came to hear "4 of 5" on every board card.
+//
+// Required rather than merely translated at the call sites: the fallback was
+// only reachable because nothing made the caller supply one, and a third call
+// site would have arrived with the same defect.
+export type StarRatingProps =
+  | (StarRatingBase & {
+      /** Non-interactive display (board/dashboard/detail fit score, #455) —
+       *  shows all `max` stars filled to `value`, so it reads consistently
+       *  everywhere instead of the old bare "N glyphs" spans. */
+      readOnly: true;
+      "aria-label": string;
+    })
+  | (StarRatingBase & {
+      readOnly?: false;
+      "aria-label"?: string;
+    });
 
 export function StarRating({
   value,
@@ -42,7 +59,7 @@ export function StarRating({
       <span
         className="zui-starrating zui-starrating--readonly"
         role="img"
-        aria-label={ariaLabel ?? `${value ?? 0} of ${max}`}
+        aria-label={ariaLabel}
       >
         {stars.map((n) => (
           <span

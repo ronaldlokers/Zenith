@@ -723,7 +723,14 @@ function NextUpPanel({
                   {a.fit_score ? (
                     <span className="fit-stars">
                       {" "}
-                      <StarRating value={a.fit_score} readOnly />
+                      <StarRating
+                        value={a.fit_score}
+                        readOnly
+                        aria-label={t("detail.fitScoreAria", {
+                          value: a.fit_score ?? 0,
+                          max: 5,
+                        })}
+                      />
                     </span>
                   ) : null}
                 </span>

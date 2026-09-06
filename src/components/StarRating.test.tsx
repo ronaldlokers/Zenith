@@ -50,10 +50,14 @@ describe("StarRating", () => {
   });
 
   test("readOnly renders a non-interactive img with all `max` stars", () => {
-    const { container } = render(<StarRating value={4} max={5} readOnly />);
+    // The label is required and comes from the caller — the component used to
+    // build "4 of 5" itself, which stayed English in every locale (#72).
+    const { container } = render(
+      <StarRating value={4} max={5} readOnly aria-label="Fit score 4 of 5" />,
+    );
     // No radios/buttons in read-only mode.
     expect(screen.queryAllByRole("radio")).toHaveLength(0);
-    const img = screen.getByRole("img", { name: "4 of 5" });
+    const img = screen.getByRole("img", { name: "Fit score 4 of 5" });
     expect(img).toBeInTheDocument();
     // All 5 stars render; 4 are "on".
     expect(container.querySelectorAll(".zui-star")).toHaveLength(5);
