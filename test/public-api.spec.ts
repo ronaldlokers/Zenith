@@ -1,4 +1,4 @@
-import { SELF } from "cloudflare:test";
+import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
 
@@ -409,5 +409,54 @@ describe("v1 pagination", () => {
     });
     expect(junk.status).toBe(200);
     expect(((await junk.json()) as unknown[]).length).toBeLessThanOrEqual(20);
+  });
+});
+
+// The extension's create path wrote the application and no status_history
+// row, unlike POST /api/applications and the feed's add-to-pipeline which
+// both write a genesis row. Every pipeline metric is built on that table
+// alone, so an extension-saved application counted as nothing in the funnel,
+// the response rate, the ghost rate and the origin breakdown — the last of
+// which exists specifically to say how well the extension is working.
+describe("what the extension's save leaves behind", () => {
+  it("writes the genesis row every other creation path writes", async () => {
+    const key = await apiKey();
+    const res = await SELF.fetch(`${BASE}/api/v1/applications`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "History Check", source: "extension" }),
+    });
+    expect(res.status).toBe(201);
+    const created = await res.json<{ id: number }>();
+
+    const { results } = await env.DB.prepare(
+      "SELECT from_status, to_status FROM status_history WHERE application_id = ?",
+    )
+      .bind(created.id)
+      .all<{ from_status: string | null; to_status: string }>();
+
+    expect(results, "no history row, so the funnel cannot see it").toHaveLength(1);
+    expect(results[0]).toEqual({ from_status: null, to_status: "interested" });
+  });
+
+  it("is counted by the funnel, which is the point of the row", async () => {
+    // Asserting the consequence rather than the insert. A row with the wrong
+    // shape would satisfy "a row exists" and still leave the application
+    // invisible to every metric that matters.
+    const key = await apiKey();
+    const before = await env.DB.prepare(
+      "SELECT COUNT(DISTINCT application_id) AS n FROM status_history WHERE user_id = 'seed-admin'",
+    ).first<{ n: number }>();
+
+    await SELF.fetch(`${BASE}/api/v1/applications`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Counted By The Funnel", source: "extension" }),
+    });
+
+    const after = await env.DB.prepare(
+      "SELECT COUNT(DISTINCT application_id) AS n FROM status_history WHERE user_id = 'seed-admin'",
+    ).first<{ n: number }>();
+    expect(after!.n, "the new application is invisible to the funnel").toBe(before!.n + 1);
   });
 });

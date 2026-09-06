@@ -419,6 +419,25 @@ export function registerPublicApiRoutes(app: Hono<AppEnv>) {
     )
       .bind(userId, companyId, title, url, source)
       .first();
+
+    // The genesis row every other creation path writes — POST /api/applications
+    // (worker/index.ts) and the feed's add-to-pipeline both do this, and this
+    // one did not. Without it the application exists but has no history, and
+    // every metric that reads status_history is built on that table alone:
+    // funnelReachCounts, responseRate, responseTime, ghostRate and the origin
+    // breakdown all count it as nothing.
+    //
+    // It self-heals on the first real stage change, because recordStatusChange
+    // reads the current status for from_status rather than the last history
+    // row. So the gap is permanent only for an application that never leaves
+    // "interested" — which, for something saved off a job board and not yet
+    // acted on, is the normal state rather than the rare one.
+    await c.env.DB.prepare(
+      `INSERT INTO status_history (application_id, user_id, from_status, to_status) VALUES (?, ?, NULL, 'interested')`,
+    )
+      .bind((result as { id: number }).id, userId)
+      .run();
+
     return c.json(result, 201);
   });
 
