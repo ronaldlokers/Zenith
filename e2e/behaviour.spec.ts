@@ -520,3 +520,65 @@ describe("the top bar at 200% text on a 320px screen", () => {
     await ctx.close();
   }, 180_000);
 });
+
+describe("the card menu when focus leaves it", () => {
+  it("closes on Tab instead of leaving a live backdrop over the page", async () => {
+    // The WAI-ARIA menu-button pattern requires Tab to dismiss. It did not:
+    // the menu and its position:fixed backdrop stayed mounted while focus
+    // moved on, so the next click anywhere hit the invisible catcher instead
+    // of the control it was aimed at.
+    //
+    // Only a browser can see this. jsdom has no tab order, so nothing in the
+    // component suite can move focus off the last item the way a person does.
+    const page = await board(1440);
+    await addApplication(page, "E2E Menu Focus");
+
+    await page.locator(".zui-cardmenu-btn").first().focus();
+    await page.keyboard.press("Enter");
+    await page.waitForSelector('[role="menu"]');
+    expect(await page.locator(".zui-cardmenu-backdrop").count()).toBe(1);
+
+    // Enough presses to walk the items and fall off the end. The popup is
+    // portalled to <body>, past everything in tab order, so focus goes to
+    // nothing before wrapping round to the top bar.
+    for (let i = 0; i < 10; i++) {
+      if ((await page.locator('[role="menu"]').count()) === 0) break;
+      await page.keyboard.press("Tab");
+      await page.waitForTimeout(80);
+    }
+
+    expect(await page.locator('[role="menu"]').count(), "the menu survived tabbing out of it").toBe(0);
+    expect(
+      await page.locator(".zui-cardmenu-backdrop").count(),
+      "the full-page click-catcher outlived the menu",
+    ).toBe(0);
+    await page.context().close();
+  }, 180_000);
+
+  it("stays open when a submenu replaces its items", async () => {
+    // The regression the fix could easily cause. Choosing "Move to stage"
+    // remounts the items, so focus passes through the document for a frame —
+    // a focusout/relatedTarget check reads that as leaving and closes the
+    // menu the moment it is opened. focusin cannot, because nothing receives
+    // focus during the gap.
+    const page = await board(1440);
+    await addApplication(page, "E2E Menu Submenu");
+
+    await page.locator(".zui-cardmenu-btn").first().focus();
+    await page.keyboard.press("Enter");
+    await page.waitForSelector('[role="menu"]');
+    await page.locator('[role="menu"] [role="menuitem"]').first().click();
+    await page.waitForTimeout(300);
+
+    expect(
+      await page.locator('[role="menu"]').count(),
+      "opening the submenu closed the menu",
+    ).toBe(1);
+    // And focus landed inside it, which is what keeps the keyboard usable.
+    const inside = await page.evaluate(() =>
+      document.querySelector(".zui-cardmenu-pop")?.contains(document.activeElement) ?? false,
+    );
+    expect(inside, "focus left the popup when the submenu opened").toBe(true);
+    await page.context().close();
+  }, 180_000);
+});
