@@ -674,7 +674,8 @@
     "twoFactorError": "Kon die code niet verifiëren.",
     "verify": "Verifiëren",
     "useBackupCode": "Gebruik een back-upcode",
-    "useTwoFactorCode": "Gebruik je authenticator-app"
+    "useTwoFactorCode": "Gebruik je authenticator-app",
+    "twoFactorLockedOut": "Je apparaat én je back-upcodes kwijt? Een beheerder kan tweestapsverificatie op je account resetten."
   },
   "account": {
     "testPushTitle": "Testmelding versturen",
