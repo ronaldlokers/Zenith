@@ -5,6 +5,7 @@ import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { recordCronRun } from "./cron-log.js";
 import { pruneAuthRows } from "./retention.js";
+import { BACKUP_RETENTION_DAYS } from "../src/backup-policy.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { registerOutreachRoutes } from "./outreach.js";
@@ -2729,7 +2730,7 @@ export async function logInboundEmail(
 // so a stale database has no recovery path if D1 has an issue. Keeps the
 // last 14 daily backups, pruning older ones on each run.
 const BACKUP_PREFIX = "backups/";
-const BACKUP_RETENTION = 14;
+const BACKUP_RETENTION = BACKUP_RETENTION_DAYS;
 
 export async function runScheduledBackup(env: Env): Promise<void> {
   const dump = await buildFullExport(env);

@@ -180,6 +180,14 @@ npm run dev
 
 This runs against a local D1 replica — no remote resources touched, no secrets required beyond `.dev.vars` from step 4.
 
+## Backups and what deletion means
+
+A scheduled task writes the whole database to R2 nightly, under `backups/`, and prunes to the last 14 days. That is the recovery path if D1 has a problem, and `scripts/restore-backup.mjs` reads it back.
+
+It has a consequence worth knowing before someone asks you about it. **Deleting an account removes it from the database immediately, but a copy stays in the backups until they age out** — up to 14 days. Nothing in the app can reach it, and no new backup includes the deleted account, but it exists. The dialog in Settings says so; you are the one holding the bucket, so you should know too.
+
+The same applies to contact details of people who never used Zenith: a user's contacts are third-party personal data, and it is in those files too. Treat the bucket as holding personal data, keep it private, and if you have a retention policy of your own, `BACKUP_RETENTION_DAYS` in `src/backup-policy.ts` is the one number that sets this — both the pruning and the copy shown to the user read it.
+
 ## Keeping up to date
 
 Pull upstream and redeploy — new D1 migrations apply automatically as part of `npx wrangler d1 migrations apply`:
