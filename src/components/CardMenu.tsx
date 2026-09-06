@@ -128,6 +128,42 @@ export function CardMenu({
     focused.current = false;
   }, [mode]);
 
+  // Tab out and the menu used to stay open with its full-page backdrop still
+  // live — focus visibly somewhere else while an invisible click-catcher
+  // covered the page, so the next click anywhere just closed the stale menu
+  // instead of hitting the control it was aimed at. Measured: it swallowed a
+  // real click on a second card's own menu button. The WAI-ARIA menu-button
+  // pattern requires Tab to dismiss it, and only Escape and a backdrop click
+  // did.
+  //
+  // focusin on the document, not blur on the popup, and the difference is the
+  // whole fix. The popup is portalled to <body>, past everything else in tab
+  // order, so tabbing off its last item hands focus to nothing and focusout
+  // arrives with relatedTarget === null — indistinguishable, at that moment,
+  // from the null it carries while choosing a submenu remounts the items.
+  // Measured: from=BUTTON.zui-btn -> to=NULL on the way out, which is exactly
+  // the event a relatedTarget check has to ignore to avoid closing a submenu
+  // as it opens.
+  //
+  // focusin only fires when something *receives* focus, so the transient
+  // nowhere-focus never reaches this, and the submenu's own first item is
+  // inside popRef and ignored. Whatever the document finally lands on — the
+  // wrap-around to the top bar, a click elsewhere — is outside, and closes it.
+  useEffect(() => {
+    if (!mode) return;
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+      if (popRef.current?.contains(target)) return;
+      // The trigger takes focus back on Escape and on a normal close; treating
+      // that as "focus left" would fight those paths.
+      if (triggerRef.current?.contains(target)) return;
+      close();
+    };
+    document.addEventListener("focusin", onFocusIn);
+    return () => document.removeEventListener("focusin", onFocusIn);
+  }, [mode, close]);
+
   const onMenuKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") {
       e.stopPropagation();
