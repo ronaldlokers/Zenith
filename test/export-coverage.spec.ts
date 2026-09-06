@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { buildFullExport } from "../worker/index";
+import { buildFullExport } from "../worker/export";
 
 // Whole-account work needs more than the default 5000ms on CI. The erasure
 // spec ran 5978ms there against that budget and took a build down, while the

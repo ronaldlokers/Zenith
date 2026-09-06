@@ -1,6 +1,6 @@
 import { env, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { buildFullExport } from "../worker/index";
+import { buildFullExport } from "../worker/export";
 import { authedFetch } from "./helpers";
 
 // feed_items is a shared pool with no user_id, and the export treated that as
