@@ -6,8 +6,10 @@ import {
   responseTime,
   median,
   outcomeBreakdown,
+  originBreakdown,
+  originChannel,
 } from "../src/stats";
-import type { Status, StatusHistoryRow } from "../src/types";
+import type { StatsApplication, Status, StatusHistoryRow } from "../src/types";
 
 function h(
   application_id: number,
@@ -362,5 +364,86 @@ describe("applications waiting longer than any reply ever took", () => {
     const r = responseTime(history, NOW);
     expect(r.waiting).toBe(1);
     expect(r.beyondAnyReply).toBe(0);
+  });
+});
+
+// `source` has been written on every application by all three creation paths
+// since the feed shipped, and carried in the /api/stats payload the whole
+// time, and nothing read it. A user could not answer whether the feed was
+// earning the six-hourly cron it runs.
+describe("originBreakdown", () => {
+  const a = (
+    id: number,
+    source: string | null,
+  ): StatsApplication => ({
+    id,
+    status: "applied" as Status,
+    source,
+    applied_at: "2026-01-02",
+    created_at: "2026-01-01",
+  });
+
+  it("maps the sources the three creation paths actually write", () => {
+    expect(originChannel("feed:adzuna")).toBe("feed");
+    expect(originChannel("feed:greenhouse")).toBe("feed");
+    expect(originChannel("feed:ashby")).toBe("feed");
+    expect(originChannel("extension")).toBe("extension");
+    expect(originChannel(null)).toBe("manual");
+    // Not a fourth bucket: an unrecognised string is far likelier to be
+    // something typed or imported than a channel nobody added here.
+    expect(originChannel("some-future-importer")).toBe("manual");
+  });
+
+  it("splits the funnel by where the application came from", () => {
+    const apps = [
+      a(1, "feed:adzuna"),
+      a(2, "feed:greenhouse"),
+      a(3, "feed:ashby"),
+      a(4, null),
+    ];
+    const rows = originBreakdown(apps, HISTORY);
+    const feed = rows.find((r) => r.channel === "feed")!;
+    const manual = rows.find((r) => r.channel === "manual")!;
+
+    // Apps 1-3 all reached applied; 1 and 2 reached screening.
+    expect(feed.total).toBe(3);
+    expect(feed.applied).toBe(3);
+    expect(feed.responded).toBe(2);
+    expect(feed.rate).toBeCloseTo(2 / 3);
+    expect(feed.offers).toBe(0);
+
+    // App 4 never got past interested.
+    expect(manual.total).toBe(1);
+    expect(manual.applied).toBe(0);
+    expect(manual.rate).toBeNull();
+  });
+
+  it("refuses a rate below the floor the rest of the page uses", () => {
+    // Splitting by channel makes a small denominator the normal case rather
+    // than the edge one, so the floor matters more here, not less. Two
+    // applied out of two responded is "100%" and means nothing.
+    const rows = originBreakdown([a(1, "feed:adzuna"), a(2, "feed:adzuna")], HISTORY);
+    const feed = rows.find((r) => r.channel === "feed")!;
+    expect(feed.applied).toBe(2);
+    expect(feed.responded).toBe(2);
+    expect(feed.rate, "a rate off two applications is the overconfidence the floor exists to refuse").toBeNull();
+  });
+
+  it("counts an application with no history at all toward its channel only", () => {
+    // What an extension-created application looks like before it first moves:
+    // it exists, and it has not been sent anywhere.
+    const rows = originBreakdown([a(99, "extension")], []);
+    expect(rows).toEqual([
+      { channel: "extension", total: 1, applied: 0, responded: 0, rate: null, offers: 0 },
+    ]);
+  });
+
+  it("omits a channel the account has never used", () => {
+    const rows = originBreakdown([a(1, null)], HISTORY);
+    expect(rows.map((r) => r.channel)).toEqual(["manual"]);
+  });
+
+  it("returns nothing for an account with no applications", () => {
+    expect(originBreakdown([], [])).toEqual([]);
   });
 });

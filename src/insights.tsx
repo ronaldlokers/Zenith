@@ -21,6 +21,7 @@ import {
   funnelConversions,
   funnelReachCounts,
   outcomeBreakdown,
+  originBreakdown,
   MIN_CONVERSION_N,
   responseRate,
   responseTime,
@@ -143,6 +144,13 @@ export function InsightsTab({
   const pipe = computePipelineMomentum(history);
   const t2o = medianTimeToOffer(history);
   const outcomes = outcomeBreakdown(history);
+  // Only worth drawing when there is a comparison to make: with one
+  // channel this says nothing the response-rate card above does not.
+  // stats.applications, not the `applications` prop: the prop is the live
+  // list, so every archived and closed application would drop out of the
+  // comparison — and those are the rows carrying the outcome the rate is
+  // about. The funnel and the response rate beside it read the same payload.
+  const origins = originBreakdown(stats.applications, history);
   const outcomeMax = Math.max(1, ...outcomes.counts.map((o) => o.count));
   const liveOffers = applications.filter((a) => a.status === "offer");
   const comps = liveOffers
@@ -496,6 +504,47 @@ export function InsightsTab({
                 <strong>{g.name}</strong>{" "}
                 <span className="muted small">
                   {t("insights.gapsAsked", { count: g.asked })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Where the applications came from. The product's second positioning
+          claim is that sourcing and the pipeline are one loop; this is the
+          half that closes it, and it reads a column all three creation paths
+          have written since the feed shipped.
+
+          Drawn only when there is more than one channel to compare. On an
+          account that has only ever typed applications in, this is the
+          response-rate card again with a label on it. */}
+      {origins.length > 1 && (
+        <div className="insights-origins">
+          <h2 className="ruled-h">{t("insights.originTitle")}</h2>
+          <p className="muted small">
+            {t("insights.originHint", { count: MIN_CONVERSION_N })}
+          </p>
+          <ul className="insights-origin-list">
+            {origins.map((o) => (
+              <li key={o.channel}>
+                <span className="insights-origin-name">
+                  {t(
+                    o.channel === "feed"
+                      ? "insights.originFeed"
+                      : o.channel === "extension"
+                        ? "insights.originExtension"
+                        : "insights.originManual",
+                  )}
+                </span>
+                <span className="insights-origin-n muted small">
+                  {t("insights.originCount", { count: o.total })} ·{" "}
+                  {t("insights.originSent", { count: o.applied })}
+                </span>
+                <span className="insights-origin-rate">
+                  {o.rate == null
+                    ? <span className="muted small">{t("insights.originTooFew")}</span>
+                    : t("insights.originRate", { pct: Math.round(o.rate * 100) })}
                 </span>
               </li>
             ))}
