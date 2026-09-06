@@ -138,6 +138,56 @@ const APP_COLUMNS = [
   "referred_by_contact_id", "job_description", "job_description_captured_at",
 ] as const;
 
+// The numbers on this table had no bound of any kind — no CHECK constraint,
+// no route validation — and totalComp() multiplies base by bonus_target_pct
+// unconditionally, so a 500 typed into that field becomes a bonus five times
+// salary in the offer comparison, the PDF export and the negotiation draft.
+// Those three are exactly where the figures have to be trustworthy.
+//
+// Server-side rather than in the form, because the form is not the only
+// writer: the browser extension posts applications, and PUT rewrites every
+// column from the body.
+//
+// Zero is a real answer everywhere here (an unpaid internship, no bonus
+// scheme, no equity), so the floor is inclusive. The bonus ceiling is
+// generous on purpose — sales plans do reach three figures — it only has to
+// catch someone typing a multiplier where a percentage goes.
+const NUMERIC_BOUNDS: Record<string, [number, number]> = {
+  salary_min: [0, Number.MAX_SAFE_INTEGER],
+  salary_max: [0, Number.MAX_SAFE_INTEGER],
+  signing_bonus: [0, Number.MAX_SAFE_INTEGER],
+  equity_value: [0, Number.MAX_SAFE_INTEGER],
+  bonus_target_pct: [0, 200],
+  // The other unbounded number on the table: the rating renders as five
+  // stars, so a 9 draws nine of them.
+  fit_score: [1, 5],
+};
+
+// Returns the error message for the first field that is out of bounds, or
+// null when there is nothing to object to. Absent and null are always fine —
+// most applications carry no compensation at all.
+export function compensationError(body: Record<string, unknown>): string | null {
+  for (const [field, [min, max]] of Object.entries(NUMERIC_BOUNDS)) {
+    const raw = body[field];
+    if (raw === undefined || raw === null || raw === "") continue;
+    const n = typeof raw === "number" ? raw : Number(raw);
+    if (!Number.isFinite(n)) return `${field} must be a number`;
+    if (n < min || n > max) return `${field} must be between ${min} and ${max}`;
+  }
+  // Both ends have to actually be there. Number(null) is 0, so reading the
+  // pair unconditionally makes every row with a minimum and no maximum look
+  // like a range that runs backwards — which is most of them.
+  const present = (v: unknown) => v !== undefined && v !== null && v !== "";
+  if (present(body.salary_min) && present(body.salary_max)) {
+    const min = Number(body.salary_min);
+    const max = Number(body.salary_max);
+    if (Number.isFinite(min) && Number.isFinite(max) && max < min) {
+      return "salary_max must not be below salary_min";
+    }
+  }
+  return null;
+}
+
 // The bound values in APP_COLUMNS order. Keep this in lockstep with the list.
 function applicationValues(
   body: Record<string, unknown>,
@@ -750,6 +800,8 @@ app.post("/api/applications", async (c) => {
     { table: "contacts", id: body.referred_by_contact_id },
   ]);
   if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
+  const outOfBounds = compensationError(body);
+  if (outOfBounds) return c.json({ error: outOfBounds }, 400);
   const jobDescription = body.job_description ?? null;
   const cols = ["user_id", ...APP_COLUMNS];
   const result = await c.env.DB.prepare(
@@ -832,6 +884,8 @@ app.post("/api/applications/:id/unarchive", async (c) => {
 app.put("/api/applications/:id", async (c) => {
   const body = await c.req.json();
   if (!body.title) return c.json({ error: "title is required" }, 400);
+  const outOfBounds = compensationError(body);
+  if (outOfBounds) return c.json({ error: outOfBounds }, 400);
   const userId = c.get("userId");
   const existing = await c.env.DB.prepare(
     "SELECT status, updated_at, job_description, job_description_captured_at FROM applications WHERE id = ? AND user_id = ?",
