@@ -93,8 +93,17 @@ describe("the admin user list", () => {
     // else should say what happened.
     // Not swallowed. The first version did `.catch(() => {})`, so a failed
     // create surfaced only as "no pair of rows", which is a slower way to
-    // learn the same thing. A duplicate is fine on a re-run.
-    expect(created, "could not create the extra accounts").not.toMatch(/\b(4\d\d|5\d\d)\s/);
+    // learn the same thing.
+    //
+    // "already exists" is a 400 here, and it is the normal answer on every run
+    // after the first — e2e setup deletes applications, not users. Rejecting
+    // all 4xx made this pass on CI's clean database and fail the second time
+    // anyone ran it locally, which is the same local-state trap in reverse.
+    for (const line of created.split(" | ")) {
+      expect(line, "could not create the extra accounts").toMatch(
+        /^2\d\d |already exists/i,
+      );
+    }
 
     await page.goto(`${BASE}/admin`);
     await page.waitForLoadState("networkidle");

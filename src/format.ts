@@ -633,3 +633,29 @@ export function isGoneQuiet(a: Application, now = Date.now()): boolean {
   const days = Math.floor((now - parseSqlDate(a.updated_at)) / 86400000);
   return days >= 21;
 }
+
+// A website shortened for a list row. The companies list printed the stored
+// value verbatim, so half the rows carried a second line of "https://www."
+// at ink weight while the other half had no second line at all.
+//
+// The full URL is not lost — the company detail renders it as a real link —
+// so the list only has to say which company this is.
+//
+// Deliberately not a URL parser. The input is whatever someone typed into a
+// free-text field, and every branch here is about not making that worse: no
+// protocol is the common case and URL() throws on it, so the fallback shows
+// what they wrote rather than an error or an empty cell.
+export function displayDomain(website: string | null | undefined): string {
+  const raw = (website ?? "").trim();
+  if (!raw) return "";
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const { protocol, hostname } = new URL(withScheme);
+    // Only the two schemes a company website is ever going to be. Anything
+    // else is shown as typed rather than tidied into something it is not.
+    if (protocol !== "http:" && protocol !== "https:") return raw;
+    return hostname.replace(/^www\./, "");
+  } catch {
+    return raw;
+  }
+}

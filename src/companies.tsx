@@ -8,7 +8,7 @@ import { Dialog } from "./ui";
 import { rowActivate, useSubmitGuard } from "./hooks";
 import { EmptyCompaniesIcon } from "./icons";
 import { ActionBar, Badge, Button, EmptyState, FieldLabel, Row, SegmentedControl, Toolbar } from "./components";
-import { isDead, safeHref } from "./format";
+import { displayDomain, isDead, safeHref } from "./format";
 import type { Application, Company, Contact, CrudTabProps } from "./types";
 
 export function CompaniesTab({
@@ -187,7 +187,11 @@ export function CompaniesTab({
             </div>
             {c.website && (
               <div className="l2">
-                <span className="co">{c.website}</span>
+                {/* The domain, not the stored URL. The row printed
+                    "https://www.…/careers" at ink weight, which is protocol
+                    noise standing where the useful word is; the full URL is a
+                    real link on the company's own page. */}
+                <span className="co">{displayDomain(c.website)}</span>
               </div>
             )}
             </div>
