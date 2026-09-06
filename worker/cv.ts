@@ -31,15 +31,50 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
     return c.json(withoutKeyHash(result));
   });
 
+// The precondition 0060 gave contacts and companies, applied to the three CV
+// forms that have the same shape: they rewrite every field they own from a
+// copy loaded when the page opened, so a save from a stale tab reverts what it
+// never showed. 412 per RFC 9110 13.1, and the current validator comes back in
+// the body so the client can say what it collided with.
+//
+// Additive: no header, no precondition, so every existing caller — the tailor
+// panel writing one field, the LinkedIn import — behaves exactly as before.
+//
+// updated_at is datetime('now') at second resolution, so two saves inside one
+// second are indistinguishable. That is the case this is least needed for; the
+// conflict it prevents is a form left open for minutes or hours.
+function stale(
+  ifMatch: string | undefined,
+  current: string | null | undefined,
+): boolean {
+  return !!ifMatch && ifMatch !== current;
+}
+
+const conflict = (current: string | null | undefined) =>
+  ({ error: "it changed somewhere else", current_updated_at: current }) as const;
+
   app.put("/api/profile", async (c) => {
     const body = await c.req.json();
     const userId = c.get("userId");
     await c.env.DB.prepare("INSERT OR IGNORE INTO profile (user_id) VALUES (?)")
       .bind(userId)
       .run();
+    // Only this route stamps profile.updated_at, and only these columns. The
+    // profile row is a grab-bag — the share token, the calendar token, the
+    // folded board rails and the API key all live on it — and stamping there
+    // too would make folding a board column invalidate an open CV form.
+    const current = await c.env.DB.prepare(
+      "SELECT updated_at FROM profile WHERE user_id = ?",
+    )
+      .bind(userId)
+      .first<{ updated_at: string | null }>();
+    if (stale(c.req.header("If-Match"), current?.updated_at)) {
+      return c.json(conflict(current?.updated_at), 412);
+    }
     const result = await c.env.DB.prepare(
       `UPDATE profile SET name = ?, email = ?, phone = ?, location = ?,
-         linkedin = ?, github = ?, portfolio = ?, summary = ?
+         linkedin = ?, github = ?, portfolio = ?, summary = ?,
+         updated_at = datetime('now')
        WHERE user_id = ? RETURNING *`,
     )
       .bind(
@@ -173,10 +208,20 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
     if (!body.company || !body.title) {
       return c.json({ error: "company and title are required" }, 400);
     }
+    const current = await c.env.DB.prepare(
+      "SELECT updated_at FROM work_experience WHERE id = ? AND user_id = ?",
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .first<{ updated_at: string | null }>();
+    if (!current) return c.json({ error: "not found" }, 404);
+    if (stale(c.req.header("If-Match"), current.updated_at)) {
+      return c.json(conflict(current.updated_at), 412);
+    }
     const result = await c.env.DB.prepare(
       `UPDATE work_experience
        SET company = ?, title = ?, description = ?, start_month = ?, start_year = ?,
-           end_month = ?, end_year = ?, is_current = ?, sort_order = COALESCE(?, sort_order)
+           end_month = ?, end_year = ?, is_current = ?, sort_order = COALESCE(?, sort_order),
+           updated_at = datetime('now')
        WHERE id = ? AND user_id = ? RETURNING *`,
     )
       .bind(
@@ -296,10 +341,20 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
     if (!body.institution) {
       return c.json({ error: "institution is required" }, 400);
     }
+    const current = await c.env.DB.prepare(
+      "SELECT updated_at FROM education WHERE id = ? AND user_id = ?",
+    )
+      .bind(c.req.param("id"), c.get("userId"))
+      .first<{ updated_at: string | null }>();
+    if (!current) return c.json({ error: "not found" }, 404);
+    if (stale(c.req.header("If-Match"), current.updated_at)) {
+      return c.json(conflict(current.updated_at), 412);
+    }
     const result = await c.env.DB.prepare(
       `UPDATE education
        SET institution = ?, degree = ?, field = ?, start_month = ?, start_year = ?,
-           end_month = ?, end_year = ?, sort_order = COALESCE(?, sort_order)
+           end_month = ?, end_year = ?, sort_order = COALESCE(?, sort_order),
+           updated_at = datetime('now')
        WHERE id = ? AND user_id = ? RETURNING *`,
     )
       .bind(

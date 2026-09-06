@@ -306,6 +306,8 @@ export interface Profile {
   // folded, which is a different thing.
   board_folded: string | null;
   share_show_identity: number;
+  /** Validator for the If-Match precondition on the full-form save (0063). */
+  updated_at: string | null;
 }
 
 export interface Webhook {
@@ -404,6 +406,8 @@ export interface WorkExperience {
   is_current: number;
   sort_order: number;
   skills: Skill[];
+  /** Validator for the If-Match precondition on the full-form save (0063). */
+  updated_at: string | null;
 }
 
 export interface Education {
@@ -416,6 +420,8 @@ export interface Education {
   end_month: number | null;
   end_year: number | null;
   sort_order: number;
+  /** Validator for the If-Match precondition on the full-form save (0063). */
+  updated_at: string | null;
 }
 
 export interface Language {

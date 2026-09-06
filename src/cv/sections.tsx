@@ -56,7 +56,7 @@ export function ProfileSection({
 
   const [submitting, submit] = useSubmitGuard(async () => {
     await api
-      .updateProfile(form)
+      .updateProfile(form, profile.updated_at)
       .then(() => {
         notify(t("common.saved"));
         return onChanged();
@@ -392,7 +392,9 @@ export function WorkExperienceSection({
                 initial={editing}
                 onCancel={() => setEditing(null)}
                 onSubmit={(data) =>
-                  run(() => api.update("work-experience", w.id, data))
+                  run(() =>
+                    api.update("work-experience", w.id, data, w.updated_at),
+                  )
                 }
               />
             )}
@@ -586,7 +588,9 @@ export function EducationSection({
               <EducationForm
                 initial={editing}
                 onCancel={() => setEditing(null)}
-                onSubmit={(data) => run(() => api.update("education", ed.id, data))}
+                onSubmit={(data) =>
+                  run(() => api.update("education", ed.id, data, ed.updated_at))
+                }
               />
             )}
           </CvItem>
