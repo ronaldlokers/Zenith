@@ -152,6 +152,25 @@ npx wrangler d1 execute zenith --remote --file scripts/.seed-admin.sql
 
 You'll be prompted for a password (hidden input, 8+ characters). Log in with that email/password at your deployed URL. Once in, invite any other accounts you want from Settings — the seed admin has an "Invite user" form there (Better Auth's admin plugin under the hood).
 
+## 7. Inbound email (optional)
+
+Zenith can log a recruiter's email as an interaction against the matching contact: you forward the mail, and it appears on that person's timeline with the subject as the note. If the contact was `awaiting_reply`, it flips to `replied`, so a follow-up you have already had stops being nudged.
+
+This runs off the Worker's `email()` handler, which nothing in `wrangler.jsonc` switches on. It only ever fires if you point **Cloudflare Email Routing** at the Worker, which is a dashboard step:
+
+1. In the Cloudflare dashboard, pick the zone for a domain you own, then **Email → Email Routing**, and enable it if you have not already. This adds the MX and TXT records it needs.
+2. Under **Routing rules**, create a custom address — say `jobs@your-domain.example` — and set its action to **Send to a Worker**, choosing your Zenith worker.
+3. Forward a recruiter's email to that address.
+
+Two things decide whether a forward is logged, and both are easy to trip over:
+
+- **Forward from the address you signed in with.** The envelope sender identifies which account the mail belongs to, so it has to match a Zenith user's email exactly. A forward from a different address of yours is dropped rather than guessed at.
+- **The original sender has to match exactly one of your contacts.** Zenith reads the real sender out of the forward — either from an attached `message/rfc822` part (forwarding "as attachment" is the reliable shape) or from the quoted `From:` line of an inline forward — and looks it up among *your* contacts. No match, or more than one, and nothing is written.
+
+Anything that does not meet both is ignored silently: there is no bounce and no error, by design, because this address is reachable from the open internet.
+
+**What this is not.** An SMTP envelope sender can be forged, so someone who knows your address and your routing address could forge a forward and have an interaction logged against one of your contacts. That is the ceiling of the damage — it cannot reach another account, and it writes a note, not a credential. Requiring SPF to pass would close it and is not free: forwarding routinely breaks SPF, which is the exact thing this feature exists to handle. Leave the feature off if that trade is not one you want.
+
 ## Local development
 
 ```bash
