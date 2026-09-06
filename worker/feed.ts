@@ -289,6 +289,27 @@ export async function fetchAshby(
   }
 }
 
+// What a user is allowed to see in the shared pool, as one fragment rather
+// than two copies. Today's unread count and the feed list itself have to agree
+// — a count that includes a blocked company, or a board the user stopped
+// watching, sends someone to a feed that does not have what the badge
+// promised. Takes two binds: blocklist user, ATS-board user.
+const VISIBLE_TO_USER = `
+         AND NOT EXISTS (
+           SELECT 1 FROM feed_company_blocklist
+           WHERE feed_company_blocklist.user_id = ?
+             AND feed_company_blocklist.company = feed_items.company COLLATE NOCASE
+         )
+         AND (
+           feed_items.board_slug IS NULL
+           OR EXISTS (
+             SELECT 1 FROM feed_ats_boards
+             WHERE feed_ats_boards.user_id = ?
+               AND feed_ats_boards.source = feed_items.source
+               AND feed_ats_boards.slug = feed_items.board_slug
+           )
+         )`;
+
 export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: number }> {
   const [keywords, configs, atsBoards] = await Promise.all([
     loadRoleKeywords(env),
@@ -412,20 +433,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
          ON feed_item_status.feed_item_id = feed_items.id
          AND feed_item_status.user_id = ?
        WHERE COALESCE(feed_item_status.status, 'new') IN ('new', 'saved')
-         AND NOT EXISTS (
-           SELECT 1 FROM feed_company_blocklist
-           WHERE feed_company_blocklist.user_id = ?
-             AND feed_company_blocklist.company = feed_items.company COLLATE NOCASE
-         )
-         AND (
-           feed_items.board_slug IS NULL
-           OR EXISTS (
-             SELECT 1 FROM feed_ats_boards
-             WHERE feed_ats_boards.user_id = ?
-               AND feed_ats_boards.source = feed_items.source
-               AND feed_ats_boards.slug = feed_items.board_slug
-           )
-         )
+         ${VISIBLE_TO_USER}
          ${cursorClause}
        ORDER BY COALESCE(feed_items.posted_at, '') DESC, feed_items.id DESC
        LIMIT ?`,
@@ -508,6 +516,30 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
       .map((h) => ({ source: h.label.replace(/^feed:/, ""), error: h.error }));
 
     return c.json({ items, nextCursor, failingSources });
+  });
+
+  // Just the number, for Today. The daily loop is open, see what is due,
+  // triage new matches — and the third step had no entry point anywhere in
+  // the chrome, so it ran on memory while the first two ran on a glance.
+  //
+  // A count, not a page of items: Today should not pull twenty-five feed rows
+  // and their skill matching to render one line. Counts 'new' only — 'saved'
+  // has already been triaged once, and offering it again as something to
+  // triage is what makes a badge stop meaning anything.
+  app.get("/api/feed/summary", async (c) => {
+    const userId = c.get("userId");
+    const row = await c.env.DB.prepare(
+      `SELECT COUNT(*) AS count
+       FROM feed_items
+       LEFT JOIN feed_item_status
+         ON feed_item_status.feed_item_id = feed_items.id
+         AND feed_item_status.user_id = ?
+       WHERE COALESCE(feed_item_status.status, 'new') = 'new'
+         ${VISIBLE_TO_USER}`,
+    )
+      .bind(userId, userId, userId)
+      .first<{ count: number }>();
+    return c.json({ count: row?.count ?? 0 });
   });
 
   app.get("/api/feed/ats-boards", async (c) => {

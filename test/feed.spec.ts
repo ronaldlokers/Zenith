@@ -114,3 +114,57 @@ describe("a feed source that cannot be reached", () => {
     if (row) expect(row.ok, "an unconfigured source was reported as failing").toBe(1);
   });
 });
+
+// Today's count and the feed's own list have to agree. A count that includes
+// a blocked company, or a board the user stopped watching, sends someone to a
+// feed that does not contain what the badge promised — and a badge that lies
+// once is a badge nobody trusts again. They share one SQL fragment for
+// exactly this reason; this is what proves the sharing works.
+describe("the unread count Today shows", () => {
+  const summary = async () => {
+    const res = await authedFetch(`${BASE}/api/feed/summary`);
+    return ((await res.json()) as { count: number }).count;
+  };
+  const listed = async () => {
+    const res = await authedFetch(`${BASE}/api/feed`);
+    const body = (await res.json()) as { items: { status: string }[] };
+    return body.items.filter((i) => i.status === "new").length;
+  };
+
+  it("matches the number of new items the feed itself would show", async () => {
+    await env.DB.prepare("DELETE FROM feed_items").run();
+    await env.DB.prepare(
+      `INSERT INTO feed_items (source, external_id, title, company, url)
+       VALUES ('adzuna','c1','Platform Engineer','Visible Co','https://x.test/1'),
+              ('adzuna','c2','Backend Engineer','Blocked Co','https://x.test/2')`,
+    ).run();
+    expect(await summary()).toBe(await listed());
+
+    // Block one company: both sides must drop it, together.
+    await env.DB.prepare(
+      "INSERT INTO feed_company_blocklist (user_id, company) VALUES ('seed-admin', 'Blocked Co')",
+    ).run();
+    const afterBlock = await summary();
+    expect(afterBlock).toBe(await listed());
+    expect(afterBlock, "the blocked company is still being counted").toBe(1);
+  });
+
+  it("does not count something already triaged", async () => {
+    // "Saved" has been triaged once. Offering it again as something to triage
+    // is what makes a badge stop meaning anything.
+    await env.DB.prepare("DELETE FROM feed_items").run();
+    await env.DB.prepare("DELETE FROM feed_company_blocklist").run();
+    const row = await env.DB.prepare(
+      `INSERT INTO feed_items (source, external_id, title, company, url)
+       VALUES ('adzuna','s1','Saved Role','Some Co','https://x.test/3') RETURNING id`,
+    ).first<{ id: number }>();
+    expect(await summary()).toBe(1);
+
+    await env.DB.prepare(
+      "INSERT INTO feed_item_status (feed_item_id, user_id, status) VALUES (?, 'seed-admin', 'saved')",
+    )
+      .bind(row!.id)
+      .run();
+    expect(await summary(), "a saved item is still counted as untriaged").toBe(0);
+  });
+});

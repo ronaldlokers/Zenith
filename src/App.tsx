@@ -673,6 +673,7 @@ export default function App() {
                     stats={statsData}
                     notify={notify}
                     onOpenQuickAdd={() => setShowQuickAdd(true)}
+                    onGoToFeed={() => setTab("feed")}
                   />
                 )}
                 {tab === "insights" && (

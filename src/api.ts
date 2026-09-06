@@ -322,6 +322,10 @@ export const api = {
       failingSources?: { source: string; error: string | null }[];
     }>(`/api/feed${q}`);
   },
+  // Just the untriaged count, for Today's entry point into the feed. The
+  // full feed() call pulls items and their skill matching, which Today has no
+  // use for.
+  feedSummary: () => request<{ count: number }>("/api/feed/summary"),
   refreshFeed: () =>
     request<{ inserted: number; seen: number }>("/api/feed/refresh", {
       method: "POST",

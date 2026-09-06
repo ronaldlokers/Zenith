@@ -53,10 +53,12 @@ export function DashboardTab({
   stats,
   notify,
   onOpenQuickAdd,
+  onGoToFeed,
 }: {
   applications: Application[];
   onOpenJob: (id: number) => void;
   onGoToJobs: () => void;
+  onGoToFeed: () => void;
   onError: (message: string | null) => void;
   onChanged: () => Promise<unknown> | void;
   stats: Stats | null;
@@ -74,6 +76,22 @@ export function DashboardTab({
       .then(setGoal)
       .catch((e) => onError((e as Error).message));
   }, [onError]);
+  // Step three of the daily loop — open, see what is due, triage new matches
+  // — had no entry point anywhere in the chrome. tileCounts carries numbers
+  // for overview and pipeline only, so even the wordmark menu showed nothing
+  // for the feed, and the step ran on memory while the first two ran on a
+  // glance.
+  //
+  // Silent on failure, unlike the goals load above it. The feed count is a
+  // nudge toward another screen; an error toast on Today because a secondary
+  // count could not be fetched would be louder than the thing it is counting.
+  const [feedCount, setFeedCount] = useState(0);
+  useEffect(() => {
+    api
+      .feedSummary()
+      .then((s) => setFeedCount(s.count))
+      .catch(() => setFeedCount(0));
+  }, []);
   // Which half of Next Up is showing. The hero is the handle that sets it,
   // which is also what keeps the hero count and the list length honest: they
   // are the same filter, not two filters that can disagree.
@@ -304,6 +322,16 @@ export function DashboardTab({
               them that the content never asked for. */}
           <div className="today-rail">
           <div className="today-col">
+            {/* One line, not a panel. The feed is a place to go, not a thing
+                to read here — the whole gap was that nothing said there was
+                anything waiting. Hidden at zero: a permanent "0 new matches"
+                is chrome that teaches you to stop looking at it. */}
+            {feedCount > 0 && (
+              <button type="button" className="today-feed" onClick={onGoToFeed}>
+                <span className="today-feed-n">{feedCount}</span>
+                <span>{t("today.feedWaiting", { count: feedCount })}</span>
+              </button>
+            )}
             {quiet.length > 0 && (
               <div className="today-quiet">
                 <h2 className="today-quiet-h">{t("today.quietTitle")}</h2>
