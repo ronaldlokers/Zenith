@@ -674,7 +674,8 @@
     "twoFactorError": "Couldn't verify that code.",
     "verify": "Verify",
     "useBackupCode": "Use a backup code instead",
-    "useTwoFactorCode": "Use your authenticator app instead"
+    "useTwoFactorCode": "Use your authenticator app instead",
+    "twoFactorLockedOut": "Lost your device and your backup codes? An administrator can reset two-factor authentication on your account."
   },
   "account": {
     "testPushTitle": "Test push notification",

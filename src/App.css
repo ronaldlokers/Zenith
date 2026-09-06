@@ -402,6 +402,14 @@
   text-underline-offset: 2px;
 }
 
+/* Sits under the code/backup toggle as the last thing on the card: it is the
+   answer for someone who has already tried both, not an instruction. */
+.login-locked-out {
+  margin: var(--space-2) 0 0;
+  text-align: center;
+  text-wrap: balance;
+}
+
 .login-link:hover {
   color: var(--ink);
 }

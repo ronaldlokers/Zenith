@@ -154,6 +154,23 @@ export function Login() {
           >
             {useBackupCode ? t("login.useTwoFactorCode") : t("login.useBackupCode")}
           </button>
+          {/* The dead end this screen used to be. Lose the authenticator and
+              the backup codes and there is no self-serve way past it — the
+              reset is an admin-only route the person cannot know exists, so
+              the form asked for a code they could not produce and said
+              nothing else.
+              Naming no address on purpose: there is no configured operator
+              contact to read one from, and a wrong address is worse than a
+              true sentence about who can help.
+              Shown on the backup-code view only. That is where someone whose
+              authenticator is gone actually lands, and it keeps the ordinary
+              path — open the app, type six digits — free of a warning about
+              a situation they are not in. */}
+          {useBackupCode && (
+            <p className="login-locked-out muted small">
+              {t("login.twoFactorLockedOut")}
+            </p>
+          )}
         </form>
       ) : (
         <form className="login-card" onSubmit={submit}>
