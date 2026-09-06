@@ -167,7 +167,14 @@ function BoardCard({
           )}
           {a.fit_score ? (
             <span className="bfit" title={`${a.fit_score}/5`}>
-              <StarRating value={a.fit_score} readOnly />
+              <StarRating
+                value={a.fit_score}
+                readOnly
+                aria-label={t("detail.fitScoreAria", {
+                  value: a.fit_score ?? 0,
+                  max: 5,
+                })}
+              />
             </span>
           ) : null}
         </div>

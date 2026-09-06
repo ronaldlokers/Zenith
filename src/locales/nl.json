@@ -497,6 +497,7 @@
     "followUpFallback": "opvolgen",
     "setFollowUp": "Follow-up instellen",
     "addNote": "Notitie toevoegen",
+    "fitScoreAria": "Fit-score {{value}} van {{max}}",
     "fitSetAria": "Fit op {{n}} zetten",
     "editFollowUp": "Follow-up bewerken",
     "editNotes": "Notitie bewerken",
