@@ -552,7 +552,15 @@ app.get("/api/applications", async (c) => {
     // contact_id can never surface another user's name (security review,
     // #445 — defence in depth behind the write-time findForeignRef check).
     `SELECT applications.*, companies.name AS company_name, contacts.name AS contact_name,
-            referrer.name AS referred_by_name
+            referrer.name AS referred_by_name,
+            -- Unchecked prep items, so Today can see the checklist without a
+            -- fetch per application (#109). Scoped by user_id like every other
+            -- join here, even though the rows hang off an application this
+            -- query has already scoped.
+            (SELECT COUNT(*) FROM interview_prep_items
+              WHERE interview_prep_items.application_id = applications.id
+                AND interview_prep_items.user_id = applications.user_id
+                AND interview_prep_items.done = 0) AS open_prep_items
      FROM applications
      LEFT JOIN companies ON companies.id = applications.company_id
                         AND companies.user_id = applications.user_id

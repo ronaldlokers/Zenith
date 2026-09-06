@@ -51,6 +51,8 @@
     "pushAll_one": "Push {{count}} late follow-up over the next few days",
     "movedToday": "Today",
     "movedEarlier": "Earlier this week",
+    "finishPrep": "Finish interview prep — {{count}} left",
+    "prepStage": "Interview",
     "feedWaiting_one": "new match waiting in the feed",
     "feedWaiting_other": "new matches waiting in the feed"
   },

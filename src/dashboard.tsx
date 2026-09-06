@@ -17,6 +17,7 @@ import {
   isDue,
   isGoneQuiet,
   isOverdue,
+  openPrepCount,
   parseSqlDate,
   searchWeekNumber,
   STAGE_URGENCY,
@@ -112,8 +113,11 @@ export function DashboardTab({
     () => applications.filter((a) => !isDead(a.status)),
     [applications],
   );
+  // An interview with unchecked prep items and nothing typed is due work, and
+  // Today used to be silent about it (#109). openPrepCount only speaks when
+  // the user has typed nothing, so this can never displace their own words.
   const due = useMemo(
-    () => live.filter((a) => isOverdue(a) || isDue(a)),
+    () => live.filter((a) => isOverdue(a) || isDue(a) || openPrepCount(a) > 0),
     [live],
   );
   const upcoming = useMemo(
@@ -695,7 +699,12 @@ function NextUpPanel({
                 <span
                   className={`side-date${isOverdue(a) ? " late" : isDue(a) ? " today" : ""}`}
                 >
-                  {formatDate(a.next_action_at!)}
+                  {/* A prep-driven row (#109) has no date — the checklist is
+                      what makes it due, not a reminder someone set. The
+                      non-null assertion here used to be safe because every row
+                      in this list came from next_action_at; it is not any
+                      more, and formatDate(null) throws. */}
+                  {a.next_action_at ? formatDate(a.next_action_at) : t("today.prepStage")}
                   {isOverdue(a)
                     ? ` · ${t("urgency.overdue")}`
                     : isDue(a)
@@ -709,7 +718,13 @@ function NextUpPanel({
                     row left out. Without it Done clears a follow-up the user
                     was never shown. */}
                 <span className="side-title">
-                  {a.next_action ?? a.title}
+                  {/* The checklist speaks only where the user has not (#109):
+                      openPrepCount returns 0 the moment a next_action exists,
+                      so this can never overwrite their own wording. */}
+                  {a.next_action ??
+                    (openPrepCount(a) > 0
+                      ? t("today.finishPrep", { count: openPrepCount(a) })
+                      : a.title)}
                 </span>
                 <span className="side-co">
                   {/* The words in their own element, so they can truncate.

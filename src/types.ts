@@ -282,6 +282,9 @@ export interface Application {
   tags: Tag[];
   created_at: string;
   updated_at: string;
+  /** Unchecked interview_prep_items, counted by /api/applications so Today can
+   *  see the checklist without fetching it per application (#109). */
+  open_prep_items?: number;
 }
 
 export interface Profile {
