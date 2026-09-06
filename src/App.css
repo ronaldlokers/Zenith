@@ -1681,11 +1681,25 @@ button.primary:hover {
   border-left: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .feed-strip > span:first-child {
   border-left: 0;
+}
+
+/* Both identity strips make each cell a flex container so the dividing border
+   stretches the full height. text-overflow does nothing on one: the text
+   inside is an anonymous flex item, not the container's own inline content.
+   So the ellipsis these cells declared never drew, and company names clipped
+   mid-word on every board card and feed row for as long as both have existed.
+   The truncation has to sit on a block child — a flex item, which is
+   blockified, so a bare span is enough. Shared by .bstrip and .feed-strip;
+   test-node/ellipsis-container.spec.ts stops the pairing coming back. */
+.strip-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .feed-strip-co {
@@ -5552,7 +5566,6 @@ button:not(:disabled):active,
   border-left: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .bstrip > span:first-child {

@@ -120,8 +120,10 @@ function BoardCard({
             className="bco"
             title={[a.company_name, a.contact_name].filter(Boolean).join(" · ")}
           >
-            {a.company_name ?? "—"}
-            {a.contact_name ? ` · ${a.contact_name}` : ""}
+            <span className="strip-text">
+              {a.company_name ?? "—"}
+              {a.contact_name ? ` · ${a.contact_name}` : ""}
+            </span>
           </span>
         </div>
         <h3 className="btitle">{a.title}</h3>
