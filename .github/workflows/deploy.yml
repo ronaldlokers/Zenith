@@ -22,6 +22,51 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # A migration reaches production the moment it merges, and D1 migrations
+      # are one-directional — there is not a single down file in migrations/.
+      # #660 gave the nightly backup a restore path; this gives a bad
+      # migration something to restore that is from *before* it ran, rather
+      # than up to 24 hours stale.
+      #
+      # Only when something is pending. An export reads every row and D1's
+      # free tier meters row reads, so paying that on every deploy — most of
+      # which carry no migration at all — would be a real cost for nothing.
+      - name: Are there migrations to apply?
+        id: pending
+        run: |
+          OUTPUT=$(npx wrangler d1 migrations list zenith --remote 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "No migrations to apply"; then
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+
+      # To R2, never to a workflow artifact. This repository is public, so an
+      # artifact holding the production database would be downloadable by
+      # anyone who can open the Actions tab — every user's applications,
+      # compensation figures, private interview notes and contact details.
+      # R2 is the operator's own bucket and already holds the nightly backup.
+      #
+      # If this step fails the deploy stops here, before the migration runs,
+      # which is the behaviour worth having: no snapshot, no schema change.
+      - name: Snapshot the database before migrating
+        if: steps.pending.outputs.any == 'true'
+        run: |
+          npx wrangler d1 export zenith --remote --output=pre-migration.sql -y
+          npx wrangler r2 object put \
+            "zenith-documents/backups/pre-migration-${GITHUB_SHA}.sql" \
+            --file=pre-migration.sql --remote --content-type=application/sql
+          # Off the runner as soon as it is safely in R2, so no later step can
+          # pick it up and publish it.
+          rm -f pre-migration.sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Apply D1 migrations
         run: npx wrangler d1 migrations apply zenith --remote
         env:
