@@ -5187,7 +5187,14 @@ button:not(:disabled):active,
 /* The input drops its native outline, so surface focus on the wrapping pill
    instead — otherwise keyboard users get no focus feedback (a11y review, #447). */
 .board-bar:focus-within {
-  border-color: var(--accent);
+  /* --accent-ink, not --accent, for the same reason index.css gives for the
+     global ring: the gold measures 2.27:1 on a card and 2.03:1 on the paper
+     ground, against the 3:1 WCAG 1.4.11 asks of a focus indicator. This pill
+     replaces the input's native outline, so it IS the indicator — and it kept
+     the gold when #496 moved everything else, because the guard only looked
+     at :focus-visible outlines and this is a :focus-within border. The soft
+     halo stays: it is a wash behind the border, not the indicator. */
+  border-color: var(--accent-ink);
   box-shadow: 0 0 0 2px var(--accent-soft);
 }
 .board-bar .primary {
@@ -5486,9 +5493,14 @@ button:not(:disabled):active,
   background: transparent;
 }
 
-.bcol-add:hover,
-.bcol-add:focus-within {
+.bcol-add:hover {
   border-color: var(--accent);
+}
+
+/* Split from the hover above: hover is decoration and can stay gold, focus is
+   an indicator and has to clear 3:1. */
+.bcol-add:focus-within {
+  border-color: var(--accent-ink);
 }
 
 /* The way back from the closed-only view. Sits above the columns rather
