@@ -414,3 +414,65 @@ describe("the network view's tabs", () => {
     await ctx.close();
   }, 180_000);
 });
+
+describe("the identity strip on a board card", () => {
+  it("truncates a long company with an ellipsis instead of cutting mid-word", async () => {
+    // The cell is a flex container so its dividing border stretches full
+    // height, and text-overflow does nothing on one — the text inside is an
+    // anonymous flex item, not the container's own inline content. So the
+    // ellipsis the cell declared never drew and company names clipped
+    // mid-word ("SOLACE SYSTEMS · DIE"). jsdom resolves no cascade and has no
+    // layout, so only a real browser can tell the fix from the defect.
+    const page = await board(1440);
+
+    // A company long enough to overflow the cell at any board width. Created
+    // through the app's own API so it carries the session and the same
+    // validation a person's input would.
+    const company = `E2E Interminably Long Talent Partners International ${Date.now()}`;
+    const created = await page.evaluate(async (name) => {
+      const post = (url: string, body: unknown) =>
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }).then((r) => r.json());
+      const c = await post("/api/companies", { name });
+      await post("/api/applications", {
+        title: "E2E Ellipsis Target",
+        company_id: c.id,
+        status: "interested",
+      });
+      return c.id as number;
+    }, company);
+    expect(created, "the fixture company was not created").toBeTruthy();
+
+    await page.goto(`${BASE}/board`);
+    await page.waitForSelector("[data-card-id]");
+    const cell = page.locator(".bstrip .bco").filter({ hasText: "Interminably" }).first();
+    await cell.waitFor({ timeout: 10_000 });
+
+    const measured = await cell.evaluate((el) => {
+      const inner = el.querySelector<HTMLElement>(".strip-text");
+      if (!inner) return null;
+      const cs = getComputedStyle(inner);
+      return {
+        display: cs.display,
+        textOverflow: cs.textOverflow,
+        whiteSpace: cs.whiteSpace,
+        overflowing: inner.scrollWidth > inner.clientWidth + 1,
+      };
+    });
+
+    expect(measured, "no .strip-text inside the company cell").not.toBeNull();
+    // Blockified as a flex item, which is what lets it carry the ellipsis at
+    // all. Were this flex again, the property would silently do nothing.
+    expect(measured!.display, "the truncating child must not be a flex container").toBe("block");
+    expect(measured!.textOverflow).toBe("ellipsis");
+    expect(measured!.whiteSpace).toBe("nowrap");
+    // Without this the assertions above pass on a cell that has nothing to
+    // truncate, which is the version of this test that proves nothing.
+    expect(measured!.overflowing, "the fixture company did not overflow its cell").toBe(true);
+
+    await page.context().close();
+  }, 180_000);
+});

@@ -1127,9 +1127,13 @@ function FeedCard({
         {/* Where it came from and how old it is, flush across the top —
             the same identity strip the board card carries. */}
         <div className="feed-strip">
-          <span className="feed-strip-co">{item.company ?? "—"}</span>
+          <span className="feed-strip-co">
+            <span className="strip-text">{item.company ?? "—"}</span>
+          </span>
           <span className="feed-strip-src">
-            {t("feed.viaSource", { source: item.source })}
+            <span className="strip-text">
+              {t("feed.viaSource", { source: item.source })}
+            </span>
           </span>
           <span className="feed-strip-age">
             {t("feed.postedAge", {
