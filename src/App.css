@@ -6002,6 +6002,13 @@ button:not(:disabled):active,
    rather than a bar chart: with three channels and a floor under the rate,
    half the rows have no number to draw, and a chart with two bars and a
    caption is a table that has to be decoded. */
+/* The ghost rate sits above the outcome bars it summarises, so it needs to
+   read as a statement rather than another row of the chart. */
+.insights-ghost {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-meta);
+}
+
 .insights-origin-list {
   list-style: none;
   margin: var(--space-3) 0 0;

@@ -1025,7 +1025,9 @@
     "originSent_one": "{{count}} verstuurd",
     "originSent_other": "{{count}} verstuurd",
     "originRate": "{{pct}}% reageerde",
-    "originTooFew": "te weinig voor een percentage"
+    "originTooFew": "te weinig voor een percentage",
+    "ghostRate": "{{pct}}% van de afgeronde sollicitaties eindigde in stilte — {{ghosted}} van {{closed}}.",
+    "ghostRateTooFew": "Ghostpercentage heeft {{count}} afgeronde sollicitaties nodig voordat het iets zegt."
   },
   "export": {
     "applications": "Sollicitaties",

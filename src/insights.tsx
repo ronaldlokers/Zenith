@@ -21,6 +21,7 @@ import {
   funnelConversions,
   funnelReachCounts,
   outcomeBreakdown,
+  ghostRate,
   originBreakdown,
   MIN_CONVERSION_N,
   responseRate,
@@ -151,6 +152,11 @@ export function InsightsTab({
   // comparison — and those are the rows carrying the outcome the rate is
   // about. The funnel and the response rate beside it read the same payload.
   const origins = originBreakdown(stats.applications, history);
+  // Same denominator as outcomes.total by construction — both count the
+  // applications that reached a terminal state. Kept as its own function
+  // because it is the metric README and PRODUCT.md name, and its semantics
+  // (open applications are not ghosts) are worth stating once and testing.
+  const ghost = ghostRate(history);
   const outcomeMax = Math.max(1, ...outcomes.counts.map((o) => o.count));
   const liveOffers = applications.filter((a) => a.status === "offer");
   const comps = liveOffers
@@ -376,6 +382,23 @@ export function InsightsTab({
             </p>
           ) : (
             <>
+              {/* The headline the bars below decompose. Named in README and
+                  PRODUCT.md as a shipped metric long before anything
+                  computed it — a reader had to eyeball the bars and do the
+                  division. */}
+              {ghost.rate == null ? (
+                <p className="muted small insights-ghost">
+                  {t("insights.ghostRateTooFew", { count: MIN_CONVERSION_N })}
+                </p>
+              ) : (
+                <p className="insights-ghost">
+                  {t("insights.ghostRate", {
+                    pct: Math.round(ghost.rate * 100),
+                    ghosted: ghost.ghosted,
+                    closed: ghost.closed,
+                  })}
+                </p>
+              )}
               <div className="dash-funnel dash-outcome">
                 {outcomes.counts.map(({ reason, count }) => (
                   <div className="dash-fn" key={reason}>

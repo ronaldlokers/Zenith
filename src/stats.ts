@@ -238,16 +238,61 @@ export interface OutcomeBreakdown {
 // counting it would inflate "no reason recorded" with rows nobody can act
 // on. The latest row is also exactly the row the outcome endpoint writes to,
 // which keeps the breakdown and the edit path pointed at the same data.
-export function outcomeBreakdown(history: StatusHistoryRow[]): OutcomeBreakdown {
+// The last row per application. Don't lean on the caller's ordering:
+// same-timestamp rows are ordered by id server-side, but these functions are
+// used on any history array.
+function latestByApp(history: StatusHistoryRow[]): Map<number, StatusHistoryRow> {
   const latest = new Map<number, StatusHistoryRow>();
   for (const row of history) {
     const prev = latest.get(row.application_id);
-    // Don't lean on the caller's ordering: same-timestamp rows are ordered
-    // by id server-side, but this function is used on any history array.
     if (!prev || sqlMs(row.changed_at) >= sqlMs(prev.changed_at)) {
       latest.set(row.application_id, row);
     }
   }
+  return latest;
+}
+
+export interface GhostRate {
+  /** Applications that reached a terminal state at all. */
+  closed: number;
+  /** Of those, how many ended in "ghosted". */
+  ghosted: number;
+  /** Null below MIN_CONVERSION_N closed — same floor as everything else. */
+  rate: number | null;
+}
+
+// Ghost rate. README and PRODUCT.md have both named it as a shipped Insights
+// metric since the stats work landed, and nothing computed it: "ghosted"
+// existed as a status, a one-tap action and a bucket of outcome labels, never
+// as a fraction. A reader had to eyeball the outcome bars and do the division.
+//
+// Of the applications that ENDED, how many ended in silence. Applications
+// still open are not in the denominator, for the reason responseTime spells
+// out at length: an application nobody has answered yet is not a ghost, it is
+// an unfinished measurement, and folding the two together is how a metric
+// ends up wrong in a specific direction.
+//
+// Counts the "ghosted" status only, not rejections whose reason happens to be
+// no_response. Those are different rows because the user said they were —
+// they chose the terminal status — and reclassifying them here would make the
+// number disagree with the outcome breakdown drawn beside it.
+export function ghostRate(history: StatusHistoryRow[]): GhostRate {
+  let closed = 0;
+  let ghosted = 0;
+  for (const row of latestByApp(history).values()) {
+    if (FUNNEL_STAGES.includes(row.to_status)) continue;
+    closed++;
+    if (row.to_status === "ghosted") ghosted++;
+  }
+  return {
+    closed,
+    ghosted,
+    rate: closed >= MIN_CONVERSION_N ? ghosted / closed : null,
+  };
+}
+
+export function outcomeBreakdown(history: StatusHistoryRow[]): OutcomeBreakdown {
+  const latest = latestByApp(history);
 
   const tally = new Map<string, number>();
   let unrecorded = 0;
