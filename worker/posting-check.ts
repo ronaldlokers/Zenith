@@ -7,7 +7,30 @@ import { guardedFetch } from "./url-guard.js";
 // a hard HTTP error, or a redirect that collapses to a bare top-level
 // page (the shape of a "bounced to the generic listings page" result).
 
-const BATCH_SIZE = 15;
+// Per account, not per deployment. This was one global BATCH_SIZE with no
+// user_id predicate — the fifteen least-recently-checked applications across
+// everyone — which is a constant tuned when there was one account and becomes
+// a division the moment there are two. At the stated ~50 applications per
+// heavy user and a run every six hours, three users already meant a posting
+// was re-checked about every three days, so the "posting may be gone" badge
+// was reporting a state that could be days old.
+//
+// The old ordering was worse than an even split, too: all-NULL
+// posting_checked_at values tie, so whoever inserted first took the whole
+// batch. A user who added fifty applications at once could starve everyone
+// else indefinitely.
+export const PER_USER_BATCH = 15;
+
+// And a ceiling, because the work is now unbounded in the number of accounts
+// and each candidate is a network probe. Workers cap subrequests per
+// invocation, so a deployment large enough to pass this would otherwise start
+// failing the whole run rather than doing less of it.
+//
+// It binds at roughly thirteen active accounts. Past that the round-robin
+// ordering below is what matters: rows are taken rank-first, so everyone's
+// oldest posting is checked before anyone's second-oldest, and the shortfall
+// is shared instead of landing entirely on whoever sorts last.
+export const GLOBAL_CEILING = 200;
 const FETCH_TIMEOUT_MS = 8000;
 
 // Each attempt gets its own controller + timeout (#285) — a HEAD and its
@@ -52,13 +75,22 @@ export function looksStale(
 
 export async function checkStalePostings(env: Env): Promise<{ checked: number; flagged: number }> {
   const { results } = await env.DB.prepare(
-    `SELECT id, url FROM applications
-     WHERE url IS NOT NULL
-       AND status NOT IN ('rejected', 'withdrawn', 'ghosted')
-     ORDER BY posting_checked_at IS NOT NULL, posting_checked_at ASC
-     LIMIT ?`,
+    `WITH ranked AS (
+       SELECT id, url, user_id,
+              ROW_NUMBER() OVER (
+                PARTITION BY user_id
+                ORDER BY posting_checked_at IS NOT NULL, posting_checked_at ASC, id
+              ) AS rn
+         FROM applications
+        WHERE url IS NOT NULL
+          AND status NOT IN ('rejected', 'withdrawn', 'ghosted')
+     )
+     SELECT id, url FROM ranked
+      WHERE rn <= ?
+      ORDER BY rn, user_id
+      LIMIT ?`,
   )
-    .bind(BATCH_SIZE)
+    .bind(PER_USER_BATCH, GLOBAL_CEILING)
     .all<{ id: number; url: string }>();
 
   // Check every candidate concurrently (#346) — each is an independent
