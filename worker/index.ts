@@ -1242,9 +1242,36 @@ const EXPORT_TABLES = [
   "notifications",
 ] as const;
 
-// feed_items is a shared pool (no user_id — see migration 0024), so it's
-// exported as-is rather than scoped to one user.
-const GLOBAL_EXPORT_TABLES = new Set(["feed_items"]);
+// feed_items is a shared pool with no user_id (migration 0024), which the
+// export used to treat as a reason to hand over the whole table: SELECT *, no
+// predicate, no LIMIT, served synchronously into a browser download. The rows
+// are public job postings so it was never a tenant leak, but one person's
+// export scaled with everyone's ingest and with all of history, on a table
+// that only grows and carries the full posting description (0045).
+//
+// What is the user's own data here is their relationship to a posting — the
+// feed_item_status row saying they saved or dismissed it — so the export
+// follows that rather than dropping feed_items outright. A list of dismissed
+// postings with no postings in it would not be portable.
+//
+// buildFullExport is deliberately not changed: the backup restores the
+// instance rather than an account, and scoping it would lose every posting
+// nobody has triaged yet.
+const USER_SCOPED_BY_STATUS = new Set(["feed_items"]);
+
+function exportQuery(env: Env, table: string, userId: string) {
+  if (USER_SCOPED_BY_STATUS.has(table)) {
+    return env.DB.prepare(
+      `SELECT ${table}.* FROM ${table}
+        WHERE EXISTS (
+          SELECT 1 FROM feed_item_status
+           WHERE feed_item_status.feed_item_id = ${table}.id
+             AND feed_item_status.user_id = ?
+        )`,
+    ).bind(userId);
+  }
+  return env.DB.prepare(`SELECT * FROM ${table} WHERE user_id = ?`).bind(userId);
+}
 
 export async function buildFullExport(
   env: Env,
@@ -1263,11 +1290,7 @@ async function buildUserExport(
 ): Promise<Record<string, unknown>> {
   const dump: Record<string, unknown[]> = {};
   for (const table of EXPORT_TABLES) {
-    const { results } = GLOBAL_EXPORT_TABLES.has(table)
-      ? await env.DB.prepare(`SELECT * FROM ${table}`).all()
-      : await env.DB.prepare(`SELECT * FROM ${table} WHERE user_id = ?`)
-          .bind(userId)
-          .all();
+    const { results } = await exportQuery(env, table, userId).all();
     dump[table] = results;
   }
   return { exported_at: new Date().toISOString(), ...dump };
@@ -1304,11 +1327,7 @@ app.get("/api/export/:table", async (c) => {
   if (!(EXPORT_TABLES as readonly string[]).includes(table)) {
     return c.json({ error: "unknown table" }, 404);
   }
-  const { results } = GLOBAL_EXPORT_TABLES.has(table)
-    ? await c.env.DB.prepare(`SELECT * FROM ${table}`).all()
-    : await c.env.DB.prepare(`SELECT * FROM ${table} WHERE user_id = ?`)
-        .bind(c.get("userId"))
-        .all();
+  const { results } = await exportQuery(c.env, table, c.get("userId")).all();
   return c.body(toCsv(results as Record<string, unknown>[]), 200, {
     "Content-Type": "text/csv; charset=utf-8",
     "Content-Disposition": `attachment; filename="zenith-${table}.csv"`,
