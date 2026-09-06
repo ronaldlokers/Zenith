@@ -4,6 +4,7 @@ import type { Context } from "hono";
 import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { recordCronRun } from "./cron-log.js";
+import { pruneAuthRows } from "./retention.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { registerOutreachRoutes } from "./outreach.js";
@@ -2764,6 +2765,10 @@ export default {
 
     if (event.cron === "11 3 * * *") {
       independently("backup", runScheduledBackup(env));
+      // Its own waitUntil, not chained onto the backup: the two have nothing
+      // to do with each other and a retention failure must not be the reason
+      // a backup did not happen.
+      independently("auth retention", pruneAuthRows(env));
       return;
     }
     if (event.cron === "0 8 * * 1") {
