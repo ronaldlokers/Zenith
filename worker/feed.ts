@@ -391,6 +391,25 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   return { inserted, seen: candidates.length };
 }
 
+// Exported so its query plan can be asserted (test-node has no D1; the check
+// lives in test/feed-index.spec.ts). Before migration 0062 this ORDER BY had
+// no index behind it at all — the only one feed_items ever carried was
+// idx_feed_items_status, dropped in 0047 — so every page read the whole table
+// and built a temp b-tree to sort it, on a tier that bills rows read.
+export function feedPageSql(cursorClause: string): string {
+  return `SELECT feed_items.*,
+              COALESCE(feed_item_status.status, 'new') AS status
+       FROM feed_items
+       LEFT JOIN feed_item_status
+         ON feed_item_status.feed_item_id = feed_items.id
+         AND feed_item_status.user_id = ?
+       WHERE COALESCE(feed_item_status.status, 'new') IN ('new', 'saved')
+         ${VISIBLE_TO_USER}
+         ${cursorClause}
+       ORDER BY COALESCE(feed_items.posted_at, '') DESC, feed_items.id DESC
+       LIMIT ?`;
+}
+
 export function registerFeedRoutes(app: Hono<AppEnv>) {
   app.get("/api/feed", async (c) => {
     const userId = c.get("userId");
@@ -425,19 +444,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
     }
     binds.push(limit);
 
-    const { results } = await c.env.DB.prepare(
-      `SELECT feed_items.*,
-              COALESCE(feed_item_status.status, 'new') AS status
-       FROM feed_items
-       LEFT JOIN feed_item_status
-         ON feed_item_status.feed_item_id = feed_items.id
-         AND feed_item_status.user_id = ?
-       WHERE COALESCE(feed_item_status.status, 'new') IN ('new', 'saved')
-         ${VISIBLE_TO_USER}
-         ${cursorClause}
-       ORDER BY COALESCE(feed_items.posted_at, '') DESC, feed_items.id DESC
-       LIMIT ?`,
-    )
+    const { results } = await c.env.DB.prepare(feedPageSql(cursorClause))
       .bind(...binds)
       .all<{ id: number; posted_at: string | null; description: string | null }>();
 
