@@ -197,6 +197,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
                 applications.next_action_at AS date, companies.name AS company_name
          FROM applications
          LEFT JOIN companies ON companies.id = applications.company_id
+                            AND companies.user_id = applications.user_id
          WHERE applications.user_id = ?
            AND applications.next_action_at IS NOT NULL
            AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
@@ -208,6 +209,7 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
                 applications.deadline_at AS date, companies.name AS company_name
          FROM applications
          LEFT JOIN companies ON companies.id = applications.company_id
+                            AND companies.user_id = applications.user_id
          WHERE applications.user_id = ?
            AND applications.deadline_at IS NOT NULL
            AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
@@ -222,7 +224,9 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
                 applications.title, companies.name AS company_name
          FROM interactions
          LEFT JOIN applications ON applications.id = interactions.application_id
+                               AND applications.user_id = interactions.user_id
          LEFT JOIN companies ON companies.id = applications.company_id
+                            AND companies.user_id = interactions.user_id
          WHERE interactions.user_id = ?
            AND interactions.type = 'interview'
            AND interactions.happened_at >= ?`,

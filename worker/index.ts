@@ -514,6 +514,7 @@ app.get("/api/applications", async (c) => {
     `SELECT application_tags.application_id, tags.id, tags.name
      FROM application_tags
      JOIN tags ON tags.id = application_tags.tag_id
+              AND tags.user_id = application_tags.user_id
      WHERE application_tags.user_id = ?
      ORDER BY application_tags.sort_order, application_tags.tag_id`,
   )
@@ -1428,6 +1429,7 @@ app.get("/api/agenda", async (c) => {
               applications.next_action_at AS date, companies.name AS company_name
        FROM applications
        LEFT JOIN companies ON companies.id = applications.company_id
+                          AND companies.user_id = applications.user_id
        WHERE applications.user_id = ?
          AND applications.next_action_at IS NOT NULL
          AND applications.status NOT IN ('rejected', 'withdrawn', 'ghosted')`,
@@ -1441,8 +1443,11 @@ app.get("/api/agenda", async (c) => {
               companies.name AS company_name, contacts.name AS contact_name
        FROM interactions
        LEFT JOIN applications ON applications.id = interactions.application_id
+                             AND applications.user_id = interactions.user_id
        LEFT JOIN companies ON companies.id = applications.company_id
+                          AND companies.user_id = interactions.user_id
        LEFT JOIN contacts ON contacts.id = COALESCE(interactions.contact_id, applications.contact_id)
+                         AND contacts.user_id = interactions.user_id
        WHERE interactions.user_id = ?
          AND interactions.happened_at >= date('now', '-14 days')`,
     )
@@ -1453,6 +1458,7 @@ app.get("/api/agenda", async (c) => {
               companies.name AS company_name
        FROM applications
        LEFT JOIN companies ON companies.id = applications.company_id
+                          AND companies.user_id = applications.user_id
        WHERE applications.user_id = ?
          AND applications.applied_at IS NOT NULL
          -- Forward-looking agenda: bound the apply-date leg like the
@@ -1491,7 +1497,9 @@ app.get("/api/activity", async (c) => {
             sh.changed_at AS ts
      FROM status_history sh
      JOIN applications a ON a.id = sh.application_id
+                        AND a.user_id = sh.user_id
      LEFT JOIN companies comp ON comp.id = a.company_id
+                             AND comp.user_id = sh.user_id
      WHERE sh.user_id = ?1
 
      UNION ALL
@@ -1501,7 +1509,9 @@ app.get("/api/activity", async (c) => {
             i.happened_at
      FROM interactions i
      JOIN applications a ON a.id = i.application_id
+                        AND a.user_id = i.user_id
      LEFT JOIN companies comp ON comp.id = a.company_id
+                             AND comp.user_id = i.user_id
      WHERE i.user_id = ?1 AND i.application_id IS NOT NULL
 
      UNION ALL
@@ -1511,7 +1521,9 @@ app.get("/api/activity", async (c) => {
             d.created_at
      FROM documents d
      JOIN applications a ON a.id = d.application_id
+                        AND a.user_id = d.user_id
      LEFT JOIN companies comp ON comp.id = a.company_id
+                             AND comp.user_id = d.user_id
      WHERE d.user_id = ?1
 
      ORDER BY ts DESC

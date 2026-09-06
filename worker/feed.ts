@@ -453,6 +453,7 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
       `SELECT DISTINCT skills.name
        FROM work_experience_skills wes
        JOIN skills ON skills.id = wes.skill_id
+                  AND skills.user_id = wes.user_id
        WHERE wes.user_id = ?`,
     )
       .bind(userId)
