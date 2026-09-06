@@ -2591,17 +2591,49 @@ export async function logInboundEmail(
   env: Env,
   fromAddress: string,
   subject: string,
+  // The SMTP envelope sender — who put this message into the ingest address.
+  // For the way this feature is actually used that is the account holder
+  // forwarding a recruiter's mail to themselves.
+  envelopeFrom: string,
 ): Promise<void> {
   fromAddress = fromAddress.toLowerCase();
 
-  // Contacts are per-user now, so the same sender address could match a
-  // contact belonging to more than one user. Matching purely on address
-  // can't disambiguate that case — skip rather than guess and log against
-  // the wrong user's contact.
-  const { results: contacts } = await env.DB.prepare(
-    "SELECT id, user_id, outreach_status FROM contacts WHERE lower(email) = ?",
+  // Whose mailbox this arrived from decides whose account it may touch.
+  //
+  // Before this, the contact lookup ran across every user's contacts on the
+  // strength of a From address alone — and the From of a forwarded message is
+  // read out of the body, which anyone who can mail the ingest address can
+  // write. So a stranger could have an interaction logged against another
+  // person's contact, carrying attacker-chosen text, and flip that contact's
+  // outreach_status to "replied" so a real follow-up stopped being prompted.
+  //
+  // Resolving the forwarder first bounds every one of those to the account
+  // that forwarded the mail. It also drops a case that used to work: a
+  // recruiter mailing the ingest address directly is no longer logged,
+  // because there is nobody it can safely be attributed to. That was the
+  // unauthenticated path, so losing it is the fix rather than a casualty of
+  // it.
+  //
+  // Not solved here, and worth being plain about: an SMTP envelope sender is
+  // itself forgeable. This narrows the blast radius from "any account" to
+  // "the account whose address was forged", which is the part that was
+  // actually wrong. Requiring SPF to pass would be the next step and is not
+  // free — forwarding routinely breaks SPF, which is precisely what this
+  // feature is for.
+  const forwarder = await env.DB.prepare(
+    'SELECT id FROM "user" WHERE lower(email) = ?',
   )
-    .bind(fromAddress)
+    .bind(envelopeFrom.toLowerCase())
+    .first<{ id: string }>();
+  if (!forwarder) return;
+
+  // Scoped to that user. Contacts are per-user, so the same address can exist
+  // for several people; matching on address alone could not tell them apart
+  // and skipped rather than guess. Now there is nothing to guess about.
+  const { results: contacts } = await env.DB.prepare(
+    "SELECT id, user_id, outreach_status FROM contacts WHERE lower(email) = ? AND user_id = ?",
+  )
+    .bind(fromAddress, forwarder.id)
     .all<{ id: number; user_id: string; outreach_status: string }>();
   if (contacts.length !== 1) return;
   const contact = contacts[0];
@@ -2724,7 +2756,7 @@ export default {
     // used the way it actually is — see worker/forwarded-email.ts (#179).
     ctx.waitUntil(
       resolveOriginalSender(message.raw, message.from).then((sender) =>
-        logInboundEmail(env, sender.address, subject),
+        logInboundEmail(env, sender.address, subject, message.from),
       ),
     );
   },
