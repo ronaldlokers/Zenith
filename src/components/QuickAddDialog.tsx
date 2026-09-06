@@ -71,6 +71,10 @@ export interface QuickAddDialogProps {
   onError: (message: string | null) => void;
 }
 
+// One id, so the field and both buttons point at the same sentence rather
+// than three copies that can drift apart.
+const TITLE_HINT_ID = "zui-quickadd-title-hint";
+
 export function QuickAddDialog({
   companies,
   prefill,
@@ -82,6 +86,7 @@ export function QuickAddDialog({
   const { t } = useTranslation();
   const [restored] = useState(() => (prefill ? null : takeDraft()));
   const [title, setTitle] = useState(prefill?.title ?? restored?.title ?? "");
+  const needsTitle = !title.trim();
   const [companyId, setCompanyId] = useState<number | null>(() => {
     if (prefill?.company) {
       // Matched by name rather than created: a captured site name is a guess,
@@ -210,12 +215,23 @@ export function QuickAddDialog({
 
         <label className="zui-quickadd-field">
           <span>{t("forms.title")}</span>
+          {/* Both submit buttons are disabled until this has a value, which
+              is a good structural guard — there is never a failed-validation
+              state to announce — but it left a silently inert control:
+              "button, dimmed" and no reason. The reason lives here, where the
+              fix is made, and goes away once there is nothing to explain. */}
           <input
             required
+            aria-describedby={needsTitle ? TITLE_HINT_ID : undefined}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </label>
+        {needsTitle && (
+          <p id={TITLE_HINT_ID} className="zui-quickadd-hint muted small">
+            {t("quickAdd.titleRequired")}
+          </p>
+        )}
         <label className="zui-quickadd-field">
           <span>{t("forms.company")}</span>
           <select
@@ -246,10 +262,24 @@ export function QuickAddDialog({
           </select>
         </label>
         <ActionBar variant="form">
-          <Button type="submit" variant="primary" disabled={busy || !title.trim()}>
+          {/* Described by the same hint. A disabled button is out of the tab
+              order in most browsers, but several screen-reader browse modes
+              reach one anyway, and this costs nothing where they do. */}
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={busy || needsTitle}
+            aria-describedby={needsTitle ? TITLE_HINT_ID : undefined}
+          >
             {t("quickAdd.addOpen")}
           </Button>
-          <Button type="button" variant="secondary" disabled={busy || !title.trim()} onClick={() => submit(false)}>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy || needsTitle}
+            aria-describedby={needsTitle ? TITLE_HINT_ID : undefined}
+            onClick={() => submit(false)}
+          >
             {t("quickAdd.add")}
           </Button>
           <Button type="button" variant="secondary" onClick={onClose}>

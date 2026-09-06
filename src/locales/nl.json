@@ -965,6 +965,7 @@
     "import": "Importeren",
     "importing": "Importeren…",
     "hint": "We halen de titel & het bedrijf op. Of typ hieronder een titel en vul de rest later aan.",
+    "titleRequired": "Vul eerst een titel in.",
     "addOpen": "Toevoegen & openen",
     "add": "Toevoegen"
   },

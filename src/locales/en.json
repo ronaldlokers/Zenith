@@ -965,6 +965,7 @@
     "import": "Import",
     "importing": "Importing…",
     "hint": "We'll pull the title & company. Or just type a title below and fill the rest later.",
+    "titleRequired": "Enter a title first.",
     "addOpen": "Add & open",
     "add": "Add"
   },
