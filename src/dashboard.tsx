@@ -116,17 +116,34 @@ export function DashboardTab({
     .sort((a, b) => a.updated_at.localeCompare(b.updated_at))
     .slice(0, 5);
 
-  const closeOut = (a: Application) =>
-    Promise.resolve(api.archiveApplication(a.id))
+  // This block and Next Up's "No reply" close the same real event — a role
+  // that never answered, given up on — and only one of them said so. Archiving
+  // on its own leaves the status at applied/screening, so Insights goes on
+  // counting the application as open and the ghost rate undercounts by however
+  // often the user took this path. Which is the path the screen recommends: it
+  // puts an Archive button on every quiet row.
+  //
+  // Ghosted first, then archive, so the status_history row lands while the row
+  // is still live in the pipeline — that row is what every outcome metric
+  // reads. Undo reverses both, in the opposite order.
+  //
+  // isGoneQuiet only matches an application with no next_action_at, so the
+  // status change clearing the follow-up costs nothing here.
+  const closeOut = (a: Application) => {
+    const prev = a.status;
+    return Promise.resolve(api.setStatus(a.id, "ghosted"))
+      .then(() => api.archiveApplication(a.id))
       .then(() => onChanged())
       .then(() =>
         notify(t("today.closedOut"), () =>
           Promise.resolve(api.unarchiveApplication(a.id))
+            .then(() => api.setStatus(a.id, prev))
             .then(() => onChanged())
             .catch((e) => onError((e as Error).message)),
         ),
       )
       .catch((e) => onError((e as Error).message));
+  };
 
   const searchWeek = searchWeekNumber(
     goal?.search_started_at ??
