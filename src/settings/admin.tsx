@@ -5,6 +5,7 @@ import { api } from "../api";
 import { authClient, useSession } from "../auth-client";
 import { requestConfirm } from "../hooks";
 import { Badge, Button } from "../components";
+import { formatDateWithYear, parseSqlDate } from "../format";
 import "./settings.css";
 
 // Admin user management (#285) — the recovery path for a locked-out user:
@@ -337,6 +338,93 @@ export function TestEmail({
         {t("account.testEmailSend")}
       </Button>
       {result && <p className="admin-invite-success">{result}</p>}
+    </div>
+  );
+}
+
+// How long each task may go without a successful run before the operator
+// should look. Derived from the cron expressions in wrangler.jsonc, with slack
+// for a missed invocation — the point is "this stopped happening", not
+// "this ran four minutes late".
+const CRON_MAX_AGE_HOURS: Record<string, number> = {
+  "notification delivery": 3,
+  "feed pull": 14,
+  "stale-posting check": 14,
+  backup: 48,
+  "weekly digest": 192,
+};
+
+type CronRun = {
+  label: string;
+  ok: number;
+  error: string | null;
+  ran_at: string;
+};
+
+// Operator visibility for the crons (#61 in the product review). Their only
+// failure signal was a console.error, and Workers Logs has no alerting, so a
+// weekly digest could throw every Monday for a month with nothing to see.
+//
+// Two questions, and the second is the one that needed the successes recorded:
+// is anything failing, and is anything no longer running at all.
+export function ScheduledTasks({
+  onError,
+}: {
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [runs, setRuns] = useState<CronRun[] | null>(null);
+
+  useEffect(() => {
+    api
+      .cronRuns()
+      .then(setRuns)
+      .catch((e) => onError((e as Error).message));
+  }, [onError]);
+
+  const hoursSince = (at: string) =>
+    (Date.now() - parseSqlDate(at)) / 3_600_000;
+
+  return (
+    <div className="admin-invite">
+      <h3>{t("admin.cronTitle")}</h3>
+      <p className="muted small">{t("admin.cronHint")}</p>
+      {runs === null ? (
+        <p className="muted small">{t("common.loading")}</p>
+      ) : runs.length === 0 ? (
+        // Not an error state: a freshly deployed instance has simply not run
+        // anything yet, and saying so beats an empty box.
+        <p className="muted small">{t("admin.cronNone")}</p>
+      ) : (
+        <ul className="admin-cron-list">
+          {runs.map((r) => {
+            const age = hoursSince(r.ran_at);
+            const late = age > (CRON_MAX_AGE_HOURS[r.label] ?? 48);
+            return (
+              <li key={r.label}>
+                <span className="admin-cron-label">{r.label}</span>
+                <span className="admin-cron-when muted small">
+                  {formatDateWithYear(r.ran_at)}
+                </span>
+                {/* Only the exceptions are badged. A healthy list should be
+                    quiet — a row of green "OK" pills spends the loudest thing
+                    on the screen on the state that needs no attention, and
+                    makes the one that does harder to find. The two badges
+                    share a variant because the component has one warning
+                    tone; the word is what separates them, which is also the
+                    reading that survives without colour. */}
+                {!r.ok && <Badge variant="warn">{t("admin.cronFailed")}</Badge>}
+                {!!r.ok && late && (
+                  <Badge variant="warn">{t("admin.cronLate")}</Badge>
+                )}
+                {r.error && (
+                  <span className="admin-cron-error muted small">{r.error}</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

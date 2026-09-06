@@ -218,8 +218,14 @@
       "users": "Users",
       "invites": "Invites",
       "demo": "Demo data",
-      "notifications": "Notifications"
-    }
+      "notifications": "Notifications",
+      "scheduled": "Scheduled"
+    },
+    "cronTitle": "Scheduled tasks",
+    "cronHint": "The last run of each background task. A failure, or a task that has stopped running, shows here — it is the only place it does.",
+    "cronNone": "Nothing has run yet.",
+    "cronFailed": "Failed",
+    "cronLate": "Late"
   },
   "feed": {
     "pulledFrom": "Pulled from your configured job boards (Greenhouse, Ashby) and Adzuna every 6 hours.",

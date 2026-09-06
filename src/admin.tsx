@@ -2,20 +2,32 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { SettingsNav } from "./components";
-import { AdminUsers, AdminInvite, TestPush, TestEmail } from "./settings/admin";
+import {
+  AdminUsers,
+  AdminInvite,
+  TestPush,
+  TestEmail,
+  ScheduledTasks,
+} from "./settings/admin";
 import { ResetDemoData } from "./settings/data";
 
 // Dedicated admin area (#457) — lifted out of Settings, where user management,
 // invites, demo reset and test-push were stacked in one overloaded tab. Its
 // own page, admin-only (App gates the route on role). A section nav (#469)
 // mirrors Settings: one section at a time, deep-linkable via ?s=.
-type AdminSection = "users" | "invites" | "demo" | "notifications";
+type AdminSection =
+  | "users"
+  | "invites"
+  | "demo"
+  | "notifications"
+  | "scheduled";
 
 const ADMIN_SECTIONS: AdminSection[] = [
   "users",
   "invites",
   "demo",
   "notifications",
+  "scheduled",
 ];
 
 export function AdminPage({
@@ -64,6 +76,7 @@ export function AdminPage({
           {section === "users" && <AdminUsers onError={onError} />}
           {section === "invites" && <AdminInvite />}
           {section === "demo" && <ResetDemoData />}
+          {section === "scheduled" && <ScheduledTasks onError={onError} />}
           {section === "notifications" && (
             <>
               <TestPush onError={onError} />
