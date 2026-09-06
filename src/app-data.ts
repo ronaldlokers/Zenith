@@ -199,8 +199,8 @@ export function useAppData(
   // Optimistic status change: update locally, revert on API failure
   const setStatus = useCallback(
     (id: number, status: Status) => {
-      const prev = applications;
-      const prevStatus = applications.find((a) => a.id === id)?.status;
+      const before = applications.find((a) => a.id === id);
+      const prevStatus = before?.status;
       // Optimistically stamp updated_at too so "Recently updated" ordering
       // stays correct without a full reload (perf review, #446).
       const now = new Date().toISOString();
@@ -243,7 +243,15 @@ export function useAppData(
           }
         })
         .catch((e) => {
-          setApplications(prev);
+          // Only this row. Restoring the whole array would discard any other
+          // move made in the same render — two quick drags share this closure,
+          // so the second card's already-saved change went back with the first
+          // card's failure and nothing said so.
+          if (before) {
+            setApplications((apps) =>
+              apps.map((a) => (a.id === id ? { ...a, ...before } : a)),
+            );
+          }
           setError((e as Error).message);
         });
     },
