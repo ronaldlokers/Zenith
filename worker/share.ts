@@ -26,7 +26,9 @@ function escapeHtml(v: string): string {
     .replace(/'/g, "&#39;");
 }
 
-const SHARE_STRINGS = {
+// Exported so test-node/locale-parity.spec.ts can hold it to the same rule as
+// src/locales. It is a second translation table, and it was outside the gate.
+export const SHARE_STRINGS = {
   en: {
     title: "Shared pipeline",
     momentumLabel: "Pipeline momentum",

@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { SHARE_STRINGS } from "../worker/share";
 
 // Strict en/nl key parity is a standing rule, and until now it was only ever
 // checked by hand. A missing key does not throw — i18next falls back to the
@@ -117,5 +118,53 @@ describe("locale parity", () => {
       [...missing].map(([k, f]) => `${k} (${f})`),
       "these render as the key itself",
     ).toEqual([]);
+  });
+});
+
+// The share page carries its own translation table. It is server-rendered
+// outside React and needs about fifteen strings, so it does not read
+// src/locales — which meant strict en/nl parity was enforced for the whole app
+// and silently not enforced for the one page strangers see. A key added to one
+// half and not the other would ship.
+//
+// Guarded rather than moved. Bringing these into src/locales would make the
+// Worker import the app's entire translation file — six hundred keys to render
+// fifteen — on a surface that answers unauthenticated. The problem was that
+// the second table was ungoverned, not that it exists.
+describe("the share page's own translation table", () => {
+  const table = SHARE_STRINGS as unknown as Record<string, Record<string, unknown>>;
+
+  const shareKeys = (locale: string): string[] => {
+    const walk = (obj: Record<string, unknown>, prefix = ""): string[] =>
+      Object.entries(obj).flatMap(([k, v]) =>
+        v && typeof v === "object"
+          ? [prefix + k, ...walk(v as Record<string, unknown>, `${prefix}${k}.`)]
+          : [prefix + k],
+      );
+    return walk(table[locale]).sort();
+  };
+
+  it("covers the same locales as the rest of the app", () => {
+    // The "add a language in two unrelated places" problem, made loud. A third
+    // locale in src/locales now fails here until the share page gets it too.
+    expect(Object.keys(table).sort()).toEqual([...LOCALES].sort());
+  });
+
+  it("has the same keys in every locale", () => {
+    const [first, ...others] = LOCALES;
+    for (const other of others) {
+      expect(shareKeys(other), `share strings differ in ${other}`).toEqual(
+        shareKeys(first),
+      );
+    }
+  });
+
+  it("has nothing blank standing in for a translation", () => {
+    for (const locale of LOCALES) {
+      const blank = Object.entries(table[locale]).filter(
+        ([, v]) => typeof v === "string" && v.trim() === "",
+      );
+      expect(blank.map(([k]) => k), `blank in ${locale}`).toEqual([]);
+    }
   });
 });
