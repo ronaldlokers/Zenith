@@ -1014,7 +1014,18 @@
     "gapsTitle": "Gevraagd, niet op je cv",
     "gapsHint": "Over de {{count}} vacatures waarvan je een beschrijving hebt bewaard. Dit zijn vaardigheden die je hebt genoteerd maar die in geen enkele functie in je geschiedenis terugkomen.",
     "gapsAsked": "in {{count}} daarvan",
-    "fromNOffers": "op basis van {{count}} aanbod"
+    "fromNOffers": "op basis van {{count}} aanbod",
+    "originTitle": "Waar je sollicitaties vandaan komen",
+    "originHint": "Responspercentage per kanaal — van de sollicitaties die je verstuurde, hoeveel er verder kwamen dan verstuurd. Een kanaal heeft {{count}} verstuurde sollicitaties nodig voordat een percentage iets zegt.",
+    "originFeed": "Feed",
+    "originExtension": "Browserextensie",
+    "originManual": "Handmatig toegevoegd",
+    "originCount_one": "{{count}} sollicitatie",
+    "originCount_other": "{{count}} sollicitaties",
+    "originSent_one": "{{count}} verstuurd",
+    "originSent_other": "{{count}} verstuurd",
+    "originRate": "{{pct}}% reageerde",
+    "originTooFew": "te weinig voor een percentage"
   },
   "export": {
     "applications": "Sollicitaties",

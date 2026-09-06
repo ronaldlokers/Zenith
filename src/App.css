@@ -5991,3 +5991,41 @@ button:not(:disabled):active,
   flex-direction: column;
   gap: var(--space-2);
 }
+
+/* Same list shape as the gaps above it, plus a rate column. Three columns
+   rather than a bar chart: with three channels and a floor under the rate,
+   half the rows have no number to draw, and a chart with two bars and a
+   caption is a table that has to be decoded. */
+.insights-origin-list {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.insights-origin-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+}
+
+.insights-origin-name {
+  font-weight: 600;
+}
+
+/* Under the name rather than beside it: the counts are the denominator for
+   the rate on the same row, and putting them on the label's line pushed the
+   rate off the edge at 320px. */
+.insights-origin-n {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.insights-origin-rate {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-variant-numeric: tabular-nums;
+}

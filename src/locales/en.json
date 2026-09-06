@@ -1014,7 +1014,18 @@
     "gapsTitle": "Asked for, not on your CV",
     "gapsHint": "Across the {{count}} postings you have saved a description for. These are skills you have listed but no role in your history shows.",
     "gapsAsked": "in {{count}} of them",
-    "fromNOffers": "from {{count}} offer"
+    "fromNOffers": "from {{count}} offer",
+    "originTitle": "Where your applications come from",
+    "originHint": "Response rate by channel — of the ones you sent, how many got past applied. A channel needs {{count}} applications sent before a percentage means anything.",
+    "originFeed": "Feed",
+    "originExtension": "Browser extension",
+    "originManual": "Added by hand",
+    "originCount_one": "{{count}} application",
+    "originCount_other": "{{count}} applications",
+    "originSent_one": "{{count}} sent",
+    "originSent_other": "{{count}} sent",
+    "originRate": "{{pct}}% replied",
+    "originTooFew": "too few to rate"
   },
   "export": {
     "applications": "Applications",

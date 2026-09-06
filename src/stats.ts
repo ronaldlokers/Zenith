@@ -2,7 +2,7 @@
 // /api/stats payload (applications + status_history), so they're unit
 // testable without a DOM or DB. Terminal states (rejected/withdrawn/
 // ghosted) are excluded: these measure forward progress through the funnel.
-import type { Status, StatusHistoryRow } from "./types";
+import type { StatsApplication, Status, StatusHistoryRow } from "./types";
 
 export const FUNNEL_STAGES: Status[] = [
   "interested",
@@ -269,4 +269,96 @@ export function outcomeBreakdown(history: StatusHistoryRow[]): OutcomeBreakdown 
     // rather than following Map insertion.
     .sort((a, b) => b.count - a.count || a.reason.localeCompare(b.reason));
   return { counts, unrecorded, total };
+}
+
+// Where an application came from. Three channels rather than the raw `source`
+// string: the feed writes `feed:adzuna` / `feed:greenhouse` / `feed:ashby`,
+// the browser extension writes `extension`, and anything typed by hand is
+// null. At ~50 applications per search, splitting the feed three ways puts
+// every board under the floor a rate needs — the channel is the question a
+// person actually asks ("is the feed earning the six-hourly cron?"), and the
+// per-board split is noise at this scale.
+export type OriginChannel = "feed" | "extension" | "manual";
+
+export function originChannel(source: string | null): OriginChannel {
+  if (!source) return "manual";
+  if (source.startsWith("feed:")) return "feed";
+  if (source === "extension") return "extension";
+  // A source this function does not know is manual rather than a fourth
+  // bucket: an unrecognised string is far more likely to be something typed
+  // or imported than a channel nobody added here.
+  return "manual";
+}
+
+export interface OriginStats {
+  channel: OriginChannel;
+  /** Applications that came in through this channel, whatever stage. */
+  total: number;
+  /** Of those, how many ever reached "applied". */
+  applied: number;
+  /** Of those, how many ever reached "screening" or beyond. */
+  responded: number;
+  /** Null below MIN_CONVERSION_N applied — same floor as everything else. */
+  rate: number | null;
+  /** Of those, how many ever reached "offer". */
+  offers: number;
+}
+
+// Response rate per origin channel — the product claims sourcing and pipeline
+// are one loop, and this is the half that closes it. `source` has been written
+// on every application by all three creation paths since the feed shipped, and
+// carried in the /api/stats payload the whole time, and nothing has ever read
+// it: a user could not answer whether the feed was worth having.
+//
+// Deliberately the same shape and the same floor as responseRate rather than a
+// new kind of number. A per-channel rate off two applications is exactly the
+// overconfidence MIN_CONVERSION_N exists to refuse, and splitting by channel
+// makes small denominators the normal case rather than the edge one — so the
+// floor matters more here than anywhere it is already applied, not less.
+//
+// Channels with nothing in them are omitted. A row reading "Extension — 0
+// applications" on an account that never installed it is noise, and an empty
+// list is the honest answer for an account that has only ever typed things in.
+export function originBreakdown(
+  applications: StatsApplication[],
+  history: StatusHistoryRow[],
+): OriginStats[] {
+  const reached = reachedIndexByApp(history);
+  const appliedIdx = FUNNEL_STAGES.indexOf("applied");
+  const screeningIdx = FUNNEL_STAGES.indexOf("screening");
+  const offerIdx = FUNNEL_STAGES.indexOf("offer");
+
+  const order: OriginChannel[] = ["feed", "extension", "manual"];
+  const byChannel = new Map<OriginChannel, OriginStats>();
+  for (const channel of order) {
+    byChannel.set(channel, {
+      channel,
+      total: 0,
+      applied: 0,
+      responded: 0,
+      rate: null,
+      offers: 0,
+    });
+  }
+
+  for (const app of applications) {
+    const row = byChannel.get(originChannel(app.source))!;
+    row.total++;
+    // -1 for an application with no history at all, which is what an
+    // extension-created one has until it first moves. It counts toward the
+    // channel's total and toward none of its stage counts, which is the
+    // truthful reading: it exists, and it has not been sent anywhere.
+    const r = reached.get(app.id) ?? -1;
+    if (r >= appliedIdx) row.applied++;
+    if (r >= screeningIdx) row.responded++;
+    if (r >= offerIdx) row.offers++;
+  }
+
+  return order
+    .map((channel) => byChannel.get(channel)!)
+    .filter((row) => row.total > 0)
+    .map((row) => ({
+      ...row,
+      rate: row.applied >= MIN_CONVERSION_N ? row.responded / row.applied : null,
+    }));
 }

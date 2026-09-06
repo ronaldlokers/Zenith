@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { InsightsTab } from "./insights";
 import type { Application, Stats } from "./types";
@@ -159,5 +159,58 @@ describe("the recurring gaps block", () => {
     ]);
     await screen.findByText(/still waiting|typically come|Not enough replies/i);
     expect(screen.queryByText(/Asked for, not on your CV/i)).not.toBeInTheDocument();
+  });
+});
+
+// The section exists to compare channels. On an account that has only ever
+// typed applications in, it repeats the response-rate card above it with a
+// label on it — so it is drawn only when there is a comparison to make.
+describe("the where-they-came-from block", () => {
+  const statsWithSources = (sources: (string | null)[]): Stats =>
+    ({
+      applications: sources.map((source, i) => ({
+        id: i + 1,
+        status: "applied",
+        source,
+        applied_at: day(10),
+        created_at: day(10),
+      })),
+      history: sources.flatMap((_, i) => [
+        h(i + 1, "applied", day(10)),
+        h(i + 1, "screening", day(6)),
+      ]),
+      interactions: [],
+    }) as unknown as Stats;
+
+  const renderSources = (sources: (string | null)[]) =>
+    render(
+      <MemoryRouter>
+        <InsightsTab {...props} stats={statsWithSources(sources)} />
+      </MemoryRouter>,
+    );
+
+  it("stays hidden when everything came in the same way", () => {
+    renderSources([null, null, null, null]);
+    expect(screen.queryByText(/Where your applications come from/i)).toBeNull();
+  });
+
+  it("appears once there are two channels to compare, and groups the feed", () => {
+    renderSources(["feed:adzuna", "feed:greenhouse", "feed:ashby", null]);
+    expect(screen.getByText(/Where your applications come from/i)).toBeTruthy();
+    // The three feed boards are one channel, not three rows of one.
+    expect(screen.getByText("Feed")).toBeTruthy();
+    expect(screen.getByText("3 applications · 3 sent")).toBeTruthy();
+    expect(screen.getByText("Added by hand")).toBeTruthy();
+  });
+
+  it("says so rather than printing a percentage off one application", () => {
+    renderSources(["extension", null, null, null]);
+    // Scoped to the extension row on purpose. The manual row here is three
+    // applications that all advanced, so 100% is its honest answer and the
+    // floor is met — asserting "no 100% anywhere" would have been asserting
+    // the wrong thing, and did.
+    const extensionRow = screen.getByText("Browser extension").closest("li")!;
+    expect(within(extensionRow).getByText("too few to rate")).toBeTruthy();
+    expect(within(extensionRow).queryByText(/%/)).toBeNull();
   });
 });
