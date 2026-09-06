@@ -115,6 +115,32 @@ npm run deploy
 
 `npm run deploy` builds the frontend and pushes the Worker + static assets in one step.
 
+### If a migration goes wrong
+
+D1 migrations are one-directional — there are no down files — so recovery
+means restoring a copy taken before the migration ran.
+
+The GitHub deploy workflow takes one automatically whenever a migration is
+pending, and writes it to R2 as `backups/pre-migration-<commit-sha>.sql`. It
+never uploads it as a workflow artifact: this repository is public, and an
+artifact holding the database would be readable by anyone who can open the
+Actions tab. Deploying by hand, take your own first:
+
+```bash
+npx wrangler d1 export zenith --remote --output=pre-migration.sql -y
+```
+
+To go back, apply that file to the database:
+
+```bash
+npx wrangler d1 execute zenith --remote --file=pre-migration.sql
+```
+
+That is a different path from the nightly JSON backup, which is up to 24 hours
+stale and is restored with `node scripts/restore-backup.mjs` instead. The
+pre-migration snapshot is raw SQL and matches the schema as it was moments
+before the change.
+
 ## 6. Create your login
 
 Account creation is invite-only by design (no public sign-up form) — a seed admin account exists from the initial migration with no credentials set. Give it one:
