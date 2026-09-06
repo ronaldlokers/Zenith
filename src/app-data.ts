@@ -99,6 +99,13 @@ export function useAppData(
   const loadedOnce = useRef(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
 
+  // Mirrors `applications` for callbacks that need to read the current rows
+  // without being invalidated by them. Assigned during render rather than in
+  // an effect: a callback fired between render and effect would otherwise read
+  // the previous array.
+  const appsRef = useRef(applications);
+  appsRef.current = applications;
+
   const reload = useCallback(async () => {
     try {
       const [apps, comps, conts, roles, st] = await Promise.all([
@@ -230,7 +237,12 @@ export function useAppData(
   // Optimistic status change: update locally, revert on API failure
   const setStatus = useCallback(
     (id: number, status: Status) => {
-      const before = applications.find((a) => a.id === id);
+      // From a ref, not the closure. This is the only reason setStatus needed
+      // `applications` in its dep array, and that made a callback threaded to
+      // every tab change identity on every data change — so nothing keyed on
+      // it could skip a render. Same shape as the visible* arrays memoised in
+      // #702; fixing one and not the other leaves the boundary just as leaky.
+      const before = appsRef.current.find((a) => a.id === id);
       const prevStatus = before?.status;
       // Optimistically stamp updated_at too so "Recently updated" ordering
       // stays correct without a full reload (perf review, #446).
@@ -286,7 +298,7 @@ export function useAppData(
           setError((e as Error).message);
         });
     },
-    [applications, reload, refreshStats, notify, navigate, t],
+    [reload, refreshStats, notify, navigate, t],
   );
 
   // Writes the outcome onto the application's latest terminal transition and
