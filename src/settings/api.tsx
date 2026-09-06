@@ -239,9 +239,15 @@ export function PublicApiSettings({
   );
 }
 
-// API reference (#283) — documents the read-only v1 API and webhooks right
-// where the key and hooks are managed. The base URL is derived from the
-// current origin so it's correct on any deployment.
+// API reference (#283) — documents the v1 API and webhooks right where the key
+// and hooks are managed. The base URL is derived from the current origin so
+// it's correct on any deployment.
+//
+// This page listed two of the four endpoints the key opens, and called the
+// surface read-only after a write route had been added. It is the only place a
+// user can work out what their key can reach, so it is kept in step with
+// worker/public-api.ts by test-node/api-reference-truth.spec.ts rather than by
+// remembering.
 export function ApiDocs() {
   const { t } = useTranslation();
   const base = `${window.location.origin}/api/v1`;
@@ -269,8 +275,17 @@ export function ApiDocs() {
           <code>GET /applications/:id</code>
           <span className="muted small">{t("apiDocs.getDesc")}</span>
         </li>
+        <li>
+          <code>POST /applications</code>
+          <span className="muted small">{t("apiDocs.createDesc")}</span>
+        </li>
+        <li>
+          <code>GET /profile</code>
+          <span className="muted small">{t("apiDocs.profileDesc")}</span>
+        </li>
       </ul>
       <p className="muted small">{t("apiDocs.fieldsNote")}</p>
+      <p className="muted small">{t("apiDocs.scopeNote")}</p>
 
       <h4>{t("apiDocs.exampleHeading")}</h4>
       <pre>
