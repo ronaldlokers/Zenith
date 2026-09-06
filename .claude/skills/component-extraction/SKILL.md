@@ -25,7 +25,7 @@ Cascade in the app: `@layer reset, app, components` (src/app-styles.css → inde
 
 6. **Verify zero-diff** — invoke the `zero-diff-verify` skill (`compare -metric AE = 0` after-vs-control). Non-negotiable for anything visible.
 
-7. **Gate + PR.** `npx tsc -b`, `npm run build`, `npx oxlint`, `npx vitest run --no-file-parallelism`. Commit component + adoption separately. Open PR, watch CI, merge.
+7. **Gate + PR.** `npx tsc -b`, `npm run build`, `npm run lint`, `npx vitest run --no-file-parallelism`. Commit component + adoption separately. Open PR, watch CI, merge.
 
 ## The traps (these WILL bite — all hit at least once)
 
