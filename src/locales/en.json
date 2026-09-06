@@ -685,7 +685,19 @@
     "verify": "Verify",
     "useBackupCode": "Use a backup code instead",
     "useTwoFactorCode": "Use your authenticator app instead",
-    "twoFactorLockedOut": "Lost your device and your backup codes? An administrator can reset two-factor authentication on your account."
+    "twoFactorLockedOut": "Lost your device and your backup codes? An administrator can reset two-factor authentication on your account.",
+    "forgotLink": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "We'll email you a link to choose a new one.",
+    "forgotSubmit": "Send the link",
+    "forgotSent": "If that address has an account here, a reset link is on its way. The link works once and expires in an hour.",
+    "backToSignIn": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "This link works once. Pick something you have not used here before.",
+    "newPassword": "New password",
+    "resetSubmit": "Save and sign in",
+    "resetInvalid": "That link has expired or was already used. Ask for a new one.",
+    "resetDone": "Password changed. Sign in with your new one."
   },
   "account": {
     "testPushTitle": "Test push notification",

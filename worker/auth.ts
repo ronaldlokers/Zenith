@@ -1,5 +1,7 @@
 import { betterAuth } from "better-auth";
 import { admin, twoFactor } from "better-auth/plugins";
+import { sendEmail } from "./email/index.js";
+import { buildPasswordResetEmail } from "./email/messages.js";
 
 function buildAuth(env: Env) {
   return betterAuth({
@@ -8,6 +10,39 @@ function buildAuth(env: Env) {
     baseURL: env.BETTER_AUTH_URL,
     emailAndPassword: {
       enabled: true,
+      // Invite-only governs who gets an account, not who can recover one. A
+      // locked-out user's only route was an admin editing D1 or calling an
+      // admin REST endpoint they could not know existed, which for a
+      // one-person product is a ticket per forgotten password.
+      //
+      // Better Auth answers "if this email exists in our system, check your
+      // email" either way and pads the timing when it does not, so this adds
+      // no way to discover whether an address has an account here — which
+      // matters more than usual on an invite-only instance.
+      //
+      // The link carries a one-time token, expires in an hour, and lands on
+      // /reset-password in this app rather than on a hosted page.
+      sendResetPassword: async ({ user, url }) => {
+        const locale = await env.DB.prepare(
+          'SELECT locale FROM "user" WHERE id = ?',
+        )
+          .bind(user.id)
+          .first<{ locale: string | null }>()
+          .catch(() => null);
+        const sent = await sendEmail(
+          env,
+          buildPasswordResetEmail(user.email, locale?.locale ?? "en", url),
+        );
+        if (!sent) {
+          // The user has already been told to check their inbox — Better
+          // Auth's response is fixed and deliberately says the same thing
+          // whether or not the account exists. Nothing will arrive, so say
+          // why here rather than leaving a silent dead end.
+          console.error(
+            "password reset requested but no email provider is configured (RESEND_API_KEY)",
+          );
+        }
+      },
     },
     // TOTP-based 2FA (#211) — an authenticator-app second factor on top
     // of the existing invite-only email/password login. Passkey/WebAuthn
