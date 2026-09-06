@@ -291,21 +291,46 @@ export async function deliverDueNotifications(env: Env): Promise<void> {
 
   const due = results.filter((n) => localHour(n.timezone, now) >= DELIVERY_HOUR);
 
-  // 1. Push every row not yet pushed, exactly as before.
-  await Promise.all(
+  // 1. Push every row not yet pushed, then stamp them in one write.
+  //
+  // Two things changed here together, and the second matters more than the
+  // round-trips. The old shape awaited Promise.all over promises that both
+  // sent and wrote, so a single push that threw rejected the whole thing and
+  // this function gave up before reaching the email leg below — one bad
+  // subscription could silence every email that run.
+  //
+  // Now a failure yields null instead of rejecting: that row keeps
+  // pushed_at NULL and is retried next run, which is what the column is for.
+  const pushed = await Promise.all(
     due
       .filter((n) => n.pushed_at === null)
       .map(async (n) => {
-        await sendPushToUser(env, n.user_id, {
-          title: n.title,
-          body: n.body ?? undefined,
-          url: n.link ?? "/",
-        });
-        await env.DB.prepare("UPDATE notifications SET pushed_at = datetime('now') WHERE id = ?")
-          .bind(n.id)
-          .run();
+        try {
+          await sendPushToUser(env, n.user_id, {
+            title: n.title,
+            body: n.body ?? undefined,
+            url: n.link ?? "/",
+          });
+          return n.id;
+        } catch (e) {
+          console.error("push failed", n.id, e);
+          return null;
+        }
       }),
   );
+
+  // Only what actually sent, and only if anything did — D1 rejects an empty
+  // batch with "No SQL statements detected" (the same guard as
+  // worker/posting-check.ts).
+  const sent = pushed.filter((id): id is number => id !== null);
+  if (sent.length > 0) {
+    // Prepared once and bound per row, the way refreshFeed does it — one
+    // statement and one round-trip instead of a prepare and a run each.
+    const stamp = env.DB.prepare(
+      "UPDATE notifications SET pushed_at = datetime('now') WHERE id = ?",
+    );
+    await env.DB.batch(sent.map((id) => stamp.bind(id)));
+  }
 
   // 2. Email, grouped by user so a batch of reminders becomes one message.
   const unemailed = due.filter((n) => n.emailed_at === null);
