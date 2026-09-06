@@ -685,7 +685,19 @@
     "verify": "Verifiëren",
     "useBackupCode": "Gebruik een back-upcode",
     "useTwoFactorCode": "Gebruik je authenticator-app",
-    "twoFactorLockedOut": "Je apparaat én je back-upcodes kwijt? Een beheerder kan tweestapsverificatie op je account resetten."
+    "twoFactorLockedOut": "Je apparaat én je back-upcodes kwijt? Een beheerder kan tweestapsverificatie op je account resetten.",
+    "forgotLink": "Wachtwoord vergeten?",
+    "forgotTitle": "Wachtwoord opnieuw instellen",
+    "forgotSubtitle": "We mailen je een link om een nieuw wachtwoord te kiezen.",
+    "forgotSubmit": "Stuur de link",
+    "forgotSent": "Als dat adres hier een account heeft, is er een link onderweg. De link werkt één keer en verloopt na een uur.",
+    "backToSignIn": "Terug naar inloggen",
+    "resetTitle": "Kies een nieuw wachtwoord",
+    "resetSubtitle": "Deze link werkt één keer. Kies iets dat je hier nog niet gebruikt hebt.",
+    "newPassword": "Nieuw wachtwoord",
+    "resetSubmit": "Opslaan en inloggen",
+    "resetInvalid": "Die link is verlopen of al gebruikt. Vraag een nieuwe aan.",
+    "resetDone": "Wachtwoord gewijzigd. Log in met je nieuwe wachtwoord."
   },
   "account": {
     "testPushTitle": "Testmelding versturen",

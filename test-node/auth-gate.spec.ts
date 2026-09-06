@@ -20,6 +20,12 @@ const DELIBERATELY_PUBLIC = [
   // Refuses every sign-up: invite-only. Nothing to protect, and it has to
   // answer before the session check or it would 401 instead of explaining.
   '/api/auth/sign-up/email',
+  // Asked by the sign-in page, which by definition has no session. It reports
+  // only whether this deployment has an email provider configured — a fact
+  // about the server, not about any account — and exists so a self-hoster
+  // without one is not offered a "Forgot your password?" link that promises a
+  // message nothing will send.
+  '/api/auth-capabilities',
 ];
 
 // Registrars called above the gate. /api/v1/* carries its own Bearer-key

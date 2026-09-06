@@ -224,6 +224,18 @@ function recordStatusChange(
 // handler. New accounts (including the demo account) are created by an
 // existing admin via the admin plugin's /api/auth/admin/create-user
 // endpoint, which already requires an authenticated admin session.
+// Whether this deployment can send a password-reset email at all. Unauthenticated
+// on purpose — it is asked by the sign-in page, before anyone has a session —
+// and it reveals only whether outbound email is configured, which is a fact
+// about the server rather than about any account.
+//
+// Without it a self-hoster with no RESEND_API_KEY gets a "Forgot your
+// password?" link that promises an email nothing will ever send, which is the
+// silent dead end this whole card is about.
+app.get("/api/auth-capabilities", (c) =>
+  c.json({ passwordReset: resolveProvider(c.env) !== null }),
+);
+
 app.post("/api/auth/sign-up/email", (c) => c.json({ error: "sign-up is invite-only" }, 403));
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => getAuth(c.env).handler(c.req.raw));
