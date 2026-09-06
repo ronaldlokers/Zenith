@@ -508,7 +508,15 @@ function BoardTab({
     {!closedGrouped &&
       !isNarrow &&
       !pinnedOnly &&
-      CLOSED_RAILS.some((r) => !shownFolded.has(r)) && (
+      CLOSED_RAILS.some((r) => !shownFolded.has(r)) &&
+      // Not while the whole live pipeline is folded. Both conditions can hold
+      // at once — fold every live stage with a closed rail still open — and
+      // the board drew two banners with two different undo links, which reads
+      // as broken chrome rather than as an explanation. The other one
+      // describes the bigger problem and its undo fixes what the reader is
+      // looking at; press it and this one appears on its own for the smaller
+      // one. One banner at a time, in the order the reader needs them.
+      !PIPELINE.every((r) => shownFolded.has(r)) && (
         /* The way back. Opening the closed group is one press; closing it
            again was four, one per rail, each its own server write — so a
            glance at what ended cost more to undo than to do. The control
