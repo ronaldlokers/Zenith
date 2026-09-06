@@ -101,6 +101,8 @@ const emptyStats: Stats = { applications: [], history: [], interactions: [] };
 
 const noop = () => {};
 const props = {
+  // Handed down from useAppData since #152 — the tab no longer fetches it.
+  goal: null,
   onOpenJob: noop,
   onGoToJobs: noop,
   onError: noop,

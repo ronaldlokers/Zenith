@@ -39,6 +39,7 @@ const dashboard = (applications: Application[]) =>
     <MemoryRouter initialEntries={["/"]}>
       <DashboardTab
         applications={applications}
+        goal={null}
         stats={{ applications: [], history: [], interactions: [] }}
         onOpenJob={() => {}}
         onChanged={() => Promise.resolve()}

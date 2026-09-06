@@ -58,8 +58,10 @@ export function DashboardTab({
   notify,
   onOpenQuickAdd,
   onGoToFeed,
+  goal,
 }: {
   applications: Application[];
+  goal: UserGoal | null | undefined;
   onOpenJob: (id: number) => void;
   onGoToJobs: () => void;
   onGoToFeed: () => void;
@@ -70,16 +72,10 @@ export function DashboardTab({
   onOpenQuickAdd: () => void;
 }) {
   const { t, i18n } = useTranslation();
-  const [goal, setGoal] = useState<UserGoal | null>(null);
-  // Only the search-start date is read here (the weekly quota moved off
-  // Today). A failure surfaces rather than being swallowed — a silently
-  // missing block is worse than a message.
-  useEffect(() => {
-    api
-      .goals()
-      .then(setGoal)
-      .catch((e) => onError((e as Error).message));
-  }, [onError]);
+  // Handed down rather than fetched. This component unmounts on every tab
+  // switch, so its own effect re-read the same single row through the session
+  // middleware each time someone came back to Overview (#152). useAppData
+  // fetches it once with everything else.
   // Step three of the daily loop — open, see what is due, triage new matches
   // — had no entry point anywhere in the chrome. tileCounts carries numbers
   // for overview and pipeline only, so even the wordmark menu showed nothing

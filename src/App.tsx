@@ -185,6 +185,7 @@ export default function App() {
     loadFailed,
     reload,
     reloadNetwork,
+    goal,
     deleteWithUndo,
     setStatus,
     outcomePrompt,
@@ -673,6 +674,7 @@ export default function App() {
                 {tab === "overview" && (
                   <DashboardTab
                     applications={visibleApps}
+                    goal={goal}
                     onOpenJob={(id) => navigate(boardTarget(id))}
                     onGoToJobs={() => setTab("board")}
                     onError={setError}

@@ -25,6 +25,7 @@ const record = <T,>(name: string, value: T) => {
 vi.mock("./api", () => ({
   api: {
     list: (resource: string) => record(resource, []),
+    goals: () => Promise.resolve(null),
     roleTypes: () => record("roleTypes", []),
     stats: () => record("stats", { history: [], interactions: [] }),
     getPreferences: () => Promise.resolve({ timezone: "Europe/Amsterdam" }),
