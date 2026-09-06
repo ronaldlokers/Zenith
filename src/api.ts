@@ -411,10 +411,17 @@ export const api = {
     return res.json() as Promise<import("./types").Document>;
   },
   profile: () => request<import("./types").Profile>("/api/profile"),
-  updateProfile: (data: Partial<import("./types").Profile>) =>
+  // expectedUpdatedAt as on `update` above: the CV profile form sends it, the
+  // tailor panel does not. The panel writes the one field it has just read, so
+  // there is nothing for it to silently revert.
+  updateProfile: (
+    data: Partial<import("./types").Profile>,
+    expectedUpdatedAt?: string | null,
+  ) =>
     request<import("./types").Profile>("/api/profile", {
       method: "PUT",
       body: JSON.stringify(data),
+      ...(expectedUpdatedAt ? { headers: { "If-Match": expectedUpdatedAt } } : {}),
     }),
   // Which board stages are folded (#535 shell). Sent whole rather than as a
   // toggle: the server stores the canonical set, so there is nothing to
