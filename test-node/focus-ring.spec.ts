@@ -64,10 +64,19 @@ function token(name: string): string {
   return m![1];
 }
 
-/** Every rule body whose selector mentions :focus-visible. */
+/**
+ * Every rule body whose selector mentions any focus pseudo-class.
+ *
+ * :focus-visible alone was too narrow, and the gap was not theoretical. Four
+ * rules drew a focus indicator in --accent and none of them matched: the
+ * board's search pill and the add-a-card slot are :focus-within, the command
+ * palette input is plain :focus, and the outcome dialog's radio row is
+ * :focus-within with a real outline — the exact property this file forbids,
+ * hidden behind the wrong pseudo-class.
+ */
 function focusRules(css: string): { selector: string; body: string }[] {
   const out: { selector: string; body: string }[] = [];
-  for (const m of code(css).matchAll(/([^{}]*:focus-visible[^{}]*)\{([^}]*)\}/g)) {
+  for (const m of code(css).matchAll(/([^{}]*:focus(?:-visible|-within)?[^{}]*)\{([^}]*)\}/g)) {
     out.push({ selector: m[1].trim().replace(/\s+/g, " "), body: m[2] });
   }
   return out;
@@ -91,14 +100,19 @@ describe("focus ring", () => {
     // Every stylesheet, not the two the first version of this checked: the
     // component CSS files set the ring too, and TabBar.css was still painting
     // it --accent when this only looked at index.css and App.css.
+    // An indicator is whatever the eye reads as the ring. Checking `outline`
+    // alone let a --accent border and a --accent box-shadow through, which is
+    // how the board's search pill kept the under-contrasted gold through the
+    // change that removed it everywhere else. --accent-soft is deliberately
+    // not matched: it is a wash sitting behind the border, not the indicator.
     const offenders = stylesheets(SRC).flatMap(({ path, css }) =>
       focusRules(css)
-        .filter((r) => /outline[^;]*var\(--accent\)/.test(r.body))
+        .filter((r) => /(outline|border|box-shadow)[^;]*var\(--accent\)/.test(r.body))
         .map((r) => `${path}: ${r.selector}`),
     );
     expect(
       offenders,
-      "a :focus-visible rule sets the ring to --accent, which measures 2.03:1 on the paper ground",
+      "a focus rule draws its indicator in --accent, which measures 2.03:1 on the paper ground",
     ).toEqual([]);
   });
 

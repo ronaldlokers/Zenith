@@ -38,7 +38,9 @@
   }
 
   .zui-outcome-reason:focus-within {
-    outline: 2px solid var(--accent);
+    /* --accent-ink: the gold is 2.27:1 on this ground, under the 3:1 a
+       focus indicator needs (WCAG 1.4.11). */
+    outline: 2px solid var(--accent-ink);
     outline-offset: -2px;
   }
 
