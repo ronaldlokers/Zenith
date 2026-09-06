@@ -54,7 +54,7 @@ BETTER_AUTH_SECRET=<same value>
 BETTER_AUTH_URL=http://localhost:8787
 ```
 
-Optional — only needed if you want the Feed tab's Adzuna source to pull live listings (the Hacker News "Who's Hiring" source needs no key):
+Optional — only needed if you want the Feed tab's Adzuna source to pull live listings. The Greenhouse and Ashby sources need no key: you add a company's board slug in Settings and they are fetched directly.
 
 ```bash
 npx wrangler secret put ADZUNA_APP_ID
@@ -72,6 +72,39 @@ npx wrangler secret put VAPID_SUBJECT
 # VAPID_SUBJECT is a contact URI push services can reach you at if they need to, e.g. mailto:you@example.com
 ```
 Without these, the push-notification toggle in Settings tells the user push isn't configured — nothing else breaks.
+
+Optional — only needed for outbound email. Two features send it: the weekly
+digest (a Monday 08:00 cron) and the due-follow-up reminders.
+
+```bash
+npx wrangler secret put RESEND_API_KEY
+# from resend.com — the only provider wired up today
+
+npx wrangler secret put EMAIL_FROM
+# e.g. "Zenith <zenith@your-domain.example>"
+```
+
+Set `EMAIL_FROM` if you set `RESEND_API_KEY`. It defaults to
+`Zenith <zenith@zenith.lokilabs.nl>`, which is this project's own domain and
+not one your Resend account can send from — Resend rejects a From address it
+did not issue a token for, so the default fails for every self-hoster.
+
+Without `RESEND_API_KEY` no email is sent and nothing else breaks: the digest
+cron and the reminder pass both no-op rather than erroring.
+
+Optional — only needed for the AI features (CV tailoring, LinkedIn review,
+mock interview, negotiation practice). Users bring their own Anthropic key;
+this secret is what encrypts those keys at rest:
+
+```bash
+# base64 of 32 random bytes — AES-256
+openssl rand -base64 32
+npx wrangler secret put AI_KEY_ENCRYPTION_KEY
+```
+
+Without it, saving an AI key answers `503 AI keys are not enabled on this
+server` and every AI feature stays unavailable. Rotating it makes every stored
+key undecryptable, so users have to re-enter theirs.
 
 ## 5. Apply migrations and deploy
 

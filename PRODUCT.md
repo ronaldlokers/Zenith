@@ -35,7 +35,7 @@ Privacy (no analytics, no telemetry, no trackers, self-hostable, exportable, BYO
 - **Daily loop:** open → see what is due today → triage new feed matches → log a touchpoint → advance a stage. Mobile and desktop both real; mobile often used between other commitments, one-handed.
 - **Weekly loop:** review momentum and stalled applications, chase follow-ups, prep for interviews.
 - **Materials in play:** job descriptions, CVs and cover letters (R2 documents), an in-app CV builder with PDF export and versions, JD keyword matching, ATS scoring, interview-prep checklists, outreach templates.
-- **Off-app surfaces:** the ICS calendar feed lands interviews and follow-ups in the user's own calendar; web push carries due follow-ups, stale postings and new matches; a public `/shared/:token` stats page and a read-only `/api/v1` key expose aggregates outward; outbound webhooks fire on status changes; a browser extension autofills from the pipeline.
+- **Off-app surfaces:** the ICS calendar feed lands interviews and follow-ups in the user's own calendar; web push carries due follow-ups, stale postings and new matches; a public `/shared/:token` stats page exposes aggregates outward and an `/api/v1` key reads the pipeline (and can add to it, which is how the extension saves a posting); outbound webhooks fire on status changes; a browser extension autofills from the pipeline.
 - **Scale:** ~50 applications for a heavy user. Never a big-data problem; no virtualization, load-more where needed.
 
 ## Capabilities and Constraints
