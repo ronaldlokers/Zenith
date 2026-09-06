@@ -28,7 +28,6 @@ import {
 import { ConfirmHost } from "./ui";
 import { type Tab, TAB_PATHS, canonicalPath, parsePath } from "./routing";
 import { DashboardTab } from "./dashboard";
-import { InsightsTab } from "./insights";
 
 // Tab bodies are code-split (perf review, #446): only the active tab's chunk
 // loads, instead of shipping every tab in the initial bundle. Dashboard stays
@@ -47,6 +46,13 @@ const ContactsTab = lazy(() =>
   import("./contacts").then((m) => ({ default: m.ContactsTab })),
 );
 const CVTab = lazy(() => import("./cv").then((m) => ({ default: m.CVTab })));
+// Insights was the one tab body imported eagerly alongside Dashboard, with
+// nothing saying why. Dashboard is eager because it is where every session
+// lands; Insights is a tab most sessions never open, and it brings
+// calendar.tsx with it since nothing else imports that.
+const InsightsTab = lazy(() =>
+  import("./insights").then((m) => ({ default: m.InsightsTab })),
+);
 const ApplicationDetailModal = lazy(() =>
   import("./detail").then((m) => ({ default: m.ApplicationDetailModal })),
 );
