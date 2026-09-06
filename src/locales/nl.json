@@ -507,7 +507,7 @@
     "title": "Volgende acties",
     "showAll": "Alle {{count}} tonen",
     "done": "Klaar",
-    "doneToast": "Follow-up afgerond",
+    "doneToast": "Follow-up vastgelegd en afgevinkt",
     "segDue": "Open {{count}}",
     "segUpcoming": "Binnenkort {{count}}",
     "emptyDue": "Niets open vandaag.",

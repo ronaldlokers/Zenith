@@ -19,6 +19,15 @@ vi.mock("./api", () => ({
     goals: () => Promise.resolve(null),
     updateFollowUp: (id: number, body: { next_action_at: string | null }) => {
       followUpCalls.push({ id, at: body.next_action_at });
+      apiCalls.push(`updateFollowUp(${id}, ${body.next_action_at})`);
+      return Promise.resolve(undefined);
+    },
+    addInteraction: (resource: string, id: number, body: Record<string, unknown>) => {
+      apiCalls.push(`addInteraction(${resource}, ${id}, ${body.type}, ${JSON.stringify(body.notes)})`);
+      return Promise.resolve({ id: 555 });
+    },
+    removeInteraction: (id: number) => {
+      apiCalls.push(`removeInteraction(${id})`);
       return Promise.resolve(undefined);
     },
     setStatus: (id: number, status: string) => {
@@ -483,5 +492,67 @@ describe("the way into the feed", () => {
     // racing the summary fetch and passing before it could have rendered.
     await screen.findByRole("list", { name: "Next up" });
     expect(screen.queryByText(/waiting in the feed/i)).toBeNull();
+  });
+});
+
+// Done cleared the reminder and nothing else, so the moment the user did the
+// work was the moment the app forgot it. No touchpoint reached the timeline,
+// which is what response rate and ghost detection read, and the application
+// dropped into the unplanned pool whose own copy warns that silence is what
+// kills a search. The product promise is "never lose a follow-up" and the
+// primary button on the primary screen was manufacturing exactly that.
+describe("marking a follow-up done", () => {
+  const due = () =>
+    app({ id: 21, next_action: "Send a polite follow-up email", next_action_at: iso(-1) });
+
+  const clickDone = async () => {
+    const list = screen.getByRole("list", { name: "Next up" });
+    // The accessible name carries the action too ("Done: Send a polite
+    // follow-up email"), which is what makes it distinguishable in a list.
+    fireEvent.click(within(list).getByRole("button", { name: /^done:/i }));
+  };
+
+  test("records that the follow-up happened", async () => {
+    apiCalls.length = 0;
+    render(<DashboardTab {...props} applications={[due()]} stats={emptyStats} />);
+    await clickDone();
+
+    await waitFor(() =>
+      expect(apiCalls.some((c) => c.startsWith("addInteraction"))).toBe(true),
+    );
+    // Clear first, then log: if the log fails the user is left where this
+    // button already left them, rather than with a logged contact against a
+    // follow-up still showing as due.
+    expect(apiCalls[0]).toMatch(/^updateFollowUp\(21, null\)/);
+    // "other", not a guess at email-vs-call from free text — and the action
+    // text is kept as the note, which is the part worth having.
+    expect(apiCalls[1]).toBe(
+      'addInteraction(applications, 21, other, "Send a polite follow-up email")',
+    );
+  });
+
+  test("undo takes back the touchpoint as well as the reminder", async () => {
+    apiCalls.length = 0;
+    let undo: (() => void) | undefined;
+    render(
+      <DashboardTab
+        {...props}
+        applications={[due()]}
+        stats={emptyStats}
+        notify={(_m: string, action?: () => void) => {
+          undo = action;
+        }}
+      />,
+    );
+    await clickDone();
+    await waitFor(() => expect(undo).toBeTypeOf("function"));
+
+    apiCalls.length = 0;
+    undo!();
+    // Leaving the interaction behind would make undo a half-undo: the
+    // reminder returns and a contact that never happened stays on the
+    // timeline, feeding the same metrics this was meant to protect.
+    await waitFor(() => expect(apiCalls).toContain("removeInteraction(555)"));
+    expect(apiCalls[0]).toBe("removeInteraction(555)");
   });
 });
