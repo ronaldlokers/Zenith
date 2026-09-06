@@ -24,13 +24,26 @@ function sqlMs(d: string): number {
 }
 
 // Furthest funnel stage index each application ever reached.
+//
+// A terminal transition is not a funnel stage, but it is still evidence the
+// application entered the pipeline — so it floors the application at 0 rather
+// than dropping it. Without that, an application whose only history row is
+// (NULL, 'ghosted') contributed nothing to counts[0], the "ever entered"
+// figure the funnel card headlines with, and the base every rate below it is
+// measured against was short.
+//
+// That is not a demo-data curiosity: the insert trigger writes exactly one row
+// when an application is created already dead, and logging a past application
+// that went nowhere is an ordinary thing to do.
+//
+// Floored at 0 and no further on purpose. The row says it entered; nothing
+// says how far it got, so nothing here claims it did.
 function reachedIndexByApp(history: StatusHistoryRow[]): Map<number, number> {
   const reached = new Map<number, number>();
   for (const row of history) {
     const idx = FUNNEL_STAGES.indexOf(row.to_status);
-    if (idx < 0) continue;
     const prev = reached.get(row.application_id) ?? -1;
-    if (idx > prev) reached.set(row.application_id, idx);
+    if (Math.max(idx, 0) > prev) reached.set(row.application_id, Math.max(idx, 0));
   }
   return reached;
 }
