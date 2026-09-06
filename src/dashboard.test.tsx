@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import type { Application, Stats, Status } from "./types";
 import { DashboardTab } from "./dashboard";
 // Side-effect: initializes i18next so `t()` renders real copy instead of keys.
@@ -7,6 +7,8 @@ import "./i18n";
 import { daysFromToday } from "./format";
 
 const followUpCalls: { id: number; at: string | null }[] = [];
+// Mutable so a test can choose what the feed summary reports.
+let feedCount = 0;
 // One ordered log, not one array per method: what the gone-quiet test needs to
 // prove is the ORDER — ghosted has to be written while the row is still live in
 // the pipeline, and the undo has to unwind in the opposite order.
@@ -23,6 +25,7 @@ vi.mock("./api", () => ({
       apiCalls.push(`setStatus(${id}, ${status})`);
       return Promise.resolve(undefined);
     },
+    feedSummary: () => Promise.resolve({ count: feedCount }),
     archiveApplication: (id: number) => {
       apiCalls.push(`archive(${id})`);
       return Promise.resolve(undefined);
@@ -95,6 +98,7 @@ const props = {
   onChanged: noop,
   notify: noop,
   onOpenQuickAdd: noop,
+  onGoToFeed: noop,
 };
 
 describe("DashboardTab (Today)", () => {
@@ -433,5 +437,51 @@ describe("closing out a gone-quiet application", () => {
     // forward move.
     await waitFor(() => expect(apiCalls).toContain("setStatus(42, applied)"));
     expect(apiCalls).toEqual(["unarchive(42)", "setStatus(42, applied)"]);
+  });
+});
+
+// The daily loop is open, see what is due, triage new matches. Steps one and
+// two are a glance; step three had no entry point anywhere in the chrome, so
+// it ran on memory. tileCounts carries numbers for overview and pipeline
+// only, so even the wordmark menu showed nothing for the feed.
+describe("the way into the feed", () => {
+  afterEach(() => {
+    feedCount = 0;
+  });
+
+  test("offers a way through when matches are waiting", async () => {
+    feedCount = 4;
+    const went: number[] = [];
+    render(
+      <DashboardTab
+        {...props}
+        applications={[app({ id: 1 })]}
+        stats={emptyStats}
+        onGoToFeed={() => went.push(1)}
+      />,
+    );
+    const strip = await screen.findByRole("button", {
+      name: /new matches waiting in the feed/i,
+    });
+    expect(strip.textContent).toContain("4");
+    fireEvent.click(strip);
+    expect(went, "the strip does not go to the feed").toEqual([1]);
+  });
+
+  test("says nothing when there is nothing to triage", async () => {
+    // A permanent "0 new matches" is chrome that teaches you to stop looking
+    // at it, which would cost the strip the only job it has.
+    feedCount = 0;
+    render(
+      <DashboardTab
+        {...props}
+        applications={[app({ id: 7, next_action_at: iso(-2) })]}
+        stats={emptyStats}
+      />,
+    );
+    // Wait for the screen to settle, so this is asserting absence rather than
+    // racing the summary fetch and passing before it could have rendered.
+    await screen.findByRole("list", { name: "Next up" });
+    expect(screen.queryByText(/waiting in the feed/i)).toBeNull();
   });
 });
