@@ -7,6 +7,10 @@ import "./i18n";
 import { daysFromToday } from "./format";
 
 const followUpCalls: { id: number; at: string | null }[] = [];
+// One ordered log, not one array per method: what the gone-quiet test needs to
+// prove is the ORDER — ghosted has to be written while the row is still live in
+// the pipeline, and the undo has to unwind in the opposite order.
+const apiCalls: string[] = [];
 
 vi.mock("./api", () => ({
   api: {
@@ -15,8 +19,18 @@ vi.mock("./api", () => ({
       followUpCalls.push({ id, at: body.next_action_at });
       return Promise.resolve(undefined);
     },
-    archiveApplication: () => Promise.resolve(undefined),
-    unarchiveApplication: () => Promise.resolve(undefined),
+    setStatus: (id: number, status: string) => {
+      apiCalls.push(`setStatus(${id}, ${status})`);
+      return Promise.resolve(undefined);
+    },
+    archiveApplication: (id: number) => {
+      apiCalls.push(`archive(${id})`);
+      return Promise.resolve(undefined);
+    },
+    unarchiveApplication: (id: number) => {
+      apiCalls.push(`unarchive(${id})`);
+      return Promise.resolve(undefined);
+    },
   },
 }));
 
@@ -365,5 +379,59 @@ describe("DashboardTab (Today)", () => {
     expect(
       screen.getAllByRole("heading", { level: 2 }).length,
     ).toBeGreaterThan(0);
+  });
+});
+
+// The Gone Quiet block and Next Up's "No reply" close the same real event, and
+// only one of them used to say so. Archiving alone left the status at applied,
+// so Insights counted the application as open forever and the ghost rate
+// undercounted by however often the user took this path — the path the screen
+// itself recommends, with an Archive button on every quiet row.
+describe("closing out a gone-quiet application", () => {
+  const quiet = () =>
+    app({
+      id: 42,
+      title: "Ghosted Platform Engineer",
+      status: "applied" as Status,
+      next_action_at: null,
+      updated_at: iso(-30),
+    });
+
+  test("records the ghost before archiving, so the outcome is in status_history", async () => {
+    apiCalls.length = 0;
+    render(
+      <DashboardTab {...props} applications={[quiet()]} stats={emptyStats} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+
+    await waitFor(() => expect(apiCalls).toContain("archive(42)"));
+    // Order is the assertion. Archiving first would write the status_history
+    // row against a row already out of the pipeline.
+    expect(apiCalls).toEqual(["setStatus(42, ghosted)", "archive(42)"]);
+  });
+
+  test("undo restores the stage as well as the archive", async () => {
+    apiCalls.length = 0;
+    let undo: (() => void) | undefined;
+    render(
+      <DashboardTab
+        {...props}
+        applications={[quiet()]}
+        stats={emptyStats}
+        notify={(_msg: string, action?: () => void) => {
+          undo = action;
+        }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Archive" }));
+    await waitFor(() => expect(undo).toBeTypeOf("function"));
+
+    apiCalls.length = 0;
+    undo!();
+    // Unarchive first: putting the row back in the pipeline before restoring
+    // the stage it had, which is the close-out reversed rather than a second
+    // forward move.
+    await waitFor(() => expect(apiCalls).toContain("setStatus(42, applied)"));
+    expect(apiCalls).toEqual(["unarchive(42)", "setStatus(42, applied)"]);
   });
 });
