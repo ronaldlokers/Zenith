@@ -33,9 +33,15 @@
   top: 0;
   z-index: 10;
   /* Three columns so the wordmark sits on the centre line whatever the
-     corners hold — a flex row would drift it as soon as one side changed. */
+     corners hold — a flex row would drift it as soon as one side changed.
+     minmax(0, 1fr), not 1fr, for the reason .bottombar already carries: a
+     grid item's min-width defaults to auto, so a 1fr track refuses to shrink
+     below its content and the bar overflows the screen instead of
+     compressing. .bottombar got this fix and .top did not, so every route
+     scrolled sideways at 200% text on a 320px screen — the corners are
+     fixed-width 38px circles that will not give. */
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
   /* Break out of the .app side padding so the bar is full-bleed on mobile;

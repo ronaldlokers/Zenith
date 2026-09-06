@@ -51,8 +51,19 @@ describe("top bar chrome", () => {
   });
 
   it("puts the wordmark on the centre line", () => {
+    // Three tracks with equal outer ones, which is what centres the wordmark
+    // whatever the corners hold. Asserted on the shape rather than the exact
+    // string: the outer tracks became minmax(0, 1fr) so the bar compresses at
+    // 200% text instead of pushing the page sideways (WCAG 1.4.10), which is
+    // the same fix .bottombar already carries. Pinning the literal made a
+    // reflow fix look like a layout regression.
     const rule = APP.match(/\.top \{[^}]*\}/)![0];
-    expect(rule).toContain("grid-template-columns: 1fr auto 1fr");
+    const tracks = rule.match(/grid-template-columns:\s*([^;]+);/)?.[1].trim();
+    expect(tracks, ".top is no longer a three-track grid").toBeTruthy();
+    const [start, middle, end] = tracks!.split(/\s+(?![^(]*\))/);
+    expect(start, "the outer tracks must match or the wordmark drifts").toBe(end);
+    expect(middle, "the wordmark track sizes to the wordmark").toBe("auto");
+    expect(start).toMatch(/^(1fr|minmax\(0,\s*1fr\))$/);
   });
 
   it("runs the title rule through the line, not under the block", () => {
