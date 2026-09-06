@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error — plain .mjs script, no types, deliberately not compiled
@@ -9,11 +9,19 @@ import { RESTORE_ORDER, sqlForBackup, sqlValue, summarize } from "../scripts/res
 // thing worth pinning is not that it emits SQL — it is that it cannot silently
 // skip data.
 
+// Searched across worker/, not read from one path. EXPORT_TABLES moved from
+// worker/index.ts to worker/export.ts in #100 and this broke — correctly, but
+// for the wrong reason: what it needs to know is what the backup writes, not
+// which file happens to declare it.
 function exportTables(): string[] {
-  const source = readFileSync(new URL("../worker/index.ts", import.meta.url), "utf8");
-  const block = source.match(/const EXPORT_TABLES = \[([\s\S]*?)\] as const;/);
-  if (!block) throw new Error("EXPORT_TABLES not found in worker/index.ts");
-  return [...block[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
+  const dir = new URL("../worker/", import.meta.url);
+  for (const name of readdirSync(dir)) {
+    if (!name.endsWith(".ts")) continue;
+    const source = readFileSync(new URL(name, dir), "utf8");
+    const block = source.match(/const EXPORT_TABLES = \[([\s\S]*?)\] as const;/);
+    if (block) return [...block[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
+  }
+  throw new Error("EXPORT_TABLES not found anywhere in worker/");
 }
 
 describe("restore-backup", () => {
