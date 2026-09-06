@@ -17,6 +17,7 @@ import type { RoleTypeDef } from "../types";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ActionBar, Button, SettingsNav } from "../components";
 import { CaptureBookmarklet } from "./bookmarklet-section";
+import { BrowserExtension } from "./extension-section";
 import { FeedSettings } from "../feed";
 import { TimezoneField } from "./timezone-field";
 import { SettingsRow } from "./row";
@@ -467,6 +468,10 @@ export function SettingsPage({
         )}
         {section === "integrations" && session && (
           <div className="account-section">
+            {/* Ahead of the bookmarklet: same job, and the extension is the
+                one that also autofills. The bookmarklet is the fallback for
+                a browser that cannot load an unpacked extension. */}
+            <BrowserExtension />
             <CaptureBookmarklet />
             <PublicApiSettings onError={setApiError} />
             <NotificationSettings />

@@ -1044,5 +1044,13 @@
     "chunkFailed": "Een deel van de app kon niet worden geladen. Meestal betekent dit dat er een nieuwe versie is uitgebracht terwijl Zenith openstond.",
     "chunkFailedOffline": "Een deel van de app kon niet worden geladen omdat je offline bent. Het laadt zodra je weer verbinding hebt.",
     "staleEdit": "Deze sollicitatie is elders gewijzigd terwijl je aan het bewerken was. Er is niets verloren — laad hem opnieuw en pas je wijziging nogmaals toe."
+  },
+  "extension": {
+    "title": "Browserextensie",
+    "hint": "Bewaar de vacature in je huidige tabblad direct in je pijplijn, en vul een sollicitatieformulier automatisch in vanuit je profiel.",
+    "step1": "Open chrome://extensions (of edge://extensions) en zet Ontwikkelaarsmodus aan.",
+    "step2": "Kies Uitgepakt laden en selecteer de map extension/ uit je Zenith-checkout.",
+    "step3": "Open de opties van de extensie en stel je Zenith-URL en een API-sleutel in.",
+    "keyHint": "De API-sleutel die de extensie vraagt, maak je hieronder op deze pagina aan."
   }
 }
