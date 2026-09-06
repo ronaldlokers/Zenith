@@ -273,6 +273,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  removeInteraction: (id: number) =>
+    request<void>(`/api/interactions/${id}`, { method: "DELETE" }),
   stats: () => request<import("./types").Stats>("/api/stats"),
   roleTypes: () => request<import("./types").RoleTypeDef[]>("/api/role-types"),
   createRoleType: (label: string) =>

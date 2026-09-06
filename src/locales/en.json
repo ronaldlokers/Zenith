@@ -507,7 +507,7 @@
     "title": "Next up",
     "showAll": "Show all {{count}}",
     "done": "Done",
-    "doneToast": "Follow-up completed",
+    "doneToast": "Follow-up logged and cleared",
     "segDue": "Due {{count}}",
     "segUpcoming": "Upcoming {{count}}",
     "emptyDue": "Nothing due today.",

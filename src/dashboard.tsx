@@ -20,6 +20,9 @@ import {
   parseSqlDate,
   searchWeekNumber,
   STAGE_URGENCY,
+  // Aliased: this file already has a local `today` holding the formatted
+  // date string in the page heading.
+  today as todayIso,
 } from "./format";
 import {
   Button,
@@ -456,14 +459,50 @@ function NextUpPanel({
       next_action: a.next_action ?? null,
       next_action_at: a.next_action_at ?? null,
     };
+    // Done used to clear the reminder and nothing else, so the moment the
+    // user did the work was the moment the app forgot it: no touchpoint
+    // reached the timeline, response rate and ghost detection never saw the
+    // contact, and the application dropped straight into the unplanned pool
+    // whose own copy warns that silence is what kills a search. The promise
+    // is "never lose a follow-up" and the primary button on the primary
+    // screen was manufacturing exactly that.
+    //
+    // Type "other", not a guess. The action is free text ("Send a polite
+    // follow-up email", "Ask Ingrid for the JD") and inferring email-vs-call
+    // from it would be wrong often enough to make the timeline untrustworthy.
+    // The text itself is the note, which is the part worth keeping.
+    //
+    // Clear first, then log. If the log fails the user is left exactly where
+    // this button already left them — reminder cleared, nothing recorded —
+    // which is the old behaviour rather than a new corruption. The other
+    // order would leave a logged contact against a follow-up still showing
+    // as due.
+    let loggedId: number | null = null;
     return Promise.resolve(
       api.updateFollowUp(a.id, { next_action: null, next_action_at: null }),
     )
+      .then(() =>
+        api
+          .addInteraction("applications", a.id, {
+            type: "other",
+            happened_at: todayIso(),
+            notes: a.next_action ?? null,
+          })
+          .then((i) => {
+            loggedId = (i as { id?: number } | undefined)?.id ?? null;
+          })
+          // A follow-up that was completed but not recorded is still better
+          // than an error toast over a screen the user has already moved on
+          // from. The reminder is cleared either way.
+          .catch(() => {}),
+      )
       .then(() => onChanged())
       .then(() =>
         notify(t("nextUp.doneToast"), () =>
-          api
-            .updateFollowUp(a.id, prev)
+          Promise.resolve(
+            loggedId === null ? undefined : api.removeInteraction(loggedId),
+          )
+            .then(() => api.updateFollowUp(a.id, prev))
             .then(() => onChanged())
             .catch((e) => onError((e as Error).message)),
         ),
