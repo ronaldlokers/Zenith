@@ -32,14 +32,14 @@ privacy-respecting web app: no analytics, no tracking, invite-only.
 **Sharing & integrations**
 - **Public stats page** (`/shared/:token`) — aggregate pipeline stats only, never per-application detail or compensation.
 - **Calendar feed** (`/calendar/:token`) — subscribe to follow-ups and interviews as ICS.
-- **Read-only REST API** (`/api/v1`, Bearer key; RFC 9457 problem details on errors, `Link` + `X-Total-Count` on collections) and **outbound webhooks** (HMAC-signed `X-Zenith-Signature`) on status changes.
+- **REST API** (`/api/v1`, Bearer key; RFC 9457 problem details on errors, `Link` + `X-Total-Count` on collections) — reads applications and your contact details, plus one narrow write, `POST /applications`, which is how the browser extension saves a posting. Treat a key as able to add to your pipeline, not just read it. Also **outbound webhooks** (HMAC-signed `X-Zenith-Signature`) on status changes.
 - **Web push** notifications for due follow-ups, stale postings, and new feed matches.
 
 **Accounts**
 - Better Auth email/password, two-factor (TOTP), an admin console with invites, JSON/CSV data export, and one-click sample data.
 
 **Everywhere**
-- Three themes (Automatic / Light / Dark), full **English + Dutch** localization, and first-class mobile layouts.
+- Full **English + Dutch** localization and first-class mobile layouts. Light theme only — Automatic and Dark were removed with the #535 shell, and the palette is contrast-tuned against one ground.
 
 ---
 
@@ -87,9 +87,11 @@ login)? See **[SELF_HOSTING.md](./SELF_HOSTING.md)**.
 ```
 src/                 React app — one module per feature area
   App.tsx            shell: routing, data state, toasts, keyboard shortcuts
-  dashboard·board·detail·feed·calendar·cv·network·settings·stats-view·chrome
+  dashboard·board·detail·feed·calendar·companies·contacts·insights·shell
+  cv/ · settings/    feature folders, split out as they grew
+  app-data.ts        useAppData / useToasts — app-level controller hooks
   format·types·icons·ui·hooks·routing   shared helpers, primitives, types
-  index.css          design tokens (colors, spacing, themes)
+  index.css          design tokens (colors, spacing, type)
   locales/           en.json · nl.json
 worker/              Hono API on Workers
   index.ts           REST routes under /api
