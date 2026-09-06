@@ -11,12 +11,23 @@ import { deleteDocumentObjects } from "../worker/documents";
 // invisible. Measured — raising the stride so it only ever runs once left the
 // whole suite green.
 describe("removing stored files by key", () => {
+  // 1200 objects, and an explicit timeout because of it. Vitest's default is
+  // 5000ms and building the fixture is the slow part, not the assertion:
+  // measured at 691ms sequentially on a developer machine and comfortably
+  // inside the default — then it timed out twice in an hour on CI, where the
+  // workers project's own setup takes 247s and everything runs under
+  // contention. An intermittent red on a file the PR never touched is the
+  // thing that teaches a reader to dismiss a red, so this says how long it is
+  // allowed to take rather than relying on a default that happens to fit
+  // locally.
+  //
+  // The puts go out in chunks rather than one at a time (measured 691ms ->
+  // 395ms). The delete under test still receives all 1200 keys at once, which
+  // is the whole point of the fixture.
   it("clears every key, not just the first batch", async () => {
-    const keys: string[] = [];
-    for (let i = 0; i < 1200; i++) {
-      const key = `batch/${i}`;
-      await env.DOCS.put(key, "x");
-      keys.push(key);
+    const keys = Array.from({ length: 1200 }, (_, i) => `batch/${i}`);
+    for (let i = 0; i < keys.length; i += 50) {
+      await Promise.all(keys.slice(i, i + 50).map((k) => env.DOCS.put(k, "x")));
     }
 
     await deleteDocumentObjects(env.DOCS, keys);
@@ -26,7 +37,7 @@ describe("removing stored files by key", () => {
       left.objects.map((o) => o.key),
       "objects past the first batch survived the delete",
     ).toEqual([]);
-  });
+  }, 60_000);
 
   it("does nothing, rather than something, for an empty list", async () => {
     await env.DOCS.put("keep/me", "x");
