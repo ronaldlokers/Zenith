@@ -18,6 +18,7 @@ const reject = () => Promise.reject(new Error("nope"));
 vi.mock("./api", () => ({
   api: {
     list: () => (fail ? reject() : Promise.resolve([])),
+    goals: () => Promise.resolve(null),
     roleTypes: () => (fail ? reject() : Promise.resolve([])),
     stats: () =>
       fail ? reject() : Promise.resolve({ history: [], interactions: [] }),

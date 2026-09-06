@@ -12,6 +12,7 @@ import {
   type Company,
   type Contact,
   type RoleTypeDef,
+  type UserGoal,
   type Stats,
   type Status,
   type TerminalStatus,
@@ -99,6 +100,13 @@ export function useAppData(
   const loadedOnce = useRef(false);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
 
+  // Fetched with the rest, not per tab. DashboardTab used to ask for this in
+  // its own effect, and it unmounts on every tab switch — so returning to
+  // Overview re-read the same single row through the session middleware every
+  // time. undefined means "not answered yet", which is different from a user
+  // who has no goal set.
+  const [goal, setGoal] = useState<UserGoal | null | undefined>(undefined);
+
   // Mirrors `applications` for callbacks that need to read the current rows
   // without being invalidated by them. Assigned during render rather than in
   // an effect: a callback fired between render and effect would otherwise read
@@ -108,7 +116,7 @@ export function useAppData(
 
   const reload = useCallback(async () => {
     try {
-      const [apps, comps, conts, roles, st] = await Promise.all([
+      const [apps, comps, conts, roles, st, g] = await Promise.all([
         api.list<Application>("applications"),
         api.list<Company>("companies"),
         api.list<Contact>("contacts"),
@@ -116,12 +124,16 @@ export function useAppData(
         // One stats fetch for the whole app (#314) — Overview's momentum,
         // the Pipeline's attention heat, and the Stats tab all read it.
         api.stats(),
+        // Tolerated separately: a goal that fails to load costs one block on
+        // Overview, and failing the whole reload for it would blank the board.
+        api.goals().catch(() => null),
       ]);
       setApplications(apps);
       setCompanies(comps);
       setContacts(conts);
       setRoleTypes(roles);
       setStatsData(st);
+      setGoal(g);
       setError(null);
       setLoadFailed(false);
       loadedOnce.current = true;
@@ -355,6 +367,7 @@ export function useAppData(
     loadFailed,
     reload,
     reloadNetwork,
+    goal,
     deleteWithUndo,
     setStatus,
     outcomePrompt,

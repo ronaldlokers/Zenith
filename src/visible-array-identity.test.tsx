@@ -26,6 +26,7 @@ vi.mock("./api", () => ({
   api: {
     list: (resource: string) =>
       Promise.resolve(resource === "applications" ? SEED.map((a) => ({ ...a })) : []),
+    goals: () => Promise.resolve(null),
     roleTypes: () => Promise.resolve([]),
     stats: () => Promise.resolve({ history: [], interactions: [] }),
     getPreferences: () => Promise.resolve({ timezone: "Europe/Amsterdam" }),
