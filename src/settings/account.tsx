@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
+import { BACKUP_RETENTION_DAYS } from "../backup-policy";
 import { useAiStatus } from "../ai-status-context";
 import { authClient, signOut, useSession } from "../auth-client";
 import { ActionBar, Button } from "../components";
@@ -73,6 +74,14 @@ export function DeleteAccount({
               the point at which someone realises they wanted their data,
               not the settings section they would have to go find. */}
           <p className="muted small">{t("account.deleteExportFirst")}</p>
+          {/* The account is erased from the database on confirm, but the
+              nightly R2 backups still hold it until they age out. Saying so
+              here rather than in a doc: this is the moment the promise is
+              being made, and "permanently deletes all your data" is not
+              quite what happens for another two weeks. */}
+          <p className="muted small">
+            {t("account.deleteBackupNote", { days: BACKUP_RETENTION_DAYS })}
+          </p>
           <label className="settings-field">
             <span>{t("account.deleteTypeEmail", { email })}</span>
             <input

@@ -827,6 +827,7 @@
     "deleteTypeEmail": "Type {{email}} to confirm",
     "deleteForever": "Delete my account",
     "deleteExportFirst": "Want a copy first? Settings → Data has a full export.",
+    "deleteBackupNote": "Nightly backups are kept for {{days}} days, so a copy of this data can survive there until it ages out. Nothing in the app can reach it, and no new backup will include you.",
     "resetPasswordFor": "Reset password for {{user}}",
     "reset2faFor": "Reset two-factor for {{user}}",
     "removeUserFor": "Remove {{user}}"

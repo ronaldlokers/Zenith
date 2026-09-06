@@ -827,6 +827,7 @@
     "deleteTypeEmail": "Typ {{email}} om te bevestigen",
     "deleteForever": "Verwijder mijn account",
     "deleteExportFirst": "Eerst een kopie? Instellingen → Gegevens heeft een volledige export.",
+    "deleteBackupNote": "Nachtelijke back-ups worden {{days}} dagen bewaard, dus een kopie van deze gegevens kan daar nog zo lang bestaan tot ze verlopen. Niets in de app kan erbij, en geen nieuwe back-up bevat jou nog.",
     "resetPasswordFor": "Wachtwoord opnieuw instellen voor {{user}}",
     "reset2faFor": "Tweestapsverificatie opnieuw instellen voor {{user}}",
     "removeUserFor": "Verwijder {{user}}"
