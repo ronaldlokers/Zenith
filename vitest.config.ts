@@ -72,6 +72,22 @@ export default defineConfig({
           name: "workers",
           include: ["test/**/*.spec.ts"],
           setupFiles: ["./test/apply-migrations.ts"],
+          // Not the 5000ms default. A loaded CI runner with a cold workerd is
+          // roughly twenty times slower than this machine — measured, not
+          // guessed: test/upload-collision.spec.ts takes 263ms locally and
+          // failed at 5061ms on CI, blocking a PR whose own tests were never
+          // in doubt. Against 5000ms that puts everything over ~250ms locally
+          // at risk, and three more were already sitting just under the line:
+          // the two stale-form-save cases and cover-letter-clobber each sleep
+          // 1100ms on purpose to cross a second boundary, so they start four
+          // fifths of the way through the budget.
+          //
+          // 20_000 rather than something tighter for the same reason the
+          // whole-account specs picked it, and because a timeout that only
+          // just clears the worst observation is the same bug with a bigger
+          // number. Individual tests still override it — document-objects
+          // needs 60_000 and says so.
+          testTimeout: 20_000,
         },
       },
       {
