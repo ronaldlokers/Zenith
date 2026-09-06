@@ -184,6 +184,7 @@ export default function App() {
     loading,
     loadFailed,
     reload,
+    reloadNetwork,
     deleteWithUndo,
     setStatus,
     outcomePrompt,
@@ -799,7 +800,7 @@ export default function App() {
                       companies={visibleCompanies}
                       applications={visibleApps}
                       contacts={visibleContacts}
-                      onChanged={reload}
+                      onChanged={reloadNetwork}
                       onError={setError}
                       notify={notify}
                       onDelete={deleteWithUndo}
@@ -820,7 +821,7 @@ export default function App() {
                     <ContactsTab
                       contacts={visibleContacts}
                       companies={visibleCompanies}
-                      onChanged={reload}
+                      onChanged={reloadNetwork}
                       onError={setError}
                       notify={notify}
                       onDelete={deleteWithUndo}

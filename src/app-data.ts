@@ -126,6 +126,37 @@ export function useAppData(
     }
   }, []);
 
+  // Everything a company or contact edit can change, and nothing else.
+  //
+  // onChanged={reload} was wired to every tab, so saving a company name cost
+  // the same five fetches — at least eight D1 statements — as a cold start.
+  // D1 bills row reads, which makes that the amplification worth removing
+  // before there is more than one user.
+  //
+  // Safe rather than merely narrower: /api/stats reads applications' status
+  // columns, status_history and interactions, and neither of these two tabs
+  // touches any of them — they create and edit companies and contacts and
+  // nothing else. Role types have no mutation call site anywhere in src.
+  //
+  // applications is still refetched, because the list carries the joined
+  // company and contact names: renaming a company does change what the board
+  // shows, and leaving it stale would be a worse bug than the cost this saves.
+  const reloadNetwork = useCallback(async () => {
+    try {
+      const [apps, comps, conts] = await Promise.all([
+        api.list<Application>("applications"),
+        api.list<Company>("companies"),
+        api.list<Contact>("contacts"),
+      ]);
+      setApplications(apps);
+      setCompanies(comps);
+      setContacts(conts);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, []);
+
   // Stats-only refresh (perf review, #446). A kanban drag optimistically
   // updates the application locally, so the only thing it still needs from the
   // server is the recomputed stats — refetching all five resources on every
@@ -295,6 +326,7 @@ export function useAppData(
     loading,
     loadFailed,
     reload,
+    reloadNetwork,
     deleteWithUndo,
     setStatus,
     outcomePrompt,
