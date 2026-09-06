@@ -476,3 +476,47 @@ describe("the identity strip on a board card", () => {
     await page.context().close();
   }, 180_000);
 });
+
+describe("the top bar at 200% text on a 320px screen", () => {
+  it("compresses instead of forcing the page sideways", async () => {
+    // WCAG 1.4.10 Reflow. .bottombar carries this fix already, with the
+    // reasoning in its own comment: a grid item's min-width defaults to auto,
+    // so a 1fr track refuses to shrink below its content. .top has the same
+    // three-track layout and fixed 38px corner circles, and never got it — so
+    // every route scrolled sideways at this size.
+    //
+    // jsdom cannot see this: it has no layout, so scrollWidth is always 0.
+    const ctx = await browser.newContext({
+      viewport: { width: 320, height: 700 },
+      storageState: STATE,
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/feed`);
+    await page.waitForSelector(".bottombar");
+    // After goto, not addInitScript: that runs before document.documentElement
+    // exists, so setting fontSize there silently does nothing and the whole
+    // sweep reports clean for the wrong reason.
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "200%";
+    });
+    await page.waitForTimeout(300);
+
+    const m = await page.evaluate(() => {
+      const top = document.querySelector(".top") as HTMLElement;
+      const d = document.documentElement;
+      return {
+        topOverflow: top.scrollWidth - top.clientWidth,
+        pageOverflow: d.scrollWidth - d.clientWidth,
+        // Proves the zoom actually applied — without this the assertions
+        // below pass on an un-zoomed page, which is the version of this test
+        // that checks nothing.
+        rootFontSize: getComputedStyle(d).fontSize,
+      };
+    });
+
+    expect(m.rootFontSize, "the 200% zoom did not apply").not.toBe("16px");
+    expect(m.topOverflow, "the top bar overflows its own box").toBeLessThanOrEqual(0);
+    expect(m.pageOverflow, "the page scrolls sideways on /feed").toBeLessThanOrEqual(0);
+    await ctx.close();
+  }, 180_000);
+});
