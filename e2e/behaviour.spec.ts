@@ -49,6 +49,67 @@ async function addApplication(page: Page, title: string) {
   return title;
 }
 
+describe("the admin user list", () => {
+  it("groups each account's actions with that account", async () => {
+    // "Remove" deletes an account. The buttons carry per-user aria-labels, so
+    // the screen-reader path was already unambiguous — the visual one was not:
+    // measured, the gap from a name to its own actions was 8px and from those
+    // actions to the *next* name 6px, so by proximity the destructive control
+    // grouped with the account it would not delete.
+    //
+    // Asserted as a comparison rather than against fixed numbers: what matters
+    // is that a row holds together more tightly than rows separate, whatever
+    // the spacing scale becomes.
+    const page = await board(360);
+
+    // A second account, so there is something to confuse. Fixed address and a
+    // tolerated failure, because e2e setup does not delete users and this runs
+    // repeatedly against the same local database.
+    await page.evaluate(async () => {
+      await fetch("/api/auth/admin/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "e2e-admin-row@example.com",
+          password: "e2e-admin-row-password",
+          name: "E2E Admin Row",
+        }),
+      }).catch(() => {});
+    });
+
+    await page.goto(`${BASE}/admin`);
+    await page.waitForLoadState("networkidle");
+    await page.waitForSelector("li.admin-user .admin-user-actions");
+
+    const gaps = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll("li.admin-user")];
+      const withActions = rows.filter((r) => r.querySelector(".admin-user-actions"));
+      const intra = withActions.map((r) => {
+        const n = r.querySelector(".admin-user-id")!.getBoundingClientRect();
+        const a = r.querySelector(".admin-user-actions")!.getBoundingClientRect();
+        return a.top - n.bottom;
+      });
+      const between: number[] = [];
+      for (let i = 1; i < rows.length; i++) {
+        const prev = rows[i - 1].querySelector(".admin-user-actions");
+        if (!prev) continue;
+        between.push(
+          rows[i].querySelector(".admin-user-id")!.getBoundingClientRect().top -
+            prev.getBoundingClientRect().bottom,
+        );
+      }
+      return { intra, between, rows: rows.length };
+    });
+
+    expect(gaps.rows, "needs two accounts to be ambiguous about").toBeGreaterThan(1);
+    expect(gaps.between.length, "no pair of rows to compare").toBeGreaterThan(0);
+    expect(
+      Math.max(...gaps.intra),
+      `actions sit closer to the next account than to their own (${Math.max(...gaps.intra)} vs ${Math.min(...gaps.between)})`,
+    ).toBeLessThan(Math.min(...gaps.between));
+  });
+});
+
 describe("reflow at 320px", () => {
   it("does not make the page scroll sideways", async () => {
     // WCAG 1.4.10: content has to reflow into a 320px viewport without a
