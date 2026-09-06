@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -103,3 +103,50 @@ function workerFiles(): string[] {
   walk(join(ROOT, "worker"));
   return out;
 }
+
+// CLAUDE.md is the standing brief — the file every agent and every new reader
+// is told to treat as binding. Two of its claims had drifted, and drift there
+// costs more than drift in a README: a brief that has to be read as historical
+// erodes exactly the trust it exists to provide.
+//
+// verification-list.spec.ts already checks the *list* of gates against CI. It
+// does not look inside them, which is how the coverage floor could be raised
+// twice without the sentence naming it moving at all.
+describe("the standing brief", () => {
+  const claudeMd = read("CLAUDE.md");
+
+  it("quotes the coverage floor that is actually enforced", () => {
+    const config = readFileSync(join(ROOT, "vitest.config.ts"), "utf8");
+    const threshold = (name: string) =>
+      Number(config.match(new RegExp(`${name}:\\s*(\\d+)`))?.[1]);
+
+    // The sentence names statements and functions; the config carries four.
+    // Reading them from the config rather than hardcoding here keeps this test
+    // from becoming the third copy that drifts.
+    for (const [name, value] of [
+      ["statements", threshold("statements")],
+      ["functions", threshold("functions")],
+    ] as const) {
+      expect(Number.isFinite(value), `no ${name} threshold in vitest.config.ts`).toBe(true);
+      expect(
+        claudeMd,
+        `CLAUDE.md does not name the enforced ${name} floor of ${value}%`,
+      ).toContain(`${value}% ${name}`);
+    }
+  });
+
+  it("does not claim a file was split while it is still sitting there", () => {
+    // "settings.tsx → src/settings/, network.tsx → …, and cv.tsx → src/cv/
+    // have since been split" read as three clean moves. Two were; cv.tsx is
+    // still at the top level, importing from the directory it supposedly
+    // became. A reader looking for it where the sentence implies finds nothing.
+    const sentence = claudeMd.match(/\(`[^)]*have since been split[^)]*\)/)?.[0] ?? "";
+    const named = [...sentence.matchAll(/`([a-z-]+\.tsx)`\s*→/g)].map((m) => m[1]);
+    expect(named.length, "the split sentence has moved or been reworded").toBeGreaterThan(0);
+    const stillThere = named.filter((f) => existsSync(join(ROOT, "src", f)));
+    expect(
+      stillThere,
+      "CLAUDE.md says these were split, but they are still at the top level of src/",
+    ).toEqual([]);
+  });
+});
