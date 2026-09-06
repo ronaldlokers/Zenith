@@ -1,0 +1,90 @@
+{
+  "run": {
+    "date": "2026-09-06",
+    "head": "9867cf6",
+    "branch": "main",
+    "effort": "deep",
+    "scope": "whole-product",
+    "focus": ["product-roadmap", "bugs-correctness", "ux-design", "security-privacy"],
+    "liveApp": true,
+    "externalResearch": true,
+    "artifactUrl": "https://claude.ai/code/artifact/854c1846-ef10-4797-ad0d-e43a8d84afc4",
+    "priorRun": null
+  },
+  "totals": {
+    "raised": 167,
+    "refuted": 2,
+    "downgraded": 8,
+    "uniqueAfterMerge": 147,
+    "critical": 1,
+    "high": 24,
+    "medium": 57,
+    "low": 65,
+    "healthyNotes": 8
+  },
+  "coverage": [
+    { "persona": "pm",        "role": "Lead Product Manager",     "status": "completed", "findings": 9  },
+    { "persona": "qa",        "role": "Lead QA Tester",           "status": "completed", "findings": 10 },
+    { "persona": "leaddev",   "role": "Lead Developer",           "status": "completed", "findings": 16 },
+    { "persona": "seniordev", "role": "Senior Developer",         "status": "completed", "findings": 13 },
+    { "persona": "designer",  "role": "Lead Designer",            "status": "completed", "findings": 13 },
+    { "persona": "ux",        "role": "Lead UX Designer",         "status": "completed", "findings": 13 },
+    { "persona": "security",  "role": "Lead Security Officer",    "status": "completed", "findings": 9  },
+    { "persona": "sre",       "role": "DevOps / SRE Lead",        "status": "completed", "findings": 13 },
+    { "persona": "privacy",   "role": "Data Privacy Officer",     "status": "completed", "findings": 11 },
+    { "persona": "a11y",      "role": "Accessibility Specialist", "status": "completed", "findings": 9  },
+    { "persona": "analytics", "role": "Data / Analytics Lead",    "status": "completed", "findings": 9  },
+    { "persona": "docs",      "role": "Technical Writer",         "status": "completed", "findings": 11 },
+    { "persona": "support",   "role": "Customer Support Lead",    "status": "completed", "findings": 12 },
+    { "persona": "em",        "role": "Engineering Manager",      "status": "completed", "findings": 10 },
+    { "persona": "perf",      "role": "Performance Engineer",     "status": "completed", "findings": 9  }
+  ],
+  "coverageGaps": [],
+  "verification": {
+    "verifiers": 3,
+    "claimsTested": 18,
+    "refuted": [
+      {
+        "claim": "Share page 'never compensation' invariant has zero test enforcement",
+        "raisedBy": "em",
+        "evidence": "test/share-page.spec.ts contains it(\"never puts compensation on the page\"), seeds salary/bonus/equity as secrets, and asserts the fixture landed before asserting absence",
+        "cause": "recon digest understated test/ as essentially api.spec.ts; it holds 66 spec files"
+      },
+      {
+        "claim": "outcomeBreakdown splits 'never heard back' across two unrelated bars",
+        "raisedBy": "analytics",
+        "evidence": "rejected and ghosted are distinct user-chosen terminal statuses with separate validated reason vocabularies; only the copy is similar"
+      }
+    ],
+    "downgraded": [
+      { "claim": "CardMenu keyboard trap", "from": "critical", "to": "high", "note": "focus does escape; backdrop stays live and swallowed a real click" },
+      { "claim": "Extension applications missing status_history", "from": "high", "to": "medium", "note": "recordStatusChange self-heals from_status on first real transition" },
+      { "claim": "Backup failure is silent", "from": "high", "to": "medium", "note": "put is awaited, failures logged; accurate claim is 'not alerted'" },
+      { "claim": "Target-size violations", "from": "medium", "to": "low", "note": "pointer:coarse rule already fixes touch; cv-rail-del qualifies for spacing exception" },
+      { "claim": "feed_items has no index at all", "from": "high", "to": "medium", "note": "UNIQUE autoindex exists but is unusable for the query; SCAN + TEMP B-TREE confirmed" },
+      { "claim": "Median time-in-stage censored-data bias", "from": "medium", "to": "low", "note": "still-open rows excluded deliberately and documented" },
+      { "claim": "feed_items unbounded growth", "from": "high", "to": "medium", "note": "confirmed no pruning; OOM zone ~70k-150k rows, slow burn" },
+      { "claim": "No duplicate-application detection", "from": "high", "to": "medium", "note": "feed UI has a client-side guard; only the extension path is unguarded" },
+      { "claim": "Self-serve password reset absent", "from": "critical", "to": "high", "note": "admin reset path exists; recovery is manual, not absent" }
+    ],
+    "worsened": [
+      { "claim": "Reflow overflow at 320px/200%", "note": "filed as 332-374px content; measured 446px vs 320px viewport on all 9 routes" }
+    ]
+  },
+  "topConsensus": [
+    { "finding": "Board card company chip clips mid-word; ellipsis inert on display:flex", "raisedBy": ["designer","ux","pm","qa","seniordev","support"], "count": 6, "where": "src/App.css:5548" },
+    { "finding": "Two 'everything is folded' banners stack on the board", "raisedBy": ["pm","qa","seniordev","ux","support"], "count": 5, "where": "src/board.tsx:499-529" },
+    { "finding": "/api/v1 documented read-only but has a write endpoint", "raisedBy": ["docs","security"], "count": 2, "where": "worker/public-api.ts:381" },
+    { "finding": "Browser extension built but invisible in-app", "raisedBy": ["pm","docs"], "count": 2, "where": "src/settings/api.tsx:130-176" }
+  ],
+  "environmentNotes": {
+    "localD1": "restored to pre-session snapshot (4 applications) after the run",
+    "authState": ".auth.json was regenerated during the run; the seeded-admin password was rotated in the local D1 and reverted by the restore, so .auth.json is stale again (as it was found)",
+    "rigBreakage": "scripts/screenshot-baseline.mjs:47 clicks .top-add, removed by #583 on 2026-08-13; harness hard-fails after 3 of 52 captures"
+  },
+  "files": {
+    "allFindings": "findings-2026-09-06.json",
+    "reconDigest": "recon-2026-09-06.md",
+    "verifierVerdicts": ["verify-a11y.json", "verify-data.json", "verify-ops.json"]
+  }
+}

@@ -24,7 +24,8 @@ import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "
 // identical on both sides (the client renders it, the worker validates against
 // it), and a second copy would drift into a silent validation bug. Type-only
 // plus a const table — no DOM, nothing browser-specific comes with it.
-import { OUTCOME_REASONS, STATUSES as ALL_STATUSES, type TerminalStatus } from "../src/types.js";
+import { OUTCOME_REASONS, STATUSES as ALL_STATUSES, type Status, type TerminalStatus } from "../src/types.js";
+import { PIPELINE, computePipelineMomentum } from "../src/momentum.js";
 
 export type AppEnv = {
   Bindings: Env;
@@ -1754,11 +1755,6 @@ app.put("/api/preferences/email", async (c) => {
   return c.body(null, 204);
 });
 
-const SHARE_PIPELINE = ["interested", "applied", "screening", "interview", "offer"];
-
-function shareParseSqlDate(d: string): number {
-  return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
-}
 
 // The public page's own strings. It is server-rendered outside React, so it
 // cannot reach react-i18next — and it was hard-coded English on a product
@@ -1830,6 +1826,7 @@ const SHARE_STRINGS = {
     steady: "Steady",
     quiet: "No recent activity",
     faster: "Speeding up",
+    early: "Too early to tell",
     slower: "Slowing down",
     open: (n: number) => `${n} open application${n === 1 ? "" : "s"}`,
     footer:
@@ -1851,6 +1848,7 @@ const SHARE_STRINGS = {
     steady: "Stabiel",
     quiet: "Geen recente activiteit",
     faster: "Versnelt",
+    early: "Nog te vroeg",
     slower: "Vertraagt",
     open: (n: number) =>
       `${n} openstaande sollicitatie${n === 1 ? "" : "s"}`,
@@ -1995,33 +1993,17 @@ app.get("/shared/:token", async (c) => {
 
   const reachedByApp = new Map<number, number>();
   for (const row of history.results) {
-    const idx = SHARE_PIPELINE.indexOf(row.to_status);
+    const idx = PIPELINE.indexOf(row.to_status as Status);
     if (idx < 0) continue;
     const prev = reachedByApp.get(row.application_id) ?? -1;
     if (idx > prev) reachedByApp.set(row.application_id, idx);
   }
-  const funnel = SHARE_PIPELINE.map((stage, i) => ({
+  const funnel = PIPELINE.map((stage, i) => ({
     stage,
     count: [...reachedByApp.values()].filter((r) => r >= i).length,
   }));
   const funnelMax = Math.max(1, funnel[0]?.count ?? 0);
 
-  const now = Date.now();
-  const PERIOD = 14 * 86400000;
-  const isForwardMove = (row: (typeof history.results)[number]) => {
-    const toIdx = SHARE_PIPELINE.indexOf(row.to_status);
-    const fromIdx = row.from_status ? SHARE_PIPELINE.indexOf(row.from_status) : -1;
-    return toIdx >= 0 && toIdx > fromIdx;
-  };
-  const recentMoves = history.results.filter(
-    (h) => isForwardMove(h) && shareParseSqlDate(h.changed_at) >= now - PERIOD,
-  ).length;
-  const priorMoves = history.results.filter(
-    (h) =>
-      isForwardMove(h) &&
-      shareParseSqlDate(h.changed_at) >= now - 2 * PERIOD &&
-      shareParseSqlDate(h.changed_at) < now - PERIOD,
-  ).length;
   const lang = shareLocale(c.req.header("Accept-Language"), profile.locale);
   const S = SHARE_STRINGS[lang];
 
@@ -2052,13 +2034,17 @@ app.get("/shared/:token", async (c) => {
     ? `${profile.name} — ${S.title}`
     : `Zenith — ${S.title}`;
 
-  let momentum: string = S.steady;
-  if (recentMoves === 0 && priorMoves === 0) momentum = S.quiet;
-  else if (priorMoves === 0) momentum = S.faster;
-  else {
-    const change = (recentMoves - priorMoves) / priorMoves;
-    momentum = change > 0.15 ? S.faster : change < -0.15 ? S.slower : S.steady;
-  }
+  // The same verdict the app shows its owner, from the same function — the
+  // page used to reimplement the ratio and had never picked up the small-n
+  // floor, so one stage advance told a stranger the search was speeding up.
+  const { verdict } = computePipelineMomentum(history.results);
+  const momentum = {
+    none: S.quiet,
+    early: S.early,
+    up: S.faster,
+    down: S.slower,
+    flat: S.steady,
+  }[verdict];
 
   const totalOpen = apps.results.filter(
     (a) => !["rejected", "withdrawn", "ghosted"].includes(a.status),

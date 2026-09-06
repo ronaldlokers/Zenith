@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "O1: nightly R2 backup has no restore path anywhere",
+    "verdict": "CONFIRMED",
+    "evidence": "grep -rn 'restore' worker/ scripts/ SELF_HOSTING.md README.md .github/workflows/ finds zero hits related to backup restore. scripts/ contains only dead-css.mjs, generate-vapid-keys.mjs, layout-audit.mjs, screenshot-baseline.mjs, seed-admin.mjs, seed-demo.sql, storybook-shots.mjs - nothing that reads backups/*.json from R2. /api/import (worker/index.ts:1306) is a URL-scraper for a single job posting (returns {title,company,location,salary,source} scraped from JSON-LD/OG meta tags) - it does not accept a file upload and its output shape has nothing in common with buildFullExport's {exported_at, <table>: rows[]} multi-table dump. SELF_HOSTING.md and README.md never mention the word 'backup' at all. runScheduledBackup (worker/index.ts:2617) writes backups/<date>.json to R2 and prunes to 14 daily files, but nothing in the codebase, scripts, or docs can consume that file to repopulate D1.",
+    "corrected_severity": "critical"
+  },
+  {
+    "claim": "O2: backup success is never verified - a silent write failure looks like success",
+    "verdict": "PLAUSIBLE",
+    "evidence": "worker/index.ts:2617-2626: `await env.DOCS.put(key, ...)` is awaited, inside a plain async function with no inner try/catch that could swallow. It's invoked from scheduled() via `independently('backup', runScheduledBackup(env))` (worker/index.ts ~2669) which is `ctx.waitUntil(work.catch(err => console.error('scheduled backup failed', err)))`. So an R2.put throw IS caught and IS logged via console.error, not silently discarded. wrangler.jsonc:40 has `observability: {enabled: true}`, so that console.error is captured in Cloudflare Workers Logs and visible in the dashboard. What's actually true: there is no re-verification beyond the put() promise resolving (no follow-up GET/checksum), and critically no active alerting (email/webhook/push) on failure - an operator who doesn't check the dashboard logs would miss a failed night. That is 'no alerting', which is materially weaker than the claimed 'silent failure looks like success' - it is logged, just not pushed to anyone.",
+    "corrected_severity": "medium"
+  },
+  {
+    "claim": "O3: feed_items grows forever and nightly backup serialises the whole DB in one Worker",
+    "verdict": "PLAUSIBLE",
+    "evidence": "(a) No pruning: grep 'DELETE FROM feed_items' across worker/+migrations/ finds exactly one hit, migrations/0040_remove_hn_source.sql, a one-off migration deleting rows from a decommissioned source - no recurring cleanup job exists. worker/feed.ts's own comment above the /api/feed route says outright: 'the feed grows unbounded as sources are ingested'. (b) buildFullExport (worker/index.ts:1179) does `SELECT * FROM <table>` for every one of ~25 tables including global feed_items and loads all results into one JS object, then JSON.stringify's the whole thing in one call - confirmed single-invocation, whole-table, in-memory. (c) Numbers: live seed DB has only 5 feed_items rows averaging 176.8 bytes of text payload each (title+company+location+url+salary_text+description); with JSON key/structure overhead a realistic row is ~350-400 bytes of JSON text. Workers' 128MB heap ceiling would need combined table data (feed_items + all other tables, since it's one export object) in that range; accounting for V8 object/string overhead (typically 2-4x the eventual JSON text size) a plausible OOM zone is roughly 70,000-150,000 feed_items rows, i.e. sustained ingestion of ~100-150 new rows/day for 2-3 years, or heavier multi-tenant use. For an invite-only, ~50-applications-per-user product this is a real but slow-burn risk, not an imminent one - 'grows unbounded, no ceiling' is confirmed architecture; 'HIGH now' is overstated for current scale.",
+    "corrected_severity": "medium"
+  },
+  {
+    "claim": "O4: feed page full-scans and sorts feed_items on every request, no index at all",
+    "verdict": "CONFIRMED",
+    "evidence": "Live DB indexes on feed_items: only `sqlite_autoindex_feed_items_1` (backing the UNIQUE(source,external_id) constraint) - so 'no index at all' is literally imprecise, but there is no index usable for this query's WHERE/ORDER BY. Ran EXPLAIN QUERY PLAN on the exact query from worker/feed.ts:365-388 against the real sqlite file: `SCAN feed_items` (full table scan) joined via correlated subqueries that DO use indexes on OTHER tables (feed_company_blocklist, feed_ats_boards, feed_item_status all hit their own indexes), finishing with `USE TEMP B-TREE FOR ORDER BY` because nothing indexes posted_at/id for the sort. So every /api/feed request scans all of feed_items and sorts in a temp b-tree, confirmed verbatim by the query planner.",
+    "corrected_severity": "medium"
+  },
+  {
+    "claim": "O5: no duplicate-application detection on any create path",
+    "verdict": "CONFIRMED",
+    "evidence": "migrations: only UNIQUE constraint anywhere near applications is application_tags.name (migrations/0016) - applications table (migrations/0001) has no UNIQUE beyond its PK. worker/index.ts POST /api/applications (~725): plain INSERT, no existence check. worker/feed.ts POST /api/feed/:id/add (~608-637): reads the feed_items row and unconditionally INSERTs into applications; the ON CONFLICT upsert is on feed_item_status(feed_item_id,user_id), not on applications, so it dedupes 'has this feed item been marked added' but not 'does an application already exist for this url/company'. worker/public-api.ts POST /applications (~381, the extension's write path): also a bare INSERT with company find-or-create but no title/url existence check. Mitigations found: the feed UI (src/feed.tsx addToPipeline, ~612) has a client-side `addingIds` set that blocks double-click races, and once added the feed_item_status flip to 'added' removes the item from future feed listings, so re-adding via the feed UI specifically requires deliberate action. Realistic worst path is the extension (public-api POST /applications) re-adding a posting the user already tracked from the feed or manually, since it has zero cross-check against existing applications. With ~50 apps/user and a human in the loop, actual accidental-duplicate rate is low but the gap is real and unguarded on the extension path specifically.",
+    "corrected_severity": "medium"
+  },
+  {
+    "claim": "O6: public share page's 'never compensation' invariant has zero test enforcement",
+    "verdict": "REFUTED",
+    "evidence": "test/share-page.spec.ts:123 `it('never puts compensation on the page', ...)` seeds an application with salary_currency/salary_min/salary_max as SECRETS values (lines 70-72), fetches /shared/:token, and asserts (line 141) `expect(html).not.toContain(value)` for each secret figure plus (line 145-146) asserts the words 'salary'/'Salary'/'compensation'/'Compensation' never appear in the HTML. This is exactly the test the claim says doesn't exist. Also confirmed via worker/index.ts:1923 handler itself: the SQL selects only `id, status, role_type` from applications and a status_history projection with no salary/comp columns at all, matching the enforced invariant.",
+    "corrected_severity": "none"
+  },
+  {
+    "claim": "O7: worker/ has no coverage number at all",
+    "verdict": "CONFIRMED",
+    "evidence": "vitest.config.ts coverage.include is `['src/**/*.{ts,tsx}']` only - worker/ is not included anywhere, confirmed by reading the file. The config's own comment states the reason verbatim: '@cloudflare/vitest-pool-workers loads the worker as a separate pre-bundled module graph, so v8 sees none of it: running the workers project with --coverage reports 0% of 1641 lines while nine hundred tests drive that code. That figure is wrong rather than low, so worker/ stays out and the suite itself is its net.' This matches CLAUDE.md's stated reasoning exactly and is still true as of this vitest-pool-workers setup - no in-repo workaround exists. Not spending further time on fixability per instructions. Given this is a deliberate, documented tradeoff (not an oversight) and worker/ is exercised by ~900 tests per that comment, treating it as a HIGH-severity gap overstates it - it's a known, accepted, mitigated limitation of the tool, not an unmeasured/untested blind spot.",
+    "corrected_severity": "low"
+  }
+]
