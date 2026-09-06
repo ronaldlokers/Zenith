@@ -317,6 +317,9 @@ export const api = {
     return request<{
       items: import("./types").FeedItem[];
       nextCursor: import("./types").FeedCursor | null;
+      // Sources whose last fetch failed. Empty is the normal case; a
+      // non-empty list is why the feed looks quiet.
+      failingSources?: { source: string; error: string | null }[];
     }>(`/api/feed${q}`);
   },
   refreshFeed: () =>

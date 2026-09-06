@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
+import { recordCronRun } from "./cron-log.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { registerOutreachRoutes } from "./outreach.js";
@@ -2625,44 +2626,6 @@ export async function runScheduledBackup(env: Env): Promise<void> {
   const keys = listed.objects.map((o) => o.key).sort();
   const toDelete = keys.slice(0, Math.max(0, keys.length - BACKUP_RETENTION));
   await Promise.all(toDelete.map((k) => env.DOCS.delete(k)));
-}
-
-// Operator visibility for the scheduled tasks. console.error was the whole
-// failure signal, and Workers Logs has no alerting — so the way to learn that
-// the weekly digest had been throwing for a month was to go looking for it.
-//
-// Successes are recorded too, and that is the point rather than completeness:
-// a task that throws leaves an error row, but a task that silently stops
-// firing leaves nothing, and "backup last succeeded eleven days ago" is the
-// only sentence that catches the second kind.
-const CRON_RUN_RETENTION_DAYS = 30;
-
-export async function recordCronRun(
-  env: Env,
-  label: string,
-  err: unknown,
-): Promise<void> {
-  // Never let the bookkeeping become the outage. This runs inside the catch
-  // that already handled the real failure, so throwing here would replace a
-  // recorded error with an unrecorded one.
-  try {
-    const message =
-      err == null
-        ? null
-        : (err instanceof Error ? err.message : String(err)).slice(0, 500);
-    await env.DB.prepare(
-      "INSERT INTO cron_runs (label, ok, error) VALUES (?, ?, ?)",
-    )
-      .bind(label, err == null ? 1 : 0, message)
-      .run();
-    await env.DB.prepare(
-      `DELETE FROM cron_runs WHERE ran_at < datetime('now', ?)`,
-    )
-      .bind(`-${CRON_RUN_RETENTION_DAYS} days`)
-      .run();
-  } catch (e) {
-    console.error("recording the cron run failed", e);
-  }
 }
 
 // The last run of each task, which is what answers "is anything broken" and

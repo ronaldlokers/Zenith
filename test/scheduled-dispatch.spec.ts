@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import worker, { recordCronRun, shouldRunFeedPull } from "../worker/index";
+import worker, { shouldRunFeedPull } from "../worker/index";
+import { recordCronRun } from "../worker/cron-log";
 
 // The feed cadence moved out of wrangler.jsonc and into this branch, so it is
 // the only place the 6-hourly schedule is still expressed. These four hours

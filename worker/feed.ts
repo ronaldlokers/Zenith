@@ -1,5 +1,6 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
+import { recordCronRun } from "./cron-log.js";
 
 // Each board is fetched in turn; one that never answers would otherwise stall
 // the whole pull, and this runs unattended on a cron.
@@ -125,12 +126,29 @@ function matchedSkills(jd: string, skillNames: string[]): string[] {
   });
 }
 
+// Not configured and broken are different answers, and the feed used to give
+// the same one for both. This marks the first so refreshFeed can record it as
+// a fact about the setup rather than a fault.
+export class SourceUnconfigured extends Error {}
+
+// One label shape, defined once, because the feed route parses these back out
+// to tell a user which of *their* sources is broken. A drift between writer
+// and reader would silently report every source as healthy.
+export const FEED_SOURCE_LABEL = {
+  adzuna: () => "feed:adzuna",
+  board: (source: string, slug: string) => `feed:${source}:${slug}`,
+};
+
 export async function fetchAdzuna(
   env: Env,
   keywords: RoleKeywords,
   country: string | null,
 ): Promise<FeedCandidate[]> {
-  if (!env.ADZUNA_APP_ID || !env.ADZUNA_APP_KEY) return [];
+  // Not configured is not broken, and the difference is the whole point of
+  // this card: a user who never set up Adzuna should not be told it failed.
+  if (!env.ADZUNA_APP_ID || !env.ADZUNA_APP_KEY) {
+    throw new SourceUnconfigured("Adzuna credentials are not set on this server");
+  }
   const countryCode = (country || "nl").toLowerCase();
   // Fetch every role's keyword query concurrently (#449) — the old sequential
   // loop made latency scale linearly with the number of configured roles.
@@ -144,9 +162,9 @@ export async function fetchAdzuna(
         `https://api.adzuna.com/v1/api/jobs/${countryCode}/search/1` +
         `?app_id=${env.ADZUNA_APP_ID}&app_key=${env.ADZUNA_APP_KEY}` +
         `&results_per_page=10&what=${encodeURIComponent(query)}&content-type=application/json`;
-      try {
+      {
         const res = await fetch(url, { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) });
-        if (!res.ok) return [];
+        if (!res.ok) throw new Error(`Adzuna answered ${res.status}`);
         const data = (await res.json()) as {
           results?: Array<{
             id: string;
@@ -176,9 +194,6 @@ export async function fetchAdzuna(
           // Adzuna returns only a truncated ~200-char snippet.
           description: job.description ?? null,
         }));
-      } catch {
-        // best effort per source
-        return [];
       }
     }),
   );
@@ -195,12 +210,16 @@ export async function fetchGreenhouse(
   slug: string,
   keywords: RoleKeywords,
 ): Promise<FeedCandidate[]> {
-  try {
+  {
     const res = await fetch(
       `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(slug)}/jobs?content=true`,
       { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) },
     );
-    if (!res.ok) return [];
+    // A 404 here is the commonest real failure: a mistyped board slug saves
+    // happily and then returns nothing forever. Empty is a fact about the
+    // board; not-ok is a fact about the request, and they must not read the
+    // same on the way out.
+    if (!res.ok) throw new Error(`Greenhouse board "${slug}" answered ${res.status}`);
     const data = (await res.json()) as {
       jobs?: Array<{
         id: number;
@@ -225,8 +244,6 @@ export async function fetchGreenhouse(
       // ?content=true (already requested) returns the full JD as HTML.
       description: job.content ? stripHtml(job.content) : null,
     }));
-  } catch {
-    return [];
   }
 }
 
@@ -234,12 +251,12 @@ export async function fetchAshby(
   slug: string,
   keywords: RoleKeywords,
 ): Promise<FeedCandidate[]> {
-  try {
+  {
     const res = await fetch(
       `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(slug)}`,
       { signal: AbortSignal.timeout(FEED_TIMEOUT_MS) },
     );
-    if (!res.ok) return [];
+    if (!res.ok) throw new Error(`Ashby board "${slug}" answered ${res.status}`);
     const data = (await res.json()) as {
       jobs?: Array<{
         id: string;
@@ -269,8 +286,6 @@ export async function fetchAshby(
           ? stripHtml(job.descriptionHtml)
           : null,
     }));
-  } catch {
-    return [];
   }
 }
 
@@ -281,15 +296,43 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
     loadDistinctAtsBoards(env),
   ]);
 
+  // One source failing must not take the others down, and it must not read as
+  // "nothing new" either. Each is recorded under its own label so the feed can
+  // say which one is broken; SourceUnconfigured is recorded as a success,
+  // because a source nobody set up has not failed at anything.
+  const attempt = async (
+    label: string,
+    work: Promise<FeedCandidate[]>,
+  ): Promise<FeedCandidate[]> => {
+    try {
+      const items = await work;
+      await recordCronRun(env, label, null);
+      return items;
+    } catch (e) {
+      await recordCronRun(env, label, e instanceof SourceUnconfigured ? null : e);
+      return [];
+    }
+  };
+
   const jobs: Promise<FeedCandidate[]>[] = [];
   for (const cfg of configs.filter((c) => c.source === "adzuna")) {
-    jobs.push(fetchAdzuna(env, keywords, cfg.location));
+    jobs.push(attempt(FEED_SOURCE_LABEL.adzuna(), fetchAdzuna(env, keywords, cfg.location)));
   }
   for (const board of atsBoards.filter((b) => b.source === "greenhouse")) {
-    jobs.push(fetchGreenhouse(board.slug, keywords));
+    jobs.push(
+      attempt(
+        FEED_SOURCE_LABEL.board("greenhouse", board.slug),
+        fetchGreenhouse(board.slug, keywords),
+      ),
+    );
   }
   for (const board of atsBoards.filter((b) => b.source === "ashby")) {
-    jobs.push(fetchAshby(board.slug, keywords));
+    jobs.push(
+      attempt(
+        FEED_SOURCE_LABEL.board("ashby", board.slug),
+        fetchAshby(board.slug, keywords),
+      ),
+    );
   }
   const candidates = (await Promise.all(jobs)).flat();
 
@@ -436,7 +479,35 @@ export function registerFeedRoutes(app: Hono<AppEnv>) {
         match_count: match_skills.length,
       };
     });
-    return c.json({ items, nextCursor });
+    // Which of *this user's* sources failed on their last attempt. Without
+    // this the feed has one empty state for three different situations —
+    // nothing new, a mistyped board slug that will return nothing forever,
+    // and an upstream outage — and they render identically, so the user
+    // concludes the feature works and never reports the real defect.
+    //
+    // Scoped to the sources this user actually watches: the health is
+    // instance-level (the credentials and the upstream API are shared), but
+    // being told that somebody else's board is down is noise.
+    const watched = new Set<string>([
+      FEED_SOURCE_LABEL.adzuna(),
+      ...(
+        await c.env.DB.prepare(
+          "SELECT source, slug FROM feed_ats_boards WHERE user_id = ?",
+        )
+          .bind(userId)
+          .all<{ source: string; slug: string }>()
+      ).results.map((b) => FEED_SOURCE_LABEL.board(b.source, b.slug)),
+    ]);
+    const { results: health } = await c.env.DB.prepare(
+      `SELECT label, error FROM cron_runs
+        WHERE id IN (SELECT MAX(id) FROM cron_runs WHERE label LIKE 'feed:%' GROUP BY label)
+          AND ok = 0`,
+    ).all<{ label: string; error: string | null }>();
+    const failingSources = health
+      .filter((h) => watched.has(h.label))
+      .map((h) => ({ source: h.label.replace(/^feed:/, ""), error: h.error }));
+
+    return c.json({ items, nextCursor, failingSources });
   });
 
   app.get("/api/feed/ats-boards", async (c) => {

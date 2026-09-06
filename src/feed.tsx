@@ -385,6 +385,12 @@ export function FeedTab({
 }) {
   const { t } = useTranslation();
   const [items, setItems] = useState<FeedItem[] | null>(null);
+  // Which of the user's own sources failed on their last attempt. An empty
+  // feed with one of these is broken, not quiet, and the two used to render
+  // identically.
+  const [failingSources, setFailingSources] = useState<
+    { source: string; error: string | null }[]
+  >([]);
   // Surface high-fit jobs: sort the flat chronological feed by CV skill match
   // and optionally hide anything below a minimum. The match count is computed
   // server-side now (#446) and arrives on each item as match_count.
@@ -489,6 +495,7 @@ export function FeedTab({
         .then((page) => {
           setItems(page.items);
           setCursor(page.nextCursor);
+          setFailingSources(page.failingSources ?? []);
         })
         .catch((e) => {
           setFailed(true);
@@ -990,11 +997,36 @@ export function FeedTab({
           )}
         </div>
       )}
+      {/* Above the empty state, and shown even when there ARE items: a board
+          that has been failing for a week still returns the listings it
+          pulled before it broke, so "we have some items" is not evidence
+          that every source is healthy. */}
+      {failingSources.length > 0 && (
+        <div className="feed-source-trouble" role="status">
+          <p>{t("feed.sourceTrouble", { count: failingSources.length })}</p>
+          <ul>
+            {failingSources.map((f) => (
+              <li key={f.source}>
+                <span className="feed-source-name">{f.source}</span>
+                {f.error && (
+                  <span className="muted small"> — {f.error}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="muted small">{t("feed.sourceTroubleHint")}</p>
+        </div>
+      )}
       {items?.length === 0 && (
         <ul className="cards">
           <EmptyState as="li">
             <EmptyFeedIcon />
-            {t("empty.feedNothingNew")}
+            {/* Two different sentences, because they mean different things.
+                "Nothing new" on a feed whose sources are broken is the lie
+                this card is about. */}
+            {failingSources.length > 0
+              ? t("empty.feedSourcesDown")
+              : t("empty.feedNothingNew")}
           </EmptyState>
         </ul>
       )}

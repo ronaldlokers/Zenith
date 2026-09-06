@@ -175,7 +175,8 @@
     "boardEmpty": "empty",
     "noFollowUps": "No follow-ups scheduled.",
     "feedNothingNew": "Nothing new. Feed checks automatically every 6 hours, or hit “Check now”.",
-    "pipelineNoJobs": "Nothing tracked yet."
+    "pipelineNoJobs": "Nothing tracked yet.",
+    "feedSourcesDown": "Nothing to show — and at least one source is failing, so this may not be the whole picture."
   },
   "settings": {
     "title": "Settings",
@@ -266,7 +267,10 @@
     "listLabel": "Postings to triage",
     "detailLabel": "Selected posting",
     "save": "Keep for later",
-    "saved": "Kept"
+    "saved": "Kept",
+    "sourceTrouble_one": "1 of your feed sources could not be reached on its last run.",
+    "sourceTrouble_other": "{{count}} of your feed sources could not be reached on their last run.",
+    "sourceTroubleHint": "Check the board slug in Feed settings, or wait — the feed retries every 6 hours."
   },
   "stats": {
     "momentum": {
