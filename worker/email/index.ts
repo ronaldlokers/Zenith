@@ -29,7 +29,32 @@ export async function sendEmail(env: Env, msg: EmailMessage): Promise<boolean> {
     await provider.send(msg);
     return true;
   } catch (err) {
-    console.error("email send failed", err);
+    // Not the whole error. Observability is on, so this line is retained in
+    // Cloudflare's log platform, outside this app's data boundary — and the
+    // provider's error body can quote the address it rejected, which would
+    // put a user's email address there.
+    //
+    // The status is what has diagnostic value ("422" against "500" is the
+    // question a log answers); the body is where the address is. The thrown
+    // Error keeps both, because the admin test-send calls the provider
+    // directly to show its real words — redacting at the throw site would
+    // have taken that away too.
+    console.error("email send failed", summarizeSendError(err));
     return false;
   }
+}
+
+/**
+ * A one-line, non-identifying description of a provider failure.
+ *
+ * Providers throw `<name> <status>: <body>`; the body is dropped. Anything
+ * else — a network error, a thrown string — is reported by shape rather than
+ * content, since an unrecognised message is exactly the one whose contents
+ * cannot be vouched for.
+ */
+export function summarizeSendError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  const provider = message.match(/^([a-z]+) (\d{3}):/i);
+  if (provider) return `${provider[1]} responded ${provider[2]}`;
+  return err instanceof Error ? `${err.name} (message withheld)` : "non-error thrown";
 }
