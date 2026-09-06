@@ -51,6 +51,8 @@
     "pushAll_one": "Verzet {{count}} late vervolgactie naar de komende dagen",
     "movedToday": "Vandaag",
     "movedEarlier": "Eerder deze week",
+    "finishPrep": "Interviewvoorbereiding afmaken — nog {{count}}",
+    "prepStage": "Interview",
     "feedWaiting_one": "nieuwe match wacht in de feed",
     "feedWaiting_other": "nieuwe matches wachten in de feed"
   },

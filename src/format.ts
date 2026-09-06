@@ -659,3 +659,20 @@ export function displayDomain(website: string | null | undefined): string {
     return raw;
   }
 }
+
+// When the interview-prep checklist is the answer to "what next" (#109).
+//
+// Next Up ranked purely off next_action/next_action_at, which the user types
+// by hand, while interview_prep_items is real tracked state the app already
+// holds. An interview two days out with four unchecked items and nothing typed
+// left Today blank — on the screen whose whole job is "know the next action
+// within seconds".
+//
+// Narrow on purpose. A typed next_action is the user's own words and always
+// wins over a generated sentence, and prep items on an application that has
+// not reached interview are notes for later rather than something to do now.
+export function openPrepCount(a: Application): number {
+  if (a.status !== "interview") return 0;
+  if (a.next_action || a.next_action_at) return 0;
+  return a.open_prep_items ?? 0;
+}
