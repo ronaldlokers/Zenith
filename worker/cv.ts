@@ -81,6 +81,7 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
       `SELECT work_experience_skills.work_experience_id, skills.id, skills.name
        FROM work_experience_skills
        JOIN skills ON skills.id = work_experience_skills.skill_id
+                  AND skills.user_id = work_experience_skills.user_id
        WHERE work_experience_skills.user_id = ?`,
     )
       .bind(userId)
