@@ -175,7 +175,8 @@
     "boardEmpty": "leeg",
     "noFollowUps": "Geen vervolgacties gepland.",
     "feedNothingNew": "Niets nieuws. Feed controleert automatisch elke 6 uur, of klik op “Nu controleren”.",
-    "pipelineNoJobs": "Nog niets bijgehouden."
+    "pipelineNoJobs": "Nog niets bijgehouden.",
+    "feedSourcesDown": "Niets te tonen — en minstens één bron faalt, dus dit is mogelijk niet het volledige beeld."
   },
   "settings": {
     "title": "Instellingen",
@@ -266,7 +267,10 @@
     "listLabel": "Vacatures om te beoordelen",
     "detailLabel": "Geselecteerde vacature",
     "save": "Bewaar voor later",
-    "saved": "Bewaard"
+    "saved": "Bewaard",
+    "sourceTrouble_one": "1 van je feedbronnen was tijdens de laatste run niet bereikbaar.",
+    "sourceTrouble_other": "{{count}} van je feedbronnen waren tijdens de laatste run niet bereikbaar.",
+    "sourceTroubleHint": "Controleer de board-slug in Feed-instellingen, of wacht af — de feed probeert het elke 6 uur opnieuw."
   },
   "stats": {
     "momentum": {

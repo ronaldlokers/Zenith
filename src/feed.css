@@ -53,3 +53,33 @@
     }
   }
 }
+
+/* A source that cannot be reached is the reason the feed looks quiet, so it
+   sits above the list rather than inside the empty state — a board that broke
+   last week still returns what it pulled before, and the warning has to show
+   alongside those items too. */
+.feed-source-trouble {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  background: var(--surface-sunken);
+}
+
+.feed-source-trouble p {
+  margin: 0;
+}
+
+.feed-source-trouble ul {
+  list-style: none;
+  margin: var(--space-2) 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.feed-source-name {
+  font-family: var(--mono);
+  font-size: var(--text-meta);
+}

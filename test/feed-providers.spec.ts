@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchAdzuna, fetchAshby, fetchGreenhouse } from "../worker/feed";
+import { fetchAdzuna, fetchAshby, fetchGreenhouse,
+  SourceUnconfigured,
+} from "../worker/feed";
 
 // Provider-parsing coverage (#449): each source maps a different JSON shape
 // into a FeedCandidate, and the description-capture rules (Greenhouse HTML
@@ -40,9 +42,14 @@ describe("fetchGreenhouse", () => {
     expect(c.description).not.toContain("<");
   });
 
-  it("returns [] on a non-ok response", async () => {
+  it("reports a non-ok response instead of returning nothing", async () => {
+    // This used to resolve to [], which reaches the user as "nothing new
+    // today" — indistinguishable from a genuinely quiet board. A mistyped
+    // slug 404s and would have looked like a working, empty board forever.
+    // refreshFeed decides what to do about it now; the fetcher's job is to
+    // say what happened.
     stub({}, false);
-    expect(await fetchGreenhouse("acme", {})).toEqual([]);
+    await expect(fetchGreenhouse("acme", {})).rejects.toThrow(/acme/);
   });
 });
 
@@ -111,10 +118,13 @@ describe("fetchAdzuna", () => {
     expect(out[0].description).toBe("Short snippet.");
   });
 
-  it("returns [] without API credentials", async () => {
+  it("marks missing credentials as unconfigured, not as a failure", async () => {
+    // The distinction the feed needs. A source nobody set up has not failed
+    // at anything, and telling the user it is broken would be its own kind of
+    // wrong — so this throws a type refreshFeed records as a success.
     const empty = {} as unknown as Parameters<typeof fetchAdzuna>[0];
-    expect(await fetchAdzuna(empty, { engineering: ["backend"] }, "nl")).toEqual(
-      [],
-    );
+    await expect(
+      fetchAdzuna(empty, { engineering: ["backend"] }, "nl"),
+    ).rejects.toBeInstanceOf(SourceUnconfigured);
   });
 });
