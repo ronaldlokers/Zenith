@@ -66,3 +66,46 @@ describe("what the first page load has to download", () => {
     expect(entry.body.includes(MARKERS.settings)).toBe(false);
   });
 });
+
+// FeedSettings is a settings panel that lived in src/feed.tsx, because
+// SettingsPage once imported it from there — a coupling src/settings/index.tsx
+// recorded in its own header as a circular-import workaround.
+//
+// The cost was two lazy route chunks welded together. Measured on the built
+// output before the move, settings-BCXxpNdb.js referenced feed-D6vqjS-i.js, so
+// opening Settings downloaded the feed chunk too: 27.77 + 17.23 kB for someone
+// who had never opened the Feed tab. After: 33.01 kB and no feed reference,
+// and the feed's own chunk fell to 11.98 kB.
+describe("the lazy route chunks", () => {
+  const chunkFor = (prefix: string) => {
+    const all = chunks();
+    const found = all.find((c) => c.name.startsWith(`${prefix}-`));
+    expect(found, `no ${prefix}-*.js chunk in the build`).toBeTruthy();
+    return found!;
+  };
+
+  it("do not pull each other in", () => {
+    // Asserted on the built graph rather than the import statement: what costs
+    // a download is which chunk references which, and a re-export somewhere
+    // else would restore the coupling without restoring the import line.
+    const settings = chunkFor("settings");
+    const feed = chunkFor("feed");
+
+    expect(
+      settings.body.includes(feed.name),
+      `${settings.name} references ${feed.name} — opening Settings downloads the feed tab`,
+    ).toBe(false);
+    expect(
+      feed.body.includes(settings.name),
+      `${feed.name} references ${settings.name}`,
+    ).toBe(false);
+  });
+
+  it("still both exist and carry their own panel", () => {
+    // Guards the vacuous pass: if either chunk vanished or the panel moved
+    // back into a shared chunk, the assertion above would hold for the wrong
+    // reason.
+    expect(chunkFor("settings").body).toContain("feedSettings.atsBoardsHint");
+    expect(chunkFor("feed").body).not.toContain("feedSettings.atsBoardsHint");
+  });
+});

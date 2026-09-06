@@ -1,6 +1,7 @@
 // Settings sub-components extracted from App.tsx (#285 split). SettingsPage
-// itself stays in App (it also renders FeedSettings, which would form a
-// cycle); these are the self-contained leaf sections it composes.
+// itself stays in App; these are the self-contained leaf sections it
+// composes. FeedSettings used to come from ../feed, which welded the two
+// lazy route chunks together — it lives in ./feed-settings now (#151).
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api";
@@ -18,7 +19,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ActionBar, Button, SettingsNav } from "../components";
 import { CaptureBookmarklet } from "./bookmarklet-section";
 import { BrowserExtension } from "./extension-section";
-import { FeedSettings } from "../feed";
+import { FeedSettings } from "./feed-settings";
 import { TimezoneField } from "./timezone-field";
 import { SettingsRow } from "./row";
 import { DeleteAccount, ChangePassword, TwoFactorSettings, SessionManagement, AnthropicKeySettings } from "./account";
