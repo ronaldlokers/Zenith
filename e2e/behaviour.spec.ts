@@ -49,6 +49,41 @@ async function addApplication(page: Page, title: string) {
   return title;
 }
 
+describe("the job title the detail pane focuses", () => {
+  it("is not ringed like an editable field", async () => {
+    // The two paths that actually paint one. Chromium's :focus-visible
+    // heuristic declines on a mouse click but matches a keyboard activation
+    // and a cold deep link — so a keyboard user saw a stray box on every card
+    // open, and so did anyone following a link straight to an application.
+    //
+    // Reading outlineStyle rather than screenshotting: the ring's presence is
+    // the defect, and a computed style says so without a pixel baseline to
+    // maintain.
+    const page = await board();
+    await addApplication(page, "E2E Ring Target");
+    const id = await page.locator("[data-card-id]").first().getAttribute("data-card-id");
+
+    const ring = async () => {
+      await page.waitForSelector(".detail-pane h2");
+      await page.waitForFunction(
+        () => document.activeElement?.tagName === "H2",
+        undefined,
+        { timeout: 10_000 },
+      );
+      return page.evaluate(
+        () => getComputedStyle(document.querySelector(".detail-pane h2") as HTMLElement).outlineStyle,
+      );
+    };
+
+    await page.locator("[data-card-id]").first().focus();
+    await page.keyboard.press("Enter");
+    expect(await ring(), "opening a card from the keyboard rings the title").toBe("none");
+
+    await page.goto(`${BASE}/board/${id}`);
+    expect(await ring(), "a deep link to an application rings its title").toBe("none");
+  });
+});
+
 describe("opening an application", () => {
   it("puts the keyboard on it rather than back at the top", async () => {
     // /board/:id keeps the board's page title, so the shell's own
@@ -81,6 +116,24 @@ describe("opening an application", () => {
         .map((v) => `${v.impact} ${v.id} (${v.nodes.length})`);
     });
     expect(violations, "the application detail page").toEqual([]);
+
+    // The focus move is right; the ring it painted was not. The global
+    // :focus-visible rule drew a 2px --accent-ink outline around a heading
+    // nobody can act on, which reads as a broken editable field.
+    //
+    // Measured in Chromium rather than reasoned about, because whether
+    // :focus-visible matches a programmatic focus is a UA heuristic:
+    //
+    //   click a card      none    (the heuristic declines — this path)
+    //   Enter on a card   solid 2px
+    //   open /board/:id   solid 2px
+    //
+    // The card above was clicked, so this path never showed a ring and cannot
+    // prove the fix. The deep-link path below is the one that reproduced.
+    const ringAfterClick = await page.evaluate(
+      () => getComputedStyle(document.querySelector(".detail-pane h2") as HTMLElement).outlineStyle,
+    );
+    expect(ringAfterClick, "the mouse path changed behaviour").toBe("none");
 
     const focused = await page.evaluate(() => ({
       tag: document.activeElement?.tagName,

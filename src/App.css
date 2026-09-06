@@ -1057,6 +1057,27 @@
   margin-bottom: var(--space-3);
 }
 
+/* The detail pane moves focus to the job title on open so a screen reader is
+   told which application it landed on (#596). The global :focus-visible rule
+   then painted a 2px --accent-ink ring around a heading nobody can act on,
+   which reads as a broken editable field — the first thing you see.
+
+   Measured in Chromium across the three ways in, because whether
+   :focus-visible matches a programmatic focus is a UA heuristic rather than
+   something the selector states:
+
+     click a card       outline: none   (no ring — the heuristic declines)
+     Enter on a card    outline: solid  2px
+     open /board/:id    outline: solid  2px
+
+   So it was real on two paths of three, including a deep link where the reader
+   has not touched the keyboard at all. Suppressed here only: the heading is a
+   landing spot for the announcement, not a target, so there is nothing for a
+   ring to tell anyone. Every other focusable element keeps it. */
+.detail-head-main h2[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
 .detail-head-main {
   min-width: 0;
 }
