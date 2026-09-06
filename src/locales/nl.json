@@ -218,8 +218,14 @@
       "users": "Gebruikers",
       "invites": "Uitnodigingen",
       "demo": "Demodata",
-      "notifications": "Notificaties"
-    }
+      "notifications": "Notificaties",
+      "scheduled": "Gepland"
+    },
+    "cronTitle": "Geplande taken",
+    "cronHint": "De laatste run van elke achtergrondtaak. Een fout, of een taak die niet meer draait, is hier te zien — en alleen hier.",
+    "cronNone": "Er is nog niets gedraaid.",
+    "cronFailed": "Mislukt",
+    "cronLate": "Te laat"
   },
   "feed": {
     "pulledFrom": "Opgehaald uit je ingestelde vacaturesites (Greenhouse, Ashby) en Adzuna, elke 6 uur.",

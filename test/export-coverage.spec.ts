@@ -40,6 +40,12 @@ const DELIBERATELY_NOT_EXPORTED = new Set([
   "ai_credentials",
   // Device-bound and worthless once restored elsewhere.
   "push_subscriptions",
+  // Operator visibility for the scheduled tasks, and the only table here with
+  // no user_id at all: it describes the instance, not a person. Putting it in
+  // the per-user export would hand every user the deployment's operational
+  // history, and putting it in the backup would restore one instance's cron
+  // log onto another.
+  "cron_runs",
 ]);
 
 // On the first run this test named six tables that hold user data and were

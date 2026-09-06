@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import worker, { shouldRunFeedPull } from "../worker/index";
+import worker, { recordCronRun, shouldRunFeedPull } from "../worker/index";
 
 // The feed cadence moved out of wrangler.jsonc and into this branch, so it is
 // the only place the 6-hourly schedule is still expressed. These four hours
@@ -95,5 +95,57 @@ describe("scheduled handler", () => {
 
     expect(promises).toHaveLength(1); // delivery branch only
     await Promise.allSettled(promises);
+  });
+});
+
+// Every scheduled task was wrapped in independently(), whose entire failure
+// signal was a console.error. Workers Logs captures those and has no alerting,
+// so the way to learn that the weekly digest had been throwing for a month was
+// to open the Cloudflare dashboard and go looking for it.
+describe("recording what the crons did", () => {
+  const rows = () =>
+    env.DB.prepare(
+      "SELECT label, ok, error FROM cron_runs ORDER BY id",
+    ).all<{ label: string; ok: number; error: string | null }>();
+
+  it("records a success, not only a failure", async () => {
+    // The half that matters most and is easiest to leave out. A task that
+    // throws leaves an error row; a task that silently stops firing leaves
+    // nothing at all, and only the successes can show that.
+    await recordCronRun(env, "backup", null);
+    const { results } = await rows();
+    const backup = results.filter((r) => r.label === "backup");
+    expect(backup.at(-1)).toMatchObject({ label: "backup", ok: 1, error: null });
+  });
+
+  it("keeps the error text, which is the whole point of looking", async () => {
+    await recordCronRun(env, "weekly digest", new Error("resend 500: nope"));
+    const { results } = await rows();
+    const last = results.at(-1)!;
+    expect(last.ok).toBe(0);
+    expect(last.error).toContain("resend 500");
+  });
+
+  it("survives a non-Error throw", async () => {
+    // A rejected promise carries whatever it was rejected with.
+    await recordCronRun(env, "feed pull", "just a string");
+    const { results } = await rows();
+    expect(results.at(-1)!.error).toContain("just a string");
+  });
+
+  it("never lets the bookkeeping replace the failure it is recording", async () => {
+    // This runs inside the catch that already handled the real error, so a
+    // throw here would turn a recorded failure into an unrecorded one — the
+    // exact outcome the whole change exists to prevent.
+    const broken = {
+      DB: {
+        prepare() {
+          throw new Error("D1 is down");
+        },
+      },
+    } as unknown as typeof env;
+    await expect(
+      recordCronRun(broken, "backup", new Error("original failure")),
+    ).resolves.toBeUndefined();
   });
 });

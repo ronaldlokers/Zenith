@@ -153,6 +153,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ type }),
     }),
+  // Admin: the last run of each scheduled task. Answers both "is anything
+  // broken" and the harder one, "is anything not running at all".
+  cronRuns: () =>
+    request<
+      { label: string; ok: number; error: string | null; ran_at: string }[]
+    >("/api/admin/cron-runs"),
   // BYO Claude key. The key itself is never returned — only whether one is
   // configured and its last-4 hint.
   getAiCredentials: () =>
