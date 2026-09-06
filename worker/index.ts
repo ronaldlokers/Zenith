@@ -1,7 +1,7 @@
 import { guardedFetch, isForbiddenUrl } from "./url-guard.js";
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { refreshFeed, registerFeedRoutes } from "./feed.js";
+import { pruneFeedItems, refreshFeed, registerFeedRoutes } from "./feed.js";
 import { registerRoleTypeRoutes } from "./role-types.js";
 import { recordCronRun } from "./cron-log.js";
 import { pruneAuthRows } from "./retention.js";
@@ -2789,6 +2789,11 @@ export default {
       // to do with each other and a retention failure must not be the reason
       // a backup did not happen.
       independently("auth retention", pruneAuthRows(env));
+      // Before the backup would be tidier, but they are independent on
+      // purpose: a prune that throws must not be the reason a backup did not
+      // happen, and a backup carrying one extra day of stale postings is a
+      // far smaller problem than no backup at all.
+      independently("feed retention", pruneFeedItems(env));
       return;
     }
     if (event.cron === "0 8 * * 1") {
