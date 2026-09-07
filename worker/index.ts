@@ -9,6 +9,7 @@ import { registerDocumentRoutes } from "./documents.js";
 import { buildFullExport, registerExportRoutes } from "./export.js";
 import { registerImportRoutes } from "./import-posting.js";
 import { BACKUP_RETENTION_DAYS } from "../src/backup-policy.js";
+import { happenedAtError } from "./interaction-validation.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { registerOutreachRoutes } from "./outreach.js";
@@ -1174,6 +1175,8 @@ app.post("/api/applications/:id/interactions", async (c) => {
     .bind(c.req.param("id"), userId)
     .first();
   if (!application) return c.json({ error: "not found" }, 404);
+  const dateError = happenedAtError(body);
+  if (dateError) return c.json({ error: dateError }, 400);
   const result = await c.env.DB.prepare(
     `INSERT INTO interactions (application_id, user_id, type, happened_at, notes, interviewers)
      VALUES (?, ?, ?, coalesce(?, date('now')), ?, ?) RETURNING *`,
@@ -1209,6 +1212,8 @@ app.post("/api/contacts/:id/interactions", async (c) => {
     .bind(c.req.param("id"), userId)
     .first();
   if (!contact) return c.json({ error: "not found" }, 404);
+  const dateError = happenedAtError(body);
+  if (dateError) return c.json({ error: dateError }, 400);
   const result = await c.env.DB.prepare(
     `INSERT INTO interactions (contact_id, user_id, type, happened_at, notes, interviewers)
      VALUES (?, ?, ?, coalesce(?, date('now')), ?, ?) RETURNING *`,
