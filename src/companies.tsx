@@ -309,7 +309,7 @@ function CompanyForm({
 // contact_name), plus any other contacts at the company not part of a
 // chain. No new schema — there's no general "reports to" field, just
 // what the referral link already captures.
-function ContactRelationshipMap({
+export function ContactRelationshipMap({
   contacts,
   applications,
 }: {
@@ -319,20 +319,31 @@ function ContactRelationshipMap({
   const { t } = useTranslation();
   if (contacts.length === 0) return null;
 
+  // Keyed by contact id, not display name (#card) — two contacts at the
+  // same company can share a name ("Alex", "Sam"), and a name-keyed set
+  // would treat the unrelated one as already shown, dropping it from the
+  // map entirely instead of rendering it as an unlinked node.
   const referralLinks = [
     ...new Map(
       applications
-        .filter((a) => a.referred_by_name && a.contact_name)
+        .filter(
+          (a) => a.referred_by_contact_id && a.contact_id && a.referred_by_name && a.contact_name,
+        )
         .map((a) => [
-          `${a.referred_by_name}->${a.contact_name}`,
-          { from: a.referred_by_name!, to: a.contact_name! },
+          `${a.referred_by_contact_id}->${a.contact_id}`,
+          {
+            fromId: a.referred_by_contact_id!,
+            toId: a.contact_id!,
+            from: a.referred_by_name!,
+            to: a.contact_name!,
+          },
         ]),
     ).values(),
   ];
-  const linkedNames = new Set(
-    referralLinks.flatMap((l) => [l.from, l.to]),
+  const linkedIds = new Set(
+    referralLinks.flatMap((l) => [l.fromId, l.toId]),
   );
-  const unlinked = contacts.filter((c) => !linkedNames.has(c.name));
+  const unlinked = contacts.filter((c) => !linkedIds.has(c.id));
 
   return (
     <div className="contact-map">
