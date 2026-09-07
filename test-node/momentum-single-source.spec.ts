@@ -20,6 +20,22 @@ const WORKER = readdirSync(`${ROOT}worker`)
   .map((f) => readFileSync(`${ROOT}worker/${f}`, "utf8"))
   .join("\n");
 
+// Named pairs rather than one joined blob: the copy check has to report which
+// file carries the duplicate, and a blob can only say that one exists.
+function tsFiles(dir: string): [string, string][] {
+  const out: [string, string][] = [];
+  for (const entry of readdirSync(`${ROOT}${dir}`, { withFileTypes: true })) {
+    const rel = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) out.push(...tsFiles(rel));
+    else if (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) {
+      out.push([rel, readFileSync(`${ROOT}${rel}`, "utf8")]);
+    }
+  }
+  return out;
+}
+const srcFiles = () => tsFiles("src");
+const workerFiles = () => tsFiles("worker");
+
 describe("the momentum rule", () => {
   it("is called by the worker rather than reimplemented anywhere in it", () => {
     expect(WORKER).toContain("computePipelineMomentum");
@@ -35,6 +51,30 @@ describe("the momentum rule", () => {
   it("keeps its floor where both callers get it", () => {
     const shared = readFileSync(`${ROOT}src/momentum.ts`, "utf8");
     expect(shared).toMatch(/recent \+ prior < MOMENTUM_MIN_EVENTS/);
+  });
+
+  it("has no second copy of the date parser anywhere", () => {
+    // The same defect as the ratio above, and it has now happened twice: the
+    // worker carried shareParseSqlDate, and after that was removed src/stats.ts
+    // still had sqlMs — byte for byte the same expression under a third name.
+    // Both were written as deliberate copies for a reason that has since
+    // dissolved, which is why a behavioural test cannot catch the next one:
+    // a fresh copy is correct on the day it is written and only wrong later.
+    //
+    // The fingerprint is the branch, not the replace. worker/calendar.ts does
+    // an unconditional replace for an ICS sequence number and falls back to 0
+    // rather than NaN — a different function that happens to share a substring,
+    // and deliberately not caught here.
+    const files = [...srcFiles(), ...workerFiles()].filter(
+      ([name]) => name !== "src/momentum.ts",
+    );
+    const copies = files
+      .filter(([, text]) => /\.includes\("T"\)\s*\?/.test(text))
+      .map(([name]) => name);
+    expect(
+      copies,
+      "these reimplement parseSqlDate instead of importing it from src/momentum.ts",
+    ).toEqual([]);
   });
 
   it("keeps the share page off its own copy of the stage order", () => {
