@@ -847,3 +847,79 @@ describe("target size (WCAG 2.5.8)", () => {
     await page.context().close();
   }, 120_000);
 });
+
+describe("the board card's company chip when the name is too long", () => {
+  // The chip clips hard by design — measured 56px of box against 288px of
+  // content at nine unfolded columns — so the only question is whether the
+  // cut reads as deliberate. Without an ellipsis it reads as data corruption,
+  // and five reviewers independently reported it that way.
+  //
+  // text-overflow does nothing on a flex container, so the truncation sits on
+  // .strip-text, a blockified flex child.
+  // test-node/ellipsis-container.spec.ts guards that shape by reading the
+  // stylesheet — that the property is never declared on a flex container. It
+  // cannot see whether an ellipsis then actually draws, and until this test
+  // nothing rendered the chip at all.
+  //
+  // Established by mutation, since the reasoning is easy to get wrong: the
+  // two properties that matter are text-overflow and overflow on .strip-text
+  // itself, and removing either is caught here while tsc, oxlint and the
+  // stylesheet guard all stay green. Its min-width: 0 and the parent cell's
+  // own overflow: hidden are *not* load-bearing — the chip still clips and
+  // still draws its ellipsis without them — so neither is asserted.
+  it("draws an ellipsis rather than cutting mid-word", async () => {
+    const page = await board(1440);
+    // Seeded here, not assumed — the same trap the reflow test above records:
+    // a long company name left behind by an earlier run makes this pass with
+    // the fix removed.
+    const NAME =
+      "E2E Brightpath Fieldstone Solace Consolidated Talent Partners International";
+    await page.evaluate(async (name) => {
+      const post = (url: string, body: unknown) =>
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }).then((r) => r.json());
+      const company = (await post("/api/companies", { name })) as { id: number };
+      await post("/api/applications", {
+        title: "E2E Ellipsis Target",
+        company_id: company.id,
+        status: "interested",
+      });
+    }, NAME);
+    await page.reload();
+    await page.waitForSelector(".bstrip");
+
+    const measured = await page.evaluate((name) => {
+      const chip = [...document.querySelectorAll(".bco")].find((el) =>
+        (el.getAttribute("title") ?? "").includes(name),
+      );
+      const text = chip?.querySelector(".strip-text");
+      if (!chip || !text) return null;
+      const style = getComputedStyle(text);
+      return {
+        title: chip.getAttribute("title") ?? "",
+        overflowing: text.scrollWidth > text.clientWidth,
+        textOverflow: style.textOverflow,
+        whiteSpace: style.whiteSpace,
+        overflow: style.overflow,
+      };
+    }, NAME);
+
+    expect(measured, "no board card rendered for the seeded company").not.toBeNull();
+    // All four together are the claim. Overflowing alone is the bug; ellipsis
+    // alone proves nothing, because a chip wide enough to fit the name would
+    // report it while never drawing one.
+    expect(
+      measured!.overflowing,
+      "the chip is not clipping the name at all, so this proves nothing about the ellipsis",
+    ).toBe(true);
+    expect(measured!.textOverflow, "the clipped name gets no ellipsis").toBe("ellipsis");
+    expect(measured!.whiteSpace).toBe("nowrap");
+    expect(measured!.overflow).toBe("hidden");
+    // The escape hatch: the full name has to remain readable somewhere.
+    expect(measured!.title, "the truncated name is unrecoverable").toContain(NAME);
+    await page.context().close();
+  }, 120_000);
+});
