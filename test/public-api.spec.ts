@@ -287,9 +287,11 @@ describe("ssrf + export guards (#346)", () => {
   });
 
   it("rejects importing from a private address", async () => {
-    const res = await authedFetch(
-      `${BASE}/api/import?url=${encodeURIComponent("http://127.0.0.1:8787/x")}`,
-    );
+    const res = await authedFetch(`${BASE}/api/import`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "http://127.0.0.1:8787/x" }),
+    });
     expect(res.status).toBe(400);
   });
 

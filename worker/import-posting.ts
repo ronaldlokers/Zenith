@@ -68,9 +68,15 @@ function findJobPosting(node: unknown): Record<string, unknown> | null {
 }
 
 export function registerImportRoutes(app: Hono<AppEnv>) {
-  app.get("/api/import", async (c) => {
-  const raw = c.req.query("url");
-  if (!raw) return c.json({ error: "url query param is required" }, 400);
+  // POST, not GET: a GET here would carry the SameSite=Lax session cookie on
+  // a cross-site top-level navigation, letting any third-party page make
+  // this deployment fetch an attacker-chosen URL. POST closes that at the
+  // transport — no cookie on a cross-site POST — so don't add a GET alias
+  // back for compatibility.
+  app.post("/api/import", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const raw = typeof body?.url === "string" ? body.url : undefined;
+  if (!raw) return c.json({ error: "url is required" }, 400);
   let url: URL;
   try {
     url = new URL(raw);
