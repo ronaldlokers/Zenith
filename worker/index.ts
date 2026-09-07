@@ -167,6 +167,11 @@ const NUMERIC_BOUNDS: Record<string, [number, number]> = {
   fit_score: [1, 5],
 };
 
+// fit_score renders as whole stars, so a fractional value has no sane cast.
+// The money fields have no such constraint (a salary_min of 85000.50 is a
+// real number), so this is narrower than NUMERIC_BOUNDS on purpose.
+const INTEGER_FIELDS = new Set(["fit_score"]);
+
 // Returns the error message for the first field that is out of bounds, or
 // null when there is nothing to object to. Absent and null are always fine —
 // most applications carry no compensation at all.
@@ -176,6 +181,9 @@ export function compensationError(body: Record<string, unknown>): string | null 
     if (raw === undefined || raw === null || raw === "") continue;
     const n = typeof raw === "number" ? raw : Number(raw);
     if (!Number.isFinite(n)) return `${field} must be a number`;
+    if (INTEGER_FIELDS.has(field) && !Number.isInteger(n)) {
+      return `${field} must be a whole number`;
+    }
     if (n < min || n > max) return `${field} must be between ${min} and ${max}`;
   }
   // Both ends have to actually be there. Number(null) is 0, so reading the
@@ -1111,12 +1119,12 @@ app.patch("/api/applications/:id", async (c) => {
     vals.push(body.cover_letter ?? null);
   }
   if ("fit_score" in body) {
-    const fit = body.fit_score;
-    if (fit != null && !(Number.isInteger(fit) && fit >= 1 && fit <= 5)) {
-      return c.json({ error: "fit_score must be 1-5 or null" }, 400);
-    }
+    // Same rule as POST/PUT, from the same place — a second inline copy of
+    // this check is exactly how it drifted out of sync with them before.
+    const outOfBounds = compensationError({ fit_score: body.fit_score });
+    if (outOfBounds) return c.json({ error: outOfBounds }, 400);
     sets.push("fit_score = ?");
-    vals.push(fit ?? null);
+    vals.push(body.fit_score ?? null);
   }
   if (!sets.length) return c.json({ error: "nothing to update" }, 400);
   const result = await c.env.DB.prepare(

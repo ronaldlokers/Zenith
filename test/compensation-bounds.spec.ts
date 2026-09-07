@@ -69,6 +69,15 @@ describe("compensation the server will not store", () => {
   it("refuses a fit score outside the five stars that render it", async () => {
     await rejected({ fit_score: 9 }, "a nine-star fit score was stored");
     await rejected({ fit_score: 0 }, "a zero-star fit score was stored");
+    await rejected({ fit_score: 999 }, "a wildly out-of-range fit score was stored");
+    await rejected({ fit_score: -50 }, "a negative fit score was stored");
+  });
+
+  it("refuses a fit score that isn't a whole star", async () => {
+    // sortCards's fit sort and matchBand both assume a whole 1-5 rating.
+    expect(await rejected({ fit_score: 2.5 }, "a fractional fit score was stored")).toMatch(
+      /fit_score/i,
+    );
   });
 });
 
@@ -139,5 +148,99 @@ describe("the same bounds on the way in through PUT", () => {
       rows.find((r) => r.id === id)?.salary_min,
       "the rejected write changed the row anyway",
     ).toBe(50000);
+  });
+
+  const putFitScore = async (id: number, fit_score: unknown) =>
+    authedFetch(`${BASE}/api/applications/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Bounds fixture", fit_score }),
+    });
+
+  it("rejects an out-of-range or fractional fit_score on PUT", async () => {
+    const created = await create({});
+    const { id } = await created.json<{ id: number }>();
+
+    for (const bad of [999, -50, 2.5]) {
+      const res = await putFitScore(id, bad);
+      expect(res.status, `fit_score ${bad} was stored via PUT`).toBe(400);
+      const { error } = await res.json<{ error: string }>();
+      expect(error).toMatch(/fit_score/i);
+    }
+  });
+
+  it("accepts the boundaries, and absent or null, on PUT", async () => {
+    const created = await create({});
+    const { id } = await created.json<{ id: number }>();
+
+    for (const good of [1, 5]) {
+      const res = await putFitScore(id, good);
+      expect(res.status, `fit_score ${good} was rejected via PUT`).toBe(200);
+      const row = await res.json<{ fit_score: number }>();
+      expect(row.fit_score).toBe(good);
+    }
+
+    const withNull = await authedFetch(`${BASE}/api/applications/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Bounds fixture", fit_score: null }),
+    });
+    expect(withNull.status, "an explicit null fit_score was rejected via PUT").toBe(200);
+
+    const withoutField = await authedFetch(`${BASE}/api/applications/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Bounds fixture" }),
+    });
+    expect(withoutField.status, "an absent fit_score was rejected via PUT").toBe(200);
+  });
+});
+
+describe("the same bounds on the way in through PATCH", () => {
+  const patchFitScore = async (id: number, fit_score: unknown) =>
+    authedFetch(`${BASE}/api/applications/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fit_score }),
+    });
+
+  it("rejects an out-of-range or fractional fit_score on PATCH", async () => {
+    const created = await create({});
+    const { id } = await created.json<{ id: number }>();
+
+    for (const bad of [999, -50, 0, 2.5]) {
+      const res = await patchFitScore(id, bad);
+      expect(res.status, `fit_score ${bad} was stored via PATCH`).toBe(400);
+      const { error } = await res.json<{ error: string }>();
+      expect(error).toMatch(/fit_score/i);
+    }
+  });
+
+  it("accepts the boundaries, and absent or null, on PATCH", async () => {
+    const created = await create({});
+    const { id } = await created.json<{ id: number }>();
+
+    for (const good of [1, 5]) {
+      const res = await patchFitScore(id, good);
+      expect(res.status, `fit_score ${good} was rejected via PATCH`).toBe(200);
+      const row = await res.json<{ fit_score: number }>();
+      expect(row.fit_score).toBe(good);
+    }
+
+    const withNull = await authedFetch(`${BASE}/api/applications/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fit_score: null }),
+    });
+    expect(withNull.status, "an explicit null fit_score was rejected via PATCH").toBe(200);
+
+    // Not touching fit_score at all in the body is legal too — PATCH only
+    // validates fields it was actually asked to write.
+    const notesOnly = await authedFetch(`${BASE}/api/applications/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: "unrelated edit" }),
+    });
+    expect(notesOnly.status, "an unrelated PATCH was rejected").toBe(200);
   });
 });
