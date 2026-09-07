@@ -2,6 +2,7 @@
 // /api/stats payload (applications + status_history), so they're unit
 // testable without a DOM or DB. Terminal states (rejected/withdrawn/
 // ghosted) are excluded: these measure forward progress through the funnel.
+import { parseSqlDate } from "./momentum";
 import type { StatsApplication, Status, StatusHistoryRow } from "./types";
 
 export const FUNNEL_STAGES: Status[] = [
@@ -12,16 +13,11 @@ export const FUNNEL_STAGES: Status[] = [
   "offer",
 ];
 
-// Deliberately a copy of format.ts's parseSqlDate rather than an import: this
-// module states it is dependency-free so it can be unit-tested without a DOM
-// or a DB, and that is worth more than saving four lines. It was not a
-// faithful copy — the ISO branch is the fix format.ts's own comment records
-// (a value that already has a T and a Z became "...ZZ", an Invalid Date and a
-// NaN), and it had not been carried across. Nothing feeds this ISO today; a
-// copy that has silently diverged from the thing it copies is the point.
-function sqlMs(d: string): number {
-  return new Date(d.includes("T") ? d : d.replace(" ", "T") + "Z").getTime();
-}
+// Imported from momentum.ts rather than format.ts: format.ts touches
+// localStorage and pulls in the PDF helper, neither of which this
+// dependency-free, DOM/DB-free module can carry — momentum.ts imports nothing
+// but a type, so pulling parseSqlDate from there keeps this module exactly as
+// free of both as it was with its own copy.
 
 // Furthest funnel stage index each application ever reached.
 //
@@ -208,15 +204,15 @@ export function responseTime(
   const waits: number[] = [];
   for (const rows of byApp.values()) {
     const sorted = [...rows].sort(
-      (a, b) => sqlMs(a.changed_at) - sqlMs(b.changed_at),
+      (a, b) => parseSqlDate(a.changed_at) - parseSqlDate(b.changed_at),
     );
     const i = sorted.findIndex((r) => r.to_status === "applied");
     if (i === -1) continue;
-    const appliedAt = sqlMs(sorted[i].changed_at);
+    const appliedAt = parseSqlDate(sorted[i].changed_at);
     // The first move after applying, whatever it is. A rejection is an
     // answer: it is the silence this measures, not the outcome.
     const next = sorted[i + 1];
-    const days = ((next ? sqlMs(next.changed_at) : nowMs) - appliedAt) / 86400000;
+    const days = ((next ? parseSqlDate(next.changed_at) : nowMs) - appliedAt) / 86400000;
     if (days < 0) continue;
     if (next) answered.push(days);
     else waits.push(days);
@@ -258,7 +254,7 @@ function latestByApp(history: StatusHistoryRow[]): Map<number, StatusHistoryRow>
   const latest = new Map<number, StatusHistoryRow>();
   for (const row of history) {
     const prev = latest.get(row.application_id);
-    if (!prev || sqlMs(row.changed_at) >= sqlMs(prev.changed_at)) {
+    if (!prev || parseSqlDate(row.changed_at) >= parseSqlDate(prev.changed_at)) {
       latest.set(row.application_id, row);
     }
   }
