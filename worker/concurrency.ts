@@ -1,6 +1,5 @@
 // Cloudflare Workers cap outbound "simultaneous connections waiting for
-// response headers" at exactly six per invocation, on every plan (SRE
-// review, #660):
+// response headers" at exactly six per invocation, on every plan:
 // https://developers.cloudflare.com/workers/platform/limits/#simultaneous-open-connections
 // A seventh fetch doesn't error, it just queues — but a fetch that carries
 // its own abort timeout (feed.ts's FEED_TIMEOUT_MS, posting-check.ts's
