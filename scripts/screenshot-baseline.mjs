@@ -24,7 +24,8 @@ const AUTH = process.env.AUTH_STATE ?? ".auth.json";
 // LEGACY_PATHS rewrites them to a canonical route, so capturing them would
 // duplicate another view's shots and imply views that no longer exist.
 //
-// A third element is an interaction list: each entry clicks a selector and
+// A third element is an interaction list: each entry clicks a selector (or,
+// for a surface with no selector to click, presses a key via `press`) and
 // captures again under `<name>-<suffix>`. Local-state controls (detail's
 // section tabs, the segmented groups) are invisible to a URL-only capture,
 // and those are exactly what PR 4 rewrites.
@@ -42,9 +43,11 @@ const VIEWS = [
     { suffix: "nextup-upcoming", click: ".today-nextup .zui-segmented button:nth-child(2)" },
     // The bell popover holds "mark all read", which no capture ever opened.
     { suffix: "bell", click: ".zui-notification-bell .zui-notification-trigger" },
-    // QuickAddDialog only opens from the top bar's + Add, so nothing captured
-    // it — its stylesheet was verified in Storybook alone.
-    { suffix: "quickadd", click: ".top-add" },
+    // QuickAddDialog no longer has a top-bar button (that's `.top-add`, since
+    // removed) — it opens from the top-centre menu's "quick-add" action or
+    // the global "n" shortcut. "n" is the documented route (the menu's own
+    // keycap reads "n"), so drive the dialog open the same way a user does.
+    { suffix: "quickadd", press: "n", expect: '[aria-modal="true"]' },
   ]],
   ["board", "/board", [{ suffix: "cardmenu", click: ".zui-cardmenu-btn" }]],
   ["detail", `/board/${process.env.DETAIL_ID ?? "1"}`, [
@@ -221,13 +224,33 @@ for (const [vpName, viewport] of VIEWPORTS) {
     await parkPointer(page);
     await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
     console.log(`captured ${name}-${vpName}`);
-    for (const { suffix, click } of interactions ?? []) {
+    for (const { suffix, click, press, expect } of interactions ?? []) {
       // `click` is a selector or an ordered list of them. Sequences reach
       // surfaces one click cannot: the outreach template manager needs a
       // contact dialog opened first, and a control nested two deep was
       // previously verified by CSS derivation alone because the harness could
       // not express it.
-      for (const selector of Array.isArray(click) ? click : [click]) {
+      //
+      // `press` is the alternative for a surface with no selector to click at
+      // all — quick-add's own top-bar button was removed, and the dialog now
+      // only opens via a keyboard shortcut or a two-step menu. A page-level
+      // keypress is one step and matches the app's documented route.
+      if (press) {
+        await page.keyboard.press(press);
+        // `expect` is not optional alongside `press`, and that asymmetry with
+        // `click` is the point: a missing click selector already stops the run
+        // below, but a shortcut that has been retired or rebound opens nothing
+        // and would still capture — a screenshot of the surface without the
+        // dialog, diffing clean against the next one, covering nothing. The
+        // wait is what keeps a press as loud as a click.
+        try {
+          await page.locator(expect).first().waitFor({ state: "visible", timeout: 5000 });
+        } catch {
+          console.error(`Key "${press}" opened nothing on ${route}: expected ${expect}`);
+          process.exit(1);
+        }
+      }
+      for (const selector of Array.isArray(click) ? click : click ? [click] : []) {
         const target = page.locator(selector).first();
         // Wait for it rather than testing presence immediately: a step in a
         // sequence opens a surface the next step clicks, and on the mobile

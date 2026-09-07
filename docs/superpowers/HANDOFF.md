@@ -86,7 +86,9 @@ fill `input[type="email"]` and `input[type="password"]`, submit `form.login-card
 The seeded admin owns all 15 applications, ids **9001–9015**, so `DETAIL_ID=9001`.
 
 **Prove the harness is byte-stable before trusting any diff.** Two full runs into different
-`OUT_DIR`s must differ on 0 of 52 captures. Once that holds, a non-zero line is a real defect —
+`OUT_DIR`s must differ on 0 of 52 captures — re-run this yourself before trusting any diff from
+the rig; the last confirmed byte-stable run is not evidence about the rig as it stands today,
+only about the commit it was run against. Once that holds, a non-zero line is a real defect —
 see the process note at the end of this file.
 
 ## The two harnesses, and why there are two
@@ -355,8 +357,13 @@ nothing at all when clean, so the exit code is the only signal.
   the limit and has worked reliably.
 - **Do not let an implementer explain away a non-zero diff.** The harness has had four
   determinism defects fixed (lingering pointer, transition race, partial rasterisation, clock
-  drift) and is byte-stable across runs — re-confirmed on the Omarchy host during PR 4 with two
-  full runs differing on 0 of 52 captures. A non-zero line is a real defect.
+  drift) and was confirmed byte-stable across runs as of PR 4, re-confirmed on the Omarchy host
+  with two full runs differing on 0 of 52 captures. That confirmation is a point-in-time fact
+  about the commit it was run against, not a standing property of the file — the harness has since
+  hard-failed outright when one of its `click:` interactions targeted a class deleted elsewhere in
+  the app, which a byte-stability run would never even reach far enough to catch (it dies mid-run
+  instead of producing a diff). Re-run the byte-stability check yourself before trusting a diff
+  from the harness as it stands today; a non-zero line, once that check passes, is a real defect.
 - **Run the pixel gate yourself rather than delegating it.** The implementer is the party with an
   incentive to reason around a non-zero result. Across PR 4 the gate ran nine times — after every
   task and every fix commit, plus once after the squash-merge to confirm the claim survived it.
