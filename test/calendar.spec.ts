@@ -133,4 +133,17 @@ describe("calendar ICS feed", () => {
     const res = await SELF.fetch(`${BASE}/calendar/not-a-real-token`);
     expect(res.status).toBe(404);
   });
+
+  it("tells crawlers not to index it, live and revoked alike", async () => {
+    // The share page sends this via a <meta> tag it can render; this feed is
+    // a text/calendar body with nowhere to put one, so the header is the only
+    // way to say the same thing. The token in the URL makes both responses as
+    // unguessable-but-not-secret as /shared/:token, which carries the header
+    // on both its live and revoked paths.
+    const live = await SELF.fetch(`${BASE}/calendar/${TOKEN}`);
+    expect(live.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+
+    const revoked = await SELF.fetch(`${BASE}/calendar/not-a-real-token`);
+    expect(revoked.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
 });

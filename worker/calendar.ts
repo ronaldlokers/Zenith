@@ -187,7 +187,12 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
       .bind(token)
       .first<{ user_id: string; timezone: string | null }>();
     if (!profile)
-      return c.text("Not found", 404, { "Referrer-Policy": "no-referrer" });
+      return c.text("Not found", 404, {
+        "Referrer-Policy": "no-referrer",
+        // Same reasoning as the live response below — the 404 body still
+        // carries the token in its request URL.
+        "X-Robots-Tag": "noindex, nofollow",
+      });
     const today = localDate(profile.timezone, new Date());
 
     const [followUps, deadlines, interviews] = await Promise.all([
@@ -272,6 +277,10 @@ export function registerCalendarRoutes(app: Hono<AppEnv>) {
       // app-wide default only withholds the path cross-origin; a tokenised
       // feed should not depend on that distinction.
       "Referrer-Policy": "no-referrer",
+      // Matches the <meta name="robots"> the HTML share page sends — this
+      // response has no HTML to put a meta tag in, so the header carries it
+      // instead (#157).
+      "X-Robots-Tag": "noindex, nofollow",
     });
   });
 }
