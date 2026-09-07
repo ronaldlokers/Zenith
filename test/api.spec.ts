@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { authedFetch } from "./helpers";
 
 const BASE = "http://zenith.test";
@@ -815,8 +815,31 @@ describe("misc", () => {
   });
 
   it("rejects non-http import urls", async () => {
-    const res = await authedFetch(`${BASE}/api/import?url=ftp://example.com`);
+    const res = await post("/api/import", { url: "ftp://example.com" });
     expect(res.status).toBe(400);
+  });
+
+  it("rejects a GET to /api/import (cross-site nav would carry the session cookie)", async () => {
+    const getRes = await authedFetch(`${BASE}/api/import?url=https://example.com`);
+    expect(getRes.status).toBe(404);
+
+    // Proves the path itself is right, so the GET rejection above isn't
+    // passing because of a typo'd route rather than a genuinely removed verb.
+    const realFetch = globalThis.fetch;
+    vi.stubGlobal("fetch", async () =>
+      new Response("<title>Staff Engineer</title>", {
+        status: 200,
+        headers: { "content-type": "text/html" },
+      }),
+    );
+    try {
+      const postRes = await post("/api/import", { url: "https://example.com" });
+      expect(postRes.status).toBe(200);
+      const body = (await postRes.json()) as { title: string | null };
+      expect(body.title).toBe("Staff Engineer");
+    } finally {
+      vi.stubGlobal("fetch", realFetch);
+    }
   });
 });
 

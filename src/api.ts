@@ -411,9 +411,10 @@ export const api = {
       body: JSON.stringify({ endpoint }),
     }),
   importUrl: (url: string) =>
-    request<import("./types").ImportResult>(
-      `/api/import?url=${encodeURIComponent(url)}`,
-    ),
+    request<import("./types").ImportResult>("/api/import", {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    }),
   documents: (applicationId: number) =>
     request<import("./types").Document[]>(
       `/api/applications/${applicationId}/documents`,
