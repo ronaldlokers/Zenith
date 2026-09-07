@@ -7,8 +7,16 @@ import { describe, expect, it } from "vitest";
 // Dashboard is the one deliberate exception — it's the default landing view,
 // per the comment above the lazy() block in App.tsx — and nothing else is
 // allowed to be. Nothing else stops a tab body being switched back to a
-// static import: the bundle would grow, no other test would fail, and the
-// next perf review would file the same card again.
+// static import for six of the nine: the bundle would grow, no other test
+// would fail, and the next perf review would file the same card again.
+//
+// It is the weaker of the two checks, deliberately. test-node/lazy-tabs.spec.ts
+// reads the built chunks and asserts Insights and Settings are absent from the
+// entry — which catches what an import statement cannot, since a lazy() that
+// some other module re-exports eagerly still lands in the entry chunk. That
+// one is narrow and deep; this one is broad and shallow, covering every tab
+// but only at the import. Neither replaces the other, so do not delete either
+// as redundant.
 //
 // "Tab body" is identified structurally rather than by a hardcoded name
 // list, which would rot: routing.ts's `Tab` union is the source of truth for
