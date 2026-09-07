@@ -79,6 +79,15 @@ function buildAuth(env: Env) {
     // ctx.context.session is still the admin's own session at this point:
     // the endpoint builds the impersonated session as a local value and
     // returns it in the response, it never reassigns ctx.context.session.
+    //
+    // Gated to this one path because the card named it, NOT because it is
+    // the only one worth recording. The plugin also exposes set-user-password,
+    // remove-user, ban-user, set-role and update-user, all reachable by any
+    // admin session and none of them recorded here — set-user-password is a
+    // persistent account takeover, which is worse than impersonation, not
+    // better. This hook is the seam for all of them; extending it is a path
+    // map rather than new machinery. Do not read the table as a complete
+    // account of what an admin did.
     hooks: {
       after: createAuthMiddleware(async (ctx) => {
         if (ctx.path !== "/admin/impersonate-user") return;
