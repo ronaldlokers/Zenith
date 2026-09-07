@@ -70,3 +70,47 @@ describe("an error that did reach the Worker", () => {
     );
   });
 });
+
+describe("what the console gets when the body is not JSON", () => {
+  // The user-facing half deliberately never shows the raw response. That
+  // leaves whoever is debugging a misconfigured proxy with a sentence about
+  // connectivity and nothing to distinguish it from an actual outage, because
+  // reading the body as JSON consumes the stream and loses the evidence.
+  test("the status, the route and the body reach the console", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    respondWith(522, EDGE_PAGE, "text/html");
+
+    await expect(api.list("applications")).rejects.toThrow();
+
+    const [label, snippet] = spy.mock.calls[0] ?? [];
+    expect(String(label)).toContain("522");
+    expect(String(label)).toContain("/api/applications");
+    expect(String(snippet)).toContain("Origin Connection Time-out");
+    spy.mockRestore();
+  });
+
+  test("an empty body says so rather than logging nothing", async () => {
+    // A 502 with no body at all is a different diagnosis from a 502 carrying
+    // an error page, and an empty second argument reads as neither.
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    respondWith(502, "", "text/html");
+
+    await expect(api.list("applications")).rejects.toThrow();
+
+    expect(String(spy.mock.calls[0]?.[1])).toBe("(empty body)");
+    spy.mockRestore();
+  });
+
+  test("a normal app error is not logged, because nothing was lost", async () => {
+    // The server said what happened in the message the user is already
+    // shown. Logging it again would make the console noisy on every ordinary
+    // validation failure, which is how a useful log gets ignored.
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    respondWith(400, JSON.stringify({ error: "Title is required." }), "application/json");
+
+    await expect(api.create("applications", { title: "" })).rejects.toThrow();
+
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+});
