@@ -58,10 +58,11 @@ describe("outgoing request headers", () => {
   });
 
   test("the document upload still sends the file's own type", async () => {
-    // A separate path, not this merge: uploadDocument calls fetch directly.
-    // Pinned here anyway because the merge was written with this case in mind
-    // and it would be easy to later route the upload through request() and
-    // quietly turn a PDF into application/json.
+    // This is what the merge is for. uploadDocument goes through request()
+    // now, so the default JSON content type and the file's own type meet on
+    // every upload — replacing instead of merging would announce a PDF as
+    // application/json. Written when the upload still called fetch directly,
+    // anticipating the move; it is load-bearing rather than speculative now.
     captureFetch(201, { id: 1 });
     const file = new File(["bytes"], "cv.pdf", { type: "application/pdf" });
     await api.uploadDocument(1, file, null);
