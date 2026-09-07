@@ -169,6 +169,13 @@
     color: var(--faint);
     cursor: pointer;
     padding: 0 0.2rem;
+    /* WCAG 2.5.8's spacing exception needs a 24px circle centred on this
+       13px-wide control to clear the variant-select button beside it —
+       12px minus half its own width, 5.3px — for every pointer, not only
+       touch. The row's flex gap alone (3.2px) does not; this does. Kept as
+       a margin rather than a bigger button because the glyph is the whole
+       control here, not a label a wider box would give more room to. */
+    margin-inline-start: var(--space-2);
   }
 
   .cv-rail-del:hover,
@@ -188,7 +195,6 @@
   @media (pointer: coarse) {
     .cv-rail-del {
       position: relative;
-      margin-inline-start: var(--space-2);
     }
 
     .cv-rail-del::after {
