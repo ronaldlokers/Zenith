@@ -923,3 +923,39 @@ describe("the board card's company chip when the name is too long", () => {
     await page.context().close();
   }, 120_000);
 });
+
+describe("the Settings general panel's right rail", () => {
+  // Five rows end in a small-caps value; the shortcuts row ends in a
+  // checkbox. It is the one raw OS control on the panel, and a native
+  // checkbox carries a UA margin — so it sat off the edge the values are
+  // flush to, and the column rhythm snapped at the last row.
+  //
+  // Measured rather than eyeballed: the margin is a few pixels, which is
+  // exactly the size of defect that survives a screenshot review and is
+  // obvious once a number is put on it.
+  it("lands the toggle on the same edge as the values above it", async () => {
+    const page = await board(1440);
+    await page.goto(`${BASE}/settings`);
+    await page.waitForSelector(".set-row-toggle input[type=checkbox]");
+
+    const measured = await page.evaluate(() => {
+      const box = document.querySelector<HTMLElement>(
+        ".set-row-toggle input[type=checkbox]",
+      );
+      const value = document.querySelector<HTMLElement>(".set-row-value");
+      if (!box || !value) return null;
+      return {
+        boxRight: box.getBoundingClientRect().right,
+        valueRight: value.getBoundingClientRect().right,
+      };
+    });
+
+    expect(measured, "the settings panel did not render both row shapes").not.toBeNull();
+    // Sub-pixel tolerance only: this is a flush edge, not an approximate one.
+    expect(
+      Math.abs(measured!.boxRight - measured!.valueRight),
+      "the toggle is off the rail the small-caps values sit on",
+    ).toBeLessThan(1);
+    await page.context().close();
+  }, 120_000);
+});
