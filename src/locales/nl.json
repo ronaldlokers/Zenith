@@ -343,6 +343,8 @@
     "searchStartLabel": "Zoektocht gestart",
     "searchWeek_one": "Week {{count}} van je zoektocht",
     "searchWeek_other": "Week {{count}} van je zoektocht",
+    "searchWeekInferred_one": "Week {{count}} · sinds je eerste sollicitatie",
+    "searchWeekInferred_other": "Week {{count}} · sinds je eerste sollicitatie",
     "weeklyGoalValue_one": "{{count}}",
     "weeklyGoalValue_other": "{{count}}"
   },

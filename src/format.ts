@@ -558,6 +558,29 @@ export function computeWeeklyMomentum(
 
 // 1-based "week N of your search" from a start date (#473). `now` is injected
 // so it's unit-testable. Returns null when no start date is known.
+// The start date the week number counts from, and whether the app had to
+// guess it. Both surfaces that show "Week N" fell back to the earliest
+// application when search_started_at was unset — a good default, presented
+// with exactly the certainty of a configured one, while Settings said NOT
+// SET on the same account. Two screens disagreeing about whether the app
+// knows something is how a derived number stops being believed.
+//
+// Deliberately not written back into the goal as a default: a guess stored
+// where the user's own answer goes reads as their decision the next time they
+// open Settings, and they were never asked. Saying which it is costs a
+// sentence and stays true.
+export function searchStart(
+  configured: string | null | undefined,
+  applications: { applied_at?: string | null; created_at?: string | null }[],
+): { date: string | null; inferred: boolean } {
+  if (configured) return { date: configured, inferred: false };
+  const earliest = applications.reduce<string | null>((min, a) => {
+    const d = a.applied_at ?? a.created_at;
+    return d && (!min || d < min) ? d : min;
+  }, null);
+  return { date: earliest, inferred: earliest != null };
+}
+
 export function searchWeekNumber(
   startDate: string | null | undefined,
   now: number,

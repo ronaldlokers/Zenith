@@ -30,6 +30,7 @@ import {
 import {
   computePipelineMomentum,
   computeWeeklyMomentum,
+  searchStart,
   searchWeekNumber,
   downloadOfferComparisonPdf,
   isDead,
@@ -133,14 +134,8 @@ export function InsightsTab({
   // search" was already translated. Without them a figure has no scale: 5
   // applications is good or bad depending entirely on what you meant to do.
   const sentThisWeek = mom.weeks[mom.weeks.length - 1]?.count ?? 0;
-  const searchWeek = searchWeekNumber(
-    goal?.search_started_at ??
-      stats.applications.reduce<string | null>((min, a) => {
-        const d = a.applied_at ?? a.created_at;
-        return d && (!min || d < min) ? d : min;
-      }, null),
-    Date.now(),
-  );
+  const start = searchStart(goal?.search_started_at, stats.applications);
+  const searchWeek = searchWeekNumber(start.date, Date.now());
   const weekMax = Math.max(1, ...mom.weeks.map((w) => w.count));
   const pipe = computePipelineMomentum(history);
   const t2o = medianTimeToOffer(history);
@@ -216,7 +211,11 @@ export function InsightsTab({
           not smuggle it back in for people who declined it. */}
       {(searchWeek != null || (goal?.weekly_app_goal ?? 0) > 0) && (
         <p className="insights-pace muted small">
-          {searchWeek != null ? t("goals.searchWeek", { count: searchWeek }) : ""}
+          {searchWeek != null
+            ? t(start.inferred ? "goals.searchWeekInferred" : "goals.searchWeek", {
+                count: searchWeek,
+              })
+            : ""}
           {searchWeek != null && (goal?.weekly_app_goal ?? 0) > 0 ? " · " : ""}
           {(goal?.weekly_app_goal ?? 0) > 0
             ? t("insights.pace", {
