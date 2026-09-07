@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // The delete-account dialog tells someone asking to be erased how long a copy
@@ -17,11 +17,21 @@ describe("the backup retention window", () => {
   });
 
   it("is not re-declared as a literal in the worker", () => {
-    const worker = read("worker/index.ts");
-    expect(worker).toContain("BACKUP_RETENTION_DAYS");
+    // The whole directory, not index.ts by name. runScheduledBackup moved to
+    // worker/backup.ts and this failed — correctly in form, for the wrong
+    // reason: it was pinning where the constant is read rather than that it
+    // is read from one place. Same correction five other specs have needed.
+    const worker = readdirSync(`${ROOT}worker`)
+      .filter((f) => f.endsWith(".ts"))
+      .map((f) => read(`worker/${f}`))
+      .join("\n");
     expect(
       worker,
-      "worker/index.ts hardcodes a retention number again",
+      "no worker file reads BACKUP_RETENTION_DAYS any more",
+    ).toContain("BACKUP_RETENTION_DAYS");
+    expect(
+      worker,
+      "a worker file hardcodes a retention number again",
     ).not.toMatch(/BACKUP_RETENTION\s*=\s*\d+/);
   });
 

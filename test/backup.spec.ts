@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { authedFetch } from "./helpers";
-import { runScheduledBackup } from "../worker/index";
+import { runScheduledBackup } from "../worker/backup";
 
 const BASE = "http://zenith.test";
 
@@ -84,5 +84,43 @@ describe("runScheduledBackup", () => {
     const after = (await env.DOCS.list({ prefix: "backups/" })).objects.length;
     expect(before).toBeGreaterThan(14);
     expect(after, "a failed backup pruned the backups it could not replace").toBe(before);
+  });
+});
+
+describe("what the backup key promises", () => {
+  // BACKUP_RETENTION_DAYS is named in days and the prune counts objects.
+  // Those agree only because the key is the calendar date alone: a same-day
+  // rerun overwrites rather than taking a second slot, and lexicographic
+  // order over YYYY-MM-DD is chronological, so sorting keys sorts by age.
+  //
+  // A key carrying a time would break both at once, quietly — the window
+  // would start counting runs instead of days and nothing else would notice.
+  it("is the calendar date, so sorting keys sorts by age", async () => {
+    // R2 is shared across this file and the retention test above seeds
+    // backups/fake-N.json. Those sort after a date key (digits before
+    // letters), so the prune deletes today's real backup to keep the
+    // fixtures — clear the prefix first rather than assert around it.
+    for (const o of (await env.DOCS.list({ prefix: "backups/" })).objects) {
+      await env.DOCS.delete(o.key);
+    }
+    await runScheduledBackup(env);
+    const today = new Date().toISOString().slice(0, 10);
+    expect(today, "the date this test builds is not the shape being pinned").toMatch(
+      /^\d{4}-\d{2}-\d{2}$/,
+    );
+    expect(
+      await env.DOCS.head(`backups/${today}.json`),
+      "no object under the plain calendar-date key — the key carries something else now",
+    ).not.toBeNull();
+  });
+
+  it("does not spend a retention slot on a rerun of the same day", async () => {
+    // The retry case. Two runs on one day must leave one object, or a
+    // Cloudflare cron retry would silently eat a day of the window.
+    await runScheduledBackup(env);
+    const before = (await env.DOCS.list({ prefix: "backups/" })).objects.length;
+    await runScheduledBackup(env);
+    const after = (await env.DOCS.list({ prefix: "backups/" })).objects.length;
+    expect(after, "a second run the same day added an object").toBe(before);
   });
 });
