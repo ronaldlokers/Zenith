@@ -126,6 +126,13 @@ export function registerDocumentRoutes(app: Hono<AppEnv>) {
     // already accepted the object by the time the real count is known.
     // Leaving it behind is exactly the orphan this file exists to prevent
     // (see deleteDocumentObjects above).
+    //
+    // So this bounds what is *stored*, not what is written: a hostile client
+    // still causes one oversized write before the delete. Piping the body
+    // through a counting stream to abort earlier is not available — R2 needs
+    // a stream carrying the runtime's known-length tag and rejects a
+    // JS-authored transform with "Provided readable stream must have a known
+    // length". Worth revisiting if that changes.
     await c.env.DOCS.delete(key);
     return c.json({ error: "file too large (max 10 MB)" }, 413);
   }
