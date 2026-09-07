@@ -724,7 +724,9 @@ export function FeedTab({
 // device, so this only activates via touch.
 const SWIPE_COMMIT_THRESHOLD = 90;
 
-function FeedCard({
+// Exported for the action-order test: the row is only reachable with feed
+// items seeded, which the e2e database has none of.
+export function FeedCard({
   item,
   roleLabel,
   focused,
@@ -864,6 +866,21 @@ function FeedCard({
         )}
       </div>
       <div className="feed-row-actions">
+        {/* Add leads, here as on the desktop pane and in the a/s/d keys the
+            hint prints. This row had Keep first, so the primary action sat
+            mid-row on the one surface where triage is a thumb repeating the
+            same motion — muscle memory built on either surface misfired on
+            the other. */}
+        <Button
+          variant="primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd();
+          }}
+          disabled={adding}
+        >
+          {t("feed.addToJobs")}
+        </Button>
         {/* Keep for later. The third door triage never had: without it a
             posting you were unsure about could only go into the pipeline,
             which is the number the board, the funnel and the response rate
@@ -876,16 +893,6 @@ function FeedCard({
           }}
         >
           {item.status === "saved" ? t("feed.saved") : t("feed.save")}
-        </Button>
-        <Button
-          variant="primary"
-          onClick={(e) => {
-            e.stopPropagation();
-            onAdd();
-          }}
-          disabled={adding}
-        >
-          {t("feed.addToJobs")}
         </Button>
         <Button
           variant="secondary"
