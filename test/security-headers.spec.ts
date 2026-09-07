@@ -14,6 +14,10 @@ const BASE = "http://zenith.test";
 const EXPECTED: Record<string, string> = {
   "x-frame-options": "DENY",
   "x-content-type-options": "nosniff",
+  // max-age asserted exactly: a value like "max-age=0" would still be
+  // "present" but disables HSTS outright, so a presence-only check wouldn't
+  // catch it.
+  "strict-transport-security": "max-age=31536000",
 };
 
 describe("security headers", () => {
@@ -21,6 +25,11 @@ describe("security headers", () => {
     ["a client route", "/board"],
     ["an unauthenticated API call", "/api/applications"],
     ["the public share page", "/shared/does-not-exist"],
+    // The other tokenised public surface, and the one where header interplay
+    // has already gone wrong once — the middleware used to overwrite the
+    // no-referrer these two set for themselves. A header added to the shared
+    // block is exactly the kind of change that would repeat it.
+    ["the calendar feed", "/calendar/does-not-exist"],
   ])("sets them on %s", async (_what, path) => {
     const res = await SELF.fetch(`${BASE}${path}`, {
       headers: { Accept: "text/html" },
