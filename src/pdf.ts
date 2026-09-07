@@ -70,13 +70,36 @@ export interface CvPdfData {
 // Deliberately not an /Author: the CV is the one document where a name is
 // already on the page, and the others are working notes about someone else's
 // company. Nothing here needs a second, invisible copy of who made it.
-function titleDoc(doc: jsPDF, title: string): void {
+//
+// Every generator also sets a /Lang: a screen reader picks its pronunciation
+// from the document language, not the UI it was downloaded from, and without
+// it a Dutch CV is read with an English voice — the same bug src/i18n.ts's
+// syncDocumentLang fixed for the page itself. `lang` is whatever language the
+// caller actually rendered `labels`/text in (the CV's own output language,
+// which the user can set independently of the UI — see getCvLanguage — for
+// the two CV generators; the current UI language for the others).
+//
+// This is metadata, not remediation: it does not make the PDF accessible.
+// jsPDF 4.2.1 has no tagged-PDF / logical-structure-tree support at all (no
+// `beginMarkedContent`/tag API in its dist, and none in its plugin list), so
+// there is no reading order to declare here — full PDF/UA tagging is not a
+// missing call on this library, it is a missing feature of it.
+function setDocMeta(doc: jsPDF, title: string, lang: string): void {
   doc.setProperties({ title });
+  // jsPDF's setLanguage() types the code against a fixed ISO-639 list, so a
+  // region-tagged or not-yet-supported locale (src/i18n.ts's supportedLngs is
+  // just "en" | "nl" today) is normalized to its base, falling back to "en" —
+  // the same fallback i18next itself uses.
+  doc.setLanguage(lang.split("-")[0] === "nl" ? "nl" : "en");
 }
 
-export function generateCvPdf(data: CvPdfData, labels: CvPdfLabels): jsPDF {
+export function generateCvPdf(
+  data: CvPdfData,
+  labels: CvPdfLabels,
+  lang = "en",
+): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  titleDoc(doc, data.profile.name ? `${data.profile.name} — CV` : "CV");
+  setDocMeta(doc, data.profile.name ? `${data.profile.name} — CV` : "CV", lang);
   const marginX = 18;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -253,9 +276,10 @@ export interface OfferComparisonLabels {
 export function generateOfferComparisonPdf(
   offers: OfferComparisonRow[],
   labels: OfferComparisonLabels,
+  lang = "en",
 ): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  titleDoc(doc, labels.heading);
+  setDocMeta(doc, labels.heading, lang);
   const marginX = 18;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -356,11 +380,13 @@ export interface InterviewCheatSheetData {
 export function generateInterviewCheatSheet(
   data: InterviewCheatSheetData,
   labels: InterviewCheatSheetLabels,
+  lang = "en",
 ): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  titleDoc(
+  setDocMeta(
     doc,
     data.companyName ? `${data.title} — ${data.companyName}` : data.title,
+    lang,
   );
   const marginX = 18;
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -480,9 +506,10 @@ export type CvTemplate = "single-column" | "two-column";
 export function generateCvPdfTwoColumn(
   data: CvPdfData,
   labels: CvPdfLabels,
+  lang = "en",
 ): jsPDF {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
-  titleDoc(doc, data.profile.name ? `${data.profile.name} — CV` : "CV");
+  setDocMeta(doc, data.profile.name ? `${data.profile.name} — CV` : "CV", lang);
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const marginX = 14;

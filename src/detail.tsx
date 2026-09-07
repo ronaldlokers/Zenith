@@ -88,7 +88,7 @@ export function ApplicationDetailModal({
     note: string | null,
   ) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const dialogRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState(false);
@@ -243,6 +243,7 @@ export function ApplicationDetailModal({
           pastInteractions: t("detail.timeline"),
           noNotes: t("detail.cheatSheet.noNotes"),
         },
+        i18n.resolvedLanguage ?? "en",
       );
       doc.save(`${a.title.replace(/\s+/g, "-")}-cheat-sheet.pdf`);
     } catch (e) {

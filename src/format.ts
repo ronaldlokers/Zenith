@@ -360,6 +360,7 @@ export function totalComp(a: Application): number | null {
 export async function downloadOfferComparisonPdf(
   offers: Application[],
   t: (key: string, opts?: Record<string, unknown>) => string,
+  lang = "en",
 ) {
   const { generateOfferComparisonPdf } = await import("./pdf");
   const rows = offers.map((a) => ({
@@ -370,13 +371,17 @@ export async function downloadOfferComparisonPdf(
     breakdown: totalCompBreakdown(a),
     benefitsNotes: a.benefits_notes,
   }));
-  const doc = generateOfferComparisonPdf(rows, {
-    heading: t("stats.offerComparisonHeading"),
-    totalComp: t("offer.totalComp"),
-    breakdown: t("stats.offerComparisonBreakdown"),
-    benefits: t("offer.benefitsNotes"),
-    noOffers: t("stats.offerComparisonEmpty"),
-  });
+  const doc = generateOfferComparisonPdf(
+    rows,
+    {
+      heading: t("stats.offerComparisonHeading"),
+      totalComp: t("offer.totalComp"),
+      breakdown: t("stats.offerComparisonBreakdown"),
+      benefits: t("offer.benefitsNotes"),
+      noOffers: t("stats.offerComparisonEmpty"),
+    },
+    lang,
+  );
   doc.save("offer-comparison.pdf");
 }
 

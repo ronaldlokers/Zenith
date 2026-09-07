@@ -65,7 +65,7 @@ export function InsightsTab({
   onJump: (title: string) => void;
   stats: Stats | null;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [showActivity, setShowActivity] = useState(false);
   const [goal, setGoal] = useState<UserGoal | null>(null);
   const [cvSkills, setCvSkills] = useState<Skill[]>([]);
@@ -499,7 +499,9 @@ export function InsightsTab({
               variant="secondary"
               wrap
               className="dash-offers-pdf"
-              onClick={() => downloadOfferComparisonPdf(liveOffers, t)}
+              onClick={() =>
+                downloadOfferComparisonPdf(liveOffers, t, i18n.resolvedLanguage ?? "en")
+              }
             >
               {t("stats.downloadOfferComparison")}
             </Button>
