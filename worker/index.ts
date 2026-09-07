@@ -1078,9 +1078,18 @@ app.delete("/api/applications/:id", async (c) => {
     c.env.DOCS,
     results.map((r) => r.key),
   );
-  await c.env.DB.prepare("DELETE FROM applications WHERE id = ? AND user_id = ?")
+  const result = await c.env.DB.prepare(
+    "DELETE FROM applications WHERE id = ? AND user_id = ?",
+  )
     .bind(id, userId)
     .run();
+  // Not an idempotent 204. A DELETE of something already gone is defensible
+  // as success, and it is not what this app wants: the frontend hides the row
+  // optimistically and only restores it on an error, so a 204 for a row that
+  // was never the caller's left the board showing a delete that did not
+  // happen until the next reload. Matches the sibling routes, which 404 on a
+  // row the user_id scope did not reach.
+  if (!result.meta.changes) return c.json({ error: "not found" }, 404);
   return c.body(null, 204);
 });
 
