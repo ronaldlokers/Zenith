@@ -105,3 +105,27 @@ describe("the If-Match precondition", () => {
     ).toEqual([]);
   });
 });
+
+// happened_at reaches parseSqlDate, and an unparseable one becomes NaN there
+// rather than an error: every window comparison against it is false, so the
+// row is silently dropped from momentum and response-time instead of showing
+// up wrong. That is why the validation exists, and why a write path that
+// skips it fails invisibly.
+//
+// Two routes validate today. A third would look correct beside them and lose
+// nothing a test would notice, which is the shape this file already guards
+// twice over.
+describe("writes to interactions", () => {
+  it("validate happened_at wherever they accept it from a caller", () => {
+    const offenders = [...workerFiles()]
+      // demo.ts seeds fixed literal dates rather than anything a caller sent.
+      .filter(([name]) => name !== "worker/demo.ts")
+      .filter(([, text]) => /INSERT INTO interactions/.test(text))
+      .filter(([, text]) => !text.includes("happenedAtError"))
+      .map(([name]) => name);
+    expect(
+      offenders,
+      "these insert an interaction without checking happened_at parses",
+    ).toEqual([]);
+  });
+});

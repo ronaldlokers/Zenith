@@ -421,6 +421,88 @@ describe("interactions", () => {
     });
     expect(res.status).toBe(400);
   });
+
+  async function interactionCount(): Promise<number> {
+    const row = await env.DB.prepare("SELECT count(*) AS n FROM interactions").first<{
+      n: number;
+    }>();
+    return row!.n;
+  }
+
+  describe("happened_at validation", () => {
+    for (const bad of ["not a date", "31/02/2026", "2026-02-31", "2026-13-01"]) {
+      it(`rejects ${JSON.stringify(bad)} on an application interaction`, async () => {
+        const app = await seedApplication();
+        const before = await interactionCount();
+        const res = await post(`/api/applications/${app.id}/interactions`, {
+          type: "call",
+          happened_at: bad,
+        });
+        expect(res.status).toBe(400);
+        const payload = (await res.json()) as { error: string };
+        expect(payload.error).toContain("happened_at");
+        expect(await interactionCount()).toBe(before);
+      });
+
+      it(`rejects ${JSON.stringify(bad)} on a contact interaction`, async () => {
+        const contact = (await (
+          await post("/api/contacts", { name: "Jane" })
+        ).json()) as { id: number };
+        const before = await interactionCount();
+        const res = await post(`/api/contacts/${contact.id}/interactions`, {
+          type: "call",
+          happened_at: bad,
+        });
+        expect(res.status).toBe(400);
+        const payload = (await res.json()) as { error: string };
+        expect(payload.error).toContain("happened_at");
+        expect(await interactionCount()).toBe(before);
+      });
+    }
+
+    for (const good of [
+      "2026-01-15",
+      "2026-01-15 09:30:00",
+      "2026-01-15T09:30:00Z",
+      "2026-01-15T09:30:00.000Z",
+    ]) {
+      it(`accepts ${JSON.stringify(good)} and stores it`, async () => {
+        const app = await seedApplication();
+        const res = await post(`/api/applications/${app.id}/interactions`, {
+          type: "call",
+          happened_at: good,
+        });
+        expect(res.status).toBe(201);
+        const row = (await res.json()) as { happened_at: string };
+        expect(row.happened_at).toBe(good);
+      });
+    }
+
+    it("stays legal when happened_at is absent, falling back to today", async () => {
+      const app = await seedApplication();
+      const res = await post(`/api/applications/${app.id}/interactions`, {
+        type: "call",
+      });
+      expect(res.status).toBe(201);
+      const row = (await res.json()) as { happened_at: string };
+      const today = new Date().toISOString().slice(0, 10);
+      expect(row.happened_at).toBe(today);
+    });
+
+    it("stays legal when happened_at is explicitly null, falling back to today", async () => {
+      const contact = (await (
+        await post("/api/contacts", { name: "Jane" })
+      ).json()) as { id: number };
+      const res = await post(`/api/contacts/${contact.id}/interactions`, {
+        type: "call",
+        happened_at: null,
+      });
+      expect(res.status).toBe(201);
+      const row = (await res.json()) as { happened_at: string };
+      const today = new Date().toISOString().slice(0, 10);
+      expect(row.happened_at).toBe(today);
+    });
+  });
 });
 
 describe("documents", () => {
