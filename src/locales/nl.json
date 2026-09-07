@@ -101,6 +101,7 @@
     "title": "Voorbeelddata",
     "emptyHint": "Nieuw hier? Laad een voorbeeldpijplijn om de app te verkennen en wis die als je klaar bent voor je eigen data.",
     "load": "Voorbeelddata laden",
+    "loadConfirm": "Dit vult je account met een voorbeeldpijplijn zodat je kunt rondkijken. Je kunt het later verwijderen onder Instellingen → Voorbeelddata.",
     "loadedHint": "Je account is gevuld met voorbeelddata. Wis die om met je eigen pijplijn te beginnen.",
     "clear": "Voorbeelddata verwijderen",
     "clearConfirm": "Dit verwijdert permanent ALLE data in je account — inclusief alles wat je sindsdien hebt toegevoegd — en zet het terug naar leeg. Je login, API-sleutel en deellinks blijven behouden. Dit kan niet ongedaan worden gemaakt."
@@ -401,7 +402,7 @@
     "profile": "Vul de basis van je CV-profiel in",
     "company": "Voeg je eerste bedrijf toe",
     "goal": "Stel een weekdoel in",
-    "firstJob": "Voeg je eerste vacature toe",
+    "firstJob": "Voeg je eerste sollicitatie toe",
     "feed": "Stel je vacaturefeed in",
     "sampleLink": "Liever eerst verkennen? Laad voorbeelddata"
   },
