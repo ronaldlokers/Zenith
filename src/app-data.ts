@@ -210,8 +210,13 @@ export function useAppData(
 
   // Delete with an undo window: hide immediately, commit after the
   // toast expires unless undone (cascaded data survives an undo).
+  // `message` overrides the generic toast where a delete costs more than the
+  // row itself. Deleting a company sets company_id to NULL on every
+  // application pointing at it (0001_init), and the generic "Deleted X" said
+  // nothing about that — the link was gone once the six seconds passed, with
+  // no count up front and nothing to reconnect it to.
   const deleteWithUndo = useCallback(
-    (resource: string, id: number, name: string) => {
+    (resource: string, id: number, name: string, message?: string) => {
       const key = `${resource}:${id}`;
       setHidden((h) => new Set(h).add(key));
       const timer = window.setTimeout(() => {
@@ -227,7 +232,7 @@ export function useAppData(
             }),
           );
       }, 6000);
-      notify(t("toast.deleted", { name }), () => {
+      notify(message ?? t("toast.deleted", { name }), () => {
         window.clearTimeout(timer);
         setHidden((h) => {
           const next = new Set(h);

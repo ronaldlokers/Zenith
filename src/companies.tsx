@@ -368,7 +368,10 @@ export function ContactRelationshipMap({
   );
 }
 
-function CompanyDetailModal({
+// Exported for the delete-orphan test: the count it passes to onDelete is the
+// whole point of that path, and driving it through CompaniesTab would mean
+// opening the modal to assert one argument.
+export function CompanyDetailModal({
   company,
   contacts,
   applications,
@@ -385,7 +388,12 @@ function CompanyDetailModal({
   onChanged: () => Promise<void>;
   onError: (message: string | null) => void;
   notify: (message: string, undo?: () => void) => void;
-  onDelete: (resource: string, id: number, name: string) => void;
+  onDelete: (
+    resource: string,
+    id: number,
+    name: string,
+    message?: string,
+  ) => void;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -444,7 +452,21 @@ function CompanyDetailModal({
               <Button
                 variant="danger"
                 onClick={() => {
-                  onDelete("companies", c.id, c.name);
+                  // The applications pointing at this company lose the link
+                  // when the undo window closes — say how many while it is
+                  // still open, since afterwards nothing records what they
+                  // were attached to.
+                  const orphans = applications.filter(
+                    (a) => a.company_id === c.id,
+                  ).length;
+                  onDelete(
+                    "companies",
+                    c.id,
+                    c.name,
+                    orphans > 0
+                      ? t("toast.deletedCompany", { name: c.name, count: orphans })
+                      : undefined,
+                  );
                   onClose();
                 }}
               >
