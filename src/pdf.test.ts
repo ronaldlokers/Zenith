@@ -3,6 +3,7 @@ import {
   generateCvPdf,
   generateCvPdfTwoColumn,
   generateInterviewCheatSheet,
+  generateOfferComparisonPdf,
   type CvPdfData,
   type CvPdfLabels,
 } from "./pdf";
@@ -40,6 +41,34 @@ function pageText(doc: jsPDF): string[][] {
         m[1].replace(/\\([()\\])/g, "$1"),
       ),
     );
+}
+
+// Reads the /Lang and /Title actually written into the PDF's Catalog and Info
+// dictionaries — not doc.__private__ state, which is jsPDF's own internal
+// bookkeeping and would pass even if setLanguage/setProperties were a no-op
+// (or if the value never made it into the bytes a reader opens). doc.output()
+// is the same string jsPDF hands to the browser to download; this greps the
+// literal PDF syntax it wrote.
+// jsPDF writes /Title as a UTF-16BE string (leading BOM \xFE\xFF, one PDF byte
+// per string char here) whenever it contains a character PDFDocEncoding can't
+// represent — an em dash among them, which every title in this file uses.
+// Decode it back rather than loosen the test to a substring match.
+function decodePdfString(raw: string): string {
+  if (!raw.startsWith("þÿ")) return raw;
+  let out = "";
+  for (let i = 2; i < raw.length; i += 2) {
+    out += String.fromCharCode((raw.charCodeAt(i) << 8) | raw.charCodeAt(i + 1));
+  }
+  return out;
+}
+
+function docMeta(doc: jsPDF): { lang: string | null; title: string | null } {
+  const raw = (doc as unknown as { output: () => string }).output();
+  const title = raw.match(/\/Title \(([^)]*)\)/)?.[1] ?? null;
+  return {
+    lang: raw.match(/\/Lang \(([^)]*)\)/)?.[1] ?? null,
+    title: title === null ? null : decodePdfString(title),
+  };
 }
 
 /** The uppercase section labels the generators draw. */
@@ -212,5 +241,75 @@ describe("the interview cheat sheet", () => {
       .map((items, i) => ({ page: i + 1, last: items[items.length - 1] }))
       .filter(({ last }) => headings.includes(last));
     expect(orphans, "a heading is stranded at the foot of a page").toEqual([]);
+  });
+});
+
+describe("document language and title", () => {
+  // Every generator, independently — a fix applied to the first one and
+  // assumed to cover the rest is the failure mode this guards against.
+  it("sets /Lang and /Title on the single-column CV", () => {
+    const meta = docMeta(generateCvPdf(longCv(1), LABELS, "nl"));
+    expect(meta.lang).toBe("nl");
+    expect(meta.title).toBe("Alex Rivera — CV");
+  });
+
+  it("sets /Lang and /Title on the two-column CV", () => {
+    const meta = docMeta(generateCvPdfTwoColumn(longCv(1), LABELS, "nl"));
+    expect(meta.lang).toBe("nl");
+    expect(meta.title).toBe("Alex Rivera — CV");
+  });
+
+  it("sets /Lang and /Title on the interview cheat sheet", () => {
+    const doc = generateInterviewCheatSheet(
+      {
+        title: "Staff Engineer",
+        companyName: "Northwind",
+        companyWebsite: null,
+        contactName: null,
+        contactRole: null,
+        contactEmail: null,
+        contactPhone: null,
+        notes: null,
+        prepItems: [],
+        interactions: [],
+      },
+      {
+        contact: "Contact",
+        companyResearch: "Company research",
+        prepChecklist: "Prep checklist",
+        pastInteractions: "Past interactions",
+        noNotes: "No notes",
+      },
+      "nl",
+    );
+    const meta = docMeta(doc);
+    expect(meta.lang).toBe("nl");
+    expect(meta.title).toBe("Staff Engineer — Northwind");
+  });
+
+  it("sets /Lang and /Title on the offer comparison PDF", () => {
+    const doc = generateOfferComparisonPdf(
+      [],
+      {
+        heading: "Offer comparison",
+        totalComp: "Total comp",
+        breakdown: "Breakdown",
+        benefits: "Benefits",
+        noOffers: "No offers yet",
+      },
+      "nl",
+    );
+    const meta = docMeta(doc);
+    expect(meta.lang).toBe("nl");
+    expect(meta.title).toBe("Offer comparison");
+  });
+
+  it("falls back to English when no language is given", () => {
+    expect(docMeta(generateCvPdf(longCv(1), LABELS)).lang).toBe("en");
+  });
+
+  it("normalizes a region-tagged or unsupported code to a jsPDF-valid one", () => {
+    expect(docMeta(generateCvPdf(longCv(1), LABELS, "nl-BE")).lang).toBe("nl");
+    expect(docMeta(generateCvPdf(longCv(1), LABELS, "fr")).lang).toBe("en");
   });
 });

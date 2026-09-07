@@ -19,7 +19,8 @@ export async function buildCvSnapshotFile(
     api.list<Language>("languages"),
   ]);
   const { generateCvPdf, generateCvPdfTwoColumn } = await import("./pdf");
-  const tCv = i18n.getFixedT(getCvLanguage(i18n.resolvedLanguage ?? "en"));
+  const cvLang = getCvLanguage(i18n.resolvedLanguage ?? "en");
+  const tCv = i18n.getFixedT(cvLang);
   const labels = {
     present: tCv("cv.present"),
     workExperience: tCv("cv.workExperience"),
@@ -30,8 +31,8 @@ export async function buildCvSnapshotFile(
   const cvData = { profile, workExperience, education, languages };
   const doc =
     template === "two-column"
-      ? generateCvPdfTwoColumn(cvData, labels)
-      : generateCvPdf(cvData, labels);
+      ? generateCvPdfTwoColumn(cvData, labels, cvLang)
+      : generateCvPdf(cvData, labels, cvLang);
   const stamp = today();
   const base = profile.name ? profile.name.replace(/\s+/g, "-") : "CV";
   return new File([doc.output("blob")], `${base}-CV-${stamp}.pdf`, {

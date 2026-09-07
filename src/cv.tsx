@@ -204,7 +204,8 @@ export function CVTab({
     // Dynamic import — jsPDF (~400kB) is only needed once someone
     // actually downloads a CV, not on every page load.
     const { generateCvPdf, generateCvPdfTwoColumn } = await import("./pdf");
-    const tCv = i18n.getFixedT(getCvLanguage(i18n.resolvedLanguage ?? "en"));
+    const cvLang = getCvLanguage(i18n.resolvedLanguage ?? "en");
+    const tCv = i18n.getFixedT(cvLang);
     const labels = {
       present: tCv("cv.present"),
       workExperience: tCv("cv.workExperience"),
@@ -217,8 +218,8 @@ export function CVTab({
     const cvData = shown;
     const doc =
       template === "two-column"
-        ? generateCvPdfTwoColumn(cvData, labels)
-        : generateCvPdf(cvData, labels);
+        ? generateCvPdfTwoColumn(cvData, labels, cvLang)
+        : generateCvPdf(cvData, labels, cvLang);
     const base = shown.profile?.name
       ? shown.profile.name.replace(/\s+/g, "-")
       : "CV";
