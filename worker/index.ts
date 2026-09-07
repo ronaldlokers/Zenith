@@ -6,10 +6,10 @@ import { recordCronRun } from "./cron-log.js";
 import { pruneAuthRows } from "./retention.js";
 import { registerShareRoutes } from "./share.js";
 import { registerDocumentRoutes } from "./documents.js";
-import { buildFullExport, registerExportRoutes } from "./export.js";
+import { registerExportRoutes } from "./export.js";
 import { registerImportRoutes } from "./import-posting.js";
-import { BACKUP_RETENTION_DAYS } from "../src/backup-policy.js";
 import { happenedAtError } from "./interaction-validation.js";
+import { runScheduledBackup } from "./backup.js";
 import { checkStalePostings } from "./posting-check.js";
 import { registerCvRoutes } from "./cv.js";
 import { registerOutreachRoutes } from "./outreach.js";
@@ -1953,44 +1953,6 @@ export async function logInboundEmail(
       .bind(contact.id)
       .run();
   }
-}
-
-// Scheduled full backup to R2 (#116) — the CSV/JSON export was manual-only,
-// so a stale database has no recovery path if D1 has an issue. Keeps the
-// last 14 daily backups, pruning older ones on each run.
-const BACKUP_PREFIX = "backups/";
-const BACKUP_RETENTION = BACKUP_RETENTION_DAYS;
-
-export async function runScheduledBackup(env: Env): Promise<void> {
-  const dump = await buildFullExport(env);
-  const body = JSON.stringify(dump);
-  const key = `${BACKUP_PREFIX}${new Date().toISOString().slice(0, 10)}.json`;
-  await env.DOCS.put(key, body, {
-    httpMetadata: { contentType: "application/json" },
-  });
-
-  // put() is awaited and a throw from it is already caught by the scheduled
-  // handler, but a truncated write (a pathological row breaking
-  // JSON.stringify partway, or a partial R2 write) resolves normally and
-  // looks identical to a good backup. Read back only the object's size — not
-  // its body, these dumps are whole-database exports — and compare it
-  // against the byte length of what was sent. Byte length, not
-  // body.length: that's UTF-16 code units, and any non-ASCII row would make
-  // a good backup look wrong.
-  const expectedBytes = new TextEncoder().encode(body).length;
-  const stored = await env.DOCS.head(key);
-  if (!stored || stored.size !== expectedBytes) {
-    throw new Error(
-      `backup write verification failed for ${key}: expected ${expectedBytes} bytes, found ${
-        stored ? `${stored.size} bytes` : "no object"
-      }`,
-    );
-  }
-
-  const listed = await env.DOCS.list({ prefix: BACKUP_PREFIX });
-  const keys = listed.objects.map((o) => o.key).sort();
-  const toDelete = keys.slice(0, Math.max(0, keys.length - BACKUP_RETENTION));
-  await Promise.all(toDelete.map((k) => env.DOCS.delete(k)));
 }
 
 // The last run of each task, which is what answers "is anything broken" and
