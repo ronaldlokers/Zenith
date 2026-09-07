@@ -15,13 +15,7 @@ import {
   Button,
   Chip,
   OutcomeDialog,
-  CoverLetterSection,
-  AiKeyGate,
   Documents,
-  InterviewPrepSection,
-  JdKeywordMatch,
-  MockInterview,
-  NegotiationRoleplay,
   StarRating,
   TabBar,
 } from "./components";
@@ -54,6 +48,8 @@ import {
 } from "./format";
 import { Timeline } from "./timeline";
 import { requestConfirm } from "./hooks";
+import { DetailPrepTab } from "./detail/prep-tab";
+import { DetailTailorTab } from "./detail/tailor-tab";
 
 export function ApplicationDetailModal({
   application,
@@ -784,6 +780,13 @@ export function ApplicationDetailModal({
               id={`detail-panel-${secTab}`}
               aria-labelledby={`detail-tab-${secTab}`}
             >
+              {/* Stays inline rather than joining the Prep/Tailor extraction
+                  below: onItemsChanged also calls setActivityKey, a piece of
+                  *this* component's state (it re-triggers the facts column's
+                  RecentTouchpoints fetch). That's a write to parent state,
+                  not just a read of it — a different, more coupled thing
+                  than passing down a value or an already-external callback
+                  like onChanged/onError/notify. */}
               {secTab === "track" && (
                 <>
                   <h3 className="detail-sub detail-sub-first">
@@ -804,69 +807,16 @@ export function ApplicationDetailModal({
               )}
 
               {secTab === "prep" && (
-                <>
-                  <h3 className="detail-sub detail-sub-first">
-                    {t("prep.title")}
-                  </h3>
-                  <InterviewPrepSection
-                    applicationId={a.id}
-                    onError={onError}
-                  />
-
-                  <h3 className="detail-sub">{t("detail.aiPractice")}</h3>
-                  <p
-                    className={`ai-grounding ${
-                      a.job_description
-                        ? "ai-grounding-ready"
-                        : "ai-grounding-missing"
-                    }`}
-                  >
-                    {a.job_description
-                      ? t("ai.groundedReady")
-                      : t("ai.groundedMissing")}
-                  </p>
-
-                  <h3 className="detail-sub">{t("mockInterview.title")}</h3>
-                  <AiKeyGate>
-                    <MockInterview
-                      title={a.title}
-                      company={a.company_name ?? null}
-                      jobDescription={a.job_description}
-                      onError={onError}
-                    />
-                  </AiKeyGate>
-
-                  <h3 className="detail-sub">{t("negotiation.title")}</h3>
-                  <AiKeyGate>
-                    <NegotiationRoleplay
-                      title={a.title}
-                      company={a.company_name ?? null}
-                      salaryExpectation={a.salary_range}
-                      jobDescription={a.job_description}
-                      onError={onError}
-                    />
-                  </AiKeyGate>
-                </>
+                <DetailPrepTab application={a} onError={onError} />
               )}
 
               {secTab === "tailor" && (
-                <>
-                  <h3 className="detail-sub detail-sub-first">
-                    {t("detail.keywordMatch")}
-                  </h3>
-                  <JdKeywordMatch
-                    onError={onError}
-                    initialText={a.job_description ?? undefined}
-                  />
-
-                  <h3 className="detail-sub">{t("coverLetter.title")}</h3>
-                  <CoverLetterSection
-                    application={a}
-                    onChanged={onChanged}
-                    onError={onError}
-                    notify={notify}
-                  />
-                </>
+                <DetailTailorTab
+                  application={a}
+                  onChanged={onChanged}
+                  onError={onError}
+                  notify={notify}
+                />
               )}
             </div>
           </div>
