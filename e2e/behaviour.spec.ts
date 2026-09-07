@@ -787,3 +787,63 @@ describe("the card menu when focus leaves it", () => {
     await page.context().close();
   }, 180_000);
 });
+
+describe("target size (WCAG 2.5.8)", () => {
+  it("keeps the stage-rail step at least 24px tall for a mouse, not only pointer: coarse", async () => {
+    // The rail's touch fix is `@media (pointer: coarse) { min-height: 44px }`
+    // — real on a phone, absent on a mouse or trackpad, and 2.5.8's 24px
+    // floor is not touch-specific. Measured before this fix: 88x20.
+    const page = await board(1440);
+    await addApplication(page, "E2E Target Size Rail");
+    await page.locator("[data-card-id]").first().click();
+    await page.waitForURL(/\/board\/\d+/);
+    await page.waitForSelector(".detail-pane h2");
+
+    const rect = await page.evaluate(() => {
+      const el = document.querySelector(".detail-rail-step");
+      return el ? el.getBoundingClientRect().toJSON() : null;
+    });
+    expect(rect, ".detail-rail-step did not render on the detail page").not.toBeNull();
+    expect(
+      rect!.height,
+      "stage-rail step is under the 24px target-size floor for a mouse pointer",
+    ).toBeGreaterThanOrEqual(24);
+    await page.context().close();
+  }, 120_000);
+
+  it("gives the CV delete-variant control real spacing instead of a 24px box", async () => {
+    // .cv-rail-del stays under 24px on both axes (13x21) — it is the "×"
+    // glyph, not a label a wider box would help — so 2.5.8 only passes it
+    // through the spacing exception: a 24px-diameter circle centred on the
+    // target must not reach the real box of its neighbour, the row's own
+    // .cv-rail-step. That circle extends (12 - halfWidth) past the target's
+    // own edge. Before this fix the row's flex gap (3.2px) was the only
+    // separation and measured short of that by a good margin — this was not
+    // actually exempt despite an earlier read of the audit's "75.7px to the
+    // nearest target" saying otherwise, which measured the wrong pair. The
+    // margin below is what closes the real gap.
+    const page = await board(1440);
+    await page.goto(`${BASE}/cv`);
+    await page.waitForSelector(".cv-rail");
+    await page.locator(".cv-rail-add").click();
+    await page.getByPlaceholder("Version name (e.g. Backend-focused)").fill("E2E Target Size Variant");
+    await page.getByRole("button", { name: "Save current" }).click();
+    await page.waitForSelector(".cv-rail-del");
+
+    const measured = await page.evaluate(() => {
+      const del = document.querySelector(".cv-rail-del")?.getBoundingClientRect();
+      const row = document.querySelector(".cv-rail-del")?.closest(".cv-rail-row");
+      const step = row?.querySelector(".cv-rail-step")?.getBoundingClientRect();
+      if (!del || !step) return null;
+      const gap = Math.max(step.left - del.right, del.left - step.right);
+      const needed = 12 - del.width / 2;
+      return { gap, needed };
+    });
+    expect(measured, ".cv-rail-del or its row neighbour did not render").not.toBeNull();
+    expect(
+      measured!.gap,
+      "the gap to the nearest target is too small for the WCAG 2.5.8 spacing exception",
+    ).toBeGreaterThanOrEqual(measured!.needed);
+    await page.context().close();
+  }, 120_000);
+});

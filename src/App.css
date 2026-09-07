@@ -941,6 +941,15 @@
 }
 
 .detail-rail-step {
+  /* 2.5.8's 24px floor is not touch-specific — the pointer: coarse rule
+     below only reaches a mouse or trackpad by accident, and it measured
+     88x20 without it. flex + justify-content mirrors that rule's own fix
+     for the same reason: min-height alone leaves the label top-aligned in
+     the extra space, not centred in it. */
+  min-height: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   padding: 0.15rem 0.5rem;
   border: 0;
   border-radius: var(--radius-sm);
@@ -5983,12 +5992,6 @@ button:not(:disabled):active,
   .stage-chip,
   .detail-rail-step {
     min-height: 44px;
-  }
-
-  .detail-rail-step {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
   }
 }
 
