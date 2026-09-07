@@ -1983,10 +1983,11 @@ export default {
     // task reachable from here has to tolerate two overlapping executions,
     // not just a delayed single one (see event.scheduledTime's comment below
     // for the delayed case). generateWeeklyDigest, refreshFeed and
-    // generateNotifications get this for free from an `ON CONFLICT (...,
-    // dedup_key) DO NOTHING` / `ON CONFLICT (source, external_id) DO NOTHING`
-    // insert: a second concurrent run finds its row already there and writes
-    // nothing (see the comment beside each clause before touching one). The
+    // generateNotifications get this from a UNIQUE index plus an `ON CONFLICT
+    // ... DO NOTHING` insert: the index is what prevents the duplicate row,
+    // and the clause is what lets the losing run skip and carry on rather than
+    // throw partway (see the comment beside each clause before touching one —
+    // dropping either half breaks a different thing). The
     // backup and the two prune tasks are naturally idempotent the same way a
     // same-key R2 PUT and a DELETE always are. deliverDueNotifications is the
     // one exception — see its own comment.

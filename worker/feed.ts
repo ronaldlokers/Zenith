@@ -362,11 +362,15 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   // round-trips dominated the cron's runtime.
   //
   // ON CONFLICT (source, external_id) does two jobs, not one: it collapses
-  // the same listing seen again on an ordinary 6-hourly re-poll, and it is
-  // also what makes a Cloudflare cron retry safe — a retried invocation can
-  // run refreshFeed a second time concurrently with the first (see
-  // worker/index.ts's scheduled()), and this clause is the only thing
-  // stopping that second pass from inserting every candidate twice.
+  // the same listing seen again on an ordinary 6-hourly re-poll, and it also
+  // carries the Cloudflare cron retry, which can run refreshFeed a second time
+  // concurrently with the first (see worker/index.ts's scheduled()).
+  //
+  // The duplicate row is prevented by the UNIQUE (source, external_id) index
+  // in migrations/0007, not by this clause — remove the index and there is
+  // nothing here to conflict on. This clause is what makes the collision a
+  // silent skip rather than a thrown error, so a retried pass finishes the
+  // remaining candidates instead of aborting on the first one already stored.
   const stmt = env.DB.prepare(
     `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at, board_slug, description)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
