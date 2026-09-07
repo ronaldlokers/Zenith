@@ -36,4 +36,25 @@ describe("runScheduledBackup", () => {
     const listed = await env.DOCS.list({ prefix: "backups/" });
     expect(listed.objects.length).toBeLessThanOrEqual(14);
   });
+
+  it("throws when the stored object doesn't match what was sent", async () => {
+    // A stand-in for a silent truncation (a pathological row breaking
+    // JSON.stringify partway, or a partial R2 write): put() "succeeds" but
+    // writes fewer bytes than were sent. Only put() is overridden — head,
+    // list and delete delegate to the real bucket, so the rest of
+    // runScheduledBackup's behaviour (pruning) is untouched.
+    const truncatingDocs = {
+      put: (key: string, value: string, options?: R2PutOptions) =>
+        env.DOCS.put(key, value.slice(0, -10), options),
+      head: (key: string) => env.DOCS.head(key),
+      list: (options?: R2ListOptions) => env.DOCS.list(options),
+      delete: (keys: string | string[]) => env.DOCS.delete(keys),
+    } as unknown as typeof env.DOCS;
+
+    const badEnv = { ...env, DOCS: truncatingDocs };
+
+    await expect(runScheduledBackup(badEnv)).rejects.toThrow(
+      /backup write verification failed/,
+    );
+  });
 });
