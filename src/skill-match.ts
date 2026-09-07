@@ -1,4 +1,5 @@
 import type { Skill } from "./types";
+import { matchBand, MATCH_BANDS } from "./format";
 
 // How many of the user's CV-backed skills a job description mentions — the feed
 // "fit" signal. Reuses the JD-keyword-match logic (word-boundary regex, escaped
@@ -48,4 +49,25 @@ export function sortFilterFeed<T extends { id: number }>(
   if (sortBy === "match")
     list = [...list].sort((a, b) => matchOf(b) - matchOf(a));
   return list;
+}
+
+// Feed list derivation (#535 shell): sort/filter by fit, then band by match
+// strength (strongest first), then re-sort within each band so the chosen
+// sort survives banding. The list stays flat and in this order so keyboard
+// j/k keeps stepping through it — the bands are headings inside one list,
+// not three separate ones. showWeak=false hides the "weak" band entirely
+// (never removes it — it's folded, and one press brings it back).
+export function deriveVisibleFeedItems<
+  T extends { id: number; match_count: number | null | undefined },
+>(items: T[], sortBy: "newest" | "match", minFit: number, showWeak: boolean): T[] {
+  const sorted = sortFilterFeed(items, (i) => i.match_count ?? 0, sortBy, minFit);
+  const banded = showWeak
+    ? sorted
+    : sorted.filter((i) => matchBand(i.match_count) !== "weak");
+  // A stable sort by band alone, so the chosen sort survives inside it.
+  return [...banded].sort(
+    (a, b) =>
+      MATCH_BANDS.indexOf(matchBand(a.match_count)) -
+      MATCH_BANDS.indexOf(matchBand(b.match_count)),
+  );
 }
