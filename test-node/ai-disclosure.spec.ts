@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // Privacy is a locked product decision here, and the AI features are the one
@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 // disclosure and it named "your CV and the job description" — true of CV
 // tailoring, and not of the other three features.
 //
-// The negotiation roleplay is the one that matters. src/detail.tsx passes
+// The negotiation roleplay is the one that matters. The detail page passes
 // `salaryExpectation={a.salary_range}` into it, so the compensation stored on
 // the application is sent to Anthropic when the panel opens — the user never
 // types it, and nothing told them. Compensation is treated as sensitive
@@ -28,14 +28,27 @@ function hint(locale: string): string {
   return json.negotiation.hint as string;
 }
 
+// Searched across src/detail.tsx and src/detail/, not read from one path —
+// the Prep tab body (with it) moved out to src/detail/prep-tab.tsx in the
+// detail-tabs extraction, and a path-pinned guard would have broken on that
+// move alone, for the wrong reason.
+function detailSource(): string {
+  let out = readFileSync(`${ROOT}src/detail.tsx`, "utf8");
+  const dir = new URL("../src/detail/", import.meta.url);
+  for (const name of readdirSync(dir)) {
+    if (!name.endsWith(".tsx")) continue;
+    out += readFileSync(new URL(name, dir), "utf8");
+  }
+  return out;
+}
+
 describe("what the AI features disclose", () => {
   it("still sends the stored salary range into the negotiation roleplay", () => {
     // The premise. If this stops being true the assertion below is no longer
     // required, and a guard whose premise has silently gone away is worse
     // than no guard.
-    const detail = readFileSync(`${ROOT}src/detail.tsx`, "utf8");
     expect(
-      detail,
+      detailSource(),
       "the negotiation panel no longer receives salary_range — recheck whether the disclosure below is still owed",
     ).toMatch(/salaryExpectation=\{a\.salary_range\}/);
   });
