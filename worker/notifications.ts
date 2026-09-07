@@ -266,6 +266,15 @@ async function emailUser(env: Env, rows: DueRow[]): Promise<void> {
   await stampEmailed(env, unemailableRows.map((n) => n.id));
 }
 
+// Unlike generateNotifications above, this one is NOT covered by the
+// ON CONFLICT pattern that makes a Cloudflare cron retry safe (see the
+// scheduled() comment in worker/index.ts). It selects unsent rows, sends
+// push/email as a side effect, and only then stamps pushed_at/emailed_at —
+// two concurrent runs (the original invocation and a retry racing it) can
+// both select the same unsent row before either stamps it, and both send.
+// That's a real duplicate-notification risk, not merely wasted work; it's
+// noted here rather than fixed because the card that asked for this comment
+// scoped a lock/coordination fix as out of bounds.
 export async function deliverDueNotifications(env: Env): Promise<void> {
   const now = new Date();
   const cutoff = new Date(now.getTime() - MAX_AGE_HOURS * 3600_000)

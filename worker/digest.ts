@@ -93,6 +93,17 @@ export async function generateWeeklyDigest(env: Env): Promise<void> {
     // the date boundary would otherwise share a key that is wrong for one of
     // them, and a wrong dedup key means a silently missed digest.
     const weekKey = localDate(r.timezone, now);
+    // Load-bearing for more than the weekly re-run this file's top comment
+    // already covers: Cloudflare can retry a scheduled invocation that didn't
+    // return in time, so a second generateWeeklyDigest can run concurrently
+    // with the first (see worker/index.ts's scheduled()).
+    //
+    // What stops the duplicate row is the UNIQUE (user_id, dedup_key) index in
+    // migrations/0032 — drop that and this clause has nothing to conflict on.
+    // What this clause does is turn the collision into a silent skip instead
+    // of a thrown constraint error, so the retried run finishes the rest of
+    // its users rather than aborting on the first one it has already sent.
+    // Both halves are needed, and neither is obvious from the other.
     return env.DB.prepare(
       `INSERT INTO notifications (user_id, type, title, body, link, dedup_key)
        VALUES (?, 'weekly_digest', ?, ?, '/', ?)
