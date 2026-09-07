@@ -57,4 +57,32 @@ describe("runScheduledBackup", () => {
       /backup write verification failed/,
     );
   });
+
+  it("keeps the older backups when the new one did not verify", async () => {
+    // The ordering, not the check. Verification runs before the retention
+    // prune, so a failed backup leaves the previous ones alone. Move the
+    // check below the prune and a bad write would delete the oldest good
+    // backup on its way out — quietly spending recoverability to store
+    // something that was never readable. Nothing else pins that order.
+    for (let i = 0; i < 20; i++) {
+      await env.DOCS.put(`backups/keep-${i}.json`, "{}");
+    }
+    const before = (await env.DOCS.list({ prefix: "backups/" })).objects.length;
+
+    const truncatingDocs = {
+      put: (key: string, value: string, options?: R2PutOptions) =>
+        env.DOCS.put(key, value.slice(0, -10), options),
+      head: (key: string) => env.DOCS.head(key),
+      list: (options?: R2ListOptions) => env.DOCS.list(options),
+      delete: (keys: string | string[]) => env.DOCS.delete(keys),
+    } as unknown as typeof env.DOCS;
+
+    await expect(
+      runScheduledBackup({ ...env, DOCS: truncatingDocs }),
+    ).rejects.toThrow(/backup write verification failed/);
+
+    const after = (await env.DOCS.list({ prefix: "backups/" })).objects.length;
+    expect(before).toBeGreaterThan(14);
+    expect(after, "a failed backup pruned the backups it could not replace").toBe(before);
+  });
 });
