@@ -1,4 +1,5 @@
 import { guardedFetch } from "./url-guard.js";
+import { PLATFORM_CONNECTION_LIMIT, runBounded } from "./concurrency.js";
 // Stale/expired posting detection (issue #65) — advisory only. Never
 // changes an application's status; only sets posting_status so the UI
 // can show a soft "posting may be gone" badge and let a human decide.
@@ -93,11 +94,16 @@ export async function checkStalePostings(env: Env): Promise<{ checked: number; f
     .bind(PER_USER_BATCH, GLOBAL_CEILING)
     .all<{ id: number; url: string }>();
 
-  // Check every candidate concurrently (#346) — each is an independent
-  // network probe; a sequential loop of up-to-15 × 8s timeouts could run
-  // for minutes.
-  const checks = await Promise.all(
-    results.map(async (app) => {
+  // Check every candidate concurrently (#346), bounded to the platform's own
+  // simultaneous-connection cap (SRE review, #660) — GLOBAL_CEILING keeps the
+  // *total* subrequest count in line, but up to 200 of these firing via one
+  // Promise.all still queues most of them behind six real connections while
+  // every one's FETCH_TIMEOUT_MS clock is already running, so a queued probe
+  // can time out before it ever gets a turn. A sequential loop of up-to-200 ×
+  // 8s timeouts could run for minutes; this keeps it concurrent without that
+  // failure mode.
+  const checks = await runBounded(
+    results.map((app) => async () => {
       let postingStatus: string | null = null;
       try {
         const { res, finalUrl } = await fetchWithTimeout(app.url, "HEAD").catch(
@@ -112,6 +118,7 @@ export async function checkStalePostings(env: Env): Promise<{ checked: number; f
       }
       return { id: app.id, postingStatus };
     }),
+    PLATFORM_CONNECTION_LIMIT,
   );
   const flagged = checks.filter((c) => c.postingStatus === "maybe_stale").length;
   // One batched write instead of one round-trip per candidate. Guarded because
