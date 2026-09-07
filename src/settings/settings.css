@@ -208,6 +208,24 @@
     cursor: pointer;
   }
 
+  /* The one raw OS control on this panel. Five rows end in a small-caps value
+     and this one ends in a checkbox, so it has to land on the same right rail
+     or the column rhythm snaps at the last row.
+     
+     The margin is what actually broke it: a native checkbox carries a UA
+     margin (3px in Blink, and not the same on every engine), which offsets it
+     from the edge the values are flush to. Size is set for the same reason —
+     the default is a platform decision, so leaving it means the rail is
+     ragged differently per browser. Not a checkbox component: the prep list's
+     boxes sit in a task idiom where a native one reads correctly, and this is
+     alignment rather than a control the app owns. */
+  .set-row-toggle input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+  }
+
   .set-row-panel {
     padding: 0 0 0.8rem;
   }
