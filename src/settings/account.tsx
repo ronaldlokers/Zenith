@@ -469,6 +469,27 @@ export function AnthropicKeySettings() {
         <li>{t("account.aiFeatureInterview")}</li>
         <li>{t("account.aiFeatureNegotiation")}</li>
       </ul>
+      {/* Whose bill it is, and where to read it. The panel said what the
+          features send and that the key is stored encrypted, but never that
+          the money is the user's — which for a bring-your-own-key feature is
+          the thing they cannot find out from inside the app. Anthropic's
+          console is the only place the actual figure exists; Zenith does not
+          see it, and a running total here would mean recording per-call usage
+          it does not currently keep. */}
+      <p className="muted small">
+        {t("account.aiKeyCost")}{" "}
+        <a
+          href="https://console.anthropic.com/settings/usage"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {t("account.aiKeyCostLink")}
+        </a>
+        {" · "}
+        <a href="https://www.anthropic.com/pricing" target="_blank" rel="noreferrer">
+          {t("account.aiKeyPricingLink")}
+        </a>
+      </p>
       {error && <p className="login-error">{error}</p>}
       {configured ? (
         <div className="settings-fieldgrid">
