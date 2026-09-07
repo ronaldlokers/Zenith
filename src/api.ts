@@ -34,10 +34,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       // parses the body regardless, so nothing broke; it was a request that
       // described itself wrongly and worked by the leniency of one parser.
       //
-      // The caller still wins on a key it sets. Nothing in this file needs
-      // that today — the one call that sends its own content type, the
-      // document upload, uses fetch directly rather than going through here —
-      // so it is the safe direction to merge in rather than a dependency.
+      // The caller still wins on a key it sets, and one call now depends on
+      // that: the document upload sends the file's own content type through
+      // here. Replacing rather than merging would announce a PDF as JSON.
       headers: {
         "Content-Type": "application/json",
         ...(init?.headers as Record<string, string> | undefined),
@@ -387,14 +386,23 @@ export const api = {
     request<import("./types").Document[]>(
       `/api/applications/${applicationId}/documents`,
     ),
-  uploadDocument: async (
+  uploadDocument: (
     applicationId: number,
     file: File,
     label: string | null,
   ) => {
     const params = new URLSearchParams({ filename: file.name });
     if (label) params.set("label", label);
-    const res = await fetch(
+    // Through request(), not a bare fetch. The branch this replaces only ever
+    // reproduced request()'s generic case, so an upload was the one write in
+    // the app that answered a lapsed session with "Upload failed (401)"
+    // instead of saying the session had expired — and, with no try/catch, met
+    // a dropped connection with a raw TypeError.
+    //
+    // Safe to route a raw file body through because request() merges the
+    // caller's headers over its JSON default rather than replacing them, so
+    // the file's own content type still wins. api-headers.test.ts pins that.
+    return request<import("./types").Document>(
       `/api/applications/${applicationId}/documents?${params}`,
       {
         method: "POST",
@@ -402,13 +410,6 @@ export const api = {
         body: file,
       },
     );
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(
-        (body as { error?: string }).error ?? `Upload failed (${res.status})`,
-      );
-    }
-    return res.json() as Promise<import("./types").Document>;
   },
   profile: () => request<import("./types").Profile>("/api/profile"),
   // expectedUpdatedAt as on `update` above: the CV profile form sends it, the
