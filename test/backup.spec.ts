@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { authedFetch } from "./helpers";
 import { runScheduledBackup } from "../worker/backup";
 
@@ -122,5 +122,32 @@ describe("what the backup key promises", () => {
     await runScheduledBackup(env);
     const after = (await env.DOCS.list({ prefix: "backups/" })).objects.length;
     expect(after, "a second run the same day added an object").toBe(before);
+  });
+});
+
+describe("what a backup run leaves behind to read", () => {
+  // buildFullExport reads every row of every exported table and D1 meters
+  // rows read per day, so the size grows with other people's data rather
+  // than with anything an operator does. cron_runs answers "did it run";
+  // nothing answered "how big", which is the number that says when this
+  // stops being cheap.
+  it("logs the row total it dumped", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    await authedFetch(`${BASE}/api/companies`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Row Count Co" }),
+    });
+
+    await runScheduledBackup(env);
+
+    const line = log.mock.calls.map((c) => String(c[0])).find((m) => m.startsWith("backup "));
+    expect(line, "the backup run logged nothing about its size").toBeTruthy();
+    const rows = Number(/(\d+) rows/.exec(line!)?.[1]);
+    // Not just "a number": the company written above has to be in it, so a
+    // count that silently reports 0 — an empty dump, a reduce over the wrong
+    // shape — fails rather than looking like a healthy small database.
+    expect(rows, "the row total does not count the rows that were dumped").toBeGreaterThan(0);
+    log.mockRestore();
   });
 });
