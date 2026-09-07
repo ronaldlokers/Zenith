@@ -852,7 +852,8 @@ function ThisWeek({
     <>
       <MomentumBand
         eyebrow={t("today.sentEyebrow")}
-        verdict={t("today.sent", { count: thisWeek })}
+        verdict={thisWeek === 0 ? t("today.sentNone") : t("today.sent", { count: thisWeek })}
+        quiet={thisWeek === 0}
         detail={t("today.vsLastWeek", { count: lastWeek })}
         bars={mom.weeks.map((w) => ({
           heightPct: Math.max(4, (w.count / weekMax) * 100),

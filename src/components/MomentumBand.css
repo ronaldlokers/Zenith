@@ -34,6 +34,15 @@
     margin: 0.15rem 0;
   }
 
+  /* Nothing to headline. Matches the detail line below rather than shrinking
+     the figure a step: the point is that it stops being a figure at all. */
+  .zui-momentumband-verdict.quiet {
+    font-size: var(--text-body);
+    font-weight: 400;
+    letter-spacing: normal;
+    color: var(--muted);
+  }
+
   /* App.css:1449-1455 — the global .muted + .small utilities, reproduced here
      scoped so the component doesn't depend on App.css. */
   .zui-momentumband-detail {

@@ -594,3 +594,34 @@ describe("the search-week label when nobody set a start date", () => {
     expect(screen.getByText(/Week \d+ of your search/)).toBeInTheDocument();
   });
 });
+
+describe("the applications-sent band on a quiet week", () => {
+  // The wiring, not the component: dashboard.tsx is what decides a zero week
+  // is the quiet case, and a "0 sent" headline sat beside gold history bars
+  // that still read as activity.
+  // Applied well before the current week, so the account is not empty (the
+  // band only renders once something is tracked) but this week's count is 0 —
+  // which is the case the card is about.
+  const old = "2026-01-05";
+  const quietWeek: Stats = {
+    applications: [
+      { id: 1, status: "applied", source: null, applied_at: old, created_at: old },
+    ],
+    history: [
+      { application_id: 1, from_status: null, to_status: "applied", changed_at: old },
+    ],
+    interactions: [],
+  };
+
+  test("says nothing was sent rather than headlining a zero", () => {
+    render(
+      <DashboardTab
+        {...props}
+        applications={[app({ id: 1, status: "applied" })]}
+        stats={quietWeek}
+      />,
+    );
+    expect(screen.getByText("Nothing sent yet this week")).toBeInTheDocument();
+    expect(screen.queryByText("0 sent")).not.toBeInTheDocument();
+  });
+});

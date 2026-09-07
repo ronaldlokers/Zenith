@@ -26,3 +26,22 @@ export const Default: Story = {
     ],
   },
 };
+
+// The week with nothing in it. The verdict drops to the muted sentence
+// register rather than setting a zero at figure size, while the sparkline
+// keeps the history — which is the part that is actually true.
+export const QuietWeek: Story = {
+  args: {
+    ...Default.args,
+    eyebrow: "Applications sent",
+    verdict: "Nothing sent yet this week",
+    detail: "vs 3 last week",
+    quiet: true,
+    bars: [
+      { heightPct: 60, dim: false },
+      { heightPct: 35, dim: false },
+      { heightPct: 80, dim: false },
+      { heightPct: 4, dim: true },
+    ],
+  },
+};
