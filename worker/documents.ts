@@ -109,9 +109,26 @@ export function registerDocumentRoutes(app: Hono<AppEnv>) {
   //
   // Uniqueness by construction ends that, rather than a narrower window.
   const key = `app-${appId}/${crypto.randomUUID()}-${filename}`;
-  await c.env.DOCS.put(key, c.req.raw.body, {
+  // Content-Length is a client-supplied claim, not a fact — a request can
+  // understate it and stream more bytes than it declared. The header check
+  // above stays as a cheap early reject for an honest over-cap declaration,
+  // but nothing that gets enforced or stored may trust it further. R2
+  // already counts the real bytes as it streams the body to storage and
+  // hands the true count back on the returned object, so reading `.size`
+  // off it gets the measured length for free — no separate counting stream
+  // (and no buffering) needed.
+  const stored = await c.env.DOCS.put(key, c.req.raw.body, {
     httpMetadata: { contentType },
   });
+  const measured = stored.size;
+  if (measured > MAX_DOCUMENT_BYTES) {
+    // put() only resolves once the stream is fully consumed, so R2 has
+    // already accepted the object by the time the real count is known.
+    // Leaving it behind is exactly the orphan this file exists to prevent
+    // (see deleteDocumentObjects above).
+    await c.env.DOCS.delete(key);
+    return c.json({ error: "file too large (max 10 MB)" }, 413);
+  }
   let result;
   try {
     result = await c.env.DB.prepare(
@@ -119,7 +136,7 @@ export function registerDocumentRoutes(app: Hono<AppEnv>) {
        VALUES (?, ?, ?, ?, ?, ?, ?)
        RETURNING id, application_id, filename, label, size, content_type, created_at`,
     )
-      .bind(appId, userId, key, filename, c.req.query("label") ?? null, size, contentType)
+      .bind(appId, userId, key, filename, c.req.query("label") ?? null, measured, contentType)
       .first();
   } catch (e) {
     // The row is the only thing that will ever name this key, so a failed
