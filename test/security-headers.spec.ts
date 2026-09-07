@@ -25,6 +25,11 @@ describe("security headers", () => {
     ["a client route", "/board"],
     ["an unauthenticated API call", "/api/applications"],
     ["the public share page", "/shared/does-not-exist"],
+    // The other tokenised public surface, and the one where header interplay
+    // has already gone wrong once — the middleware used to overwrite the
+    // no-referrer these two set for themselves. A header added to the shared
+    // block is exactly the kind of change that would repeat it.
+    ["the calendar feed", "/calendar/does-not-exist"],
   ])("sets them on %s", async (_what, path) => {
     const res = await SELF.fetch(`${BASE}${path}`, {
       headers: { Accept: "text/html" },
