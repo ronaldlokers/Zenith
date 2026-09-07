@@ -892,6 +892,8 @@
   },
   "toast": {
     "deleted": "Deleted “{{name}}”",
+    "deletedCompany_one": "Deleted “{{name}}” — {{count}} application will lose its company link",
+    "deletedCompany_other": "Deleted “{{name}}” — {{count}} applications will lose their company link",
     "undo": "Undo",
     "roleTypeAdded": "Role type added",
     "savedSettings": "Saved {{source}} settings",

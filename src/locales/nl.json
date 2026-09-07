@@ -892,6 +892,8 @@
   },
   "toast": {
     "deleted": "“{{name}}” verwijderd",
+    "deletedCompany_one": "“{{name}}” verwijderd — {{count}} sollicitatie verliest de koppeling met dit bedrijf",
+    "deletedCompany_other": "“{{name}}” verwijderd — {{count}} sollicitaties verliezen de koppeling met dit bedrijf",
     "undo": "Ongedaan maken",
     "roleTypeAdded": "Functietype toegevoegd",
     "savedSettings": "{{source}}-instellingen opgeslagen",
