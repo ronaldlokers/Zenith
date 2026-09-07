@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { InsightsTab } from "./insights";
 import type { Application, Stats, Status } from "./types";
@@ -243,5 +243,17 @@ describe("the ghost rate", () => {
     renderWith([ended(1, "ghosted" as Status)]);
     expect(screen.getByText(/needs 3 finished applications/i)).toBeTruthy();
     expect(screen.queryByText(/100%/)).toBeNull();
+  });
+});
+
+describe("the search-week label here, not only on Today", () => {
+  it("says the start date was inferred, since the goals mock sets none", () => {
+    // The card named both surfaces, and they shared the fallback by
+    // copy-paste. Insights now takes it from the same helper as Today, so
+    // this is the assertion that would notice only this one drifting back.
+    renderWith([h(1, "applied", day(10))]);
+    return waitFor(() =>
+      expect(screen.getByText(/since your first application/i)).toBeInTheDocument(),
+    );
   });
 });

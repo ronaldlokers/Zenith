@@ -19,6 +19,7 @@ import {
   isOverdue,
   openPrepCount,
   parseSqlDate,
+  searchStart,
   searchWeekNumber,
   STAGE_URGENCY,
   // Aliased: this file already has a local `today` holding the formatted
@@ -166,14 +167,8 @@ export function DashboardTab({
       .catch((e) => onError((e as Error).message));
   };
 
-  const searchWeek = searchWeekNumber(
-    goal?.search_started_at ??
-      stats.applications.reduce<string | null>((min, a) => {
-        const d = a.applied_at ?? a.created_at;
-        return d && (!min || d < min) ? d : min;
-      }, null),
-    Date.now(),
-  );
+  const start = searchStart(goal?.search_started_at, stats.applications);
+  const searchWeek = searchWeekNumber(start.date, Date.now());
   const today = new Date().toLocaleDateString(i18n.language, {
     weekday: "long",
     day: "numeric",
@@ -221,7 +216,7 @@ export function DashboardTab({
         <p className="today-date">
           {today}
           {searchWeek != null
-            ? ` · ${t("goals.searchWeek", { count: searchWeek })}`
+            ? ` · ${t(start.inferred ? "goals.searchWeekInferred" : "goals.searchWeek", { count: searchWeek })}`
             : ""}
         </p>
       </header>

@@ -558,3 +558,39 @@ describe("marking a follow-up done", () => {
     expect(apiCalls[0]).toBe("removeInteraction(555)");
   });
 });
+
+describe("the search-week label when nobody set a start date", () => {
+  // Settings printed "Search started: NOT SET" on the same account where this
+  // strip asserted "Week N of your search". The number is inferred from the
+  // earliest application, which is a good default and was presented with
+  // exactly the certainty of a configured one.
+  const started = (d: string): Stats => ({
+    applications: [
+      { id: 1, status: "applied", source: null, applied_at: d, created_at: d },
+    ],
+    history: [],
+    interactions: [],
+  });
+
+  test("says where the count came from when it had to guess", () => {
+    render(
+      <DashboardTab {...props} goal={null} applications={[]} stats={started("2026-01-01")} />,
+    );
+    expect(screen.getByText(/since your first application/i)).toBeInTheDocument();
+  });
+
+  test("claims nothing of the sort once the date is actually set", () => {
+    // The other half: a user who answered the question must not be told the
+    // app guessed. Same rendered strip, different sentence.
+    render(
+      <DashboardTab
+        {...props}
+        goal={{ search_started_at: "2026-01-01", weekly_app_goal: 0 } as never}
+        applications={[]}
+        stats={started("2025-01-01")}
+      />,
+    );
+    expect(screen.queryByText(/since your first application/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Week \d+ of your search/)).toBeInTheDocument();
+  });
+});

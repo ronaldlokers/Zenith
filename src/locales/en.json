@@ -343,6 +343,8 @@
     "searchStartLabel": "Search started",
     "searchWeek_one": "Week {{count}} of your search",
     "searchWeek_other": "Week {{count}} of your search",
+    "searchWeekInferred_one": "Week {{count}} · since your first application",
+    "searchWeekInferred_other": "Week {{count}} · since your first application",
     "weeklyGoalValue_one": "{{count}}",
     "weeklyGoalValue_other": "{{count}}"
   },
