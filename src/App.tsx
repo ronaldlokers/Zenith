@@ -462,7 +462,21 @@ export default function App() {
     onGoToFeed: () => navigate("/settings?s=feed"),
     onSetGoal: () => navigate("/settings"),
     onDismiss: dismissOnboarding,
-    onLoadSample: () => navigate("/settings?s=data"),
+    // Loads it, rather than navigating to where the button lives. The link
+    // says "Load sample data" and used to open Settings, leaving a new user
+    // to find the control again on a screen they had never seen — at the
+    // moment of least commitment. Confirmed first because it writes a
+    // pipeline into their account, and the confirm names where to undo it,
+    // since Settings is exactly what they are no longer being shown.
+    onLoadSample: async () => {
+      if (!(await requestConfirm(t("sampleData.loadConfirm")))) return;
+      try {
+        await api.loadSampleData();
+        window.location.reload();
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    },
   };
 
   return (

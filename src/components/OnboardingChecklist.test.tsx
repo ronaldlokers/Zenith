@@ -35,7 +35,7 @@ describe("OnboardingChecklist", () => {
       screen.getByRole("button", { name: "Add your first company" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Add your first job" }),
+      screen.getByRole("button", { name: "Add your first application" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Set up your job feed" }),

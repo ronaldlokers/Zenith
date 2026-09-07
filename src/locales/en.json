@@ -101,6 +101,7 @@
     "title": "Sample data",
     "emptyHint": "New here? Load an example pipeline to explore the app, then clear it when you're ready for real data.",
     "load": "Load sample data",
+    "loadConfirm": "This fills your account with an example pipeline so you can look around. You can remove it later under Settings → Sample data.",
     "loadedHint": "Your account is filled with sample data. Clear it to start fresh with your own pipeline.",
     "clear": "Remove sample data",
     "clearConfirm": "This permanently deletes ALL data in your account — including anything you've added since — and resets it to empty. Your login, API key, and share links are kept. This can't be undone."
@@ -400,7 +401,7 @@
     "title": "Getting started",
     "profile": "Fill out your CV profile basics",
     "company": "Add your first company",
-    "firstJob": "Add your first job",
+    "firstJob": "Add your first application",
     "goal": "Set a weekly goal",
     "feed": "Set up your job feed",
     "sampleLink": "Prefer to explore first? Load sample data"
