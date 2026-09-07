@@ -51,12 +51,13 @@ export function sortFilterFeed<T extends { id: number }>(
   return list;
 }
 
-// Feed list derivation (#535 shell): sort/filter by fit, then band by match
-// strength (strongest first), then re-sort within each band so the chosen
-// sort survives banding. The list stays flat and in this order so keyboard
-// j/k keeps stepping through it — the bands are headings inside one list,
-// not three separate ones. showWeak=false hides the "weak" band entirely
-// (never removes it — it's folded, and one press brings it back).
+// The feed list, derived: sort and filter by fit, drop the weak band when it
+// is folded, then re-sort by band alone so the chosen sort survives inside
+// each one. Order matters — banding after filtering means minFit decides what
+// exists before bands decide where it sits.
+//
+// Why the list is flat and why weak folds by default are properties of the
+// screen, not of this function; FeedTab says both where the state lives.
 export function deriveVisibleFeedItems<
   T extends { id: number; match_count: number | null | undefined },
 >(items: T[], sortBy: "newest" | "match", minFit: number, showWeak: boolean): T[] {
