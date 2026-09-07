@@ -84,3 +84,24 @@ describe("the momentum rule", () => {
     expect(WORKER).not.toMatch(/SHARE_PIPELINE/);
   });
 });
+
+// The If-Match comparison had been written four times — once in cv.ts and
+// once in each of index.ts's three PUTs — before worker/if-match.ts collected
+// it. That is the same shape as the two above: each copy was correct when
+// written, and they drifted anyway (the error bodies still differ, which is
+// why conflict() takes the message as a parameter).
+//
+// A fifth hand-rolled comparison would pass every behavioural test on the day
+// it lands. This is what stops it.
+describe("the If-Match precondition", () => {
+  it("is compared in one place rather than inline in a route", () => {
+    const offenders = [...workerFiles()]
+      .filter(([name]) => name !== "worker/if-match.ts")
+      .filter(([, text]) => /ifMatch\s*!==|!==\s*ifMatch/.test(text))
+      .map(([name]) => name);
+    expect(
+      offenders,
+      "these compare an If-Match header inline instead of calling stale() from worker/if-match.ts",
+    ).toEqual([]);
+  });
+});

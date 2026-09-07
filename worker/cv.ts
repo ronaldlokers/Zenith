@@ -1,5 +1,6 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
+import { stale, conflict } from "./if-match.js";
 
 // The API-key digest is the one profile column the client never sees (#381):
 // the hint and creation date are what Settings renders, and the digest itself
@@ -30,28 +31,6 @@ export function registerCvRoutes(app: Hono<AppEnv>) {
     }
     return c.json(withoutKeyHash(result));
   });
-
-// The precondition 0060 gave contacts and companies, applied to the three CV
-// forms that have the same shape: they rewrite every field they own from a
-// copy loaded when the page opened, so a save from a stale tab reverts what it
-// never showed. 412 per RFC 9110 13.1, and the current validator comes back in
-// the body so the client can say what it collided with.
-//
-// Additive: no header, no precondition, so every existing caller — the tailor
-// panel writing one field, the LinkedIn import — behaves exactly as before.
-//
-// updated_at is datetime('now') at second resolution, so two saves inside one
-// second are indistinguishable. That is the case this is least needed for; the
-// conflict it prevents is a form left open for minutes or hours.
-function stale(
-  ifMatch: string | undefined,
-  current: string | null | undefined,
-): boolean {
-  return !!ifMatch && ifMatch !== current;
-}
-
-const conflict = (current: string | null | undefined) =>
-  ({ error: "it changed somewhere else", current_updated_at: current }) as const;
 
   app.put("/api/profile", async (c) => {
     const body = await c.req.json();
