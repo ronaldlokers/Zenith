@@ -196,85 +196,117 @@ interface DueRow {
   email_digest: number;
 }
 
-async function stampEmailed(env: Env, ids: number[]): Promise<void> {
-  if (ids.length === 0) return;
-  await env.DB.batch(
-    ids.map((id) =>
-      env.DB.prepare("UPDATE notifications SET emailed_at = datetime('now') WHERE id = ?").bind(
-        id,
-      ),
-    ),
+// Claims rows for one delivery channel before anything is sent: a
+// conditional per-row UPDATE that only flips (and returns) rows whose stamp
+// is still NULL. A concurrent run racing this one issues the same
+// conditional UPDATE against the same ids and wins nothing for whichever
+// rows this run claims first — that's the whole fix for the double-send
+// race, no lock or new table involved, just the stamp columns that already
+// existed reused as the coordination point instead of only as a record.
+//
+// One prepared statement, bound once per id and issued as a single
+// env.DB.batch — same shape push already used for "stamp what went out",
+// just moved earlier and given a WHERE ... IS NULL guard plus RETURNING so
+// the caller learns which ids it actually won.
+async function claimRows(
+  env: Env,
+  ids: number[],
+  column: "pushed_at" | "emailed_at",
+): Promise<Set<number>> {
+  if (ids.length === 0) return new Set();
+  const claim = env.DB.prepare(
+    `UPDATE notifications SET ${column} = datetime('now')
+     WHERE id = ? AND ${column} IS NULL
+     RETURNING id`,
   );
+  const results = await env.DB.batch(ids.map((id) => claim.bind(id)));
+  const claimed = new Set<number>();
+  for (const r of results) {
+    for (const row of (r.results ?? []) as { id: number }[]) claimed.add(row.id);
+  }
+  return claimed;
 }
 
-// Groups one user's still-unemailed rows into at most two outbound
-// messages — one batched reminder email and one digest email — never one
-// per notification. Three due_followup rows must produce one email, not
-// three, or the batching design is defeated and the user gets spammed.
+// Reverses a claim for rows whose send actually threw or reported failure.
+// A claim that stamps before sending must not silently consume the
+// notification on a failed send — this puts the stamp back to NULL so the
+// row is picked up and retried on the next run, same as it would have been
+// under the old select-then-send-then-stamp order.
+async function releaseRows(
+  env: Env,
+  ids: number[],
+  column: "pushed_at" | "emailed_at",
+): Promise<void> {
+  if (ids.length === 0) return;
+  const release = env.DB.prepare(`UPDATE notifications SET ${column} = NULL WHERE id = ?`);
+  await env.DB.batch(ids.map((id) => release.bind(id)));
+}
+
+// Groups one user's claimed-and-still-unemailed rows into at most two
+// outbound messages — one batched reminder email and one digest email —
+// never one per notification. Three due_followup rows must produce one
+// email, not three, or the batching design is defeated and the user gets
+// spammed.
+//
+// Every row passed in here was already claimed (emailed_at stamped) by
+// deliverDueNotifications before this ran — a row lost to a concurrent
+// claim never reaches this function at all. So the only remaining job is
+// deciding whether to actually send, and reverting the claim when a send
+// fails; there is no "stamp on success" step left, because the claim
+// already is the stamp.
 async function emailUser(env: Env, rows: DueRow[]): Promise<void> {
   const { email, locale, email_reminders, email_digest } = rows[0];
 
   const reminderRows = rows.filter((n) => n.type in REMINDER_KIND);
   const digestRows = rows.filter((n) => n.type === "weekly_digest");
-  // Neither a reminder nor a digest — feed_match, stale_posting. Never
-  // emailed, but still stamped below so they stop being re-selected on
-  // every run for the rest of their 24-hour window.
-  const unemailableRows = rows.filter(
-    (n) => !(n.type in REMINDER_KIND) && n.type !== "weekly_digest",
-  );
+  // Neither a reminder nor a digest — feed_match, stale_posting — and any
+  // row whose owner has the relevant toggle off: none of these are ever
+  // emailed, but the claim already stamped them, which is exactly "handled"
+  // for a type/preference that will never send. Do not add a stamp call
+  // here — reverting *that* would let a later opt-in retroactively deliver
+  // up to 24h of backlog in one batch, exactly the surprise #518's
+  // freshness window exists to prevent for push, arriving through a
+  // different door.
 
-  if (reminderRows.length > 0) {
-    if (email_reminders) {
-      const items: ReminderItem[] = reminderRows.map((n) => ({
-        kind: REMINDER_KIND[n.type],
-        title: n.title,
-        body: n.body,
-      }));
-      const sent = await sendEmail(env, buildReminderEmail(email, locale ?? "en", items));
-      // Only stamp what this send actually covered, and only on success — a
-      // failure must leave every row NULL so the next hourly run retries the
-      // whole batch instead of silently losing it.
-      if (sent) await stampEmailed(env, reminderRows.map((n) => n.id));
-    } else {
-      // The owner has reminder email off: "I don't want these" means this
-      // notification will not be emailed, full stop — not "pending until the
-      // toggle changes". Stamp now, same as the never-emailable types below,
-      // so a later opt-in can't retroactively deliver up to 24h of backlog
-      // in one batch — exactly the surprise #518's freshness window exists
-      // to prevent for push, arriving through a different door. Do not
-      // revert this to "leave NULL" — it looks harmless (can't double-send
-      // or lose an email) but it isn't.
-      await stampEmailed(env, reminderRows.map((n) => n.id));
-    }
+  if (reminderRows.length > 0 && email_reminders) {
+    const items: ReminderItem[] = reminderRows.map((n) => ({
+      kind: REMINDER_KIND[n.type],
+      title: n.title,
+      body: n.body,
+    }));
+    const sent = await sendEmail(env, buildReminderEmail(email, locale ?? "en", items));
+    // A failed send must release every row in the batch, not just stay
+    // stamped — otherwise the next hourly run would never see them again.
+    if (!sent) await releaseRows(env, reminderRows.map((n) => n.id), "emailed_at");
   }
 
   // weekly_digest arrives as its own separate message, never folded into the
   // reminder email — it's a different cadence and a different kind of news.
-  if (digestRows.length > 0) {
-    if (email_digest) {
-      for (const n of digestRows) {
-        const sent = await sendEmail(env, buildDigestEmail(email, n.title, n.body ?? "", locale ?? "en"));
-        if (sent) await stampEmailed(env, [n.id]);
-      }
-    } else {
-      // Same reasoning as the reminder branch above: digest off means this
-      // digest is handled, not deferred.
-      await stampEmailed(env, digestRows.map((n) => n.id));
+  if (digestRows.length > 0 && email_digest) {
+    for (const n of digestRows) {
+      const sent = await sendEmail(env, buildDigestEmail(email, n.title, n.body ?? "", locale ?? "en"));
+      if (!sent) await releaseRows(env, [n.id], "emailed_at");
     }
   }
-
-  await stampEmailed(env, unemailableRows.map((n) => n.id));
 }
 
-// Unlike generateNotifications above, this one is NOT covered by the
+// Unlike generateNotifications above, this one is not covered by the
 // ON CONFLICT pattern that makes a Cloudflare cron retry safe (see the
-// scheduled() comment in worker/index.ts). It selects unsent rows, sends
-// push/email as a side effect, and only then stamps pushed_at/emailed_at —
-// two concurrent runs (the original invocation and a retry racing it) can
-// both select the same unsent row before either stamps it, and both send.
-// That's a real duplicate-notification risk, not merely wasted work; it's
-// noted here rather than fixed because the card that asked for this comment
-// scoped a lock/coordination fix as out of bounds.
+// scheduled() comment in worker/index.ts) — its side effect is a push/email
+// send, not a row, so there is no unique index to make a second attempt a
+// no-op. Two concurrent runs (the original invocation and a retry racing it)
+// used to both select the same unsent row before either stamped it, and
+// both send — a real duplicate-notification risk, not merely wasted work.
+//
+// The fix is to claim rows before sending rather than after (claimRows,
+// above): a conditional UPDATE ... WHERE column IS NULL RETURNING id that
+// only the first of two racing, identical UPDATEs can win a given row for.
+// The losing run's UPDATE matches nothing (the column is no longer NULL)
+// and it sends nothing for that id. No lock, no new table — the same
+// pushed_at/emailed_at columns the retry logic already depended on are now
+// also the coordination point. Push and email each claim and release their
+// own column independently, so a row can still be legitimately owed a push
+// but not yet an email (or the reverse) exactly as before.
 export async function deliverDueNotifications(env: Env): Promise<void> {
   const now = new Date();
   const cutoff = new Date(now.getTime() - MAX_AGE_HOURS * 3600_000)
@@ -283,8 +315,8 @@ export async function deliverDueNotifications(env: Env): Promise<void> {
     .slice(0, 19);
 
   // A row is outstanding when EITHER channel is unsent — a failed batch email
-  // must not need a fresh push to earn a retry, and vice versa. Each stamp
-  // below is written independently so one channel's failure never blocks the
+  // must not need a fresh push to earn a retry, and vice versa. Each claim
+  // below is made independently so one channel's failure never blocks the
   // other's delivery or retry.
   const { results } = await env.DB.prepare(
     `SELECT n.id, n.user_id, n.type, n.title, n.body, n.link, n.pushed_at, n.emailed_at,
@@ -300,19 +332,23 @@ export async function deliverDueNotifications(env: Env): Promise<void> {
 
   const due = results.filter((n) => localHour(n.timezone, now) >= DELIVERY_HOUR);
 
-  // 1. Push every row not yet pushed, then stamp them in one write.
+  // 1. Claim every row not yet pushed, then push only what this run won.
   //
-  // Two things changed here together, and the second matters more than the
-  // round-trips. The old shape awaited Promise.all over promises that both
-  // sent and wrote, so a single push that threw rejected the whole thing and
-  // this function gave up before reaching the email leg below — one bad
-  // subscription could silence every email that run.
-  //
-  // Now a failure yields null instead of rejecting: that row keeps
-  // pushed_at NULL and is retried next run, which is what the column is for.
-  const pushed = await Promise.all(
-    due
-      .filter((n) => n.pushed_at === null)
+  // A failure still yields a retry rather than rejecting the whole batch —
+  // the old shape awaited Promise.all over promises that both sent and
+  // wrote, so a single push that threw rejected everything and this
+  // function gave up before reaching the email leg below. Here a failed
+  // send releases just that id's claim (pushed_at back to NULL) so it is
+  // retried next run, without touching the ids that succeeded.
+  const pushCandidates = due.filter((n) => n.pushed_at === null);
+  const claimedPush = await claimRows(
+    env,
+    pushCandidates.map((n) => n.id),
+    "pushed_at",
+  );
+  const pushFailed = await Promise.all(
+    pushCandidates
+      .filter((n) => claimedPush.has(n.id))
       .map(async (n) => {
         try {
           await sendPushToUser(env, n.user_id, {
@@ -320,31 +356,30 @@ export async function deliverDueNotifications(env: Env): Promise<void> {
             body: n.body ?? undefined,
             url: n.link ?? "/",
           });
-          return n.id;
+          return null;
         } catch (e) {
           console.error("push failed", n.id, e);
-          return null;
+          return n.id;
         }
       }),
   );
+  await releaseRows(
+    env,
+    pushFailed.filter((id): id is number => id !== null),
+    "pushed_at",
+  );
 
-  // Only what actually sent, and only if anything did — D1 rejects an empty
-  // batch with "No SQL statements detected" (the same guard as
-  // worker/posting-check.ts).
-  const sent = pushed.filter((id): id is number => id !== null);
-  if (sent.length > 0) {
-    // Prepared once and bound per row, the way refreshFeed does it — one
-    // statement and one round-trip instead of a prepare and a run each.
-    const stamp = env.DB.prepare(
-      "UPDATE notifications SET pushed_at = datetime('now') WHERE id = ?",
-    );
-    await env.DB.batch(sent.map((id) => stamp.bind(id)));
-  }
-
-  // 2. Email, grouped by user so a batch of reminders becomes one message.
-  const unemailed = due.filter((n) => n.emailed_at === null);
+  // 2. Claim every row not yet emailed, then group only what this run won
+  // by user so a batch of reminders becomes one message.
+  const emailCandidates = due.filter((n) => n.emailed_at === null);
+  const claimedEmail = await claimRows(
+    env,
+    emailCandidates.map((n) => n.id),
+    "emailed_at",
+  );
   const byUser = new Map<string, DueRow[]>();
-  for (const n of unemailed) {
+  for (const n of emailCandidates) {
+    if (!claimedEmail.has(n.id)) continue;
     const list = byUser.get(n.user_id);
     if (list) list.push(n);
     else byUser.set(n.user_id, [n]);
