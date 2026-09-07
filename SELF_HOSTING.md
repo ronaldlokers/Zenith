@@ -109,11 +109,15 @@ key undecryptable, so users have to re-enter theirs.
 ## 5. Apply migrations and deploy
 
 ```bash
-npx wrangler d1 migrations apply zenith --remote
+npm run migrate:remote
 npm run deploy
 ```
 
-`npm run deploy` builds the frontend and pushes the Worker + static assets in one step.
+`npm run migrate:remote` checks that `wrangler.jsonc`'s `database_id` is no longer
+the upstream one (step 2) before applying migrations — it fails with a pointer
+back to step 2 if you skipped the swap, rather than a raw wrangler auth error.
+`npm run deploy` builds the frontend and pushes the Worker + static assets in
+one step.
 
 ### If a migration goes wrong
 
@@ -195,7 +199,7 @@ Pull upstream and redeploy — new D1 migrations apply automatically as part of 
 ```bash
 git pull
 npm install
-npx wrangler d1 migrations apply zenith --remote
+npm run migrate:remote
 npm run deploy
 ```
 

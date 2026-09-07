@@ -10,6 +10,7 @@
     "preview": "npm run build && vite preview",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
+    "migrate:remote": "node scripts/check-database-id.mjs && wrangler d1 migrations apply zenith --remote",
     "test": "vitest run --project=workers --project=components --project=node",
     "e2e": "npm run build && vitest run --project=e2e",
     "coverage": "vitest run --project=components --coverage",
