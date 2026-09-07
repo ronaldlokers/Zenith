@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next";
 import { api } from "./api";
 import { EmptyFeedIcon } from "./icons";
 import type { MatchBand } from "./format";
-import { ageDays, matchBand, MATCH_BANDS, safeHref, formatDate } from "./format";
+import { ageDays, matchBand, safeHref, formatDate } from "./format";
 import type { FeedCursor, FeedItem, RoleTypeDef } from "./types";
-import { sortFilterFeed } from "./skill-match";
+import { deriveVisibleFeedItems, sortFilterFeed } from "./skill-match";
 import {
   Button,
   Chip,
@@ -66,23 +66,7 @@ export function FeedTab({
   // them back.
   const [showWeak, setShowWeak] = useState(false);
   const visibleItems = useMemo(
-    () => {
-      const sorted = sortFilterFeed(
-        items ?? [],
-        (i) => i.match_count ?? 0,
-        sortBy,
-        minFit,
-      );
-      const banded = showWeak
-        ? sorted
-        : sorted.filter((i) => matchBand(i.match_count) !== "weak");
-      // A stable sort by band alone, so the chosen sort survives inside it.
-      return [...banded].sort(
-        (a, b) =>
-          MATCH_BANDS.indexOf(matchBand(a.match_count)) -
-          MATCH_BANDS.indexOf(matchBand(b.match_count)),
-      );
-    },
+    () => deriveVisibleFeedItems(items ?? [], sortBy, minFit, showWeak),
     [items, sortBy, minFit, showWeak],
   );
 

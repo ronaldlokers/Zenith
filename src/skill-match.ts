@@ -1,4 +1,5 @@
 import type { Skill } from "./types";
+import { matchBand, MATCH_BANDS } from "./format";
 
 // How many of the user's CV-backed skills a job description mentions — the feed
 // "fit" signal. Reuses the JD-keyword-match logic (word-boundary regex, escaped
@@ -48,4 +49,26 @@ export function sortFilterFeed<T extends { id: number }>(
   if (sortBy === "match")
     list = [...list].sort((a, b) => matchOf(b) - matchOf(a));
   return list;
+}
+
+// The feed list, derived: sort and filter by fit, drop the weak band when it
+// is folded, then re-sort by band alone so the chosen sort survives inside
+// each one. Order matters — banding after filtering means minFit decides what
+// exists before bands decide where it sits.
+//
+// Why the list is flat and why weak folds by default are properties of the
+// screen, not of this function; FeedTab says both where the state lives.
+export function deriveVisibleFeedItems<
+  T extends { id: number; match_count: number | null | undefined },
+>(items: T[], sortBy: "newest" | "match", minFit: number, showWeak: boolean): T[] {
+  const sorted = sortFilterFeed(items, (i) => i.match_count ?? 0, sortBy, minFit);
+  const banded = showWeak
+    ? sorted
+    : sorted.filter((i) => matchBand(i.match_count) !== "weak");
+  // A stable sort by band alone, so the chosen sort survives inside it.
+  return [...banded].sort(
+    (a, b) =>
+      MATCH_BANDS.indexOf(matchBand(a.match_count)) -
+      MATCH_BANDS.indexOf(matchBand(b.match_count)),
+  );
 }
