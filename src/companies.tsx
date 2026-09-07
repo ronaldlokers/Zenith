@@ -319,10 +319,11 @@ export function ContactRelationshipMap({
   const { t } = useTranslation();
   if (contacts.length === 0) return null;
 
-  // Keyed by contact id, not display name (#card) — two contacts at the
-  // same company can share a name ("Alex", "Sam"), and a name-keyed set
-  // would treat the unrelated one as already shown, dropping it from the
-  // map entirely instead of rendering it as an unlinked node.
+  // Keyed by contact id, not display name. Two contacts at the same company
+  // can share one ("Alex", "Sam"), and a name-keyed set treated the unrelated
+  // one as already shown — so it vanished from the map altogether rather than
+  // rendering as an unlinked node. The labels below stay names; only identity
+  // moved to the id.
   const referralLinks = [
     ...new Map(
       applications
