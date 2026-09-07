@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 import type { AppEnv } from "./index.js";
 import { recordCronRun } from "./cron-log.js";
+import { PLATFORM_CONNECTION_LIMIT, runBounded } from "./concurrency.js";
 
 // Each board is fetched in turn; one that never answers would otherwise stall
 // the whole pull, and this runs unattended on a cron.
@@ -152,8 +153,11 @@ export async function fetchAdzuna(
   const countryCode = (country || "nl").toLowerCase();
   // Fetch every role's keyword query concurrently (#449) — the old sequential
   // loop made latency scale linearly with the number of configured roles.
-  const perRole = await Promise.all(
-    Object.entries(keywords).map(async ([role, kws]): Promise<
+  // Bounded the same way the source-level fan-out in refreshFeed is (#660):
+  // this is one more unbounded Promise.all over outbound fetches, and role
+  // count grows with what users configure too.
+  const perRole = await runBounded(
+    Object.entries(keywords).map(([role, kws]) => async (): Promise<
       FeedCandidate[]
     > => {
       if (kws.length === 0) return [];
@@ -196,6 +200,7 @@ export async function fetchAdzuna(
         }));
       }
     }),
+    PLATFORM_CONNECTION_LIMIT,
   );
   return perRole.flat();
 }
@@ -335,12 +340,19 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
     }
   };
 
-  const jobs: Promise<FeedCandidate[]>[] = [];
+  // Thunks, not promises: a promise here would already have called fetch()
+  // by the time runBounded saw it, defeating the whole cap. This is also
+  // where the aggregation pays off — one job per *distinct* config/board
+  // (already deduped across every user by loadDistinctSourceConfigs /
+  // loadDistinctAtsBoards above), so two people watching the same company
+  // still costs one fetch, and bounding this list bounds the real fan-out
+  // rather than papering over it.
+  const jobs: Array<() => Promise<FeedCandidate[]>> = [];
   for (const cfg of configs.filter((c) => c.source === "adzuna")) {
-    jobs.push(attempt(FEED_SOURCE_LABEL.adzuna(), fetchAdzuna(env, keywords, cfg.location)));
+    jobs.push(() => attempt(FEED_SOURCE_LABEL.adzuna(), fetchAdzuna(env, keywords, cfg.location)));
   }
   for (const board of atsBoards.filter((b) => b.source === "greenhouse")) {
-    jobs.push(
+    jobs.push(() =>
       attempt(
         FEED_SOURCE_LABEL.board("greenhouse", board.slug),
         fetchGreenhouse(board.slug, keywords),
@@ -348,14 +360,18 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
     );
   }
   for (const board of atsBoards.filter((b) => b.source === "ashby")) {
-    jobs.push(
+    jobs.push(() =>
       attempt(
         FEED_SOURCE_LABEL.board("ashby", board.slug),
         fetchAshby(board.slug, keywords),
       ),
     );
   }
-  const candidates = (await Promise.all(jobs)).flat();
+  // Bounded rather than one Promise.all over the lot (SRE review, #660): the
+  // job count above scales with every user's watched boards, and `attempt`
+  // already keeps one source's failure from losing another's results — this
+  // only needed to stop them all firing at once.
+  const candidates = (await runBounded(jobs, PLATFORM_CONNECTION_LIMIT)).flat();
 
   // One batched transaction instead of an awaited INSERT per candidate
   // (#285) — a refresh can pull hundreds of listings, and the serial
