@@ -54,12 +54,15 @@ const SOURCE = sourceFiles()
   .map((f) => stripCommentLines(readFileSync(f, "utf8")))
   .join("\n");
 
-// Pull every `click:` value out of VIEWS — a single selector string, or an
-// array of them for a multi-step interaction (the contact-then-templates
-// sequence in the people view).
+// Pull every `click:` and `expect:` value out of VIEWS — a single selector
+// string, or an array of them for a multi-step interaction (the
+// contact-then-templates sequence in the people view). `expect:` is included
+// so a keyboard interaction's confirming selector is held to the same rule as
+// a clicked one; today's is attribute-based and contributes no class, which is
+// fine — the check is for when one of them names a class.
 function clickSelectors(): string[] {
   const rig = readFileSync(RIG, "utf8");
-  const values = [...rig.matchAll(/click:\s*(\[[^\]]*\]|"[^"]*"|'[^']*')/g)].map(
+  const values = [...rig.matchAll(/(?:click|expect):\s*(\[[^\]]*\]|"[^"]*"|'[^']*')/g)].map(
     (m) => m[1],
   );
   const selectors: string[] = [];

@@ -47,7 +47,7 @@ const VIEWS = [
     // removed) — it opens from the top-centre menu's "quick-add" action or
     // the global "n" shortcut. "n" is the documented route (the menu's own
     // keycap reads "n"), so drive the dialog open the same way a user does.
-    { suffix: "quickadd", press: "n" },
+    { suffix: "quickadd", press: "n", expect: '[aria-modal="true"]' },
   ]],
   ["board", "/board", [{ suffix: "cardmenu", click: ".zui-cardmenu-btn" }]],
   ["detail", `/board/${process.env.DETAIL_ID ?? "1"}`, [
@@ -224,7 +224,7 @@ for (const [vpName, viewport] of VIEWPORTS) {
     await parkPointer(page);
     await page.screenshot({ path: `${OUT}/${name}-${vpName}.png`, fullPage: true });
     console.log(`captured ${name}-${vpName}`);
-    for (const { suffix, click, press } of interactions ?? []) {
+    for (const { suffix, click, press, expect } of interactions ?? []) {
       // `click` is a selector or an ordered list of them. Sequences reach
       // surfaces one click cannot: the outreach template manager needs a
       // contact dialog opened first, and a control nested two deep was
@@ -237,7 +237,18 @@ for (const [vpName, viewport] of VIEWPORTS) {
       // keypress is one step and matches the app's documented route.
       if (press) {
         await page.keyboard.press(press);
-        await page.waitForTimeout(120);
+        // `expect` is not optional alongside `press`, and that asymmetry with
+        // `click` is the point: a missing click selector already stops the run
+        // below, but a shortcut that has been retired or rebound opens nothing
+        // and would still capture — a screenshot of the surface without the
+        // dialog, diffing clean against the next one, covering nothing. The
+        // wait is what keeps a press as loud as a click.
+        try {
+          await page.locator(expect).first().waitFor({ state: "visible", timeout: 5000 });
+        } catch {
+          console.error(`Key "${press}" opened nothing on ${route}: expected ${expect}`);
+          process.exit(1);
+        }
       }
       for (const selector of Array.isArray(click) ? click : click ? [click] : []) {
         const target = page.locator(selector).first();
