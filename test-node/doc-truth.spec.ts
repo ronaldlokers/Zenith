@@ -89,6 +89,50 @@ describe("the docs describe the app that exists", () => {
       "the worker reads these and SELF_HOSTING.md never names them",
     ).toEqual([]);
   });
+
+  it("names script and file paths that exist on disk", () => {
+    // A doc that says "run scripts/restore-backup.mjs" is a promise the file
+    // is still there. Nothing checked that promise, so a rename would leave
+    // SELF_HOSTING.md pointing a recovery procedure at nothing — discovered
+    // only when someone needs it.
+    //
+    // Two shapes count as "a path the doc names": an inline `` `scripts/…` ``
+    // backtick span with a slash and an extension (the style every doc uses
+    // for worker/index.ts, test-node/*.spec.ts, scripts/*.mjs alike), and a
+    // bare `scripts/*.mjs` mention inside a fenced shell example, which
+    // carries no backticks of its own. Deliberately excluded:
+    //   - a wildcard like `scripts/*.mjs` — `*` is not in the path charset,
+    //     so a glob in prose can't be misread as a real file
+    //   - a URL path segment — the charset excludes `:`, so `https://…`
+    //     never starts a match
+    //   - `scripts/.seed-admin.sql`, which SELF_HOSTING.md names as the file
+    //     seed-admin.mjs *writes*, not one already checked in — the bare
+    //     pattern is scoped to `.mjs` so a generated, gitignored output path
+    //     doesn't fail this guard for correctly describing itself
+    const PATH_IN_BACKTICKS = /`([\w.-]+(?:\/[\w.-]+)+\.\w+)`/g;
+    const BARE_SCRIPT = /\bscripts\/[\w.-]+\.mjs\b/g;
+
+    const found = new Map<string, Set<string>>();
+    for (const doc of DOCS) {
+      const text = read(doc);
+      for (const m of text.matchAll(PATH_IN_BACKTICKS)) {
+        (found.get(m[1]) ?? found.set(m[1], new Set()).get(m[1])!).add(doc);
+      }
+      for (const m of text.matchAll(BARE_SCRIPT)) {
+        (found.get(m[0]) ?? found.set(m[0], new Set()).get(m[0])!).add(doc);
+      }
+    }
+
+    expect(
+      found.size,
+      "no repo-relative paths found in the docs — has the naming style changed?",
+    ).toBeGreaterThan(0);
+
+    const missing = [...found.entries()]
+      .filter(([p]) => !existsSync(join(ROOT, p)))
+      .map(([p, docs]) => `${p} (named in ${[...docs].join(", ")})`);
+    expect(missing, "these docs name paths that do not exist on disk").toEqual([]);
+  });
 });
 
 function workerFiles(): string[] {
