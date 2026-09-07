@@ -1978,6 +1978,19 @@ export function shouldRunFeedPull(scheduledAt: Date): boolean {
 export default {
   fetch: app.fetch,
   async scheduled(event, env, ctx) {
+    // A retry is not only "the same event fires again later" — Cloudflare can
+    // run the retry concurrently with an invocation still in flight, so every
+    // task reachable from here has to tolerate two overlapping executions,
+    // not just a delayed single one (see event.scheduledTime's comment below
+    // for the delayed case). generateWeeklyDigest, refreshFeed and
+    // generateNotifications get this for free from an `ON CONFLICT (...,
+    // dedup_key) DO NOTHING` / `ON CONFLICT (source, external_id) DO NOTHING`
+    // insert: a second concurrent run finds its row already there and writes
+    // nothing (see the comment beside each clause before touching one). The
+    // backup and the two prune tasks are naturally idempotent the same way a
+    // same-key R2 PUT and a DELETE always are. deliverDueNotifications is the
+    // one exception — see its own comment.
+    //
     // Every background task carries its own catch. Without one a rejection
     // leaves the invocation as a bare "script threw an exception" with
     // nothing saying which task failed — which is the same reasoning the feed

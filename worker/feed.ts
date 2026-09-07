@@ -360,6 +360,13 @@ export async function refreshFeed(env: Env): Promise<{ inserted: number; seen: n
   // One batched transaction instead of an awaited INSERT per candidate
   // (#285) — a refresh can pull hundreds of listings, and the serial
   // round-trips dominated the cron's runtime.
+  //
+  // ON CONFLICT (source, external_id) does two jobs, not one: it collapses
+  // the same listing seen again on an ordinary 6-hourly re-poll, and it is
+  // also what makes a Cloudflare cron retry safe — a retried invocation can
+  // run refreshFeed a second time concurrently with the first (see
+  // worker/index.ts's scheduled()), and this clause is the only thing
+  // stopping that second pass from inserting every candidate twice.
   const stmt = env.DB.prepare(
     `INSERT INTO feed_items (source, external_id, title, company, location, url, salary_text, role_type, posted_at, board_slug, description)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
