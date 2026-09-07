@@ -134,7 +134,11 @@ export function NotificationSettings() {
       await api.pushSubscribe(sub.toJSON() as PushSubscriptionJSON);
       setSubscribed(true);
     } catch (e) {
-      setError((e as Error).message);
+      // Every throw above is an Error carrying a message meant for a person.
+      // The fallback is for anything else reaching here: `(e as Error).message`
+      // on a non-Error is undefined, and an error banner with nothing in it is
+      // the one outcome worse than the wrong sentence.
+      setError(e instanceof Error ? e.message : t("account.pushRegisterError"));
     } finally {
       setBusy(false);
     }
