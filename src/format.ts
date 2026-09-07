@@ -342,16 +342,6 @@ export function annualizedComp(a: Application): number | null {
   return a.salary_period === "month" ? mid * 12 : mid;
 }
 
-export function formatComp(a: Application): string {
-  const cur = a.salary_currency ?? "";
-  const per = a.salary_period === "month" ? "/mo" : "/yr";
-  if (a.salary_min != null && a.salary_max != null) {
-    return `${cur} ${a.salary_min.toLocaleString()}–${a.salary_max.toLocaleString()}${per}`;
-  }
-  const one = a.salary_max ?? a.salary_min;
-  return one != null ? `${cur} ${one.toLocaleString()}${per}` : "—";
-}
-
 // Rough total-comp estimate for offer-stage applications: base +
 // signing bonus + bonus target (% of base) + a flat annualized equity
 // estimate. Deliberately approximate (issue #63) — equity/bonus

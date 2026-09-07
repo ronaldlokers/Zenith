@@ -89,6 +89,9 @@ function BoardCard({
 }) {
   const { t } = useTranslation();
   const actionable = urgency === "overdue" || urgency === "today";
+  // Once, so the null check and the figure below cannot disagree — the two
+  // calls it replaces needed a ! to tell the reader they could not.
+  const comp = totalComp(a);
   return (
     <article
       className={`bcard stage-${a.status} u-${urgency ?? "calm"}${isDragging ? " dragging" : ""}${a.archived_at ? " archived" : ""}${a.pinned_at ? " pinned" : ""}`}
@@ -151,12 +154,12 @@ function BoardCard({
             <span className={`bbadge u-${urgency}`}>
               {t(`attention.${urgency}`)}
             </span>
-          ) : a.status === "offer" && totalComp(a) != null ? (
+          ) : a.status === "offer" && comp != null ? (
             // Offer is the win state — surface the comp figure (serif, #464)
             // rather than the generic freshness line.
             <span className="comp">
               ~{a.salary_currency ?? "\u20ac"}{" "}
-              {Math.round(totalComp(a)!).toLocaleString()}
+              {Math.round(comp).toLocaleString()}
             </span>
           ) : (
             // Freshness at a glance (design review) — so every card carries a

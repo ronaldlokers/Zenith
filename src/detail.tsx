@@ -138,6 +138,9 @@ export function ApplicationDetailModal({
   const [negotiationDraft, setNegotiationDraft] = useState<string | null>(null);
   const [editingOutcome, setEditingOutcome] = useState(false);
   const a = application;
+  // Once, so the null check and the two figures below cannot disagree — the
+  // four calls it replaces needed a ! to tell the reader they could not.
+  const comp = totalComp(a);
   // Opening an application is a route change, and it is the one this app
   // makes most. The shell moves focus to the page heading when the page
   // title changes, but this route keeps the board's title — so activating a
@@ -480,15 +483,15 @@ export function ApplicationDetailModal({
                   </span>
                 </div>
               )}
-              {a.status === "offer" && totalComp(a) != null && (
+              {a.status === "offer" && comp != null && (
                 <span className="muted small" title={totalCompBreakdown(a)}>
                   {t("offer.totalComp")}: ~
                   {a.salary_currency ?? ""}{" "}
-                  {Math.round(totalComp(a)!).toLocaleString()}
+                  {Math.round(comp).toLocaleString()}
                 </span>
               )}
               {a.status === "offer" &&
-                totalComp(a) != null &&
+                comp != null &&
                 (() => {
                   const others = allApplications.filter(
                     (o) =>
@@ -503,7 +506,7 @@ export function ApplicationDetailModal({
                   if (!pool.length) return null;
                   const med = median(pool.map((o) => totalComp(o)!));
                   if (med == null || med === 0) return null;
-                  const diffPct = ((totalComp(a)! - med) / med) * 100;
+                  const diffPct = ((comp - med) / med) * 100;
                   // "12% above your median tracked offer (1 others)" — a
                   // median of one value is that value, and the parenthesis
                   // gave the game away in bad grammar. The comparison is
