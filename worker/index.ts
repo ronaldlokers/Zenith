@@ -25,6 +25,7 @@ import { registerPushRoutes, sendPushToUser } from "./push.js";
 import { resolveProvider } from "./email/index.js";
 import { buildDigestEmail, buildReminderEmail, type ReminderItem } from "./email/messages.js";
 import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
+import { stale, conflict } from "./if-match.js";
 // The one place the worker reaches into src/: the outcome vocabulary has to be
 // identical on both sides (the client renders it, the worker validates against
 // it), and a second copy would drift into a silent validation bug. Type-only
@@ -415,12 +416,9 @@ app.put("/api/companies/:id", async (c) => {
       .bind(c.req.param("id"), c.get("userId"))
       .first<{ updated_at: string | null }>();
     if (!existing) return c.json({ error: "not found" }, 404);
-    if (ifMatch !== existing.updated_at) {
+    if (stale(ifMatch, existing.updated_at)) {
       return c.json(
-        {
-          error: "the company changed somewhere else",
-          current_updated_at: existing.updated_at,
-        },
+        conflict(existing.updated_at, "the company changed somewhere else"),
         412,
       );
     }
@@ -502,12 +500,9 @@ app.put("/api/contacts/:id", async (c) => {
       .bind(c.req.param("id"), c.get("userId"))
       .first<{ updated_at: string | null }>();
     if (!existing) return c.json({ error: "not found" }, 404);
-    if (ifMatch !== existing.updated_at) {
+    if (stale(ifMatch, existing.updated_at)) {
       return c.json(
-        {
-          error: "the contact changed somewhere else",
-          current_updated_at: existing.updated_at,
-        },
+        conflict(existing.updated_at, "the contact changed somewhere else"),
         412,
       );
     }
@@ -949,12 +944,9 @@ app.put("/api/applications/:id", async (c) => {
   // answer. A monotonic version column would close it and costs a migration
   // plus every write path; it is not worth that for the remaining sliver.
   const ifMatch = c.req.header("If-Match");
-  if (ifMatch && ifMatch !== existing.updated_at) {
+  if (stale(ifMatch, existing.updated_at)) {
     return c.json(
-      {
-        error: "the application changed somewhere else",
-        current_updated_at: existing.updated_at,
-      },
+      conflict(existing.updated_at, "the application changed somewhere else"),
       412,
     );
   }
