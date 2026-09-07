@@ -45,3 +45,12 @@ export async function authedFetch(
   headers.set("Cookie", cookie);
   return SELF.fetch(url, { ...init, headers });
 }
+
+// The raw cookie, for callers that need to add headers authedFetch doesn't
+// set — e.g. Origin/Referer, which Better Auth's own endpoints (unlike our
+// plain Hono routes) require whenever a request carries a cookie at all
+// (see test/two-factor.spec.ts).
+export async function adminSessionCookie(): Promise<string> {
+  sessionCookie ??= signIn();
+  return sessionCookie;
+}

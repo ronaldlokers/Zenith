@@ -23,8 +23,14 @@ import { generateWeeklyDigest } from "./digest.js";
 import { registerAiRoutes } from "./ai.js";
 import { registerCalendarRoutes } from "./calendar.js";
 import { registerPushRoutes, sendPushToUser } from "./push.js";
-import { resolveProvider } from "./email/index.js";
-import { buildDigestEmail, buildReminderEmail, type ReminderItem } from "./email/messages.js";
+import { resolveProvider, sendEmail } from "./email/index.js";
+import {
+  buildDigestEmail,
+  buildReminderEmail,
+  buildTwoFactorResetEmail,
+  type ReminderItem,
+} from "./email/messages.js";
+import { recordAdminAction } from "./admin-audit.js";
 import { registerApiKeyRoutes, registerPublicApiRoutes, triggerWebhooks } from "./public-api.js";
 import { stale, conflict } from "./if-match.js";
 // The one place the worker reaches into src/: the outcome vocabulary has to be
@@ -1717,18 +1723,35 @@ app.post("/api/admin/test-email", async (c) => {
 // second factor, so a user who loses their authenticator would otherwise be
 // permanently locked out. This drops their TOTP secret + backup codes and
 // flips twoFactorEnabled off so they can log in with just their password.
+//
+// Audited (security review): the row is written before the reset itself, so
+// it survives even if a later statement in this handler fails — and if the
+// write fails, the reset never happens (fail closed, rather than resetting
+// someone's second factor with no record of who did it).
 app.post("/api/admin/users/:id/reset-2fa", async (c) => {
   const targetId = c.req.param("id");
-  const user = await c.env.DB.prepare('SELECT id FROM "user" WHERE id = ?')
+  const user = await c.env.DB.prepare(
+    'SELECT email, locale FROM "user" WHERE id = ?',
+  )
     .bind(targetId)
-    .first();
+    .first<{ email: string; locale: string | null }>();
   if (!user) return c.json({ error: "user not found" }, 404);
+  await recordAdminAction(c.env, {
+    actorId: c.get("userId"),
+    targetId,
+    action: "reset_2fa",
+  });
   await c.env.DB.prepare('DELETE FROM "twoFactor" WHERE "userId" = ?')
     .bind(targetId)
     .run();
   await c.env.DB.prepare('UPDATE "user" SET "twoFactorEnabled" = 0 WHERE id = ?')
     .bind(targetId)
     .run();
+  // Best-effort notice — sendEmail never throws and swallows its own
+  // failures, so this can't roll back the reset or the audit row above.
+  // There is no RESEND_API_KEY in production today, so in practice this
+  // currently sends nothing (separate open card).
+  await sendEmail(c.env, buildTwoFactorResetEmail(user.email, user.locale ?? "en"));
   return c.body(null, 204);
 });
 

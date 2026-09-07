@@ -46,6 +46,17 @@ const DELIBERATELY_NOT_EXPORTED = new Set([
   // history, and putting it in the backup would restore one instance's cron
   // log onto another.
   "cron_runs",
+  // Security/privacy audit trail of admin actions (security review): it
+  // names an actor and a target, not a single owner, so buildUserExport's
+  // generic `WHERE user_id = ?` doesn't even apply to it — and if it did,
+  // handing it back through "download my data" would leak the other
+  // party's involvement (an admin's own export listing every account
+  // they've ever reset or impersonated). Unlike cron_runs the whole-instance
+  // backup losing it on restore is a real gap, not a non-issue; left
+  // unaddressed here because closing it means teaching buildFullExport
+  // about tables with no user_id to scope by, which is worker/export.ts's
+  // problem to solve, not this guard's.
+  "admin_actions",
 ]);
 
 // On the first run this test named six tables that hold user data and were
