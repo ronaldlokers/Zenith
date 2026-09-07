@@ -25,6 +25,22 @@ export async function runScheduledBackup(env: Env): Promise<void> {
   const dump = await buildFullExport(env);
   const body = JSON.stringify(dump);
   const key = `${BACKUP_PREFIX}${new Date().toISOString().slice(0, 10)}.json`;
+  // buildFullExport reads every row of every exported table, and D1's free
+  // tier meters rows read per day. At two users it is nowhere near the cap;
+  // the point is that nothing would say when it stopped being so, because
+  // the size grows with other people's data rather than with anything an
+  // operator does.
+  //
+  // Logged rather than recorded: cron_runs already answers "did it run", and
+  // adding a column to answer "how big" would be a migration for a number
+  // nobody reads until they are already investigating. Workers Logs has no
+  // alerting — which is the whole reason cron_runs exists — so this is a
+  // line to grep once something looks wrong, not a monitor.
+  const rows = Object.values(dump).reduce<number>(
+    (n, v) => n + (Array.isArray(v) ? v.length : 0),
+    0,
+  );
+  console.log(`backup ${key}: ${rows} rows, ${body.length} bytes`);
   await env.DOCS.put(key, body, {
     httpMetadata: { contentType: "application/json" },
   });
