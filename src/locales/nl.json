@@ -38,6 +38,7 @@
     "sentEyebrow": "Verstuurde sollicitaties",
     "sent_one": "{{count}} verstuurd",
     "sent_other": "{{count}} verstuurd",
+    "sentNone": "Deze week nog niets verstuurd",
     "vsLastWeek": "{{count}} vorige week",
     "happened": "Vandaag gebeurd",
     "happenedNone": "Er is vandaag niets veranderd.",

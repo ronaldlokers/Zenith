@@ -62,3 +62,40 @@ describe("MomentumBand", () => {
     expect(cls).not.toContain("dash-band");
   });
 });
+
+describe("the week with nothing in it", () => {
+  // A hero-sized zero is emphasis spent on nothing, and it argues with the
+  // history bars beside it, which still read as activity at a glance. The
+  // quiet register drops the verdict to the muted sentence the app already
+  // uses elsewhere and lets the sparkline carry the history alone.
+  //
+  // The bars are deliberately still passed and still rendered: the history is
+  // the part that is true. Only the headline stops claiming a figure.
+  test("renders the verdict in the muted register, keeping the history", () => {
+    const { container } = render(
+      <MomentumBand
+        eyebrow="Applications sent"
+        verdict="Nothing sent yet this week"
+        detail="vs 3 last week"
+        quiet
+        bars={[{ heightPct: 60, dim: false }, { heightPct: 4, dim: true }]}
+      />,
+    );
+    expect(container.querySelector(".zui-momentumband-verdict")).toHaveClass("quiet");
+    expect(container.querySelectorAll(".zui-momentumband-spark i")).toHaveLength(2);
+  });
+
+  test("a week with a count keeps the figure register", () => {
+    // The other direction. Without this, a change that made every verdict
+    // quiet would satisfy the test above.
+    const { container } = render(
+      <MomentumBand
+        eyebrow="Applications sent"
+        verdict="4 sent"
+        detail="vs 3 last week"
+        bars={[{ heightPct: 60, dim: false }]}
+      />,
+    );
+    expect(container.querySelector(".zui-momentumband-verdict")).not.toHaveClass("quiet");
+  });
+});

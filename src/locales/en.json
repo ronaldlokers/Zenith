@@ -38,6 +38,7 @@
     "sentEyebrow": "Applications sent",
     "sent_one": "{{count}} sent",
     "sent_other": "{{count}} sent",
+    "sentNone": "Nothing sent yet this week",
     "vsLastWeek": "{{count}} last week",
     "happened": "Happened today",
     "happenedNone": "Nothing has changed today.",

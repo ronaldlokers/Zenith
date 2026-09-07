@@ -16,6 +16,13 @@ export interface MomentumBandProps {
   detail: ReactNode;
   /** Sparkline bars; caller computes each bar's height. */
   bars: { heightPct: number; dim: boolean }[];
+  /**
+   * Drops the verdict out of the figure register into the muted sentence one.
+   * For the week that has nothing to headline: a hero-sized zero is emphasis
+   * spent on nothing, and it argues with the history bars beside it, which
+   * still read as activity. The sparkline carries the history on its own.
+   */
+  quiet?: boolean;
 }
 
 export function MomentumBand({
@@ -23,12 +30,15 @@ export function MomentumBand({
   verdict,
   detail,
   bars,
+  quiet = false,
 }: MomentumBandProps) {
   return (
     <div className="zui-momentumband">
       <div>
         <span className="zui-momentumband-eyebrow">{eyebrow}</span>
-        <div className="zui-momentumband-verdict">{verdict}</div>
+          <div className={`zui-momentumband-verdict${quiet ? " quiet" : ""}`}>
+          {verdict}
+        </div>
         <div className="zui-momentumband-detail">{detail}</div>
       </div>
       <div className="zui-momentumband-spark" aria-hidden="true">
