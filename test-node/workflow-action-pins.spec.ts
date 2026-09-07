@@ -37,7 +37,7 @@ describe("workflow actions are pinned to commit SHAs", () => {
     const total = usesByFile.reduce((sum, { refs }) => sum + refs.length, 0);
     const filesWithRefs = usesByFile.filter(({ refs }) => refs.length > 0).length;
     expect(total, "no `uses:` references found across any workflow — has the format changed?").toBeGreaterThan(0);
-    expect(filesWithRefs, "expected more than one workflow file to reference an action").toBeGreaterThan(0);
+    expect(filesWithRefs, "expected at least one workflow file to reference an action").toBeGreaterThan(0);
   });
 
   it("names the version each SHA stands for", () => {

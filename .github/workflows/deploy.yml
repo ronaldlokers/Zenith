@@ -11,6 +11,11 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Observed 34-115s across recent runs. Set well above the 2-3x rule of
+    # thumb (~4-6 min) because the D1 export in "Snapshot the database before
+    # migrating" reads every row, and the dataset only grows — a timeout here
+    # blocks production deploys.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 

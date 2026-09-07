@@ -8,6 +8,11 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    # Observed 5.7-9.25 min over recent runs (incl. a failing one that ran
+    # to 555s before failing coverage/e2e). ~3x headroom over the worst of
+    # those. This is the required status check for merging main — a timeout
+    # here blocks every PR, so it needs real margin over a normal slow day.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
@@ -44,6 +49,11 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: checks
     runs-on: ubuntu-latest
+    # Observed ~26-30s. Generous headroom (not the 2-3x rule of thumb) because
+    # this job depends on the npm registry and the Cloudflare API, either of
+    # which can stall well past its own normal runtime without the job itself
+    # being unhealthy.
+    timeout-minutes: 10
     permissions:
       contents: read
       pull-requests: write
