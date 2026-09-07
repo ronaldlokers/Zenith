@@ -67,7 +67,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(i18n.t("errors.staleEdit"));
   }
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    // A body that is not JSON at all did not come from the Worker. Every
+    // route here and the global onError answer with `{ error }`; an HTML
+    // error page is Cloudflare's, which means the request never reached the
+    // app — the same thing a dropped connection means, and it earns the same
+    // sentence rather than "Request failed (522)", which tells a person
+    // nothing they can act on.
+    //
+    // Deliberately not the fallback for JSON that parsed but carried no
+    // `error` key: that response did reach the app, so saying Zenith could
+    // not be reached would be false. It stays a status code, because it is a
+    // bug in a route rather than anything the reader can do something about.
+    const body = await res.json().catch(() => null);
+    if (body === null) throw new Error(networkErrorMessage(init?.method));
     throw new Error(
       (body as { error?: string }).error ?? `Request failed (${res.status})`,
     );
