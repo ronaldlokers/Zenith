@@ -107,16 +107,38 @@ export function NotificationSettings() {
     setBusy(true);
     setError(null);
     try {
-      // First async call in the gesture — no awaited fetch precedes it, so iOS
-      // still treats this as user-initiated and shows the permission prompt.
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      });
+      let sub: PushSubscription;
+      try {
+        // First async call in the gesture — no awaited fetch precedes it, so
+        // iOS still treats this as user-initiated and shows the permission
+        // prompt.
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+      } catch (e) {
+        // A denied permission is a DOMException named "NotAllowedError" (Push
+        // API spec) — check the name, not just the type, since the push
+        // service throws DOMException for other failures too (e.g. an
+        // AbortError from an unreachable push service).
+        throw new Error(
+          e instanceof DOMException && e.name === "NotAllowedError"
+            ? t("account.pushError")
+            : t("account.pushRegisterError"),
+        );
+      }
+      // Goes through request() in api.ts, which already produces a good
+      // message for a lapsed session, an unreachable deployment, or the
+      // server's own `{ error }` text — use it as-is rather than overwriting
+      // it with copy about browser permissions.
       await api.pushSubscribe(sub.toJSON() as PushSubscriptionJSON);
       setSubscribed(true);
-    } catch {
-      setError(t("account.pushError"));
+    } catch (e) {
+      // Every throw above is an Error carrying a message meant for a person.
+      // The fallback is for anything else reaching here: `(e as Error).message`
+      // on a non-Error is undefined, and an error banner with nothing in it is
+      // the one outcome worse than the wrong sentence.
+      setError(e instanceof Error ? e.message : t("account.pushRegisterError"));
     } finally {
       setBusy(false);
     }

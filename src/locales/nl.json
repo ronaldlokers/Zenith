@@ -781,6 +781,7 @@
     "pushEnable": "Pushmeldingen inschakelen",
     "pushDisable": "Pushmeldingen uitschakelen",
     "pushError": "Kon dit niet doen — controleer de meldingsrechten van je browser.",
+    "pushRegisterError": "Je browser kon zich niet aanmelden voor meldingen. Als het blijft gebeuren, probeer het over een paar minuten opnieuw.",
     "pushNotConfigured": "Push is nog niet ingesteld op deze server.",
     "emailSection": "E-mail",
     "emailHint": "Wordt naast push en de meldingen in de app verstuurd, nooit in plaats daarvan.",
