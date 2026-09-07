@@ -484,6 +484,11 @@ app.put("/api/contacts/:id", async (c) => {
   // Cheapest rejection first: a bad reference is a malformed request and
   // doesn't need a concurrency check to reject it, so it's computed and
   // checked here rather than after the If-Match block below.
+  //
+  // That also settles a status this route used to decide by header. The check
+  // sat after the block, so the same malformed body answered 400 with no
+  // If-Match and 404 with one — the 404 coming from the existence check that
+  // only runs when the header is present. It is 400 either way now.
   const badRef = await findForeignRef(c.env.DB, c.get("userId"), [
     { table: "companies", id: body.company_id },
   ]);
