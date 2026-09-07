@@ -112,6 +112,13 @@ app.use("*", async (c, next) => {
   await next();
   c.header("X-Frame-Options", "DENY");
   c.header("X-Content-Type-Options", "nosniff");
+  // No includeSubDomains and no preload. This is self-hosted software: an
+  // operator we'll never meet may run it on an apex domain with unrelated
+  // sibling subdomains that have no certificate, and preload implies
+  // includeSubDomains while taking months to undo once a browser has it.
+  // User agents ignore HSTS on plain HTTP by spec, so this isn't gated on
+  // the request scheme.
+  c.header("Strict-Transport-Security", "max-age=31536000");
   // Same precedent as the CSP below: a route that has chosen a stricter
   // policy keeps it. The share and calendar routes carry their token in the
   // URL and set no-referrer; this used to overwrite them on the way out, so

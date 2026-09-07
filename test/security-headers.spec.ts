@@ -14,6 +14,10 @@ const BASE = "http://zenith.test";
 const EXPECTED: Record<string, string> = {
   "x-frame-options": "DENY",
   "x-content-type-options": "nosniff",
+  // max-age asserted exactly: a value like "max-age=0" would still be
+  // "present" but disables HSTS outright, so a presence-only check wouldn't
+  // catch it.
+  "strict-transport-security": "max-age=31536000",
 };
 
 describe("security headers", () => {
