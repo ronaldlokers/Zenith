@@ -74,7 +74,7 @@ describe("every workflow job declares timeout-minutes", () => {
     const total = jobsByFile.reduce((sum, { jobs }) => sum + jobs.length, 0);
     const filesWithJobs = jobsByFile.filter(({ jobs }) => jobs.length > 0).length;
     expect(total, "no jobs found across any workflow — has the format changed?").toBeGreaterThan(0);
-    expect(filesWithJobs, "expected more than one workflow file to declare a job").toBeGreaterThan(0);
+    expect(filesWithJobs, "expected at least one workflow file to declare a job").toBeGreaterThan(0);
   });
 
   it("names every job missing timeout-minutes", () => {
