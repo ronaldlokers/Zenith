@@ -12,6 +12,11 @@
 // new keys to `local` would still replicate the credential. This read/
 // remove path has to stay: a version that stops reading `sync` strands
 // every existing user with a popup that looks unconfigured.
+//
+// The removal does mean a second machine signed into the same profile loses
+// the key and has to be given one again. That is the point rather than a
+// regression — the key is issued per device — so do not "fix" it by leaving
+// the copy in `sync`, which is the whole defect.
 export async function getCredentials() {
   let { baseUrl, apiKey } = await chrome.storage.local.get([
     "baseUrl",
