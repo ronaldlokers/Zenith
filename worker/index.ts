@@ -481,9 +481,13 @@ app.post("/api/contacts", async (c) => {
 app.put("/api/contacts/:id", async (c) => {
   const body = await c.req.json();
   if (!body.name) return c.json({ error: "name is required" }, 400);
+  // Cheapest rejection first: a bad reference is a malformed request and
+  // doesn't need a concurrency check to reject it, so it's computed and
+  // checked here rather than after the If-Match block below.
   const badRef = await findForeignRef(c.env.DB, c.get("userId"), [
     { table: "companies", id: body.company_id },
   ]);
+  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   // Optimistic concurrency, the same shape as applications: the form seeds
   // from the record loaded when the page opened and writes every column, so a
   // save made from a stale copy reverts fields it never showed. 412 per RFC
@@ -508,7 +512,6 @@ app.put("/api/contacts/:id", async (c) => {
       );
     }
   }
-  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   const result = await c.env.DB.prepare(
     `UPDATE contacts SET ${CONTACT_COLUMNS.map((col) => `${col} = ?`).join(", ")},
          updated_at = datetime('now')
@@ -921,6 +924,15 @@ app.put("/api/applications/:id", async (c) => {
       job_description_captured_at: string | null;
     }>();
   if (!existing) return c.json({ error: "not found" }, 404);
+  // Cheapest rejection first: a bad reference is a malformed request and
+  // doesn't need a concurrency check to reject it, so it's computed and
+  // checked here rather than after the If-Match block below.
+  const badRef = await findForeignRef(c.env.DB, userId, [
+    { table: "companies", id: body.company_id },
+    { table: "contacts", id: body.contact_id },
+    { table: "contacts", id: body.referred_by_contact_id },
+  ]);
+  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   // Optimistic concurrency. This route writes every column from the body, so
   // a client that loaded the row before someone else's save will carry stale
   // copies of the fields it did not touch and put them back — measured: two
@@ -951,12 +963,6 @@ app.put("/api/applications/:id", async (c) => {
       412,
     );
   }
-  const badRef = await findForeignRef(c.env.DB, userId, [
-    { table: "companies", id: body.company_id },
-    { table: "contacts", id: body.contact_id },
-    { table: "contacts", id: body.referred_by_contact_id },
-  ]);
-  if (badRef) return c.json({ error: `invalid ${badRef} reference` }, 400);
   // A snapshot is captured once, the first time job_description goes
   // from empty to non-empty — later edits to the text don't re-stamp
   // the capture date, since the point is recording what was applied to.
