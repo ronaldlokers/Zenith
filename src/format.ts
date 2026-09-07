@@ -5,6 +5,7 @@ import type {
   Contact,
   OutreachStatus,
   Status,
+  StatusHistoryRow,
 } from "./types";
 
 // PIPELINE, the SQL date parser and the momentum verdict live in their own
@@ -330,6 +331,83 @@ export function median(nums: number[]): number | null {
   const sorted = [...nums].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+// Worst-wins attention signal per card (#314) — overdue > stale >
+// quiet, where "quiet" compares the silence against this employer's
+// own typical gap between status changes (#142's heat logic).
+export function computeAttention(
+  applications: Application[],
+  history: StatusHistoryRow[],
+  lastInteractions: { application_id: number; last_at: string }[],
+): Map<number, Urgency> {
+  const byAppHistory = new Map<number, StatusHistoryRow[]>();
+  for (const row of history) {
+    const list = byAppHistory.get(row.application_id) ?? [];
+    list.push(row);
+    byAppHistory.set(row.application_id, list);
+  }
+  const lastActivity = new Map<number, number>();
+  const gapsByApp = new Map<number, number[]>();
+  for (const a of applications) {
+    lastActivity.set(a.id, parseSqlDate(a.applied_at ?? a.created_at));
+  }
+  for (const [appId, rows] of byAppHistory) {
+    const times = rows.map((r) => parseSqlDate(r.changed_at));
+    if (times.length) lastActivity.set(appId, times[times.length - 1]);
+    const gaps: number[] = [];
+    for (let i = 1; i < times.length; i++) {
+      gaps.push((times[i] - times[i - 1]) / 86400000);
+    }
+    gapsByApp.set(appId, gaps);
+  }
+  // A logged interaction (email, call, interview) is activity too — the
+  // quiet badge said "consider a nudge"; the nudge must clear it.
+  for (const r of lastInteractions) {
+    const ts = parseSqlDate(r.last_at);
+    if (ts > (lastActivity.get(r.application_id) ?? 0)) {
+      lastActivity.set(r.application_id, ts);
+    }
+  }
+  const gapsByCompany = new Map<number, number[]>();
+  for (const a of applications) {
+    if (a.company_id == null) continue;
+    const list = gapsByCompany.get(a.company_id) ?? [];
+    list.push(...(gapsByApp.get(a.id) ?? []));
+    gapsByCompany.set(a.company_id, list);
+  }
+  const nowMs = Date.now();
+  const FALLBACK_NORM_DAYS = 7;
+  const attention = new Map<number, Urgency>();
+  const todayStr = today();
+  for (const a of applications) {
+    if (isDead(a.status) || a.archived_at) continue;
+    const companyGaps =
+      a.company_id != null ? (gapsByCompany.get(a.company_id) ?? []) : [];
+    const norm =
+      companyGaps.length >= 2
+        ? (median(companyGaps) ?? FALLBACK_NORM_DAYS)
+        : FALLBACK_NORM_DAYS;
+    const last = lastActivity.get(a.id) ?? parseSqlDate(a.created_at);
+    const daysSince = (nowMs - last) / 86400000;
+    // Only flag "quiet" when the company has enough recorded history to
+    // personalize the norm — the generic fallback over-fires on new
+    // relationships (guard restored; #330 dropped it).
+    const quiet =
+      companyGaps.length >= 2 && daysSince / norm >= 1.5 && daysSince >= 5;
+    // Worst-wins: overdue > due-today > posting-stale > gone-quiet (#346).
+    const val: Urgency = isOverdue(a)
+      ? "overdue"
+      : a.next_action_at === todayStr
+        ? "today"
+        : a.posting_status === "maybe_stale"
+          ? "stale"
+          : quiet
+            ? "quiet"
+            : null;
+    if (val) attention.set(a.id, val);
+  }
+  return attention;
 }
 
 // Annualized midpoint, for sorting/comparing offers on a common basis

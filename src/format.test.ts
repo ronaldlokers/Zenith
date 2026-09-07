@@ -11,9 +11,10 @@
 // local-aware behaviour, so the assertion would pass either way and prove
 // nothing. A negative-offset zone is what makes that class of bug visible.
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Application, Contact } from "./types";
+import type { Application, Contact, StatusHistoryRow } from "./types";
 import {
   ageDays,
+  computeAttention,
   DEADLINE_SOON_DAYS,
   deadlineDaysLeft,
   daysFromToday,
@@ -447,5 +448,217 @@ describe("workdaysFromToday", () => {
         }
       });
     }
+  });
+});
+
+// computeAttention (extracted from board.tsx's PipelineTab, #314/#142/#330/
+// #346) — the worst-wins urgency classification a board card shows. Previously
+// only reachable by rendering the tab; these exercise the pure function
+// directly, including the two gap-based guards that gate "quiet" (a
+// personalized-norm ratio and an absolute-days floor) and the worst-wins
+// ordering between all four signals.
+describe("computeAttention", () => {
+  const withNow = (iso: string, fn: () => void) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(iso));
+    try {
+      fn();
+    } finally {
+      vi.useRealTimers();
+    }
+  };
+
+  const historyRow = (
+    applicationId: number,
+    changedAt: string,
+  ): StatusHistoryRow => ({
+    application_id: applicationId,
+    from_status: "applied",
+    to_status: "screening",
+    changed_at: changedAt,
+  });
+
+  it("flags nothing for a healthy application with no signal", () => {
+    withNow("2026-02-01T00:00:00Z", () => {
+      const a = makeApplication({ id: 1, next_action_at: null });
+      expect(computeAttention([a], [], []).get(1)).toBeUndefined();
+    });
+  });
+
+  it("flags overdue when the next action date has passed", () => {
+    withNow("2026-02-10T00:00:00Z", () => {
+      const a = makeApplication({ id: 1, next_action_at: "2026-02-01" });
+      expect(computeAttention([a], [], []).get(1)).toBe("overdue");
+    });
+  });
+
+  it("flags due-today, not overdue, when the next action is today", () => {
+    withNow("2026-02-10T00:00:00Z", () => {
+      const a = makeApplication({ id: 1, next_action_at: today() });
+      expect(computeAttention([a], [], []).get(1)).toBe("today");
+    });
+  });
+
+  it("flags a stale posting", () => {
+    withNow("2026-02-10T00:00:00Z", () => {
+      const a = makeApplication({
+        id: 1,
+        next_action_at: null,
+        posting_status: "maybe_stale",
+      });
+      expect(computeAttention([a], [], []).get(1)).toBe("stale");
+    });
+  });
+
+  describe("the quiet gap logic (#142, #330)", () => {
+    // Two 10-day gaps in this application's own history give the company a
+    // personalized norm (median) of 10 days.
+    const tenDayNormHistory = [
+      historyRow(1, "2026-01-01T00:00:00Z"),
+      historyRow(1, "2026-01-11T00:00:00Z"),
+      historyRow(1, "2026-01-21T00:00:00Z"),
+    ];
+
+    it("flags quiet once the silence-to-norm ratio reaches 1.5", () => {
+      const a = makeApplication({ id: 1, company_id: 1, next_action_at: null });
+      // Last activity is 2026-01-21. 15 days later, 15/10 = 1.5 exactly.
+      withNow("2026-02-05T00:00:00Z", () => {
+        expect(
+          computeAttention([a], tenDayNormHistory, []).get(1),
+        ).toBe("quiet");
+      });
+    });
+
+    it("does not flag quiet just under the 1.5 ratio", () => {
+      const a = makeApplication({ id: 1, company_id: 1, next_action_at: null });
+      // 14 days later, 14/10 = 1.4 — one day short of the boundary above.
+      withNow("2026-02-04T00:00:00Z", () => {
+        expect(
+          computeAttention([a], tenDayNormHistory, []).get(1),
+        ).toBeUndefined();
+      });
+    });
+
+    // A 1-day norm makes the ratio clear the 1.5 threshold after under two
+    // days of silence — so the daysSince >= 5 floor, not the ratio, is what
+    // actually gates these two.
+    const oneDayNormHistory = [
+      historyRow(1, "2026-01-01T00:00:00Z"),
+      historyRow(1, "2026-01-02T00:00:00Z"),
+      historyRow(1, "2026-01-03T00:00:00Z"),
+    ];
+
+    it("does not flag quiet before the 5-day floor, even at a high ratio", () => {
+      const a = makeApplication({ id: 1, company_id: 1, next_action_at: null });
+      // Last activity 2026-01-03. 4 days later: ratio 4/1 = 4, well past 1.5,
+      // but daysSince (4) is still under the floor.
+      withNow("2026-01-07T00:00:00Z", () => {
+        expect(
+          computeAttention([a], oneDayNormHistory, []).get(1),
+        ).toBeUndefined();
+      });
+    });
+
+    it("flags quiet exactly at the 5-day floor once the ratio already clears", () => {
+      const a = makeApplication({ id: 1, company_id: 1, next_action_at: null });
+      withNow("2026-01-08T00:00:00Z", () => {
+        expect(
+          computeAttention([a], oneDayNormHistory, []).get(1),
+        ).toBe("quiet");
+      });
+    });
+
+    it("never flags quiet with fewer than 2 recorded gaps, no matter the silence", () => {
+      const a = makeApplication({ id: 1, company_id: 1, next_action_at: null });
+      const singleRow = [historyRow(1, "2026-01-01T00:00:00Z")];
+      // ~7 months of silence — the generic fallback norm must not apply here
+      // (guard restored by #330).
+      withNow("2026-08-01T00:00:00Z", () => {
+        expect(computeAttention([a], singleRow, []).get(1)).toBeUndefined();
+      });
+    });
+
+    it("clears quiet when a logged interaction is more recent than the last status change", () => {
+      const a = makeApplication({ id: 1, company_id: 1, next_action_at: null });
+      const lastInteractions = [
+        { application_id: 1, last_at: "2026-02-04T00:00:00Z" },
+      ];
+      // Same instant as the exact-boundary "quiet" case above (15 days since
+      // the last status change) — but a same-day-minus-one interaction
+      // resets the clock to 1 day of silence.
+      withNow("2026-02-05T00:00:00Z", () => {
+        expect(
+          computeAttention([a], tenDayNormHistory, lastInteractions).get(1),
+        ).toBeUndefined();
+      });
+    });
+  });
+
+  describe("worst-wins ordering (#346)", () => {
+    const quietEligibleHistory = [
+      historyRow(1, "2026-01-01T00:00:00Z"),
+      historyRow(1, "2026-01-11T00:00:00Z"),
+      historyRow(1, "2026-01-21T00:00:00Z"),
+    ];
+
+    it("overdue beats stale and a quiet-eligible gap", () => {
+      const a = makeApplication({
+        id: 1,
+        company_id: 1,
+        next_action_at: "2026-01-01",
+        posting_status: "maybe_stale",
+      });
+      withNow("2026-02-05T00:00:00Z", () => {
+        expect(
+          computeAttention([a], quietEligibleHistory, []).get(1),
+        ).toBe("overdue");
+      });
+    });
+
+    it("due-today beats stale and a quiet-eligible gap", () => {
+      withNow("2026-02-05T00:00:00Z", () => {
+        const a = makeApplication({
+          id: 1,
+          company_id: 1,
+          next_action_at: today(),
+          posting_status: "maybe_stale",
+        });
+        expect(
+          computeAttention([a], quietEligibleHistory, []).get(1),
+        ).toBe("today");
+      });
+    });
+
+    it("stale beats a quiet-eligible gap", () => {
+      const a = makeApplication({
+        id: 1,
+        company_id: 1,
+        next_action_at: null,
+        posting_status: "maybe_stale",
+      });
+      withNow("2026-02-05T00:00:00Z", () => {
+        expect(
+          computeAttention([a], quietEligibleHistory, []).get(1),
+        ).toBe("stale");
+      });
+    });
+  });
+
+  it("never flags a dead or archived application, even when overdue", () => {
+    withNow("2026-02-10T00:00:00Z", () => {
+      const dead = makeApplication({
+        id: 1,
+        status: "rejected",
+        next_action_at: "2026-02-01",
+      });
+      const archived = makeApplication({
+        id: 2,
+        next_action_at: "2026-02-01",
+        archived_at: "2026-02-02 00:00:00",
+      });
+      const attention = computeAttention([dead, archived], [], []);
+      expect(attention.get(1)).toBeUndefined();
+      expect(attention.get(2)).toBeUndefined();
+    });
   });
 });
