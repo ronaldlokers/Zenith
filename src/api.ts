@@ -78,8 +78,28 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     // `error` key: that response did reach the app, so saying Zenith could
     // not be reached would be false. It stays a status code, because it is a
     // bug in a route rather than anything the reader can do something about.
-    const body = await res.json().catch(() => null);
-    if (body === null) throw new Error(networkErrorMessage(init?.method));
+    // Read as text first so the unparseable case still has something to
+    // report. res.json() consumes the stream either way, so by the time the
+    // parse has failed the evidence is already gone — and "a 522 happened"
+    // without the page that came back is not enough to tell a proxy
+    // misconfiguration from an outage.
+    const raw = await res.text().catch(() => "");
+    let body: unknown = null;
+    try {
+      body = raw ? JSON.parse(raw) : null;
+    } catch {
+      body = null;
+    }
+    if (body === null) {
+      // The user gets the sentence below; whoever is debugging gets the
+      // actual response. Truncated because an error page is a whole document
+      // and the first line of it is the part that identifies the layer.
+      console.error(
+        `Non-JSON ${res.status} from ${path}:`,
+        raw.slice(0, 200) || "(empty body)",
+      );
+      throw new Error(networkErrorMessage(init?.method));
+    }
     throw new Error(
       (body as { error?: string }).error ?? `Request failed (${res.status})`,
     );
