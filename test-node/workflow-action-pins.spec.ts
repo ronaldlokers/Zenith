@@ -40,6 +40,26 @@ describe("workflow actions are pinned to commit SHAs", () => {
     expect(filesWithRefs, "expected more than one workflow file to reference an action").toBeGreaterThan(0);
   });
 
+  it("names the version each SHA stands for", () => {
+    // The comment is what makes the pin reviewable. A bare SHA bump tells a
+    // reviewer nothing about whether it crossed a major boundary, which is
+    // the entire thing pinning was supposed to buy — and it is the line
+    // Dependabot rewrites alongside the pin.
+    const missing: string[] = [];
+    for (const file of files) {
+      const content = readFileSync(join(WORKFLOWS_DIR, file), "utf8");
+      for (const line of content.split("\n")) {
+        if (!/^\s*-?\s*uses:\s*\S+/.test(line)) continue;
+        if (/uses:\s*\.{1,2}\//.test(line)) continue;
+        if (!/#\s*v?\d/.test(line)) missing.push(`${file}: ${line.trim()}`);
+      }
+    }
+    expect(
+      missing,
+      "these pins carry no version comment, so a bump would be unreviewable",
+    ).toEqual([]);
+  });
+
   for (const { file, refs } of usesByFile) {
     it(`${file}: every remote \`uses:\` is a 40-hex-char SHA, not a tag`, () => {
       const remoteRefs = refs.filter((ref) => !ref.startsWith("./") && !ref.startsWith("../"));
