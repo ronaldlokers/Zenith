@@ -23,6 +23,10 @@ const STRINGS = {
     resetCta: "Choose a new password",
     resetIgnore:
       "The link works once and expires in an hour. If you did not ask for this, ignore this email — nothing has changed.",
+    twoFactorResetSubject: "Your two-factor authentication was reset",
+    twoFactorResetHeading: "Two-factor authentication reset",
+    twoFactorResetBody:
+      "An administrator reset the two-factor authentication on your Zenith account. You can sign in with just your password until you set it up again.",
   },
   nl: {
     reminderSubjectOne: "1 follow-up heeft vandaag aandacht nodig",
@@ -37,6 +41,10 @@ const STRINGS = {
     resetCta: "Kies een nieuw wachtwoord",
     resetIgnore:
       "De link werkt één keer en verloopt na een uur. Heb je dit niet aangevraagd, negeer deze e-mail dan — er is niets veranderd.",
+    twoFactorResetSubject: "Je tweestapsverificatie is opnieuw ingesteld",
+    twoFactorResetHeading: "Tweestapsverificatie opnieuw ingesteld",
+    twoFactorResetBody:
+      "Een beheerder heeft de tweestapsverificatie van je Zenith-account opnieuw ingesteld. Je kunt inloggen met alleen je wachtwoord totdat je die opnieuw instelt.",
   },
 } as const;
 
@@ -226,4 +234,21 @@ export function buildPasswordResetEmail(
   );
   const text = `${s.resetHeading}\n\n${s.resetBody}\n\n${url}\n\n${s.resetIgnore}`;
   return { to, subject: s.resetSubject, html, text };
+}
+
+/**
+ * Notice sent when an admin resets a user's two-factor authentication
+ * (security review — this used to happen with no trace at all). No link, no
+ * token: unlike the password reset this carries nothing sensitive to
+ * protect, just a plain statement that it happened.
+ */
+export function buildTwoFactorResetEmail(to: string, locale: string): EmailMessage {
+  const s = STRINGS[resolveLocale(locale)];
+  const html = wrapHtml(
+    `<h1 style="font-size:${TEXT_BODY};margin:0 0 12px;">${escapeHtml(s.twoFactorResetHeading)}</h1>` +
+      `<p style="margin:0;">${escapeHtml(s.twoFactorResetBody)}</p>`,
+    resolveLocale(locale),
+  );
+  const text = `${s.twoFactorResetHeading}\n\n${s.twoFactorResetBody}`;
+  return { to, subject: s.twoFactorResetSubject, html, text };
 }
