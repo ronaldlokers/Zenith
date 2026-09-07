@@ -232,6 +232,14 @@ async function claimRows(
 // notification on a failed send — this puts the stamp back to NULL so the
 // row is picked up and retried on the next run, same as it would have been
 // under the old select-then-send-then-stamp order.
+//
+// What this cannot cover is the invocation dying between the claim and the
+// release — a killed worker, a timeout mid-send. That row stays stamped and
+// is never delivered, where the old order would have retried it. It is the
+// deliberate trade: claiming first turns at-least-once into at-most-once,
+// and a duplicate push and email to a real person is the failure this route
+// was changed to stop. Do not "fix" the dropped row by claiming after the
+// send — that is precisely the race being closed.
 async function releaseRows(
   env: Env,
   ids: number[],
