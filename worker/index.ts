@@ -1078,9 +1078,12 @@ app.delete("/api/applications/:id", async (c) => {
     c.env.DOCS,
     results.map((r) => r.key),
   );
-  await c.env.DB.prepare("DELETE FROM applications WHERE id = ? AND user_id = ?")
+  const result = await c.env.DB.prepare(
+    "DELETE FROM applications WHERE id = ? AND user_id = ?",
+  )
     .bind(id, userId)
     .run();
+  if (!result.meta.changes) return c.json({ error: "not found" }, 404);
   return c.body(null, 204);
 });
 
