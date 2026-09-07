@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { deliverDueNotifications } from "../worker/notifications";
 
 // The push leg did one UPDATE round-trip per notification, inside a cron that
@@ -13,6 +13,17 @@ import { deliverDueNotifications } from "../worker/notifications";
 // deliverDueNotifications gave up before reaching the email leg. A single bad
 // subscription could silence every email that run.
 const USER = "seed-admin";
+
+// deliverDueNotifications only delivers once it is past DELIVERY_HOUR (08:00)
+// in the recipient's own timezone. This suite did not pin either, so it passed
+// when it was written and failed on main at 00:31 local with "notification 1
+// was never marked pushed" — nothing was due, so nothing was stamped and
+// nothing was batched. It was green for sixteen hours a day.
+//
+// test/email-delivery.spec.ts, which drives the same function, had already
+// solved this: fake timers on a fixed instant, and the user's timezone set
+// rather than inherited. Same approach here, for the same reason.
+const GATE_OPEN = new Date("2026-08-05T07:00:00Z"); // 09:00 in Amsterdam
 
 async function seedNotification(type: string): Promise<number> {
   const { meta } = await env.DB.prepare(
@@ -32,6 +43,16 @@ const pushedAt = async (id: number) =>
   )?.pushed_at ?? null;
 
 describe("marking notifications as pushed", () => {
+  beforeEach(async () => {
+    // Set, not inherited: another spec file could leave any zone on this row.
+    await env.DB.prepare('UPDATE "user" SET timezone = ? WHERE id = ?')
+      .bind("Europe/Amsterdam", USER)
+      .run();
+    vi.useFakeTimers();
+    vi.setSystemTime(GATE_OPEN);
+  });
+  afterEach(() => vi.useRealTimers());
+
   it("stamps every one that went out", async () => {
     await env.DB.prepare("DELETE FROM notifications").run();
     const ids = [
