@@ -436,6 +436,15 @@ export default function App() {
   //
   // A genuinely new account sees it a beat later instead of instantly,
   // which is the honest trade: before the data lands, nobody knows.
+  //
+  // Completing the checklist by using the app never used to set the same
+  // flag the explicit Dismiss button does, so the three probes above ran on
+  // every load forever for anyone who never pressed it (#154 perf). Every
+  // input here comes from a resolved .then(), never from allSettled's
+  // rejected branch, so this can't fire off a failed or partial probe.
+  useEffect(() => {
+    if (onboardingComplete) dismissOnboarding();
+  }, [onboardingComplete]);
   const showOnboarding =
     onboardingChecked &&
     !loading &&
