@@ -1,7 +1,10 @@
 // Zenith "Save Job" popup. Extracts the posting's title + company from the
 // active tab (JobPosting JSON-LD first, then Open Graph, then <title>), lets
 // the user tweak them, and POSTs to the Zenith create endpoint with the
-// stored API key. No build step — plain MV3.
+// stored API key. No build step — plain MV3, loaded as an ES module so it
+// can share storage.js with options.js.
+import { getCredentials } from "./storage.js";
+
 const $ = (id) => document.getElementById(id);
 
 async function extractFromPage(tabId) {
@@ -40,10 +43,7 @@ async function extractFromPage(tabId) {
 }
 
 async function init() {
-  const { baseUrl, apiKey } = await chrome.storage.sync.get([
-    "baseUrl",
-    "apiKey",
-  ]);
+  const { baseUrl, apiKey } = await getCredentials();
   if (!baseUrl || !apiKey) {
     $("setup").style.display = "block";
     $("form").style.display = "none";
@@ -67,10 +67,7 @@ function setStatus(text, kind) {
 }
 
 $("save").addEventListener("click", async () => {
-  const { baseUrl, apiKey } = await chrome.storage.sync.get([
-    "baseUrl",
-    "apiKey",
-  ]);
+  const { baseUrl, apiKey } = await getCredentials();
   const title = $("title").value.trim();
   if (!title) {
     setStatus("Add a job title first.", "err");
@@ -176,10 +173,7 @@ function autofillPage(profile) {
 }
 
 $("autofill").addEventListener("click", async () => {
-  const { baseUrl, apiKey } = await chrome.storage.sync.get([
-    "baseUrl",
-    "apiKey",
-  ]);
+  const { baseUrl, apiKey } = await getCredentials();
   setStatus("Fetching your profile…");
   let profile;
   try {
